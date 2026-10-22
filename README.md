@@ -101,14 +101,25 @@ app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubl
 
 ## Get started
 
-1. Enable LG Developer Mode and pair the webOS CLI with your TV.
-2. Run the app-sync tool to build an inventory for **your** TV.
-3. Build your personalized launcher and install the optional helper.
-4. Configure the helper, then test long-Home recovery before daily use.
+On the TV, enable **Developer Mode** and **Key Server**. On a Mac or Linux computer
+with **Node.js 20+ (including npm), Python 3.9+ and Git**, run:
 
-Follow the [installation guide](docs/INSTALL.md). The generic launcher release asset
-has an empty inventory: sync and rebuild it before use. The helper asset is ready
-to install on compatible ARM32 devices, but still needs local pairing/setup.
+```sh
+git clone https://github.com/Razdva122/clean-your-tv-lg-webos.git
+cd clean-your-tv-lg-webos
+./install.sh 192.168.1.50
+```
+
+Replace the address with your TV's IP. The script prepares local tools, pairs with
+the TV, reads your apps, builds and installs both packages, configures Home Helper
+and requests its launch. Enter the Developer Mode passphrase when prompted and
+accept the remote-control pairing request on the TV. No manual helper build or
+configuration is needed. No root or `sudo` is used.
+
+Once installed, check short Home, hold Home for two seconds to test recovery, and
+check standby/wake and cold boot. **Hardware compatibility still needs to be
+verified on your TV.** See the [installation guide](docs/INSTALL.md) for prerequisites,
+manual installation and recovery. Windows installation has not been tested.
 
 ## Developer Mode auto-renewal — Beta
 

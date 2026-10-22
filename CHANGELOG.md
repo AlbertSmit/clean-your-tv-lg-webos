@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Root Edition preparation
+
+- Add an edition comparison while keeping No-root as the released path.
+- Add a read-only root doctor with optional launcher-category inspection.
+- Add a local-only Home-category metadata plan and conflict-aware rollback decisions.
+- Document bounded diagnostic successes, the production Home category failure, and remaining hardware/recovery gates.
+- Include Root Edition Python checks in CI. No production launcher/helper behavior changes and no Root Edition installer in this update.
+
 ## v0.7.0 — Home 1.1.0, Home Helper 0.6.13
 
 - Add opt-in Developer Mode session auto-renewal **Beta**, disabled by default.

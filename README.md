@@ -4,7 +4,7 @@
 
 A community launcher and optional native Home-button helper for LG webOS TVs.
 Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack).
-**No root. No firmware flashing. No always-on computer, Raspberry Pi or router script.**
+**The released No-root Edition: no root, no firmware flashing. No always-on computer, Raspberry Pi or router script.**
 The launcher and native helper run on the TV itself on the tested setup.
 A computer is needed to build, install and configure them, and later for updates;
 it can be switched off during everyday use. No USB drive or external server is required.
@@ -16,6 +16,18 @@ for the helper's paired power/foreground monitoring.
 
 [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
+
+## Choose your edition
+
+| Edition | Status | Start here |
+| --- | --- | --- |
+| **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
+| **Root Edition** | In development; read-only doctor and local preparation tools, no supported installer yet | [Overview and evidence](root-edition/README.md) |
+
+Both use the same Home interface. Root Edition investigates native system routing
+for Back exits without the LG flash; the production launcher has not passed that
+integration yet. [Compare requirements, controls and limits](docs/EDITIONS.md).
+The features and remote-control guide below describe **No-root Edition**.
 
 ![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
 
@@ -131,7 +143,8 @@ native/app/        Home controller, policies and native entry point
 native/prototype/  Remote relay/filter source and tests
 native/service/    Guarded startup service
 scripts/           Build and setup tools
-docs/              Installation, recovery and limitations
+docs/              Installation, edition comparison, recovery and limitations
+root-edition/      Read-only doctor, local metadata planner and development gates
 ```
 
 ## Credits

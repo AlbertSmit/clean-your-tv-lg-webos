@@ -13,3 +13,5 @@ mkdir -p build/tests
 cc -std=c99 -Wall -Wextra -Werror native/prototype/filter.c native/prototype/test_filter.c -o build/tests/test-filter
 build/tests/test-filter
 for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.js; do node --check "$file"; done
+
+python3 -m unittest discover -s root-edition/tests

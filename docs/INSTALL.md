@@ -33,8 +33,8 @@ the intended script environments; Windows users need a compatible shell/toolchai
 Windows installation has not been tested.
 
 Install the CLI following [LG's CLI documentation](https://webostv.developer.lge.com/develop/tools/cli-dev-guide).
-Check that `ares-package`, `ares-install`, `ares-launch`, `ares-novacom` and `ares-push`
-are on PATH. Install Zig 0.14.1 separately or set `ZIG` to its executable.
+Check that `ares-package`, `ares-install`, `ares-launch` and `ares-novacom`
+are on PATH (`npm install -g @webos-tools/cli`). Install Zig 0.14.1 separately or set `ZIG` to its executable.
 
 From the repository root:
 
@@ -107,9 +107,14 @@ TV_HOST="$TV_HOST" DEVICE=lgtv scripts/configure-tv.sh
 ```
 
 The setup script transfers your local SSAP key and app IDs to the helper's state
-directory, then requests input-source registration. Check that the printed EIM
-response contains `returnValue: true`. An error here means early input restoration
-has not been enabled; do not treat completion of the script alone as confirmation.
+directory using a temporary file, verifies SHA-256 and file permissions (640 for the
+key, 644 for app IDs), then atomically replaces each destination. A failed transfer
+leaves that destination unchanged. The two files are verified individually, not as
+a single transaction. Remote `mktemp`, `base64`, `sha256sum`, and `stat -c` are required.
+Do not run setup with shell tracing (`bash -x`): the transfer command contains the
+pairing key in Base64. The script then requests input-source registration. It checks the EIM response
+for `returnValue: true` and prints a warning when it is missing: early input
+restoration has then not been enabled, and startup relies on the guarded fallback.
 
 ```sh
 ares-launch -d lgtv com.local.nativehome

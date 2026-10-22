@@ -1,7 +1,7 @@
 # Installation
 
-This experimental release targets a setup tested on LG OLED55C3RLA, firmware 43.21.71.
-The public setup is experimental; recovery behavior is documented in RECOVERY.md. For another model,
+This release targets a setup tested on LG OLED55C3RLA, firmware 43.21.71.
+Recovery behavior is documented in RECOVERY.md. For another model,
 start with the standalone launcher; native input compatibility is not guaranteed.
 
 ## 1. Prepare your TV

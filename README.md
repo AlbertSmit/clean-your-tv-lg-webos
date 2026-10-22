@@ -1,4 +1,4 @@
-# Clear Your TV — LG webOS
+# Clean Your TV — LG webOS
 
 **Your apps. A quieter home screen. A way back.**
 
@@ -6,13 +6,13 @@ A community launcher and optional native Home-button helper for LG webOS TVs.
 Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack).
 No firmware replacement or router process is required on the tested setup.
 
-> **Experimental release.** Tested on **LG OLED55C3RLA (C3), firmware 43.21.71**.
+> Tested on **LG OLED55C3RLA (C3), firmware 43.21.71**.
 > Other models, remotes and firmware versions are unverified. Not affiliated with LG.
 
 [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
 
-![Clear Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
+![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
 
 *Launcher 1.0.11, rendered locally with an example five-app configuration.
 Your apps and their order are configured during setup; they are not bundled.*

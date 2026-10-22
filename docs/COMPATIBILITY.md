@@ -23,4 +23,4 @@ Do not remove these checks to force compatibility.
 - App inventory is generated on your computer. Re-sync after installing/removing apps.
 - Hiding a tile does not uninstall the app or disable system ads.
 
-This is an experimental alternative launcher, not an LG-supported system Home replacement.
+This is an alternative launcher, not an LG-supported system Home replacement.

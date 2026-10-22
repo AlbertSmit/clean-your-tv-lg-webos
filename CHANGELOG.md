@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.6.12 — first experimental public release
+## v0.6.12 — first public release
 
 Launcher 1.0.11; native helper 0.6.12.
 

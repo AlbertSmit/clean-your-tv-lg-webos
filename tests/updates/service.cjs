@@ -8,6 +8,8 @@ const store={read:n=>{if(corrupt&&n==='profile')throw Error('corrupt');return di
 function Service(){this.register=(n,fn)=>{methods[n]=fn;};this.call=(uri,p,cb)=>{calls.push({uri,p});setImmediate(()=>{
  if(uri.endsWith('/checkRoot'))cb({payload:{returnValue:true}});
  else if(uri.endsWith('/getAppInfo'))cb({payload:{returnValue:true,appInfo:{id:p.id,version:p.id==='com.gathin.tvhome'?'1.2.0':'0.6.13'}}});
+ else if(uri.endsWith('/pauseForUpdate'))cb({payload:{returnValue:true,state:{enabled:false,updatePause:{id:p.id,wasEnabled:false,confirmed:true}}}});
+ else if(uri.endsWith('/resumeAfterUpdate'))cb({payload:{returnValue:true,state:{enabled:false,completedUpdate:p.id}}});
  else if(uri.endsWith('/status'))cb({payload:{returnValue:true,state:{enabled:false}}});
  else if(uri.endsWith('/install')){cb({payload:{statusText:'Downloading…'}});cb({payload:{returnValue:true,finished:true}});}
  else throw Error(uri);

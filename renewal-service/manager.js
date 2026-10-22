@@ -32,6 +32,7 @@ module.exports=function(io){
    });
   },
   resumeAfterUpdate:function(id){var ticket=generation;return enqueue(async function(){
+   if(validId(id)&&state.completedUpdate===id&&!state.updatePause)return status();
    var pause=state.updatePause;
    if(!validId(id)||!pause||pause.id!==id||pause.confirmed!==true)return Object.assign(status(),{error:'invalid-update-pause'});
    if(pause.wasEnabled){
@@ -39,8 +40,9 @@ module.exports=function(io){
     if(!r||r.returnValue!==true){state.error='schedule-unavailable';save();return status();}
     if(ticket!==generation){await io.cancel();return status();}
    }
-   state.enabled=pause.wasEnabled===true;state.error=null;delete state.updatePause;
-   try{save();}catch(e){state.enabled=false;state.updatePause=pause;throw e;}
+   var previousCompleted=state.completedUpdate;
+   state.enabled=pause.wasEnabled===true;state.error=null;state.completedUpdate=id;delete state.updatePause;
+   try{save();}catch(e){state.enabled=false;state.updatePause=pause;state.completedUpdate=previousCompleted;throw e;}
    stopped=!state.enabled;return status();
   });},
   restoreHistory:function(snapshot){return enqueue(async function(){

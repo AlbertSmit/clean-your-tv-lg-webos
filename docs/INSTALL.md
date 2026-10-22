@@ -107,7 +107,12 @@ TV_HOST="$TV_HOST" DEVICE=lgtv scripts/configure-tv.sh
 ```
 
 The setup script transfers your local SSAP key and app IDs to the helper's state
-directory, then requests input-source registration. It checks the EIM response
+directory using a temporary file, verifies SHA-256 and file permissions (640 for the
+key, 644 for app IDs), then atomically replaces each destination. A failed transfer
+leaves that destination unchanged. The two files are verified individually, not as
+a single transaction. Remote `mktemp`, `base64`, `sha256sum`, and `stat -c` are required.
+Do not run setup with shell tracing (`bash -x`): the transfer command contains the
+pairing key in Base64. The script then requests input-source registration. It checks the EIM response
 for `returnValue: true` and prints a warning when it is missing: early input
 restoration has then not been enabled, and startup relies on the guarded fallback.
 

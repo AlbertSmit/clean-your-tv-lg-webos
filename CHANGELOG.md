@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Build on macOS: `fix-package-data.py` rewrites the ipk in Python; BSD `ar r` reduced the helper package to a 96-byte symbol-table archive.
-- `configure-tv.sh` works with `@webos-tools/cli` 3.x, which offers `ares-push` only for the ose/apollo profiles: files are sent over `ares-novacom` and their size is verified, without echoing the key.
+- `configure-tv.sh` works with `@webos-tools/cli` 3.x, which offers `ares-push` only for the ose/apollo profiles: files are staged over `ares-novacom`, checked by SHA-256 and actual permissions, and atomically replaced; CLI errors are reported without echoing the key.
 - `configure-tv.sh` checks the EIM response and warns when early input restoration is not registered.
 - Compatibility: community test on LG OLED55C46LA (C4), webOS 24.
 

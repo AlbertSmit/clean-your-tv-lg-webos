@@ -1,5 +1,17 @@
 # Update, disable, rollback and uninstall
 
+For a **one-script installation**, run CLI commands from the repository folder.
+The CLI is local; expose it in your current terminal:
+
+```sh
+export PATH="$PWD/build/tools/node_modules/.bin:$PATH"
+```
+
+The automatic device name is `clean-your-tv-<IP-with-dashes>` (for example
+`clean-your-tv-192-168-1-50`), or the `DEVICE` override you supplied. Replace
+`-d lgtv` in the commands below with `-d clean-your-tv-192-168-1-50`, using your
+actual device name. Manual installations below use the profile `lgtv`.
+
 ## Update
 
 Read the release notes. Pause interception with long Home before updating. Keep

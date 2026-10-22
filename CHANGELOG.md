@@ -1,10 +1,18 @@
 # Changelog
 
-## Unreleased — in-app updates development
+## Unreleased — in-app updates
 
 - Add a separate signed-update and recovery package, portable Home profiles, and Software updates in Settings.
-- Keep helper installation manual and require disabled renewal Beta before an update.
-- Hardware service permissions, persistence and recovery remain unvalidated; see docs/UPDATES.md.
+- Pause renewal Beta automatically and restore its prior preference after verified installation or rollback; Home Helper remains unchanged.
+- Recheck signed offers after service restarts, subscribe to terminal installer responses, and keep ambiguous bus failures in recovery without starting another install.
+- Add scoped permission setup/removal and fix remote navigation across disabled controls.
+- Validate isolated update and rollback on OLED55C3RLA / 43.21.71 with fake renewal responses. Production permission lifecycle and release packaging limitations are documented in docs/UPDATES.md.
+
+## Unreleased — one-script installation
+
+- Add `./install.sh <TV IP>` for macOS/Linux: local tool setup, Developer Mode SSH pairing, app sync, package build/install, verified helper configuration and helper launch.
+- Install Zig 0.14.1 and webOS CLI 3.2.6 locally without sudo or global tool installation.
+- Stop on setup errors, reject empty app inventories and protect existing CLI profiles from accidental retargeting. TV pairing approvals and hardware checks remain manual.
 
 ## v0.7.1 — macOS build and verified setup transfers
 

@@ -1,0 +1,17 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert=require('node:assert/strict');
+(async()=>{const browser=await chromium.launch({headless:true,channel:'chrome'});const page=await browser.newPage({viewport:{width:1920,height:1080}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.addInitScript(()=>{window.calls=[];window.renewEnabled=false;window.PalmServiceBridge=function(){this.cancel=()=>{};this.call=(uri,data)=>{calls.push({uri,p:JSON.parse(data)});setTimeout(()=>{let r={returnValue:true};if(uri.includes('com.gathin.tvhome.renewal/')){if(uri.endsWith('/enable'))renewEnabled=true;if(uri.endsWith('/disable'))renewEnabled=false;r.state={enabled:renewEnabled,last:renewEnabled?{status:'healthy',checkedAt:Date.now(),remainingSeconds:3240000}:null};}else if(uri.endsWith('registerServerStatus'))r.connected=true;this.onservicecallback(JSON.stringify(r));},10);};};});
+await page.route('**/apps.js',r=>r.fulfill({body:'window.TV_APPS={apps:[{id:"test.app",title:"Test App",icon:"brand-v2-icon.png"}],inputs:[]};'}));
+await page.goto('file://'+require('path').resolve(__dirname,'../launcher/index.html'));
+assert.equal(await page.evaluate(()=>calls.filter(c=>c.uri.includes('tvhome.renewal')).length),0);
+await page.locator('#btnSettings').click();await page.getByText('Auto-renewal off',{exact:false}).waitFor();
+await page.keyboard.press('ArrowRight');assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalDiagnostics');await page.keyboard.press('ArrowLeft');assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalToggle');
+await page.keyboard.press('Enter');await page.getByText('Auto-renewal enabled (Beta)',{exact:false}).waitFor();
+
+await page.locator('#renewalDiagnostics').click();assert(!(await page.locator('#renewalDetails').innerText()).includes('sessionToken'));
+await page.locator('#renewalToggle').click();await page.getByText('Auto-renewal off',{exact:false}).waitFor();
+await page.keyboard.press('Escape');await page.locator('#renewalPanel').waitFor({state:'hidden'});
+await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+assert(await page.evaluate(()=>calls.some(c=>c.p.id==='test.app')));
+assert.deepEqual(errors,[]);await browser.close();console.log('PASS Beta UI toggle, diagnostics, Back and launch after close');})();

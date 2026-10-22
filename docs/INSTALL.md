@@ -91,18 +91,18 @@ scripts/build.sh
 
 Output:
 
-- `dist/com.gathin.tvhome_1.0.13_all.ipk`
+- `dist/com.gathin.tvhome_1.1.0_all.ipk`
 - `dist/com.local.nativehome_0.6.13_arm.ipk`
 - `dist/SHA256SUMS`
 
-For launcher-only use, run `ares-package launcher -o dist`; Zig and the native
+For launcher-only use, run `ares-package launcher renewal-service -o dist`; Zig and the native
 helper are not needed. Short Home interception requires the optional helper.
 
 ## 6. Install and configure
 
 ```sh
 ares-install -d lgtv dist/com.local.nativehome_0.6.13_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.0.13_all.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.1.0_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv scripts/configure-tv.sh
 ```
 
@@ -130,3 +130,9 @@ Existing assignments should be changed explicitly.
 
 If any check fails, use [Recovery](RECOVERY.md). Report the failure before treating
 this release as validated on your TV.
+
+## Optional session auto-renewal (Beta)
+
+After installation, open Settings → Enable Beta to opt in. It is disabled by default.
+Read [the Beta guide](DEVELOPER-MODE-BETA.md) before relying on it. Monitor the official
+Developer Mode timer and share feedback; real renewal is not yet validated.

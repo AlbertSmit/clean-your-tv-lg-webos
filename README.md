@@ -83,7 +83,7 @@ and stays hidden while it is connected. If that status cannot be read, open
 **Home Helper** directly from LG's app list instead. No additional LS2 permission
 is required. A single-instance lock prevents duplicate controllers.
 
-The UI above describes the **1.0.13 launcher** with helper **0.6.13**.
+The UI above describes the **1.1.0 launcher** with helper **0.6.13**.
 Older release packages may call the helper **Native Home Prototype** and lack the
 Resume Home button; manually opening that helper performs the same recovery.
 The long-Back action is documented by [LG's remote guide](https://webostv.developer.lge.com/develop/guides/magic-remote);
@@ -100,9 +100,18 @@ Follow the [installation guide](docs/INSTALL.md). The generic launcher release a
 has an empty inventory: sync and rebuild it before use. The helper asset is ready
 to install on compatible ARM32 devices, but still needs local pairing/setup.
 
+## Developer Mode auto-renewal — Beta
+
+Home 1.1.0 adds **Settings → Enable Beta**. It is off by default and aims to renew
+the session directly on the TV, without external devices. **Real renewal still
+needs validation: keep monitoring your official Developer Mode timer.**
+See [setup, status and feedback instructions](docs/DEVELOPER-MODE-BETA.md).
+
 ## Tested release
 
-Launcher **1.0.13** + helper **0.6.13**. This release adds the tested recovery UI,
+Current release: launcher **1.1.0** + unchanged helper **0.6.13**. The new Beta
+service and settings panel are locally tested; integrated real renewal is not
+yet validated. The previous launcher **1.0.13** added the tested recovery UI,
 app names, icons and hover labels. The native input/watchdog code is unchanged
 from helper 0.6.12. Two quick standby/resume cycles passed after
 the focus fix, including arrows, OK and short Home. Earlier tests covered volume,

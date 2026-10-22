@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 — Home 1.1.0, Home Helper 0.6.13
+
+- Add opt-in Developer Mode session auto-renewal **Beta**, disabled by default.
+- Add Home settings with session status, confirmed-renewal timestamp, disable control and sanitized diagnostics. LG TV settings remain accessible.
+- Include a separate on-TV renewal service with direct LG HTTPS, bounded retries, persisted cooldown and a persistent hourly task.
+- Home Helper, native key interception, emergency exit and watchdog are unchanged.
+- Real renewal on stock unrooted TVs is awaiting feedback. Monitor the official timer; see [Beta guide](docs/DEVELOPER-MODE-BETA.md).
+
+
 ## v0.6.12 — first public release
 
 Launcher 1.0.11; native helper 0.6.12.

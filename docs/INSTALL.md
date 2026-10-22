@@ -4,6 +4,18 @@ This release targets a setup tested on LG OLED55C3RLA, firmware 43.21.71.
 Recovery behavior is documented in RECOVERY.md. For another model,
 start with the standalone launcher; native input compatibility is not guaranteed.
 
+## What you need — and what you do not
+
+- **No root access or replacement firmware** on the tested LG C3 setup.
+- **No always-on external device:** both the launcher and helper run on the TV.
+  You do not need a router script, Raspberry Pi, home server or USB drive.
+- **A computer for setup and maintenance:** build, pairing, installation, app-list
+  updates and software updates use the tools below. The computer can be off during use.
+- **LG Developer Mode must remain active.** This is separate from rooting the TV.
+- **A working local network:** initial pairing and the helper's power/foreground
+  watcher use the TV's local control interface. Running on the TV does not make
+  these monitoring features independent of network connectivity.
+
 ## 1. Prepare your TV
 
 Install LG's **Developer Mode** app, sign in to your LG Developer account and enable
@@ -117,4 +129,4 @@ Existing assignments should be changed explicitly.
 - Test standby/wake separately from a cold boot. Record what happens without pressing Home.
 
 If any check fails, use [Recovery](RECOVERY.md). Report the failure before treating
-this release candidate as validated on your TV.
+this release as validated on your TV.

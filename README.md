@@ -4,7 +4,12 @@
 
 A community launcher and optional native Home-button helper for LG webOS TVs.
 Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack).
-No firmware replacement or router process is required on the tested setup.
+**No root. No firmware flashing. No always-on computer, Raspberry Pi or router script.**
+The launcher and native helper run on the TV itself on the tested setup.
+A computer is needed to build, install and configure them, and later for updates;
+it can be switched off during everyday use. No USB drive or external server is required.
+LG Developer Mode must remain active. Local network connectivity is still needed
+for the helper's paired power/foreground monitoring.
 
 > Tested on **LG OLED55C3RLA (C3), firmware 43.21.71**.
 > Other models, remotes and firmware versions are unverified. Not affiliated with LG.
@@ -21,14 +26,17 @@ Your apps and their order are configured during setup; they are not bundled.*
 
 | Feature | Behavior |
 | --- | --- |
-| Personal home screen | Local app grid, configurable dock, tile ordering |
-| Short Home | Returns to the launcher while the helper is active |
+| Personal home screen | Local app grid, configurable dock, hidden tiles and tile ordering; no sponsored rows in this launcher |
+| Short Home | Native on-TV interception returns to the launcher without passing through LG Home on the tested setup |
 | Hold Home for 2 seconds | Stops interception and returns to LG Home |
 | Resume interception | Manually open **Native Home Prototype** from LG Apps |
 | Wi-Fi shortcut | Opens LG's network setup overlay |
-| Startup | Input restoration plus a guarded fallback helper |
-| Exit with Back | Returns after watched apps exit; LG Home can briefly flash |
-| Quick standby/resume | Avoids relaunching a launcher already restored by webOS |
+| Automatic startup | Returns after standby and cold boot using input restoration plus a guarded fallback helper; no external device runs the startup logic |
+| Exit with Back | Returns after watched apps exit, preserving in-app navigation and exit confirmation; LG Home can briefly flash |
+| Quick standby/resume | Avoids relaunching a launcher already restored by webOS, preserving arrows and OK after a fast power cycle |
+| Remote controls | Arrows, held arrows, OK, volume and pointer remain usable; wheel events are forwarded |
+| Failure recovery | Watchdog cleanup releases interception if the handler stalls; long Home provides a manual escape |
+| Local interface | App tiles, font and splash assets are stored locally; the menu does not wait for an Internet download |
 
 This does not remove system advertisements, uninstall apps, or replace the operating
 system's Home destination. It provides an alternative screen. Cold boot still has

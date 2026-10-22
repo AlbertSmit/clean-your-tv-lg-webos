@@ -1,0 +1,16 @@
+{
+  "id": "com.local.nativehome",
+  "version": "0.6.12",
+  "type": "native",
+  "main": "detach",
+  "title": "Native Home Prototype",
+  "icon": "icon.png",
+  "requiredACG": [
+    "application.launcher",
+    "activity.operation",
+    "activity.query"
+  ],
+  "noWindow": true,
+  "noSplashOnLaunch": true,
+  "spinnerOnLaunch": false
+}

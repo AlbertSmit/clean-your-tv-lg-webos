@@ -48,20 +48,9 @@ an initial black interval; early display timing is under investigation.
 for exits from configured apps. Both run on the TV. The helper leaves ordinary
 in-app Back navigation, exit confirmations and the other remote controls intact.
 
-```mermaid
-flowchart TD
-    H["Home · your app launcher"] -->|"OK / click an app"| A["Your app"]
-    A -->|"Short Home · helper active"| H
-    A -->|"Short Back"| N["Previous page or app exit dialog"]
-    N -->|"Continue / cancel exit"| A
-    N -->|"Confirm exit"| L["LG Home / system exit"]
-    A -->|"Hold Back · exit to Home"| L
-    L -->|"Helper active · watched app exited"| H
-    H -->|"Hold Home ~2 seconds"| S["LG Home · helper stopped"]
-    A -->|"Hold Home ~2 seconds"| S
-    S -->|"Open Home manually"| R["Home · Resume Home available"]
-    R -->|"Select Resume Home"| H
-```
+![Remote controls: short Home opens our launcher; hold Home stops the helper; hold Back exits to LG Home; resume via the launcher button or Home Helper app](docs/remote-controls.png)
+
+*Illustrated controls and example screens; button layout varies by remote.*
 
 **Hold Back exits the app; hold Home stops the helper.** When the helper is active,
 it returns to our launcher after a watched app exits through LG Home. That path
@@ -94,7 +83,7 @@ and stays hidden while it is connected. If that status cannot be read, open
 **Home Helper** directly from LG's app list instead. No additional LS2 permission
 is required. A single-instance lock prevents duplicate controllers.
 
-The UI above describes the current **1.0.12 working build** with helper **0.6.12**.
+The UI above describes the **1.0.13 launcher** with helper **0.6.13**.
 Older release packages may call the helper **Native Home Prototype** and lack the
 Resume Home button; manually opening that helper performs the same recovery.
 The long-Back action is documented by [LG's remote guide](https://webostv.developer.lge.com/develop/guides/magic-remote);
@@ -113,7 +102,9 @@ to install on compatible ARM32 devices, but still needs local pairing/setup.
 
 ## Tested release
 
-Launcher **1.0.11** + helper **0.6.12**. Two quick standby/resume cycles passed after
+Launcher **1.0.13** + helper **0.6.13**. This release adds the tested recovery UI,
+app names, icons and hover labels. The native input/watchdog code is unchanged
+from helper 0.6.12. Two quick standby/resume cycles passed after
 the focus fix, including arrows, OK and short Home. Earlier tests covered volume,
 pointer, long-Home recovery and watchdog cleanup. The public build replaces the
 original owner's watched-app list with your locally generated configuration;

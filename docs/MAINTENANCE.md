@@ -7,7 +7,7 @@ known-working packages locally. Do not uninstall first: that can remove app data
 
 Build the new version, then install helper followed by launcher. Refresh app inventory
 and rerun `scripts/configure-tv.sh` to restore pairing/watch configuration if the
-installer has replaced state. Manually open Native Home Prototype only when ready.
+installer has replaced state. Manually open Home Helper only when ready.
 State preservation across every firmware/installer version is not guaranteed.
 
 ## Remove input restoration

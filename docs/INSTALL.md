@@ -91,8 +91,8 @@ scripts/build.sh
 
 Output:
 
-- `dist/com.gathin.tvhome_1.0.11_all.ipk`
-- `dist/com.local.nativehome_0.6.12_arm.ipk`
+- `dist/com.gathin.tvhome_1.0.13_all.ipk`
+- `dist/com.local.nativehome_0.6.13_arm.ipk`
 - `dist/SHA256SUMS`
 
 For launcher-only use, run `ares-package launcher -o dist`; Zig and the native
@@ -101,8 +101,8 @@ helper are not needed. Short Home interception requires the optional helper.
 ## 6. Install and configure
 
 ```sh
-ares-install -d lgtv dist/com.local.nativehome_0.6.12_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.0.11_all.ipk
+ares-install -d lgtv dist/com.local.nativehome_0.6.13_arm.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.0.13_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv scripts/configure-tv.sh
 ```
 
@@ -125,7 +125,7 @@ Existing assignments should be changed explicitly.
 - Check arrows and held arrows, OK, Back, volume, pointer and wheel.
 - Open an app and press short Home: the launcher should return.
 - Hold Home for two seconds: LG Home should appear and navigation should work.
-- Open Native Home Prototype manually to resume interception.
+- Open Home Helper manually to resume interception.
 - Test standby/wake separately from a cold boot. Record what happens without pressing Home.
 
 If any check fails, use [Recovery](RECOVERY.md). Report the failure before treating

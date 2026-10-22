@@ -14,7 +14,7 @@ if not p.exists(): p.write_text('window.TV_APPS = {apps: [], inputs: []};\n')
 PYBUILD
 mkdir -p build/native-app/state build/native-service/state dist
 # Stage from a clean set of public sources; never package local runtime state.
-cp native/app/*.js native/app/*.json native/app/icon.png build/native-app/
+cp native/app/*.js native/app/*.json native/app/*.png build/native-app/
 cp -R native/app/vendor build/native-app/
 cp native/service/*.js native/service/*.json build/native-service/
 touch build/native-app/state/.keep build/native-service/state/.keep
@@ -22,7 +22,7 @@ touch build/native-app/state/.keep build/native-service/state/.keep
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/prototype/relay.c native/prototype/filter.c -o build/native-app/relay
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/app/resume.c -o build/native-app/resume
 "$ARES_PACKAGE" build/native-app build/native-service -o dist
-python3 scripts/fix-package-data.py dist/com.local.nativehome_0.6.12_arm.ipk
+python3 scripts/fix-package-data.py dist/com.local.nativehome_0.6.13_arm.ipk
 "$ARES_PACKAGE" launcher -o dist
 python3 - <<'PY'
 from pathlib import Path

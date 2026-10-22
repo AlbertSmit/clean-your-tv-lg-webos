@@ -319,3 +319,11 @@ body.editing #glass { opacity: 0 !important; }
 }
 
 #toast.shown { opacity: 1; }
+
+/* Recovery shares the shelf styling and navigation order. Give the date
+   its own line only while the fourth action needs room beside the clock. */
+#topButtons { flex-shrink: 0; }
+#btnResumeHome.hidden { display: none; }
+body.helper-stopped #timeRow { width: 400px; }
+body.helper-stopped .divider { display: none; }
+body.helper-stopped #date { position: absolute; left: 8px; top: 150px; margin: 0; font-size: 24px; }

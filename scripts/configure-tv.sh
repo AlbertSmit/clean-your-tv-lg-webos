@@ -19,4 +19,4 @@ ares-push -d "$DEVICE" build/setup/ssap-key.json /media/developer/apps/usr/palm/
 ares-push -d "$DEVICE" build/setup/apps.json /media/developer/apps/usr/palm/applications/com.local.nativehome/state/apps.json
 ares-novacom -d "$DEVICE" --run 'chmod 640 /media/developer/apps/usr/palm/applications/com.local.nativehome/state/ssap-key.json'
 ares-novacom -d "$DEVICE" --run "luna-send-pub -n 1 luna://com.webos.service.eim/addDevice '{\"appId\":\"com.gathin.tvhome\",\"pigImage\":\"\",\"mvpdIcon\":\"\"}'"
-echo 'Check the EIM response for returnValue:true. Then launch Native Home Prototype explicitly.'
+echo 'Check the EIM response for returnValue:true. Then launch Home Helper explicitly.'

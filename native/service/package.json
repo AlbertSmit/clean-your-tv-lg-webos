@@ -1,1 +1,5 @@
-{"name":"com.local.nativehome.service","version":"0.6.12","main":"service.js"}
+{
+  "name": "com.local.nativehome.service",
+  "version": "0.6.13",
+  "main": "service.js"
+}

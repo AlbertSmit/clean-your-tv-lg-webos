@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+node tests/helper-control.cjs
 node tests/resume.cjs
 node tests/controller-resume.cjs
 for test in native/prototype/test-*.cjs; do node "$test"; done

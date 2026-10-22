@@ -3,7 +3,7 @@
 | Configuration | Status |
 | --- | --- |
 | LG OLED55C3RLA, firmware 43.21.71 | Hardware used for development and tests |
-| Launcher 1.0.13 + helper 0.6.13 | Recovery UI, app icons and hover labels tested on the same TV after rooting; underlying 0.6.12 input/watchdog behavior unchanged |
+| Launcher 1.0.13 + helper 0.6.13 | Recovery UI, app icons and hover labels tested on the same TV; underlying 0.6.12 input/watchdog behavior unchanged |
 | Other LG models / firmware / remotes | Unverified |
 | macOS build / CLI | Used locally |
 | Linux | Scripts intended to support it; not hardware-tested here |

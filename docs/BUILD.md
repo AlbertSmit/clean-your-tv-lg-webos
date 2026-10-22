@@ -11,7 +11,7 @@ Use `ZIG=/absolute/path/to/zig` and `ARES_PACKAGE=/absolute/path/to/ares-package
 when tools are not on PATH. Generic builds use an empty app inventory. For a useful
 launcher, run `sync-apps.py` before packaging. Do not publish personalized packages.
 
-Outputs: launcher 1.0.13, helper 0.6.13, and SHA256SUMS in `dist/`.
+Outputs: launcher 1.1.0, helper 0.6.13, and SHA256SUMS in `dist/`.
 
 The build stages an allowlisted set of source files and empty state directories.
 A package postprocessor sets those two directories to prisoner:jailer, mode 0770,

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — one-script installation
+
+- Add `./install.sh <TV IP>` for macOS/Linux: local tool setup, Developer Mode SSH pairing, app sync, package build/install, verified helper configuration and helper launch.
+- Install Zig 0.14.1 and webOS CLI 3.2.6 locally without sudo or global tool installation.
+- Stop on setup errors, reject empty app inventories and protect existing CLI profiles from accidental retargeting. TV pairing approvals and hardware checks remain manual.
+
 ## v0.7.1 — macOS build and verified setup transfers
 
 - Build on macOS: `fix-package-data.py` rewrites the ipk in Python; BSD `ar r` reduced the helper package to a 96-byte symbol-table archive.

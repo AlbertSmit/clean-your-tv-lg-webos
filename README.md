@@ -12,6 +12,11 @@ No firmware replacement or router process is required on the tested setup.
 [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
 
+![Clear Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
+
+*Launcher 1.0.11, rendered locally with an example five-app configuration.
+Your apps and their order are configured during setup; they are not bundled.*
+
 ## What it does
 
 | Feature | Behavior |

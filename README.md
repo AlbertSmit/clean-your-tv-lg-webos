@@ -1,18 +1,21 @@
 # Clean Your TV — LG webOS
 
-**Your apps. A quieter home screen. A way back.**
+**A clean home screen for LG webOS. No root. No always-on computer.**
 
-A community launcher and optional native Home-button helper for LG webOS TVs.
-Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack).
-**The released No-root Edition: no root, no firmware flashing. No always-on computer, Raspberry Pi or router script.**
-The launcher and native helper run on the TV itself on the tested setup.
-A computer is needed to build, install and configure them, and later for updates;
-it can be switched off during everyday use. No USB drive or external server is required.
-LG Developer Mode must remain active. Local network connectivity is still needed
-for the helper's paired power/foreground monitoring.
+Keep your favorite apps in a personal dock and app grid, without sponsored rows
+in this launcher. The launcher and optional **Home Helper** run on the TV itself:
+your computer can be switched off after setup.
 
-> Tested on **LG OLED55C3RLA (C3), firmware 43.21.71**.
-> Other models, remotes and firmware versions are unverified. Not affiliated with LG.
+The released setup described here is No-root Edition. Developer Mode must remain
+active; local networking is needed for the helper’s power/foreground monitoring.
+
+- **No root or firmware flashing** — installed through LG Developer Mode.
+- **No always-on computer, Raspberry Pi or router script** — Home-button handling runs on the TV.
+- **Home opens your launcher** — a short press returns to it while Home Helper is active.
+- **A way back to LG Home** — hold Home for about two seconds to stop the helper.
+
+Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack), with Home-button
+handling moved from an external watcher to an on-TV native helper.
 
 [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
@@ -33,6 +36,16 @@ The features and remote-control guide below describe **No-root Edition**.
 
 *Launcher 1.0.11, rendered locally with an example five-app configuration.
 Your apps and their order are configured during setup; they are not bundled.*
+
+## What you need
+
+A computer is needed to build, install and configure the launcher and helper,
+and later for app-list changes and software updates. It is not needed for everyday use.
+LG Developer Mode must remain active. A working local network is still needed
+for the helper's paired power and foreground monitoring.
+
+Compatibility varies by model, remote and firmware; see [compatibility and known limits](docs/COMPATIBILITY.md)
+before installing. Not affiliated with LG.
 
 ## What it does
 
@@ -103,14 +116,25 @@ app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubl
 
 ## Get started
 
-1. Enable LG Developer Mode and pair the webOS CLI with your TV.
-2. Run the app-sync tool to build an inventory for **your** TV.
-3. Build your personalized launcher and install the optional helper.
-4. Configure the helper, then test long-Home recovery before daily use.
+On the TV, enable **Developer Mode** and **Key Server**. On a Mac or Linux computer
+with **Node.js 20+ (including npm), Python 3.9+ and Git**, run:
 
-Follow the [installation guide](docs/INSTALL.md). The generic launcher release asset
-has an empty inventory: sync and rebuild it before use. The helper asset is ready
-to install on compatible ARM32 devices, but still needs local pairing/setup.
+```sh
+git clone https://github.com/Razdva122/clean-your-tv-lg-webos.git
+cd clean-your-tv-lg-webos
+./install.sh 192.168.1.50
+```
+
+Replace the address with your TV's IP. The script prepares local tools, pairs with
+the TV, reads your apps, builds and installs both packages, configures Home Helper
+and requests its launch. Enter the Developer Mode passphrase when prompted and
+accept the remote-control pairing request on the TV. No manual helper build or
+configuration is needed. No root or `sudo` is used.
+
+Once installed, check short Home, hold Home for two seconds to test recovery, and
+check standby/wake and cold boot. **Hardware compatibility still needs to be
+verified on your TV.** See the [installation guide](docs/INSTALL.md) for prerequisites,
+manual installation and recovery. Windows installation has not been tested.
 
 ## Developer Mode auto-renewal — Beta
 
@@ -127,9 +151,9 @@ yet validated. The previous launcher **1.0.13** added the tested recovery UI,
 app names, icons and hover labels. The native input/watchdog code is unchanged
 from helper 0.6.12. Two quick standby/resume cycles passed after
 the focus fix, including arrows, OK and short Home. Earlier tests covered volume,
-pointer, long-Home recovery and watchdog cleanup. The public build replaces the
-original owner's watched-app list with your locally generated configuration;
-that packaging/setup path has not yet been tested by a second user.
+pointer, long-Home recovery and watchdog cleanup. The public build uses your
+locally generated app configuration; follow the [installation checks](docs/INSTALL.md#7-verify-before-daily-use)
+to verify the setup on your TV.
 
 Developer Mode must remain active. A LAN outage can affect the optional power and
 foreground watcher. Wheel input is forwarded, but wheel-to-tile selection is not

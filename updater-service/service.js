@@ -14,12 +14,14 @@ function rpc(uri,args,install){return new Promise(function(resolve,reject){
  });}catch(_){finish(Error('service-unavailable'));}
 });}
 async function root(){try{var r=await rpc('luna://org.webosbrew.hbchannel.service/checkRoot',{});return r.returnValue===true;}catch(_){return false;}}
-async function app(id){var r=await rpc('luna://com.webos.applicationManager/getAppInfo',{id:id});if(!r.appInfo||r.appInfo.id!==id)throw Error('version-unavailable');return r.appInfo;}
+async function app(id){var r=await rpc('luna://org.webosbrew.hbchannel.service/getAppInfo',{id:id});if(!r.appInfo||r.appInfo.id!==id)throw Error('version-unavailable');return r.appInfo;}
 async function versions(){return {home:(await app('com.gathin.tvhome')).version,helper:(await app('com.local.nativehome')).version};}
 var manager=require('./manager')({load:function(){return store.read('transaction');},save:function(s){store.write('transaction',s);},root:root,versions:versions,
  pauseRenewal:async function(id){var r=await rpc('luna://com.gathin.tvhome.renewal/pauseForUpdate',{id:id});
   if(!r.state||r.state.enabled!==false||r.state.error)throw Error('pause-unconfirmed');return r.state.updatePause;},
  resumeRenewal:async function(receipt){if(!receipt)throw Error('missing-pause-receipt');
+  var imported=await rpc('luna://com.gathin.tvhome.renewal/importUpdatePause',{receipt:receipt});
+  if(!imported.state||imported.state.error)throw Error('pause-import-unconfirmed');
   var r=await rpc('luna://com.gathin.tvhome.renewal/resumeAfterUpdate',{id:receipt.id});
   return {restored:!!(r.state&&!r.state.error&&!r.state.updatePause&&r.state.completedUpdate===receipt.id)};},
  backup:async function(s){var existing=store.read('profile');if(existing!==null)data.validate(existing);store.write('profile',data.validate(s));},

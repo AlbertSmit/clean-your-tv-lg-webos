@@ -17,6 +17,24 @@ module.exports=function(io){
  }
  function validId(id){return typeof id==='string'&&/^[a-zA-Z0-9-]{1,80}$/.test(id);}
  return {
+  importUpdatePause:function(receipt){return enqueue(async function(){
+   if(!receipt||!validId(receipt.id)||receipt.confirmed!==true||typeof receipt.wasEnabled!=='boolean')return Object.assign(status(),{error:'invalid-pause-receipt'});
+   if(state.completedUpdate===receipt.id&&!state.updatePause)return status();
+   if(state.updatePause){
+    if(state.updatePause.id!==receipt.id)return Object.assign(status(),{error:'pause-import-conflict'});
+    if(state.updatePause.confirmed&&!state.error)return status();
+   }else{
+   if(state.completedUpdate||state.error||(state.enabled&&!state.preferenceTouched))return Object.assign(status(),{error:'pause-import-conflict'});
+   state.updatePause={id:receipt.id,wasEnabled:state.preferenceTouched?state.enabled:receipt.wasEnabled,confirmed:false};
+   }
+   generation++;stopped=true;state.error=null;
+   state.enabled=false;save();
+   var r;try{r=await io.cancel();}catch(_){r=null;}
+   if(!r||!(r.returnValue===true||r.errorCode===2)){state.error='cancel-unconfirmed';save();return status();}
+   state.updatePause.confirmed=true;
+   try{save();}catch(e){state.updatePause.confirmed=false;throw e;}
+   return status();
+  });},
   pauseForUpdate:function(id){
    if(!validId(id))return Promise.resolve(Object.assign(status(),{error:'invalid-update-id'}));
    generation++;stopped=true;
@@ -59,6 +77,7 @@ module.exports=function(io){
   check:function(){return enqueue(check);},
   enable:function(){var ticket=++generation;return enqueue(async function(){
    if(state.updatePause)return Object.assign(status(),{error:'update-in-progress'});
+   state.preferenceTouched=true;
    state.enabled=false;state.error=null;save();
    var r=await io.schedule();
    if(!r||r.returnValue!==true){state.error='schedule-unavailable';save();return status();}
@@ -66,7 +85,7 @@ module.exports=function(io){
    state.enabled=true;stopped=false;save();return check();
   });},
   disable:function(){generation++;stopped=true;return enqueue(async function(){
-   state.enabled=false;state.error=null;if(state.updatePause)state.updatePause.wasEnabled=false;var persisted=true;
+   state.preferenceTouched=true;state.enabled=false;state.error=null;if(state.updatePause)state.updatePause.wasEnabled=false;var persisted=true;
    try{save();}catch(_){persisted=false;}
    var r;try{r=await io.cancel();}catch(_){r=null;}
    if(!r||!(r.returnValue===true||r.errorCode===2))state.error='cancel-unconfirmed';

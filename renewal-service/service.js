@@ -50,9 +50,9 @@ service.register('restoreHistory',function(m){
 function fromUpdater(m){
  try{var raw=m.ls2Message;return raw.applicationID()===''&&raw.senderServiceName()==='com.cleanyourtv.updater.service';}catch(_){return false;}
 }
-['pauseForUpdate','resumeAfterUpdate'].forEach(function(method){
+['pauseForUpdate','resumeAfterUpdate','importUpdatePause'].forEach(function(method){
  service.register(method,function(m){
   if(!fromUpdater(m)){m.respond({returnValue:false,errorText:'caller-not-authorized'});return;}
-  manager[method]((m.payload||{}).id).then(function(s){respond(m,s);});
+  manager[method](method==='importUpdatePause'?(m.payload||{}).receipt:(m.payload||{}).id).then(function(s){respond(m,s);});
  });
 });

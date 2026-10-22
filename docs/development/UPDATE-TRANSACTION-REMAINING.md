@@ -26,9 +26,19 @@ Only updater-owned permission artifacts may be installed or removed. Preserve pr
 1. Implemented locally: persist a unique transaction ID and intent in the independent updater before requesting a pause.
 2. Implemented locally: require matching ID, confirmed pause, disabled state and no error before installation.
 3. Receipt persistence in the independent updater is implemented locally. Move final profile capture after the queue has drained when the UI guard is removed.
-4. Define a restricted receipt-import operation for the newly installed renewal service: package installation may remove its old state. Keep this operation bound to the updater identity and transaction, never a general enable-from-profile flag.
+4. Implemented locally: `importUpdatePause` accepts a validated receipt only from the updater bus identity. It preserves a local user preference, rejects conflicting transactions, cancels scheduling and persists a stopped pause before allowing resume. Package-state erasure is covered by integration tests using both real managers.
 5. Implemented locally: resume only after a verified terminal outcome (healthy candidate or verified rollback). Keep ambiguous installer outcomes blocked and visible in recovery.
 6. Recover safely if either service exits between every pair of durable writes and RPC replies. Retry must not create a second installation or undo a later user preference.
 7. Only then remove the manual-disable UI guard and replace it with automatic progress text.
 
 Do not mark these steps complete based solely on local mocks. A rooted TV and a separate disposable package remain necessary to validate LS2, installation lifecycle and preservation of state.
+
+## Offline LS2 plan
+
+Run `node scripts/plan-updater-permissions.cjs /var/luna-service2-dev` to print a deterministic, hashed plan. It does not write to a TV or register a manifest. The alternative `/var/luna-service2` is accepted explicitly; other roots are rejected. Each plan creates only three dedicated `com.cleanyourtv.updater.permissions` files.
+
+The UI group exposes seven updater methods only. The backend group allows Homebrew `checkRoot`, `getAppInfo`, `install` and renewal `status`, `pauseForUpdate`, `importUpdatePause`, `resumeAfterUpdate`. There are no `all`/`public` grants, wildcard method paths, shell execution, new root service roles or system Home/profile permissions. Updater code now reads versions via Homebrew's wrapper instead of SAM's internal method.
+
+The format follows the locally inspected Homebrew Channel 0.7.3 `services/elevate-service.ts` manifest fields and a captured webOS manifest. Homebrew itself uses broader grants and patches its own manifest; this plan deliberately does not copy that policy.
+
+Not yet established: acceptance of a permission-only manifest, merging of grants for clients that already have a permission entry, service-instance matching, refresh/reboot persistence, and whether package replacement invalidates these grants. The plan is not an installer and is not evidence of granted rights. Before any apply implementation, verify these points in the isolated lab, preserve pre-existing content, reject filename collisions, and define rollback that deletes only files whose hashes still match the generated plan. Never replace Homebrew or production app permission files to make a test pass.

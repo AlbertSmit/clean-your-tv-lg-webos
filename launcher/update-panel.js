@@ -1,0 +1,39 @@
+(function(){
+ 'use strict';
+ var URI='luna://com.cleanyourtv.updater.service/',VERSION='1.2.0';
+ var panel=document.createElement('section');panel.id='updatePanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Software updates');
+ panel.innerHTML='<div class="renewal-card"><h2>Software updates</h2><p id="updateStatus" aria-live="polite">Check for signed Home updates.</p><p id="updateNotes"></p><div class="renewal-actions"><button id="updateCheck">Check for updates</button><button id="updateInstall" disabled>Update Home</button><button id="updateRecovery">Recovery</button><button id="updateBack">Back</button></div><p class="renewal-warning">Auto-renewal is paused during installation and its previous setting is restored afterwards. Home Helper is not replaced. Without root, use the installation guide on a computer: github.com/Razdva122/clean-your-tv-lg-webos → docs/INSTALL.md.</p></div>';
+ document.body.appendChild(panel);
+ var status=document.getElementById('updateStatus'),notes=document.getElementById('updateNotes'),install=document.getElementById('updateInstall'),check=document.getElementById('updateCheck');
+ var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,offer=null,busy=false,confirmed=false;
+ function rpc(method,payload,cb){var b,done=false,timer=setTimeout(function(){finish(null);},method==='install'?190000:65000);
+  function finish(r){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r&&r.returnValue===true?r.result:null);}
+  try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish(null);}};b.call(URI+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
+ }
+ function focus(i,direction){direction=direction||1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length)%buttons.length;if(!buttons[j].disabled){index=j;buttons[j].focus();return;}}}
+ function show(text){status.textContent=text;}
+ function checkNow(){if(busy)return;busy=true;check.disabled=true;install.disabled=true;confirmed=false;install.textContent='Update Home';show('Checking signed release…');
+  rpc('check',{},function(r){busy=false;check.disabled=false;offer=r;
+   if(!r){show('Update service or signed release unavailable. Install the separate Home Updater package once, then retry. Your current Home is unchanged.');return;}
+   notes.textContent=r.candidate.notes;install.disabled=!r.canInstall;
+   var labels={current:'Home is up to date. Tooling-only releases do not require reinstalling Home.','newer-installed':'Your installed Home is newer than this release.','helper-update-required':'Update Home Helper using the installation guide first.',available:r.canInstall?'A signed Home update is available.':r.root?'Update available, but a verified recovery package for your installed version is missing.':'Update available. Without root, install it from a computer using the guide.'};
+   show('Installed Home '+r.home+' · Available '+r.candidate.home+'\n'+labels[r.state]);focus(0);
+  });
+ }
+ check.onclick=checkNow;
+ install.onclick=function(){if(busy||!offer||!offer.canInstall)return;
+  if(!confirmed){confirmed=true;install.textContent='Confirm update';show('Home will close during installation. Your app list and settings will be saved first. Press Confirm update to continue.');return;}
+  busy=true;install.disabled=true;check.disabled=true;show('Saving apps, icons and settings…');
+  window.HomeProfile.capture(function(error,profile){if(error){busy=false;check.disabled=false;show('Could not save your complete profile. Nothing was installed.');return;}
+   show('Installing Home… Keep the TV on. If this screen closes, open Home again or use Home Updater for recovery.');
+   rpc('install',{version:offer.candidate.home,profile:profile},function(r){busy=false;check.disabled=false;show(r?'Update state: '+r.status+'. Reopen Home when installation finishes.':'Update outcome is not confirmed. Open Home Updater → Recovery before retrying.');});
+  });
+ };
+ document.getElementById('updateRecovery').onclick=function(){if(busy)return;rpc('reconcile',{},function(r){show(r?'Recovery state: '+r.status+'. Use Home Updater to restore the previous version if offered.':'No recovery result available. Your helper has not been changed.');});};
+ document.getElementById('updateBack').onclick=function(){panel.classList.add('hidden');};
+ buttons.forEach(function(b,i){b.addEventListener('mouseover',function(){focus(i);});});
+ document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)panel.classList.add('hidden');else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38?-1:1;focus(index+direction,direction);}
+ },true);
+ window.HomeUpdates={open:function(){panel.classList.remove('hidden');focus(0);},rpc:rpc,version:VERSION};
+}());

@@ -11,7 +11,7 @@ function Service(){this.register=(n,fn)=>{methods[n]=fn;};this.call=(uri,p,cb)=>
  else if(uri.endsWith('/pauseForUpdate'))cb({payload:{returnValue:true,state:{enabled:false,updatePause:{id:p.id,wasEnabled:false,confirmed:true}}}});
  else if(uri.endsWith('/importUpdatePause'))cb({payload:{returnValue:true,state:{enabled:false,updatePause:p.receipt}}});
  else if(uri.endsWith('/resumeAfterUpdate'))cb({payload:{returnValue:true,state:{enabled:false,completedUpdate:p.id}}});
- else if(uri.endsWith('/status'))cb({payload:{returnValue:true,state:{enabled:false}}});
+ else if(uri.endsWith('/status'))cb({payload:{returnValue:true,state:{enabled:true}}});
  else if(uri.endsWith('/install')){cb({payload:{statusText:'Downloading…'}});cb({payload:{returnValue:true,finished:true}});}
  else throw Error(uri);
  });return {cancel:()=>{}};};}
@@ -23,7 +23,7 @@ function request(name,p={},id='com.gathin.tvhome'){return new Promise(resolve=>m
  assert.equal((await request('check',{},'other.app')).returnValue,false);assert.equal(calls.length,0);
  const offered=await request('check');assert.equal(offered.result.canInstall,true);
  corrupt=true;assert.equal((await request('install',{version:'1.2.1',profile})).returnValue,false);assert(!calls.some(x=>x.uri.endsWith('/install')));
- corrupt=false;const installed=await request('install',{version:'1.2.1',profile});assert.equal(installed.result.status,'awaiting-launch');
+ corrupt=false;const installed=await request('install',{version:'1.2.1',profile});assert.equal(installed.returnValue,true,'enabled Beta should be paused automatically');assert.equal(installed.result.status,'awaiting-launch');
  const args=calls.find(x=>x.uri.endsWith('/install')).p;assert.equal(args.id,'com.gathin.tvhome');assert.equal(args.ipkHash,'a'.repeat(64));assert.equal(args.subscribe,true);assert.deepEqual(disk.profile,profile);
  homeVersion='1.2.1';assert.equal((await request('healthy',{version:homeVersion})).result.status,'complete');
  assert(calls.findIndex(x=>x.uri.endsWith('/importUpdatePause'))<calls.findIndex(x=>x.uri.endsWith('/resumeAfterUpdate')));

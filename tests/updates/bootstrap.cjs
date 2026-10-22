@@ -11,3 +11,7 @@ let timeout;
 const blank={...context,TV_APPS:{apps:[],inputs:[]},localStorage:{getItem:()=>null,setItem:()=>{}},setTimeout:fn=>{timeout=fn;return 1;},clearTimeout:()=>{},PalmServiceBridge:function(){this.call=()=>{};this.cancel=()=>{};}};blank.window=blank;
 vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),blank);timeout();let error;blank.HomeProfile.capture(e=>{error=e;});assert(error,'capture must fail after restore timeout');
 console.log('PASS failed restore cannot become an empty replacement profile');
+const renewalCalls=[];
+context.PalmServiceBridge=function(){this.cancel=()=>{};this.call=(uri)=>{renewalCalls.push(uri);this.onservicecallback(JSON.stringify({returnValue:true,state:{enabled:true,last:{status:'healthy'}}}));};};
+let captured,captureError;context.HomeProfile.capture((e,p)=>{captureError=e;captured=p});assert(!captureError);assert(captured);assert.equal(captured.renewal.enabled,false);assert(renewalCalls.every(uri=>uri.endsWith('/status')));
+console.log('PASS enabled renewal permits profile capture without changing its preference');

@@ -50,7 +50,7 @@ register('restore',function(){return store.read('profile');});
 register('install',async function(p){var selected=offer;if(!selected||!selected.prior||policy.compare(selected.prior.home,'1.2.0')<0||p.version!==selected.candidate.home)throw Error('check-first');
  // Revalidate signed descriptors after each check; caller cannot supply a URL/hash.
  var renewal=await rpc('luna://com.gathin.tvhome.renewal/status',{});
- if(!renewal.state||renewal.state.enabled!==false)throw Error('disable-renewal-first');
+ if(!renewal.state||typeof renewal.state.enabled!=='boolean')throw Error('renewal-state-unavailable');
  return manager.install(selected.candidate,selected.prior,data.validate(p.profile));
 });
 register('reconcile',manager.reconcile);

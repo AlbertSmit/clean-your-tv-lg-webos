@@ -25,7 +25,7 @@
   try{var order=localStorage.getItem('tvhome.order');if(order!==null)s.settings['tvhome.order']=order;}catch(e){cb(e);return;}
   var index=0;function next(error,value){if(error){cb(error);return;}if(index>0)inventory.apps[index-1].icon=value;
    if(index<inventory.apps.length){icon(inventory.apps[index++].icon,next);return;}
-   rpc('status',{},function(state){if(!state||state.enabled!==false){cb(Error('disable-renewal-first'));return;}
+   rpc('status',{},function(state){if(!state||typeof state.enabled!=='boolean'){cb(Error('renewal-state-unavailable'));return;}
     s.renewal={enabled:false};['last','lastRenewedAt','error'].forEach(function(k){if(state[k]!==undefined)s.renewal[k]=state[k];});
     try{HomeData.save(localStorage,s);cb(null,s);}catch(e){cb(e);}
    },'luna://com.gathin.tvhome.renewal/');

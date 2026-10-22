@@ -44,3 +44,15 @@ service.register('restoreHistory',function(m){
  if(typeof id!=='string'||id.split(' ')[0]!=='com.gathin.tvhome'){m.respond({returnValue:false});return;}
  manager.restoreHistory(m.payload.state).then(function(s){respond(m,s);});
 });
+
+// Only the independent updater may manage a transactional pause. A web app
+// cannot impersonate it with a JSON field or a supplied application identity.
+function fromUpdater(m){
+ try{var raw=m.ls2Message;return raw.applicationID()===''&&raw.senderServiceName()==='com.cleanyourtv.updater.service';}catch(_){return false;}
+}
+['pauseForUpdate','resumeAfterUpdate'].forEach(function(method){
+ service.register(method,function(m){
+  if(!fromUpdater(m)){m.respond({returnValue:false,errorText:'caller-not-authorized'});return;}
+  manager[method]((m.payload||{}).id).then(function(s){respond(m,s);});
+ });
+});

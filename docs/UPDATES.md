@@ -59,3 +59,13 @@ scripts/build-updater.sh
 The independent package is `com.cleanyourtv.updater_0.1.0_all.ipk`. Its state directory is staged empty, owned by prisoner:jailer, mode 0700; journal/profile files use 0600. The app uses bus-provided application identity and rejects unknown callers rather than accepting an identity from a payload.
 
 Before enabling real hardware updates, verify with a disposable test package: bus identity/permissions; root/no-root detection; profile size and restart persistence; actual installer completion/error responses; closed Home and updater service survival; power interruption; prior-package rollback; renewal off and history restore; arrows, Back and Home after update. The current tests use local mocks and do not establish these hardware results.
+
+## TV validation status (2026-10-22)
+
+An isolated test on OLED55C3RLA, firmware 43.21.71, found two integration blockers. The stock package installer assigns a per-service UID (5132 in this run), so a state directory owned by a hard-coded prisoner UID is incorrect. The build now leaves state creation to the running service, with mode 0700. Existing deployed prototype directories need explicit migration; this change alone does not repair them.
+
+LS2 rejected `getAppInfo` from the installed updater service. Declaring additional groups in the test `services.json` did not grant them. Cross-package access to the updater, Homebrew and renewal service needs a supported installation/permission design and device validation. No end-to-end update or rollback has passed on TV yet. Do not publish this prototype as a working TV updater. The production Home and Helper packages were not replaced.
+
+### Requested renewal UX
+
+The intended replacement for manual Beta disabling is a transactional pause: wait for an in-flight renewal request, persist the previous enabled state, pause scheduling, update, then restore that state after verified success or rollback. A previously disabled feature must stay disabled. Crash recovery, cancellation failure and ambiguous installation outcomes must be tested before removing the current guard. The renewal manager now implements and locally tests a durable pause/resume primitive and updater-only bus endpoints. They are not yet connected to the installer transaction or profile migration. The current manual guard remains until that integration passes failure/restart tests and TV permission validation.

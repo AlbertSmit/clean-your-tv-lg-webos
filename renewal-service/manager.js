@@ -3,7 +3,7 @@
 module.exports=function(io){
  var state,stopped=false,queue=Promise.resolve(),generation=0;
  try{state=io.load()||{};}catch(_){state={enabled:false,error:'storage-error'};}
- state.enabled=state.enabled===true;stopped=!state.enabled;
+ state.enabled=state.enabled===true;stopped=!state.enabled||!!state.updatePause;
  function status(){return JSON.parse(JSON.stringify(state));}
  function save(){io.save(state);}
  function enqueue(fn){var p=queue.then(fn).catch(function(){stopped=true;state.enabled=false;state.error='storage-error';return status();});queue=p;return p;}
@@ -15,7 +15,34 @@ module.exports=function(io){
   if(result.status==='renewed')state.lastRenewedAt=io.now();
   save();return status();
  }
+ function validId(id){return typeof id==='string'&&/^[a-zA-Z0-9-]{1,80}$/.test(id);}
  return {
+  pauseForUpdate:function(id){
+   if(!validId(id))return Promise.resolve(Object.assign(status(),{error:'invalid-update-id'}));
+   generation++;stopped=true;
+   return enqueue(async function(){
+    if(state.updatePause&&state.updatePause.id!==id)return Object.assign(status(),{error:'update-in-progress'});
+    if(!state.updatePause)state.updatePause={id:id,wasEnabled:state.enabled,confirmed:false};
+    state.updatePause.confirmed=false;state.enabled=false;state.error=null;save();
+    var r;try{r=await io.cancel();}catch(_){r=null;}
+    if(!r||!(r.returnValue===true||r.errorCode===2)){state.error='cancel-unconfirmed';save();return status();}
+    state.updatePause.confirmed=true;
+    try{save();}catch(e){state.updatePause.confirmed=false;throw e;}
+    return status();
+   });
+  },
+  resumeAfterUpdate:function(id){var ticket=generation;return enqueue(async function(){
+   var pause=state.updatePause;
+   if(!validId(id)||!pause||pause.id!==id||pause.confirmed!==true)return Object.assign(status(),{error:'invalid-update-pause'});
+   if(pause.wasEnabled){
+    var r=await io.schedule();
+    if(!r||r.returnValue!==true){state.error='schedule-unavailable';save();return status();}
+    if(ticket!==generation){await io.cancel();return status();}
+   }
+   state.enabled=pause.wasEnabled===true;state.error=null;delete state.updatePause;
+   try{save();}catch(e){state.enabled=false;state.updatePause=pause;throw e;}
+   stopped=!state.enabled;return status();
+  });},
   restoreHistory:function(snapshot){return enqueue(async function(){
    // Preserve diagnostics only, never import enabled=true or schedule renewal.
    if(state.enabled||state.last||!snapshot||snapshot.enabled!==false)return status();
@@ -29,6 +56,7 @@ module.exports=function(io){
   allowed:function(){return !stopped&&state.enabled;},status:status,
   check:function(){return enqueue(check);},
   enable:function(){var ticket=++generation;return enqueue(async function(){
+   if(state.updatePause)return Object.assign(status(),{error:'update-in-progress'});
    state.enabled=false;state.error=null;save();
    var r=await io.schedule();
    if(!r||r.returnValue!==true){state.error='schedule-unavailable';save();return status();}
@@ -36,7 +64,7 @@ module.exports=function(io){
    state.enabled=true;stopped=false;save();return check();
   });},
   disable:function(){generation++;stopped=true;return enqueue(async function(){
-   state.enabled=false;state.error=null;var persisted=true;
+   state.enabled=false;state.error=null;if(state.updatePause)state.updatePause.wasEnabled=false;var persisted=true;
    try{save();}catch(_){persisted=false;}
    var r;try{r=await io.cancel();}catch(_){r=null;}
    if(!r||!(r.returnValue===true||r.errorCode===2))state.error='cancel-unconfirmed';

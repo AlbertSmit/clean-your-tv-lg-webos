@@ -8,12 +8,10 @@ import shutil
 p=Path('build/updater-service')
 if p.exists(): shutil.rmtree(p)
 PYCLEAN
-mkdir -p build/updater-service/state dist
+mkdir -p build/updater-service dist
 cp updater-service/*.js updater-service/*.json updater-service/*.pem build/updater-service/
 cp launcher/user-data.js build/updater-service/user-data.js
-touch build/updater-service/state/.keep
 "$ARES_PACKAGE" updater-app build/updater-service -o dist
-python3 scripts/fix-updater-data.py dist/com.cleanyourtv.updater_0.1.0_all.ipk
 
 python3 - <<'PYSUM'
 from pathlib import Path

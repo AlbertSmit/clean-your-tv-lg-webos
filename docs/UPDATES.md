@@ -1,54 +1,55 @@
 # In-app updates (development)
 
-This implementation is not in the released v0.7.1. Do not replace a working installation with these development packages before isolated hardware validation.
+This draft adds signed Home updates and recovery. It is not in the released v0.7.1. The isolated update/rollback path passed on an LG OLED55C3RLA with firmware 43.21.71; production permission setup across reboot remains a release gate. Do not install these development packages over a working installation as a stable upgrade.
 
-## User flow
+## What users get
 
-Home Settings → Software updates → Check for updates shows installed and signed available Home versions. Release tags and application versions are separate: a setup-only release does not require reinstalling Home.
+Home Settings → Software updates → Check for updates shows installed and available Home versions. The separate **Home Updater** app owns the backup and recovery journal. Installation requires root, Homebrew Channel and the scoped LS2 permission setup below. The no-root launcher remains supported with computer-assisted updates; checking releases through this updater also depends on access to Homebrew's metadata API and is not promised on an unrooted TV.
 
-An independent **Home Updater** application and service must be installed once. Without root it can check releases, but installation remains a computer-assisted task. Root installations use Homebrew Channel's installation service. Unknown root capability, missing signatures, missing recovery packages and incompatible helper versions disable installation.
+Developer Mode renewal Beta is paused automatically before installation and its prior preference is restored after verified success or rollback. Users do not have to disable it manually. Helper code, emergency-stop markers, autostart configuration and system Home profiles are not changed.
 
-The updater automatically pauses Developer Mode renewal Beta and restores its prior preference after a verified update or rollback. It refuses an unavailable renewal status. Disabled renewal diagnostics are included in the portable profile; restoring them does not enable renewal or schedule checks. Helper code, stop markers, autostart configuration and system Home profiles are never modified.
-
-The first upgrade to Home 1.2.0 requires a personalized package using the existing sync/build flow. Subsequent in-app updates require an installed Home version at least 1.2.0 and a signed previous package that supports portable profiles. Do not install an empty generic package over a pre-1.2.0 installation expecting automatic migration.
+The first upgrade to Home 1.2.0 requires a personalized package using the existing sync/build flow. Subsequent in-app updates require an installed Home version at least 1.2.0 and a signed matching previous package. Never install an empty generic package over a pre-1.2.0 installation expecting migration.
 
 ## Preserved data
 
-Before installation, Home captures the app inventory, embedded icon bytes, input labels, configuration, tile order and disabled renewal history. It first saves the profile locally, then the independent updater persists a private copy outside Home's package. Missing/unreadable icons, invalid profiles or quota/write failures stop installation. Relative icon files are converted to embedded PNG/JPEG/WebP; remote arbitrary icon URLs are rejected.
+Home captures the app inventory, embedded icons, input labels, configuration, tile order and renewal diagnostic history. It saves a local copy and then an independent updater backup before installation. The transaction's renewal receipt, not diagnostic history, controls restoration of the enabled preference. Missing icons, invalid profiles and storage failures stop installation.
 
-On a generic upgrade, Home loads the local profile before rendering; if it is absent, it requests the updater's backup. The backup restores captured ordering; an existing live ordering takes precedence during ordinary launches. A damaged local snapshot is not silently replaced.
-
-Current bounds: 200 apps, 100 inputs, 256 KiB per external icon, 4 MiB JSON profile. Service message size and web storage quota require hardware validation. A personalized rebuild is not an inventory-reset mechanism once a saved profile exists; inventory editing/reset UI is outside this change.
+The new Home loads its saved profile before rendering, or restores the independent backup when local data is absent. A damaged local profile is not silently replaced. Current bounds are 200 apps, 100 inputs, 256 KiB per icon and 4 MiB profile JSON; maximum-sized profiles have not been validated on hardware. A personalized rebuild is not an inventory reset once a saved profile exists.
 
 ## Recovery
 
-Home Updater is a separate package so Home installation cannot intentionally replace its process or journal. It stores the prior signed package descriptor and transaction before invoking Homebrew Channel. A definite rejected installation gets one attempt to install the prior package. A confirmed installed update waits for a populated Home grid on first launch; this is a startup signal, not a complete hardware test.
+Open Home Updater to inspect the transaction or restore the signed previous Home package. Recovery checks root, helper compatibility, manifest signature and package hash. The previous package must remain downloadable; this is not an offline recovery image or a full TV backup.
 
-Open Home Updater to inspect the state or restore the previous Home after a confirmed installation. Recovery rechecks root and helper compatibility and verifies the stored manifest signature. The previous package must still be downloadable; this is not an offline recovery image or a full TV backup.
+Homebrew does not distinguish transport failures from terminal installer failures in its error envelope. A failed installation call therefore stays in recovery; it does not automatically start another install. Timeouts and interrupted installation remain blocked in `recovery-required`; reading a version is not proof that an installer has stopped. There is no clear-lock-and-retry button. A confirmed install waits for the populated Home grid on launch before restoring renewal. This is a startup signal, not a complete UI health test.
 
-Timeouts, service interruption and interrupted rollback remain `recovery-required`. A version read alone is not evidence that an installer has stopped. The app does not start another install in that state. Inspect the installer and journal before manual recovery; there is deliberately no “clear lock and retry” button. Power-loss recovery and installation service lifetime remain hardware test gates.
+The service fetches and verifies metadata again at confirmation so idle shutdown between Check and Confirm does not lose the offer. A changed offered version requires a new confirmation. Installation uses a subscription and waits for Homebrew's terminal `finished` reply; progress messages are not success.
 
-## Trust and publishing
+## Scoped permission setup (maintainer procedure)
 
-The client requests `https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/update.json` only when asked. The bounded HTTPS metadata reader allows only this project's GitHub release paths and GitHub asset CDN redirects. Metadata has a fixed schema and an RSA-SHA256 signature pinned to `updater-service/release-public.pem`. The signed descriptor fixes the package URL, Home version, exact helper version and SHA-256. Homebrew Channel verifies the downloaded package hash.
-
-The private signing key is maintained separately, never inside this repository or an IPK. Preserve a secure backup; key loss requires a manually installed trust update. Do not publish development signed manifests to the stable feed.
-
-Manifest input example:
-
-```json
-{"schema":1,"release":"v0.8.0","home":"1.2.0","helper":"0.6.13","url":"https://github.com/Razdva122/clean-your-tv-lg-webos/releases/download/v0.8.0/com.gathin.tvhome_1.2.0_all.ipk","sha256":"<actual 64-character lowercase SHA-256>","notes":"Release notes"}
-```
-
-Sign a reviewed manifest using an explicitly supplied key:
+The package alone does not grant cross-package permissions. Build `scripts/build-updater.sh`; its `dist/updater-setup/` directory contains the CLI and its dependencies. Transfer that directory intact to a temporary directory on an already-rooted TV. From that directory, as root:
 
 ```sh
-node scripts/sign-update.cjs manifest.json /secure/path/private.pem update.json previous-update.json
+node scripts/update-permissions.cjs plan production
+node scripts/update-permissions.cjs apply production
 ```
 
-The optional previous envelope must be signed by the same trusted key. Its Home version must match the user's installed version and its helper requirement must match the installed helper. With one previous descriptor, other older versions need a manual update. Every future stable release, including tooling-only releases, must carry a signed `update.json` to keep the feed usable.
+Review the plan before applying it. It creates only dedicated API/client permission files and a permission-only manifest under `/var/luna-service2-dev`, plus an ownership receipt. It does not edit Homebrew's manifest or grant `all`, `public`, shell access or system Home/profile permissions. Only named methods are exposed. Bus identity checks remain enforced by the updater and renewal service.
 
-## Local build and validation
+The CLI rejects filename collisions, symlink paths and changed owned files. Writes are staged, synchronized and installed without overwriting existing files; the manifest is last. A bounded `ls-control scan-services` refresh follows. `installed` means files were applied and scanning completed, **not** that every running provider has adopted the grants.
+
+On the tested TV, an already-running Homebrew JS service needed re-registration before the new permissions worked. Do not kill processes by a broad name match or restart SSH/dropbear. Confirm the exact service identity and that no installer operation is active before a targeted service restart. This procedure is not yet an automated user-facing installer. A transient `Message not processed` was also observed on a first read; never turn that into automatic retries of installation.
+
+Remove with the same LS2 root. This version also recognizes the previous exact-service client plan; it does not accept arbitrary paths from a receipt. To upgrade those permissions, remove the old plan first, then apply the new one:
+
+```sh
+node scripts/update-permissions.cjs remove production
+```
+
+Removal deletes only files matching the receipt, removes the manifest first and refreshes LS2. Changed files or stale lock/staging files require inspection, not deletion by guesswork. After removal verify that cross-package calls are denied; cached permissions may require provider re-registration. The lab's post-removal check was rejected.
+
+`/var/luna-service2-dev` persistence through reboot and permission retention across all service lifecycles still need a defined production setup path. Do not silently add a boot hook, change the root to `/var/luna-service2`, or claim reboot-safe setup from this test. The alternative root is accepted by the CLI but was not tested here. These are release gates, not changes to the working no-root installation.
+
+## Build, signing and release checklist
 
 ```sh
 scripts/test.sh
@@ -56,22 +57,36 @@ scripts/build.sh
 scripts/build-updater.sh
 ```
 
-The independent package is `com.cleanyourtv.updater_0.1.0_all.ipk`. Its state directory is created by the running service with mode 0700 and its actual runtime UID; journal/profile files use 0600. The app uses bus-provided application identity and rejects unknown callers rather than accepting an identity from a payload.
+The updater package is `com.cleanyourtv.updater_0.1.0_all.ipk`. Its service creates private state with its actual runtime UID (directory 0700, files 0600); no fixed UID is packaged. Earlier prototypes with incorrectly owned state require explicit migration.
 
-Before enabling real hardware updates, verify with a disposable test package: bus identity/permissions; root/no-root detection; profile size and restart persistence; actual installer completion/error responses; closed Home and updater service survival; power interruption; prior-package rollback; renewal off and history restore; arrows, Back and Home after update. The current tests use local mocks and do not establish these hardware results.
+The feed is `https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/update.json`. Requests are user-triggered. The HTTPS reader restricts redirects to this project's release assets and GitHub's asset CDN. RSA-SHA256 metadata is verified against the packaged `updater-service/release-public.pem`; it fixes the package URL, Home version, exact helper requirement and SHA-256. Homebrew checks the downloaded hash.
 
-## TV validation status (2026-10-22)
+Example manifest input:
 
-An isolated test on OLED55C3RLA, firmware 43.21.71, found two integration blockers. The stock package installer assigns a per-service UID (5132 in this run), so a state directory owned by a hard-coded prisoner UID is incorrect. The build now leaves state creation to the running service, with mode 0700. Existing deployed prototype directories need explicit migration; this change alone does not repair them.
+```json
+{"schema":1,"release":"v0.8.0","home":"1.2.0","helper":"0.6.13","url":"https://github.com/Razdva122/clean-your-tv-lg-webos/releases/download/v0.8.0/com.gathin.tvhome_1.2.0_all.ipk","sha256":"<actual 64-character lowercase SHA-256>","notes":"Release notes"}
+```
 
-LS2 rejected `getAppInfo` from the installed updater service. Declaring additional groups in the test `services.json` did not grant them. Cross-package access to the updater, Homebrew and renewal service needs a supported installation/permission design and device validation. No end-to-end update or rollback has passed on TV yet. Do not publish this prototype as a working TV updater. The production Home and Helper packages were not replaced.
+Sign reviewed metadata using an explicitly supplied private key kept outside the repository:
 
-### Requested renewal UX
+```sh
+node scripts/sign-update.cjs manifest.json /secure/path/private.pem update.json previous-update.json
+```
 
-The intended replacement for manual Beta disabling is a transactional pause: wait for an in-flight renewal request, persist the previous enabled state, pause scheduling, update, then restore that state after verified success or rollback. A previously disabled feature must stay disabled. Crash recovery, cancellation failure and ambiguous installation outcomes must be tested before removing the current guard. The renewal manager now implements and locally tests a durable pause/resume primitive and updater-only bus endpoints. The updater journal now records pause intent before calling the renewal service, saves the receipt, and retries terminal restoration independently of package installation. Cross-package receipt migration is implemented and tested locally, including erased package state and a later manual disable. The manual-disable guard has now been replaced by the transaction pause; TV permission and installation validation remain required.
+The signer validates the result against the pinned public key and validates the previous envelope. One previous descriptor supports only its exact installed version; other older versions need manual updates. Every future stable release, even tooling-only releases, must retain usable signed metadata.
 
-### Journal integration checks
+Before publishing:
 
-Local tests cover pause intent persisted before the RPC, no installation on an unconfirmed/mismatched pause, no renewal resume after an ambiguous install, retrying renewal restoration after service restart without installing again, and a fresh pause before rollback of a completed update. A crash before installation is reconciled by restoring renewal and marking the attempt aborted, not by silently starting installation. Completed resume IDs are persisted so a lost response cannot override a later manual disable.
+- Resolve production permission activation and reboot behavior; do not present the lab setup as a finished consumer installer.
+- Build public packages from clean sources, never personalized/live-TV backups. Exclude lab identifiers, loopback URLs, fake LG adapters, test keys and runtime state.
+- Compute hashes from the final IPKs; sign with the real pinned key. Verify the candidate and previous IPK version, helper requirement, URLs and hashes against both signed descriptors.
+- Keep the previous package downloadable. Test the public asset URLs before making the release latest. Do not publish the lab's signed envelopes to the stable feed.
+- Include updater setup files, install/removal instructions, bootstrap limitations and recovery instructions. Publishing metadata and changing the stable feed are separate from merging this PR.
 
-The UI no longer asks users to disable Beta manually. If replacement removes the renewal service's pause record, the updater imports its journal receipt through the updater-only endpoint before resuming. Conflicts, malformed receipts, persistence errors and unconfirmed cancellation stay in recovery. A completed receipt is idempotent and cannot undo a later manual disable. TV migration validation and LS2 permission activation remain release blockers.
+## Validation and limits
+
+On 2026-10-22, the corrected service completed a user-triggered isolated 1.2.0 → 1.2.1 update, restored the enabled renewal preference, and rolled back to 1.2.0 automatically. The user confirmed the preserved test tile, remote navigation and working production Home afterwards. Scoped permissions were removed and the temporary server stopped; production package metadata and helper processes matched the baseline.
+
+An earlier attempt required manual journal recovery after the terminal installer reply was lost. It is not counted as unattended success. The subscription fix was then tested with a fresh transaction, without manual recovery. See [the detailed lab record](development/UPDATE-LAB-RUNBOOK.md).
+
+The lab used fake LG responses/scheduling, an ephemeral signing key, loopback package delivery and a rooted TV. It does not prove real LG renewal, unrooted installation, maximum profile sizes, power-loss recovery, production permission persistence or public GitHub delivery. Local tests cover signature/policy checks, transaction failures, erased service state, manual preference overrides, service restart between UI actions and remote navigation. No new feature work is required for this PR.

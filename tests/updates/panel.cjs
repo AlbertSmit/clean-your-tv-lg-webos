@@ -6,5 +6,6 @@ const ctx={document:{createElement:element,body:{appendChild(){}},getElementById
 vm.runInNewContext(fs.readFileSync('launcher/update-panel.js','utf8'),ctx);ctx.window.HomeUpdates.open();assert.equal(focus,ids.updateCheck);
 ids.updateCheck.click();reply(JSON.stringify({returnValue:true,result:{home:'1.2.0',candidate:{home:'1.2.0',notes:'Tooling update'},root:false,state:'current',canInstall:false}}));assert(ids.updateInstall.disabled);assert(ids.updateStatus.textContent.includes('up to date'));
 let prevented=0;listeners[0]({keyCode:39,preventDefault(){prevented++;},stopImmediatePropagation(){}});assert.equal(focus,ids.updateRecovery);assert.equal(prevented,1);
+listeners[0]({keyCode:37,preventDefault(){},stopImmediatePropagation(){}});assert.equal(focus,ids.updateCheck,'left must skip disabled install backwards');
 listeners[0]({keyCode:461,preventDefault(){},stopImmediatePropagation(){}});listeners[0]({keyCode:39,preventDefault(){throw Error('closed panel ate key');},stopImmediatePropagation(){}});
 console.log('PASS update panel no-root/current state and remote navigation');

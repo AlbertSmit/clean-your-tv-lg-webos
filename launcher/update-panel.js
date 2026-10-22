@@ -10,7 +10,7 @@
   function finish(r){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r&&r.returnValue===true?r.result:null);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish(null);}};b.call(URI+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
  }
- function focus(i){for(var n=0;n<buttons.length;n++,i++){var j=(i+buttons.length)%buttons.length;if(!buttons[j].disabled){index=j;buttons[j].focus();return;}}}
+ function focus(i,direction){direction=direction||1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length)%buttons.length;if(!buttons[j].disabled){index=j;buttons[j].focus();return;}}}
  function show(text){status.textContent=text;}
  function checkNow(){if(busy)return;busy=true;check.disabled=true;install.disabled=true;confirmed=false;install.textContent='Update Home';show('Checking signed release…');
   rpc('check',{},function(r){busy=false;check.disabled=false;offer=r;
@@ -33,7 +33,7 @@
  document.getElementById('updateBack').onclick=function(){panel.classList.add('hidden');};
  buttons.forEach(function(b,i){b.addEventListener('mouseover',function(){focus(i);});});
  document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
-  e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)panel.classList.add('hidden');else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else focus(index+(e.keyCode===37||e.keyCode===38?-1:1));
+  e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)panel.classList.add('hidden');else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38?-1:1;focus(index+direction,direction);}
  },true);
  window.HomeUpdates={open:function(){panel.classList.remove('hidden');focus(0);},rpc:rpc,version:VERSION};
 }());

@@ -34,4 +34,26 @@ The CLI requires Linux root for apply/remove, accepts only the two fixed LS2 roo
 
 Refresh is a bounded `ls-control scan-services`, following the locally inspected Homebrew setup implementation. A refresh failure is reported and retains the receipt so removal can be retried. A lock left by a killed process requires operator inspection before removal; it is never automatically assumed stale. A partially written staging file is also a stop condition rather than permission to erase unknown content.
 
-Acceptance of the independent manifest, merging with existing grants, and refresh/unload behavior are **not yet verified on TV**. The installer does not establish these facts merely by writing files. Production use and a release remain blocked until the lab session passes.
+The 2026-10-22 C3 session confirmed that the permission-only manifest is accepted and its grants merge with existing entries. `check` and the lab renewal status call succeeded with the scoped service-instance client pattern. An already-running Homebrew JS service initially retained old permissions; restarting that exact JS service allowed calls. Later one first call returned `Message not processed` and a subsequent read succeeded. Do not interpret this as proof that refresh is reliable in every service lifecycle. No automatic provider restart or retry of installation has been added.
+
+Removal returned `removed` and the working Home/helper metadata and helper PIDs matched the baseline. Immediate revocation of permissions cached in an already-running provider was not verified. Reboot persistence and grants across package replacement remain unverified.
+
+The UI attempt stopped before installation with `check-first`: the checked offer was volatile and unavailable to the install request. There was no transaction, package download, or target version change. Local code now fetches and verifies the signed offer again when confirming, and rejects a changed version before backup/pause/install. Remote navigation across a disabled Confirm button was also fixed locally. The next session must install the entire newly built fixture set (new ephemeral signing key); do not mix it with the earlier TV bundle.
+
+Production use and release remain blocked until update, state restoration and rollback pass on the isolated package.
+
+## Completed C3 session: 2026-10-22
+
+The second bundle installed 1.2.1, but its single-response RPC lost the installer completion. The exact package/path had terminal status 30 (`installed`) in the TV's `dbg-log`. Only that lab transaction was manually advanced to awaiting-launch using this evidence; that attempt is **not** counted as an unattended success.
+
+The updater's installation RPC now uses `service.subscribe(...).on('response', ...)`, retains the timeout and cancels the subscription on completion. This source change was applied only to the independent lab updater, keeping the existing signed fixture metadata. The local regression test rejects single-response installer calls.
+
+With the corrected service, these steps passed:
+
+- Rollback to 1.2.0 reached `rolled-back` with `renewalRestored: true` automatically.
+- A fresh user-triggered 1.2.0 → 1.2.1 update reached `awaiting-launch`, then `complete` after opening the target. Transaction `d4fbf29ca2e2b9da26d09d62287420ff` had no manual-recovery marker.
+- The enabled lab renewal preference was restored automatically; the user confirmed the test tile and remote navigation. The candidate's bundled inventory was empty, so preservation did not depend on a bundled copy of the tile.
+- A final normal rollback reached `rolled-back` and restored the enabled preference again.
+- Scoped permission removal succeeded, the subsequent updater check was rejected, the loopback server was stopped, and production Home reopened. Production appinfo hashes and helper/relay PIDs matched the session baseline. The user confirmed arrows, OK and short Home.
+
+The fixture uses fake LG responses and fake scheduling and runs on a rooted TV. This proves the tested UI/service/install/restore path, not actual LG renewal, no-root installation, reboot persistence, all third-party inventories, or every provider lifecycle. No production packages, system Home profiles, helper state or startup settings were replaced. Release packaging must include the subscription fix; the original r2 Updater Lab IPK predates it.

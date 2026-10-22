@@ -4,7 +4,7 @@ This is an implementation checklist, not a working installation guide.
 
 ## Permission boundary
 
-The C3 test showed that an installed JS service receives its own UID and a limited LS2 client permission set. Adding groups to `services.json` did not grant them. Direct SAM `getAppInfo` requires internal application permissions on this firmware. Homebrew exposes its own `getAppInfo`, but the laboratory updater could not call that endpoint either. The prototype must not advertise successful installation until the full package setup is tested.
+The C3 test showed that an installed JS service receives its own UID and a limited LS2 client permission set. Adding groups to `services.json` did not grant them. Direct SAM `getAppInfo` requires internal application permissions on this firmware. Homebrew exposes its own `getAppInfo`, and the scoped laboratory grants now permit that endpoint after service re-registration. The latest UI attempt stopped before installation because its checked offer was held only in service memory; this has been fixed and regression-tested locally. The prototype must not advertise successful installation until the full package setup is tested.
 
 Prepare a root-only setup path with narrow grants for the updater, rather than granting `all` or changing Homebrew's existing permissions. Required edges are:
 
@@ -41,6 +41,8 @@ The UI group exposes seven updater methods only. The backend group allows Homebr
 
 The format follows the locally inspected Homebrew Channel 0.7.3 `services/elevate-service.ts` manifest fields and a captured webOS manifest. Homebrew itself uses broader grants and patches its own manifest; this plan deliberately does not copy that policy.
 
-Not yet established: acceptance of a permission-only manifest, merging of grants for clients that already have a permission entry, service-instance matching, refresh/reboot persistence, and whether package replacement invalidates these grants. A scoped apply/remove implementation and final lab runbook are now available in `scripts/update-permissions.cjs` and `UPDATE-LAB-RUNBOOK.md`; written files are still not evidence of granted rights. Before production deployment, verify these points in the isolated lab, preserve pre-existing content, reject filename collisions, and define rollback that deletes only files whose hashes still match the generated plan. Never replace Homebrew or production app permission files to make a test pass.
+Established on the C3: acceptance of the permission-only manifest, additive grants, scoped client-instance matching and successful metadata/renewal reads. Not yet established: reliable provider refresh through every lifecycle, immediate cached-grant revocation, reboot persistence, or grants across package replacement. `remove lab` completed without changing production metadata or helper PIDs. See the runbook for exact test limits. The installer must not automatically restart arbitrary services or retry an ambiguous installation.
 
-The next step is the bounded device session in [UPDATE-LAB-RUNBOOK.md](UPDATE-LAB-RUNBOOK.md). Do not expand feature scope.
+The offer is now fetched and signature-checked at confirmation, so service idle shutdown between Check and Confirm does not lose it. A changed offered version or invalid signature blocks before state writes. Full local tests pass. The corrected service subsequently passed an actual isolated update and rollback on the rooted C3; see the runbook for evidence and the earlier manually recovered attempt. The original fixture IPK must be rebuilt to include the subscription fix.
+
+The bounded device session in [UPDATE-LAB-RUNBOOK.md](UPDATE-LAB-RUNBOOK.md) is complete for the corrected lab service. Next is packaging/review of these fixes for the release; do not expand feature scope.

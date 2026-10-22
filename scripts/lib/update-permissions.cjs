@@ -6,8 +6,9 @@ function plan(o){
  if(o.variant==='lab')p=JSON.parse(JSON.stringify(p).replace(/com\.gathin\.tvhome/g,'com.cleanyourtv.updatetest').replace(/com\.cleanyourtv\.updater/g,'com.cleanyourtv.updaterlab'));
  p.files.forEach(f=>{f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex')});return p;
 }
-function context(o){
+function context(o,legacy){
  const p=plan(o),prefix=o.prefix||'',root=o.root||'/var/luna-service2-dev';
+ if(legacy){for(const f of p.files){f.content=f.content.replace('com.cleanyourtv.updater'+(o.variant==='lab'?'lab':'')+'.service*','com.cleanyourtv.updater'+(o.variant==='lab'?'lab':'')+'.service');f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex');}}
  const name=o.variant==='lab'?'com.cleanyourtv.updaterlab':'com.cleanyourtv.updater';
  const receipt=prefix+root+'/'+name+'.permissions.receipt.json',lock=receipt+'.lock';
  function safe(file){let dir=path.dirname(file);while(dir!==prefix&&dir!=='/'){const s=fs.lstatSync(dir);if(!s.isDirectory()||s.isSymbolicLink())throw Error('unsafe parent');dir=path.dirname(dir);}}
@@ -20,9 +21,13 @@ function context(o){
  return {p,prefix,receipt,lock,safe,exists,exact,write,bytes:JSON.stringify({schema:1,files:p.files})+'\n'};
 }
 function run(o,remove){
- const c=context(o);c.safe(c.receipt);fs.mkdirSync(c.lock,0o700);
+ let c=context(o);c.safe(c.receipt);fs.mkdirSync(c.lock,0o700);
  try{
-  const owned=c.exact(c.receipt,c.bytes);
+  let owned;try{owned=c.exact(c.receipt,c.bytes);}catch(e){
+   if(!remove)throw e;
+   // Accept only the previous known generated plan, never arbitrary receipt paths.
+   const previous=context(o,true);if(!previous.exact(previous.receipt,previous.bytes))throw e;c=previous;owned=true;
+  }
   if(!owned){if(remove)return {status:'not-installed'};for(const f of c.p.files)if(c.exists(c.prefix+f.path))throw Error('permission filename collision');c.write(c.receipt,c.bytes);}
   // Preflight all files before any removal; never erase someone else's changes.
   for(const f of c.p.files){c.safe(c.prefix+f.path);c.exact(c.prefix+f.path,f.content);}

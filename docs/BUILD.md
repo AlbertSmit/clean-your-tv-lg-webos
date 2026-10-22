@@ -25,4 +25,4 @@ a stopped setup. See RECOVERY.md before changing this behavior.
 Private runtime state includes pairing keys, control files and logs under the
 helper's `state/` directory. Never build a public package from a live TV backup.
 
-For the independent development updater package, run `scripts/build-updater.sh`. Read [UPDATES.md](UPDATES.md) before installing it; it is not part of v0.7.1.
+For the independent development updater package, run `scripts/build-updater.sh`. It also produces `dist/updater-setup/` with the scoped permission CLI and documentation. Only the pinned public signing key is copied into the package; service state is created at runtime, with no fixed-UID postprocessor. Read [UPDATES.md](UPDATES.md) for validation results and remaining release gates; it is not part of v0.7.1.

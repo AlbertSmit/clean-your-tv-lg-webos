@@ -29,7 +29,7 @@ Your apps and their order are configured during setup; they are not bundled.*
 | Personal home screen | Local app grid, configurable dock, hidden tiles and tile ordering; no sponsored rows in this launcher |
 | Short Home | Native on-TV interception returns to the launcher without passing through LG Home on the tested setup |
 | Hold Home for 2 seconds | Stops interception and returns to LG Home |
-| Resume interception | Manually open **Native Home Prototype** from LG Apps |
+| Resume interception | Select **Resume Home** in Home, or manually open **Home Helper** from LG Apps |
 | Wi-Fi shortcut | Opens LG's network setup overlay |
 | Automatic startup | Returns after standby and cold boot using input restoration plus a guarded fallback helper; no external device runs the startup logic |
 | Exit with Back | Returns after watched apps exit, preserving in-app navigation and exit confirmation; LG Home can briefly flash |
@@ -41,6 +41,64 @@ Your apps and their order are configured during setup; they are not bundled.*
 This does not remove system advertisements, uninstall apps, or replace the operating
 system's Home destination. It provides an alternative screen. Cold boot still has
 an initial black interval; early display timing is under investigation.
+
+## How it works
+
+**Home** is the app launcher. **Home Helper** handles the Home button and watches
+for exits from configured apps. Both run on the TV. The helper leaves ordinary
+in-app Back navigation, exit confirmations and the other remote controls intact.
+
+```mermaid
+flowchart TD
+    H["Home · your app launcher"] -->|"OK / click an app"| A["Your app"]
+    A -->|"Short Home · helper active"| H
+    A -->|"Short Back"| N["Previous page or app exit dialog"]
+    N -->|"Continue / cancel exit"| A
+    N -->|"Confirm exit"| L["LG Home / system exit"]
+    A -->|"Hold Back · exit to Home"| L
+    L -->|"Helper active · watched app exited"| H
+    H -->|"Hold Home ~2 seconds"| S["LG Home · helper stopped"]
+    A -->|"Hold Home ~2 seconds"| S
+    S -->|"Open Home manually"| R["Home · Resume Home available"]
+    R -->|"Select Resume Home"| H
+```
+
+**Hold Back exits the app; hold Home stops the helper.** When the helper is active,
+it returns to our launcher after a watched app exits through LG Home. That path
+can briefly show LG Home; it is not the same direct path as short Home.
+
+### Remote control guide
+
+| Button | What it does |
+| --- | --- |
+| **Arrows / hold an arrow** | Move through tiles and menus; normal navigation inside apps. |
+| **OK / pointer click** | Open the selected app or activate a control. |
+| **Short Home** | Return directly to our launcher while Home Helper is active. With the helper stopped, LG handles Home normally. |
+| **Hold Home ~2 seconds** | Emergency exit: stop the helper and open LG Home. Preferences are kept; this is **not a factory reset**. |
+| **Short Back** | Go back inside the current app. Its exit dialog and Cancel action still work normally. On a confirmed exit from a watched app, the helper returns to our launcher. |
+| **Hold Back** | Use webOS's exit-to-Home action. It **does not stop the helper**; the exit watcher can then return to our launcher. |
+| **Volume + / −, mute** | Normal TV/audio controls. |
+| **Move the Magic Remote / wheel** | Pointer and wheel events pass through. Wheel-to-tile selection is not implemented in our launcher. |
+| **Power** | Normal TV standby/wake. With startup configured and the helper not stopped, our launcher returns automatically; cold boot still takes time. |
+| **Hold 1, if assigned** | Open Home using LG Quick Access. This shortcut must be assigned during setup; it does not resume a stopped helper by itself. |
+
+### Resume after an emergency exit
+
+1. Open **Home** from LG's app list, or use your assigned Quick Access shortcut.
+2. Select **Resume Home** in the top action row.
+3. The helper starts and the button disappears. Short Home works again.
+
+Opening Home alone does **not** clear the emergency stop. The Resume Home button
+uses the system's helper-presence signal: it appears when the helper is disconnected
+and stays hidden while it is connected. If that status cannot be read, open
+**Home Helper** directly from LG's app list instead. No additional LS2 permission
+is required. A single-instance lock prevents duplicate controllers.
+
+The UI above describes the current **1.0.12 working build** with helper **0.6.12**.
+Older release packages may call the helper **Native Home Prototype** and lack the
+Resume Home button; manually opening that helper performs the same recovery.
+The long-Back action is documented by [LG's remote guide](https://webostv.developer.lge.com/develop/guides/magic-remote);
+app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubleshooting.
 
 ## Get started
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — in-app updates development
+
+- Add a separate signed-update and recovery package, portable Home profiles, and Software updates in Settings.
+- Keep helper installation manual and require disabled renewal Beta before an update.
+- Hardware service permissions, persistence and recovery remain unvalidated; see docs/UPDATES.md.
+
 ## v0.7.1 — macOS build and verified setup transfers
 
 - Build on macOS: `fix-package-data.py` rewrites the ipk in Python; BSD `ar r` reduced the helper package to a 96-byte symbol-table archive.

@@ -29,7 +29,7 @@ manager=require('./manager')({load:readConfig,save:saveConfig,now:Date.now,run:f
    schedule:{interval:'1h'},callback:{method:'luna://com.gathin.tvhome.renewal/tick',params:{}}},start:true,replace:true,subscribe:false});},
  cancel:function(){return call('luna://com.palm.activitymanager/cancel',{activityName:activityName});}
 });
-function respond(m,state){m.respond({returnValue:true,beta:true,version:'1.1.0',state:state});}
+function respond(m,state){m.respond({returnValue:true,beta:true,version:'1.2.0',state:state});}
 service.register('status',function(m){respond(m,manager.status());});
 service.register('enable',function(m){manager.enable().then(function(s){respond(m,s);});});
 service.register('disable',function(m){manager.disable().then(function(s){respond(m,s);});});
@@ -38,3 +38,9 @@ service.register('tick',function(m){manager.check().then(function(s){
  if(m.activity)service.activityManager.complete(m.activity,{restart:manager.allowed()},function(){respond(m,s);});
  else respond(m,s);
 });});
+
+service.register('restoreHistory',function(m){
+ var raw=m.ls2Message,id=raw&&raw.applicationID&&raw.applicationID();
+ if(typeof id!=='string'||id.split(' ')[0]!=='com.gathin.tvhome'){m.respond({returnValue:false});return;}
+ manager.restoreHistory(m.payload.state).then(function(s){respond(m,s);});
+});

@@ -16,6 +16,16 @@ module.exports=function(io){
   save();return status();
  }
  return {
+  restoreHistory:function(snapshot){return enqueue(async function(){
+   // Preserve diagnostics only, never import enabled=true or schedule renewal.
+   if(state.enabled||state.last||!snapshot||snapshot.enabled!==false)return status();
+   var allowed=['status','checkedAt','nextAt','failures','remainingSeconds'];
+   if(snapshot.last&&typeof snapshot.last==='object'){
+    state.last={};allowed.forEach(function(k){var v=snapshot.last[k];if((k==='status'&&typeof v==='string'&&v.length<80)||(k!=='status'&&typeof v==='number'&&Number.isFinite(v)))state.last[k]=v;});
+   }
+   if(typeof snapshot.lastRenewedAt==='number'&&Number.isFinite(snapshot.lastRenewedAt))state.lastRenewedAt=snapshot.lastRenewedAt;
+   save();return status();
+  });},
   allowed:function(){return !stopped&&state.enabled;},status:status,
   check:function(){return enqueue(check);},
   enable:function(){var ticket=++generation;return enqueue(async function(){

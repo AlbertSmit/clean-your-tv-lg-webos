@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home · Local Preview</title>
+<link rel="icon" href="data:,">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111113; color: #ededee; font: 14px system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px 24px; border-bottom: 1px solid #303034; }
+  strong { font-size: 16px; } span { color: #aaaab2; }
+  main { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+  iframe { position: absolute; border: 0; width: 1920px; height: 1080px; transform-origin: top left; background: black; }
+  footer { padding: 12px 24px; color: #aaaab2; font-size: 12px; }
+</style>
+<header><strong>Home / Preview</strong><span>1920 × 1080 · demo apps · live reload enabled</span></header>
+<main><iframe id="screen" title="LG webOS launcher" src="launcher/index.html"></iframe></main>
+<footer>Mouse or ↑ ↓ ← → · Enter — OK · Hold Enter — move tile · Esc — back. TV functions are simulated.</footer>
+<script>
+  const screen = document.getElementById('screen');
+  const area = document.querySelector('main');
+  function fit() {
+    const scale = Math.min(area.clientWidth / 1920, area.clientHeight / 1080);
+    screen.style.transform = 'scale(' + scale + ')';
+    screen.style.left = (area.clientWidth - 1920 * scale) / 2 + 'px';
+    screen.style.top = (area.clientHeight - 1080 * scale) / 2 + 'px';
+  }
+  new ResizeObserver(fit).observe(area);
+  screen.addEventListener('load', () => { fit(); screen.contentWindow.focus(); });
+  window.addEventListener('keydown', event => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'Escape'].includes(event.key)) screen.contentWindow.focus();
+  });
+  fit();
+</script>
+__LIVE_RELOAD__
+</html>

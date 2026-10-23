@@ -1,0 +1,62 @@
+name: Preview Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test
+        run: scripts/test.sh
+      - name: Build static preview
+        run: python3 scripts/preview.py --build build/preview
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/preview
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy only the current main commit
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          current=$(gh api "repos/$GH_REPO/commits/main" --jq .sha)
+          if [ "$current" = "$GITHUB_SHA" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'Skipping an outdated main build.'
+          fi
+      - uses: actions/configure-pages@v5
+        if: steps.latest.outputs.deploy == 'true'
+      - uses: actions/deploy-pages@v4
+        if: steps.latest.outputs.deploy == 'true'
+        id: deployment

@@ -14,7 +14,7 @@ your computer can be switched off after setup.
 Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack), with Home-button
 handling moved from an external watcher to an on-TV native helper.
 
-[Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
+[Live preview](https://razdva122.github.io/clean-your-tv-lg-webos/) · [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
 
 ![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
@@ -120,6 +120,34 @@ Once installed, check short Home, hold Home for two seconds to test recovery, an
 check standby/wake and cold boot. **Hardware compatibility still needs to be
 verified on your TV.** See the [installation guide](docs/INSTALL.md) for prerequisites,
 manual installation and recovery. Windows installation has not been tested.
+
+## Browser preview
+
+[Try the live launcher preview](https://razdva122.github.io/clean-your-tv-lg-webos/).
+It uses demo apps and simulated TV functions. GitHub Pages automatically deploys
+the latest `main` after tests pass.
+
+### Run locally
+
+Preview the actual launcher without a TV or extra dependencies (Python 3.9+):
+
+```sh
+python3 scripts/preview.py --open
+```
+
+Open http://127.0.0.1:8765/ if the browser does not open automatically. The
+1920×1080 TV canvas scales to fit the window. Use the mouse, arrow keys and
+Enter; hold Enter to rearrange a tile, and use Esc to go back in panels.
+The preview uses ten demo apps with scalable SVG brand logos and simulated webOS
+services. It never connects to a TV or performs real launches, renewals or updates.
+
+Save changes in `launcher/` or `preview/` and the page reloads automatically
+within about a second. The server reads sources on each request and disables
+caching. Tile order is saved in the
+browser's local storage. Stop with Ctrl+C; use `--port 8766` if the port is busy.
+Only launcher assets and preview files are served, on the loopback interface.
+The preview adapter is injected by the server and is not included in TV packages.
+Logo sources are recorded in `preview/icons/SOURCES.txt`.
 
 ## Developer Mode auto-renewal — Beta
 

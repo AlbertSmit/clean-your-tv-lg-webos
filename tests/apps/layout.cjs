@@ -24,7 +24,7 @@ assert.deepEqual(model.visible(), []);
 model.add('a'); model.add('a');
 assert.deepEqual(model.visible().map(a=>a.id), ['a'], 'no duplicate tiles');
 model.refresh([{id:'a',title:'A',icon:''},{id:'com.local.nativehome',title:'Helper',icon:''}]);
-assert.deepEqual(model.available(), [], 'removed apps and internal helper never appear');
+assert.deepEqual(model.available().map(a=>a.id), ['b','c','d'], 'partial inventory preserves known apps and excludes internal helper');
 const bad = create({getItem:()=>'{bad',setItem(){throw Error('full')}}, inventory, config);
 assert.deepEqual(bad.visible().map(a=>a.id), ['b','a']);
 assert.throws(()=>bad.save([], ['a','b','c']));

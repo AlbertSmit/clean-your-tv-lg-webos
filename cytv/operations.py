@@ -571,6 +571,11 @@ print('CYTV_ROOT_FILES_OK')
         if self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT]), timeout=30).strip() != 'CYTV_LEGACY_PERMISSIONS_REMOVED':
             raise UserError('Updater permissions removal could not be verified.')
 
+    def cleanup_updater_app_permissions(self):
+        from .app_permissions_remove import SCRIPT
+        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT]), timeout=30).strip() != 'CYTV_APP_PERMISSIONS_REMOVED':
+            raise UserError('Root Updater app permissions removal could not be verified. Recovery data was kept.')
+
     def verify_project_removed(self):
         script = """import os
 from pathlib import Path
@@ -656,6 +661,7 @@ print('CYTV_PROJECT_REMOVED')
             self.store.checkpoint(self.profile, removals=removals)
         if any(app['id'] in (package.ROOT_APP, UPDATER_APP, legacy, HELPER, HOME) for app in self.installed_apps()):
             raise UserError('Project applications remain. Removal is not complete.')
+        self.cleanup_updater_app_permissions()
         self.progress('Verifying removal and preserving recovery records…')
         final = self.root_updater_cleanup('finalize', archive)
         if final.get('removed') is not True:

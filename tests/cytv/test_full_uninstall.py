@@ -14,13 +14,29 @@ class FullUninstallTests(unittest.TestCase):
             inst=Installer(remote,store,profile,Path(tmp),{},lambda *_:None)
             inst.installed_apps=MagicMock(side_effect=[[{'id':UPDATER_APP}],[]])
             inst.root_updater_cleanup=MagicMock(side_effect=[{'disabled':True},{'removed':True,'archive':'saved'}])
-            inst.verify_project_removed=MagicMock();inst.verify_absent=MagicMock();inst.root_action=MagicMock();inst.cleanup_legacy_permissions=MagicMock()
+            inst.cleanup_updater_app_permissions=MagicMock();inst.verify_project_removed=MagicMock();inst.verify_absent=MagicMock();inst.root_action=MagicMock();inst.cleanup_legacy_permissions=MagicMock()
             result=inst.uninstall(full_project=True)
             self.assertTrue(result['removed'])
             inst.root_action.assert_not_called()
             self.assertEqual([c.args[0] for c in inst.root_updater_cleanup.call_args_list],['disable','finalize'])
             removes=[c for c in remote.luna.call_args_list if c.args[0].endswith('/remove')]
             self.assertEqual([c.args[1]['id'] for c in removes],[UPDATER_APP])
+            self.assertIsNone(store.pending(profile))
+
+    def test_resume_after_updater_state_archived_cleans_permissions_without_remove(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store=state.Store(tmp);profile=state.target('tv.local','root');remote=MagicMock()
+            remote.luna.return_value={'returnValue':True,'status':{'apps':[]}}
+            remote.run.return_value=''
+            inst=Installer(remote,store,profile,Path(tmp),{},lambda *_:None)
+            inst.installed_apps=MagicMock(return_value=[])
+            inst.root_updater_cleanup=MagicMock(return_value={'disabled':True,'removed':True,'archive':'saved'})
+            inst.cleanup_updater_app_permissions=MagicMock();inst.verify_project_removed=MagicMock()
+            inst.verify_absent=MagicMock();inst.cleanup_legacy_permissions=MagicMock()
+            store.begin(profile,'uninstall',full_project=True,removals={UPDATER_APP:'done'},updater_archive='/var/lib/clean-your-tv-root-updater.archive-'+'a'*32)
+            self.assertTrue(inst.uninstall(full_project=True)['removed'])
+            inst.cleanup_updater_app_permissions.assert_called_once()
+            self.assertFalse(any(c.args[0].endswith('/remove') for c in remote.luna.call_args_list))
             self.assertIsNone(store.pending(profile))
 
     def test_uncertain_updater_remove_is_not_submitted_again(self):

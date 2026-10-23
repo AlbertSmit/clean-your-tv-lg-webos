@@ -5,7 +5,7 @@
  panel.innerHTML='<div class="renewal-card"><h2>Software updates</h2><p id="updateStatus" aria-live="polite">Check for signed Home updates.</p><p id="updateNotes"></p><div class="renewal-actions"><button id="updateCheck">Check for updates</button><button id="updateInstall" disabled>Update Home</button><button id="updateRecovery">Recovery</button><button id="updateBack">Back</button></div><p class="renewal-warning">Auto-renewal is paused during installation and its previous setting is restored afterwards. Home Helper is not replaced. Without root, use the installation guide on a computer: github.com/Razdva122/clean-your-tv-lg-webos → docs/INSTALL.md.</p></div>';
  document.body.appendChild(panel);
  var status=document.getElementById('updateStatus'),notes=document.getElementById('updateNotes'),install=document.getElementById('updateInstall'),check=document.getElementById('updateCheck');
- var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,offer=null,busy=false,confirmed=false;
+ var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,offer=null,busy=false,confirmed=false,onClose=null,previous;
  function rpc(method,payload,cb){var b,done=false,timer=setTimeout(function(){finish(null);},method==='install'?190000:65000);
   function finish(r){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r&&r.returnValue===true?r.result:null);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish(null);}};b.call(URI+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
@@ -17,7 +17,7 @@
    if(!r){show('Update service or signed release unavailable. Install the separate Home Updater package once, then retry. Your current Home is unchanged.');return;}
    notes.textContent=r.candidate.notes;install.disabled=!r.canInstall;
    var labels={current:'Home is up to date. Tooling-only releases do not require reinstalling Home.','newer-installed':'Your installed Home is newer than this release.','helper-update-required':'Update Home Helper using the installation guide first.',available:r.canInstall?'A signed Home update is available.':r.root?'Update available, but a verified recovery package for your installed version is missing.':'Update available. Without root, install it from a computer using the guide.'};
-   show('Installed Home '+r.home+' · Available '+r.candidate.home+'\n'+labels[r.state]);focus(0);
+   show('Installed Home '+r.home+' · Available '+r.candidate.home+'\n'+labels[r.state]);if(!panel.classList.contains('hidden'))focus(0);
   });
  }
  check.onclick=checkNow;
@@ -30,10 +30,11 @@
   });
  };
  document.getElementById('updateRecovery').onclick=function(){if(busy)return;rpc('reconcile',{},function(r){show(r?'Recovery state: '+r.status+'. Use Home Updater to restore the previous version if offered.':'No recovery result available. Your helper has not been changed.');});};
- document.getElementById('updateBack').onclick=function(){panel.classList.add('hidden');};
+ function close(){panel.classList.add('hidden');if(onClose){var callback=onClose;onClose=null;callback();}else if(previous&&previous.focus)previous.focus();}
+ document.getElementById('updateBack').onclick=close;
  buttons.forEach(function(b,i){b.addEventListener('mouseover',function(){focus(i);});});
- document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
-  e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)panel.classList.add('hidden');else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38?-1:1;focus(index+direction,direction);}
+ document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([9,37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
+  e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)close();else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38||(e.keyCode===9&&e.shiftKey)?-1:1;focus(index+direction,direction);}
  },true);
- window.HomeUpdates={open:function(){panel.classList.remove('hidden');focus(0);},rpc:rpc,version:VERSION};
+ window.HomeUpdates={open:function(options){previous=document.activeElement;onClose=options&&options.onClose||null;panel.classList.remove('hidden');focus(0);},rpc:rpc,version:VERSION};
 }());

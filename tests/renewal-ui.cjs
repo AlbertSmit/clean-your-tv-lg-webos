@@ -9,8 +9,12 @@ await page.locator('#btnSettings').click();await page.getByText('Auto-renewal of
 await page.keyboard.press('ArrowRight');assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalDiagnostics');await page.keyboard.press('ArrowLeft');assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalToggle');
 await page.keyboard.press('Enter');await page.getByText('Auto-renewal enabled (Beta)',{exact:false}).waitFor();
 
-await page.locator('#renewalDiagnostics').click();assert(!(await page.locator('#renewalDetails').innerText()).includes('sessionToken'));
+await page.locator('#renewalDiagnostics').click();assert.equal(await page.locator('#renewalDiagnostics').getAttribute('aria-expanded'),'true');assert(!(await page.locator('#renewalDetails').innerText()).includes('sessionToken'));
 await page.locator('#renewalToggle').click();await page.getByText('Auto-renewal off',{exact:false}).waitFor();
+await page.locator('#renewalUpdates').click();await page.locator('#updatePanel').waitFor({state:'visible'});
+await page.keyboard.press('Escape');await page.locator('#renewalPanel').waitFor({state:'visible'});
+assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalUpdates');
+await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalTV');
 await page.keyboard.press('Escape');await page.locator('#renewalPanel').waitFor({state:'hidden'});
 await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
 assert(await page.evaluate(()=>calls.some(c=>c.p.id==='test.app')));

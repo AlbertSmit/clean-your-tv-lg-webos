@@ -1,3 +1,27 @@
-#renewalPanel{position:fixed;inset:0;z-index:500;background:rgba(7,10,14,.93);display:flex;align-items:center;justify-content:center;color:#f5f7fa}#renewalPanel.hidden{display:none}.renewal-card{width:1450px;max-height:930px;overflow:auto;padding:48px 56px;border:1px solid #414650;border-radius:30px;background:#202329;box-shadow:0 24px 100px #0008}.renewal-heading{display:flex;align-items:center;gap:24px}.renewal-card h2{font-size:44px;margin:0 0 18px}.renewal-card h3{font-size:30px;margin:12px 0}.renewal-card p{font-size:25px;line-height:1.45;margin:12px 0;color:#ccd1db}.renewal-beta{font-size:19px;letter-spacing:2px;background:#434237;color:#f5dfa0;padding:8px 12px;border-radius:8px}.renewal-card .renewal-warning{color:#e1cc9a;font-size:23px}#renewalStatus{white-space:pre-line;font-size:25px;line-height:1.5;margin:24px 0;min-height:110px}.renewal-actions{display:flex;gap:16px;flex-wrap:wrap}.renewal-actions button{font:inherit;font-size:25px;color:#eee;background:#343941;border:3px solid transparent;border-radius:30px;padding:16px 25px;outline:none}.renewal-actions button:focus{border-color:white;background:#505965}.renewal-actions button:disabled{opacity:.45}#renewalDetails{font:20px/1.35 monospace;color:#bac9d8;white-space:pre-wrap;margin-bottom:0}#renewalDetails.hidden{display:none}
-
-#updatePanel{position:fixed;inset:0;z-index:510;background:rgba(7,10,14,.93);display:flex;align-items:center;justify-content:center;color:#f5f7fa}#updatePanel.hidden{display:none}#updateStatus,#updateNotes{white-space:pre-line}
+/* Settings use the same TV-scale layout in both editions. */
+#renewalPanel,.root-settings,#updatePanel{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(7,10,14,.93);color:#f5f7fa;font-family:Outfit,sans-serif}
+#renewalPanel.hidden,#updatePanel.hidden,.root-settings[hidden]{display:none}
+.renewal-card,.root-settings-card{box-sizing:border-box;width:1120px;max-width:92vw;max-height:90vh;overflow:auto;padding:36px 44px;border:1px solid #414650;border-radius:24px;background:#202329;box-shadow:0 24px 100px #0008;scroll-padding:24px}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.renewal-card h2,.root-settings h1{font-size:40px;line-height:1.2;margin:0}
+.settings-edition{font-size:22px;color:#ccd1db;border:1px solid #626a76;border-radius:8px;padding:7px 12px;white-space:nowrap}
+.renewal-card p,.root-settings p{font-size:24px;line-height:1.4;color:#ccd1db;margin:10px 0 16px}
+.settings-section{border-top:1px solid #414650;margin-top:22px;padding-top:18px}
+.renewal-card h3,.root-settings h2{font-size:28px;line-height:1.25;margin:0 0 8px}
+.renewal-card .renewal-warning,.root-settings .settings-warning{color:#efd49a;font-size:22px}
+#renewalStatus,.root-settings .settings-status{white-space:pre-line;font-size:23px;line-height:1.4;color:#e2e8f1;margin:12px 0;min-height:64px}
+.renewal-actions{display:flex;gap:12px;flex-wrap:wrap}
+.renewal-actions button,.root-settings button{box-sizing:border-box;font:inherit;font-size:25px;line-height:1.25;color:#f5f7fa;background:#343941;border:3px solid transparent;border-radius:12px;padding:15px 22px;cursor:pointer;scroll-margin:24px}
+.renewal-actions button:focus,.root-settings button:focus{outline:3px solid #b8d3ff;outline-offset:3px;border-color:#f5f7fa;background:#46556c}
+.renewal-actions button:disabled,.root-settings button:disabled{opacity:.5;cursor:default}
+.settings-links button{flex:1;text-align:left}
+.settings-footer{display:flex;justify-content:space-between;align-items:center;gap:24px;border-top:1px solid #414650;margin-top:24px;padding-top:18px}
+.settings-footer p{font-size:21px;margin:0}
+.settings-danger{color:#ffd1bd!important}
+#renewalDetails,.root-updates .root-update-details{font-size:21px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;color:#ccd1db}
+#renewalDetails.hidden,.root-settings button[hidden]{display:none}
+#updateStatus,#updateNotes{white-space:pre-line}
+.root-updates button{display:block;width:100%;margin-top:12px;text-align:left}
+.root-updates h1{margin-bottom:18px}
+.root-updates .root-update-details{max-height:180px;overflow:auto}
+@media(max-width:1000px){.renewal-card,.root-settings-card{padding:24px;max-height:94vh}.renewal-card h2,.root-settings h1{font-size:32px}.renewal-card p,.root-settings p,.renewal-actions button,.root-settings button{font-size:22px}.settings-heading{gap:12px}.settings-edition{font-size:18px}.settings-footer p{font-size:18px}}

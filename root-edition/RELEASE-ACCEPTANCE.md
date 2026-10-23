@@ -24,6 +24,18 @@ quick standby and cold-power behavior, genuine failsafe recovery, emergency/faul
 matrix and multiple-app exits. Keep the working No-root release and all recovery
 mechanisms. Do not set `hardware_validated` or `public_release_ready` globally.
 
+## Fixed-build stabilization session
+
+[The fixed-build acceptance record](../docs/development/ROOT-STABLE-ACCEPTANCE.md)
+now documents matching installed/build manifest identity, UI and emergency exit,
+instrumented frozen-renderer escape, quick standby and controls, genuine failsafe
+with normal init.d skipped, clean uninstall/reinstall, preserved production hashes,
+Kinopoisk and VK Video navigation/exit, and observer-stall recovery in 2.414 seconds.
+Cold-power testing was explicitly deferred by the user. One initial second-attempt
+gesture report was not explained by a trace; later captured triples and the
+instrumented repeat passed. Keep that observation visible rather than claiming
+it was fixed. Stable release sign-off remains pending.
+
 ## Historical candidate records
 
 The sections below record what was known at each earlier RC. Statements about

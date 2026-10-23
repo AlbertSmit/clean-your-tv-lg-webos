@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — Root Preview
+
+- Add a separate Root launcher, installer and recovery service without changing the stable No-root launcher, helper or updater implementation.
+- Route short Home and confirmed Back exits through system Home; no LG flash observed on the tested OLED55C3RLA / 43.21.71.
+- Add protected 60-second trials, explicit Keep Root mode, persistent intent and normal software-reboot reactivation.
+- Add Settings exit and independent triple-short-Home emergency restoration, with reciprocal health checks, bounded recovery and owned startup registration.
+- Import existing validated profile data into the candidate without changing the production profile.
+- Fix atomic heartbeat read races and serialize boot callbacks; retain strict freshness and file-safety checks.
+- Document both editions, installation, recovery, removal and hardware evidence. Final-artifact cold-power, standby, failsafe and full fault/removal acceptance remain open; this is not a stable Root binary release.
+
 ## v0.8.1 — signed Home updates and recovery
 
 - Add a separate signed-update and recovery package, portable Home profiles, and Software updates in Settings.

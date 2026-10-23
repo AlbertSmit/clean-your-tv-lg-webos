@@ -1,0 +1,8 @@
+.root-settings[hidden]{display:none}
+.root-settings{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(8,10,16,.88);color:#fff;font-family:Outfit,sans-serif}
+.root-settings-card{width:820px;padding:56px;border:1px solid #505361;border-radius:28px;background:#20232c;box-shadow:0 20px 80px #0008}
+.root-settings h1{font-size:44px;margin:0 0 24px}
+.root-settings p{font-size:25px;line-height:1.5;min-height:112px;color:#d8dbe5}
+.root-settings button{display:block;width:100%;margin-top:16px;padding:20px 28px;border:2px solid transparent;border-radius:14px;background:#343844;color:#fff;text-align:left;font:inherit;font-size:27px;cursor:pointer}
+.root-settings button:focus{outline:none;border-color:#fff;background:#4c5365}
+.root-settings button:disabled{opacity:.55;cursor:wait}

@@ -6,6 +6,9 @@ Keep your favorite apps in a personal dock and app grid, without sponsored rows
 in this launcher. The launcher and optional **Home Helper** run on the TV itself:
 your computer can be switched off after setup.
 
+The released setup described here is No-root Edition. Developer Mode must remain
+active; local networking is needed for the helper’s power/foreground monitoring.
+
 - **No root or firmware flashing** — installed through LG Developer Mode.
 - **No always-on computer, Raspberry Pi or router script** — Home-button handling runs on the TV.
 - **Home opens your launcher** — a short press returns to it while Home Helper is active.
@@ -16,6 +19,18 @@ handling moved from an external watcher to an on-TV native helper.
 
 [Live preview](https://razdva122.github.io/clean-your-tv-lg-webos/) · [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
+
+## Choose your edition
+
+| Edition | Status | Start here |
+| --- | --- | --- |
+| **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
+| **Root Edition** | Separate preview; native Home/Back routing, permanent mode and recovery tested on one C3 | [Overview and evidence](root-edition/README.md) |
+
+Both use the same Home interface. Root Preview provides native system routing
+for Home and confirmed Back exits without an observed LG flash on the tested C3.
+It installs separately; final-artifact cold-boot and failsafe acceptance remains open. [Compare requirements, controls and limits](docs/EDITIONS.md).
+The features and remote-control guide below describe **No-root Edition**.
 
 ![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
 
@@ -180,7 +195,8 @@ native/app/        Home controller, policies and native entry point
 native/prototype/  Remote relay/filter source and tests
 native/service/    Guarded startup service
 scripts/           Build and setup tools
-docs/              Installation, recovery and limitations
+docs/              Installation, edition comparison, recovery and limitations
+root-edition/      Read-only doctor, local metadata planner and development gates
 ```
 
 ## Credits

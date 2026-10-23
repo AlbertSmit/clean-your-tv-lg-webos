@@ -1,4 +1,8 @@
-# Installation
+# No-root Edition installation
+
+Looking for the other track? See [Choose your edition](EDITIONS.md).
+Root Edition has no supported installer yet; do not use this guide to alter an
+existing root setup.
 
 This release targets a setup tested on LG OLED55C3RLA, firmware 43.21.71.
 Recovery behavior is documented in RECOVERY.md. For another model,

@@ -5,10 +5,12 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-**Root Stable 0.1.0** is scoped to **LG OLED55C3RLA / firmware 43.21.71**.
-Other models and firmware are unvalidated. Cold-power testing of this exact bundle
-is deferred; one initial second-attempt emergency-gesture report remains unexplained,
-although instrumented repeats passed. Read the [release scope](ROOT-STABLE-0.1.0.md).
+**Root Edition 0.1.1** adds Settings updates and independent update recovery.
+Evidence is scoped to **LG OLED55C3RLA / firmware 43.21.71**. Other models and
+firmware are unvalidated. Read the [0.1.1 release scope](ROOT-0.1.1.md), including
+one-time setup, legacy migration and the limits of isolated hardware testing.
+The earlier [Root Stable 0.1.0 record](ROOT-STABLE-0.1.0.md) remains historical
+evidence for routing and lifecycle behavior; it does not certify every new binary.
 Keep the working No-root installation and recovery backups.
 
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
@@ -47,8 +49,12 @@ Do not install Developer Mode over an existing root setup for this guide.
 
 The public bundle contains no personal app list. Installation can copy validated
 profile data from an existing Home installation without modifying it. It does not
-migrate arbitrary browser storage. The Root candidate excludes the production
-updater and Developer Mode renewal UI; use its separate installation procedure.
+migrate arbitrary browser storage. Root excludes the ordinary Home updater and
+Developer Mode renewal UI. Its own **Settings → Software updates** uses an
+independent Root Updater with saved profiles and one-attempt rollback. See
+[Root updates and one-time setup](UPDATES.md) and the
+[isolated update/rollback validation](../docs/development/ROOT-UPDATES-TV-VALIDATION.md). Recovery/updater infrastructure upgrades remain
+computer-assisted.
 
 Early boot black screens, faster boot artwork, system-library patches and
 removing system advertisements are **not** delivered by this edition. Long Home

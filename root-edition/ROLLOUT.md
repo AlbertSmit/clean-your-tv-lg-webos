@@ -1,13 +1,13 @@
-# Install and activate Root Stable
+# Install and activate Root Edition
 
-This is a separate Root Stable package for an already rooted TV. Tested device:
+This is a separate Root Edition package for an already rooted TV. Tested device:
 **OLED55C3RLA / 43.21.71**. See [acceptance and remaining gates](RELEASE-ACCEPTANCE.md).
 The ordinary launcher and Home Helper remain installed. Keep a working backup
 and root SSH connection before changing routing.
 
 ## 1. Download or build, then verify
 
-For the published Root Stable archive, extract it and open a terminal in its top
+For the published Root Edition archive, extract it and open a terminal in its top
 folder. It includes source instructions and the tested bundle at `build/root-candidate`.
 Skip the build commands below and continue with checksum verification. Do not
 replace the bundled runtime with an untested build while following this release.
@@ -19,7 +19,7 @@ On your computer, use Python 3.9+, Node.js and OpenSSH. From the repository root
 ```sh
 bash scripts/test.sh
 mkdir -p build
-python3 root-edition/build.py --output build/root-candidate
+python3 root-edition/build.py --version 0.1.1 --output build/root-candidate
 ```
 
 The output directory must be new. Keep the whole directory, including `setup.py`,
@@ -28,8 +28,9 @@ recovery. Verify its IPK checksum with `sha256sum -c SHA256SUMS` (macOS:
 `shasum -a 256 -c SHA256SUMS`) from inside that directory. Installation also checks
 all bundle files against `bundle.json`. Checksums do not replace source trust.
 
-Public builds contain an empty inventory. They exclude production updater,
-renewal and helper-control scripts. This build does not contact the TV.
+Public builds contain an empty inventory. They exclude the ordinary Home updater,
+renewal and helper-control scripts. Root's separate update UI requires the
+[one-time Root Updater setup](UPDATES.md). This build does not contact the TV.
 
 ## 2. Check access and install without activating
 
@@ -54,13 +55,30 @@ an existing candidate or state directory. If installation has an unknown outcome
 retain its journal and inspect it; never blindly retry or delete recovery state.
 Do not overwrite a live runtime with a newer bundle.
 
+## 2a. Install the independent updater once
+
+For 0.1.1, install Root Updater before activating Home control. The distribution
+contains `build/root-updater`; use the exact newly installed Root bundle as its
+rollback baseline:
+
+```sh
+python3 build/root-updater/setup-updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply
+```
+
+Keep LG Home selected during setup. See [Root updates and recovery](UPDATES.md).
+Existing Root Stable 0.1.0 uses package version 0.0.1 and older recovery
+infrastructure: it needs supervised computer migration, not an IPK-only update.
+The setup refuses live or retained state rather than overwriting it. Restore LG
+Home, retain private backups and have a maintainer inspect existing recovery
+state; do not delete that state to bypass the check.
+
 ## 3. Start a protected trial
 
 If Home Helper is active, hold Home for about two seconds to stop it, then release
 all buttons. This is the **old helper's** exit action. Root activation refuses to
 run while that helper is present and never clears its safety latch.
 
-Open **Home Root Preview** from LG Apps, then **Settings → Try Root mode**.
+Open **Home Root Preview** from LG Apps, then **Settings → Try Home control**.
 Alternatively:
 
 ```sh
@@ -70,12 +88,12 @@ python3 build/root-candidate/setup.py enable --ssh my-tv
 The trial lasts **60 seconds**. Check arrows/OK and short Home from an ordinary
 app screen. Check Back navigation, Cancel in the exit dialog, then confirmed exit.
 If the result is wrong, do not confirm: automatic recovery restores the original
-Home. You can also select Exit Root mode or run the restore command below.
+Home. You can also select Return to LG Home or run the restore command below.
 
 ## 4. Keep Root mode
 
-Before the trial expires, select **Settings → Keep Root mode**. Leave at least
-five seconds for verification. The panel should report **Root mode active**.
+Before the trial expires, select **Settings → Keep using Home**. Leave at least
+five seconds for verification. The panel should report **Home control is on**.
 This records permanent intent only after fresh input/guardian and routing checks.
 An expired or unhealthy trial cannot be promoted.
 
@@ -92,7 +110,7 @@ through automatic reactivation. Other lifecycle cases remain final release gates
 | Back inside an app | App handles navigation and its exit confirmation |
 | Confirmed Back exit | Returns to our Home on the tested setup |
 | Three short Home presses in two seconds | Emergency restore to LG, independent of the web interface |
-| Settings → Exit Root mode → Confirm exit | Normal restore; disables Root autostart |
+| Settings → Return to LG Home → Confirm return | Normal restore; disables Root autostart |
 
 Release Home between taps. Long Home is **not** the Root emergency action and can
 trigger LG behavior such as zoom. Exiting Root mode does not remove root or resume
@@ -121,8 +139,10 @@ python3 build/root-candidate/setup.py uninstall --ssh my-tv
 Uninstall restores first, removes owned recovery registration/startup hook, then
 removes the isolated package. It intentionally retains state and evidence. It
 does not touch the original launcher or start its helper. A retained state directory
-blocks reinstallation; there is no unattended Root updater yet. Archive and resolve
-that state only after verified removal and restoration, following maintainer review.
+blocks reinstallation. Compatible Root application updates can use the separate
+[Root Updater](UPDATES.md); infrastructure replacement remains host-assisted.
+Archive and resolve that state only after verified removal and restoration,
+following maintainer review.
 An unknown removal result is not permission to resubmit or delete directories.
 
 ## Release scope

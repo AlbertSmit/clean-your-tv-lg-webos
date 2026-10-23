@@ -113,7 +113,13 @@ def restore(run=command):
 
 def migrate_packaged_home():
     import personalize
-    files = personalize.prepare(INSTALLED / 'usr/palm/applications/com.gathin.tvhome')
+    profile=INSTALLED/'usr/palm/services/com.cleanyourtv.updater.service/state/profile.json'
+    if os.path.lexists(profile):
+        files=personalize.from_profile(profile)
+        source='validated updater profile; browser storage excluded'
+    else:
+        files=personalize.prepare(INSTALLED / 'usr/palm/applications/com.gathin.tvhome')
+        source='packaged com.gathin.tvhome only; browser storage excluded'
     destination = INSTALLED / ('usr/palm/applications/' + APP)
     write_stage('personalization-starting')
     for name, data in files.items():
@@ -126,7 +132,7 @@ def migrate_packaged_home():
             os.chmod(temporary, 0o644)
             stream.write(data); stream.flush(); os.fsync(stream.fileno())
         os.replace(temporary, target)
-    record = {'source': 'packaged com.gathin.tvhome only; browser storage excluded',
+    record = {'source': source,
               'files': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}}
     path = STATE / 'personalization.json'
     with path.open('x') as stream:

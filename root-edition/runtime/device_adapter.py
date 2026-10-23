@@ -52,13 +52,19 @@ def trusted_dir(path):
 
 
 def safe_json(path):
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    with os.fdopen(fd) as f:
-        st = os.fstat(f.fileno())
-        if (not stat.S_ISREG(st.st_mode) or st.st_uid != EXPECTED_UID
-                or st.st_mode & 0o022 or st.st_size > 65536 or st.st_nlink != 1):
-            raise ValueError('Unsafe state file')
-        return json.load(f)
+    # An atomic publisher may unlink the opened inode before fstat. Never
+    # accept that detached snapshot: reopen the current path, boundedly.
+    for attempt in range(3):
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd) as f:
+            st = os.fstat(f.fileno())
+            if (not stat.S_ISREG(st.st_mode) or st.st_uid != EXPECTED_UID
+                    or st.st_mode & 0o022 or st.st_size > 65536 or st.st_nlink > 1):
+                raise ValueError('Unsafe state file')
+            if st.st_nlink == 0:
+                continue
+            return json.load(f)
+    raise ValueError('State file repeatedly replaced during read')
 
 
 def sync(path):

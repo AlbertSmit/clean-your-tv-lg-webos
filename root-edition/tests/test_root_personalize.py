@@ -32,3 +32,18 @@ class Tests(unittest.TestCase):
   (self.source/'apps.js').chmod(0o777)
   result=personalize.prepare(self.source)
   self.assertEqual(result['apps.js'],(self.source/'apps.js').read_bytes())
+
+ def test_saved_profile_migrates_inventory_without_source_writes(self):
+  import json
+  profile=self.source/'profile.json'
+  data={'schema':1,'inventory':{'apps':[{'id':'test.app','title':'Example','icon':'data:image/png;base64,YQ=='}],'inputs':[]},'config':{'columns':5,'dockApps':['test.app'],'hiddenApps':[]},'settings':{}}
+  profile.write_text(json.dumps(data));before=profile.read_bytes()
+  result=personalize.from_profile(profile)
+  self.assertIn(b'test.app',result['apps.js']);self.assertIn(b'com.cleanyourtv.root.preview',result['config.js'])
+  self.assertEqual(profile.read_bytes(),before)
+ def test_saved_profile_rejects_remote_icon(self):
+  import json
+  profile=self.source/'profile.json'
+  data={'schema':1,'inventory':{'apps':[{'id':'a','title':'A','icon':'https://example.com/a.png'}],'inputs':[]},'config':{'columns':5,'dockApps':[],'hiddenApps':[]},'settings':{}}
+  profile.write_text(json.dumps(data))
+  with self.assertRaises(ValueError):personalize.from_profile(profile)

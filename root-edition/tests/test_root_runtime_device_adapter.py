@@ -41,6 +41,41 @@ class DeviceAdapterTests(unittest.TestCase):
         uid.start()
         self.addCleanup(uid.stop)
 
+    def test_atomic_replacement_between_open_and_fstat_retries_new_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'pulse.json'; path.write_text('{"sequence":1}'); path.chmod(0o600)
+            real_open=os.open; replaced=[]
+            def opening(name, flags, *args, **kwargs):
+                fd=real_open(name, flags, *args, **kwargs)
+                if Path(name)==path and not replaced:
+                    replaced.append(True)
+                    new=path.with_suffix('.new'); new.write_text('{"sequence":2}'); new.chmod(0o600)
+                    os.replace(new,path)
+                return fd
+            with patch.object(d.os,'open',side_effect=opening):
+                self.assertEqual(d.safe_json(path),{'sequence':2})
+
+    def test_continuous_replacement_is_bounded_and_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'pulse.json'; path.write_text('{}'); path.chmod(0o600)
+            real_open=os.open; attempts=[]
+            def opening(name, flags, *args, **kwargs):
+                fd=real_open(name, flags, *args, **kwargs)
+                if Path(name)==path:
+                    attempts.append(True)
+                    new=path.with_suffix('.new'); new.write_text('{}'); new.chmod(0o600)
+                    os.replace(new,path)
+                return fd
+            with patch.object(d.os,'open',side_effect=opening), self.assertRaisesRegex(ValueError,'repeatedly replaced'):
+                d.safe_json(path)
+            self.assertEqual(len(attempts),3)
+
+    def test_hardlinked_state_still_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'pulse.json'; path.write_text('{}'); path.chmod(0o600)
+            os.link(path,Path(tmp)/'other')
+            with self.assertRaises(ValueError): d.safe_json(path)
+
     def test_missing_journal_performs_no_service_calls(self):
         with tempfile.TemporaryDirectory() as root, patch.object(d, 'STATE', Path(root)), \
                 patch.object(d, 'sam_transport') as sam:

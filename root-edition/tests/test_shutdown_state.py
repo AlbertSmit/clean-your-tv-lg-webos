@@ -10,3 +10,20 @@ class Tests(unittest.TestCase):
     self.assertEqual(s.stopping(),state=='stopping\n')
  def test_unavailable_manager_is_not_shutdown_permission(self):
   with patch.object(s.subprocess,'run',side_effect=OSError()):self.assertFalse(s.stopping())
+
+class CachedTests(unittest.TestCase):
+ def test_recent_confirmed_shutdown_survives_query_timeout_but_expires(self):
+  import tempfile,os
+  import persistent_health as h,device_adapter as d
+  with tempfile.TemporaryDirectory() as tmp,patch.object(h,'ROOT',Path(tmp)),patch.object(d,'EXPECTED_UID',os.getuid()),patch('intent_runtime.boot_identity',return_value='boot-a'):
+   with patch.object(s.time,'monotonic',return_value=10):s.record('tx')
+   with patch.object(s.time,'monotonic',return_value=11),patch.object(s.subprocess,'run',side_effect=subprocess.TimeoutExpired('systemctl',.5)):
+    self.assertTrue(s.stopping('tx'));self.assertFalse(s.stopping('other'))
+   with patch.object(s.time,'monotonic',return_value=16),patch.object(s.subprocess,'run',side_effect=OSError()):
+    self.assertFalse(s.stopping('tx'))
+ def test_cached_shutdown_from_previous_boot_is_rejected(self):
+  import tempfile,os
+  import persistent_health as h,device_adapter as d
+  with tempfile.TemporaryDirectory() as tmp,patch.object(h,'ROOT',Path(tmp)),patch.object(d,'EXPECTED_UID',os.getuid()):
+   with patch('intent_runtime.boot_identity',return_value='old'):s.record('tx')
+   with patch('intent_runtime.boot_identity',return_value='new'),patch.object(s.subprocess,'run',side_effect=OSError()):self.assertFalse(s.stopping('tx'))

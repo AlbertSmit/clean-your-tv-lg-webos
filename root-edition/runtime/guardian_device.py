@@ -47,8 +47,12 @@ def run(transaction):
         guardian_ping(transaction)
         if authorized(transaction): return run(transaction, restore)
         return None
-    return watch(transaction, lambda:d.safe_json(d.STATE/'profile-trial.json'),
-                 ready,restore,time.monotonic,time.sleep,continuation=continuation)
+    from shutdown_state import monitor
+    shutdown = monitor(transaction)
+    try:
+        return watch(transaction, lambda:d.safe_json(d.STATE/'profile-trial.json'),
+                     ready,restore,time.monotonic,time.sleep,continuation=continuation)
+    finally: shutdown.set()
 
 
 if __name__ == '__main__':

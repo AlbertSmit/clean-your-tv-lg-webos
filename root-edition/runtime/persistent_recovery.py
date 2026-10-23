@@ -240,7 +240,7 @@ def bound_exit(transaction, reason=None):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
     from shutdown_state import stopping
-    if reason != 'escape' and intent['phase'] == 'active' and intent['enabled'] and stopping():
+    if reason != 'escape' and intent['phase'] == 'active' and intent['enabled'] and stopping(transaction):
         print('Confirmed system shutdown: retaining active intent for boot recovery', flush=True)
         return c.shutdown(intent)
     result = c.exit(intent, reason='fault')

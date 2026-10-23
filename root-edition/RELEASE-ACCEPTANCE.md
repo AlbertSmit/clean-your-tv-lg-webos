@@ -141,3 +141,15 @@ user's reboot intent. Stock recovery was verified; permanent reboot acceptance
 failed. RC16 distinguishes PID 1's independently observed `stopping` state from
 ordinary input failure. Explicit escape and UI exit still disable intent. Unknown
 or unavailable manager status remains fail-closed. RC16 device test pending.
+
+RC16 reboot still disabled intent. A subsequent read-only shutdown probe clarified
+that input did NOT disappear before PID 1 entered stopping: at uptime 151.317 the
+manager reported stopping; a query timed out at 151.872; input ENODEV followed at
+151.988; stopping was readable again at 152.630. The synchronous query could miss
+the valid shutdown state due to that transient timeout.
+
+RC17 adds a background manager observer with a root-private volatile five-second
+record bound to boot identity and transaction. Only an actual stopping response
+creates it. Expired, foreign-boot or different-transaction records are rejected;
+explicit escape/UI exit still disable intent. Full local suite: 338 Root Python
+and 11 setup tests, plus JS/native/update checks. RC17 hardware result pending.

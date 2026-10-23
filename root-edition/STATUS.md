@@ -160,4 +160,4 @@ were stock and recovery integrity verified. The old guardian deadline was 764
 seconds on the previous uptime clock; no manual restore was sent. After the
 failsafe flag had cleared, another software reboot returned SSH and normal mode.
 The recovery journal remained restored and the legacy helper's stop latch was
-preserved. User-visible control verification after explicit resumption is pending.
+preserved. After explicitly resuming Home control, the user confirmed arrows, OK and short Home all work after both reboots.

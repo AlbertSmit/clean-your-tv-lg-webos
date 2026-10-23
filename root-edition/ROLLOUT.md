@@ -1,11 +1,18 @@
-# Install and activate Root Preview
+# Install and activate Root Stable
 
-This is a separate preview for an already rooted TV. Tested device:
+This is a separate Root Stable package for an already rooted TV. Tested device:
 **OLED55C3RLA / 43.21.71**. See [acceptance and remaining gates](RELEASE-ACCEPTANCE.md).
 The ordinary launcher and Home Helper remain installed. Keep a working backup
 and root SSH connection before changing routing.
 
-## 1. Build and verify
+## 1. Download or build, then verify
+
+For the published Root Stable archive, extract it and open a terminal in its top
+folder. It includes source instructions and the tested bundle at `build/root-candidate`.
+Skip the build commands below and continue with checksum verification. Do not
+replace the bundled runtime with an untested build while following this release.
+
+To build from source instead:
 
 On your computer, use Python 3.9+, Node.js and OpenSSH. From the repository root:
 
@@ -103,7 +110,7 @@ If restoration reports an error or conflict, keep its evidence and root access.
 Do not remove state files or repeatedly activate. Recovery will not overwrite an
 unrecognized foreign profile. [Recovery contract](RECOVERY.md).
 
-## Remove or replace the preview
+## Remove or replace Root Edition
 
 ```sh
 python3 build/root-candidate/setup.py restore --ssh my-tv
@@ -121,5 +128,4 @@ An unknown removal result is not permission to resubmit or delete directories.
 ## Release scope
 
 System libraries, early boot artwork and faster cold-start display are outside
-this preview. Follow the [hardware test plan](TESTING.md) before promoting a final
-artifact to a stable release. Existing evidence is model- and build-specific.
+this release. See [release scope and limitations](ROOT-STABLE-0.1.0.md). Evidence is model- and build-specific.

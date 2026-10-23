@@ -5,7 +5,8 @@ Updated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
 ## Current release boundary
 
 The implementation supports protected trials and explicit permanent activation.
-Merge status: **Root Preview**, separate from the stable No-root release.
+Release designation: **Root Stable 0.1.0**, scoped to the tested C3 and firmware,
+separate from No-root. See [scope and limitations](ROOT-STABLE-0.1.0.md).
 No blanket hardware certification is claimed for the final public artifact.
 
 Latest evidence (RC19 with atomic-read correction): actual launcher app selection,
@@ -19,10 +20,22 @@ a frozen renderer) and persistent-mode escape. Earlier candidates passed recover
 in failsafe. These are useful regression evidence, not a substitute for repeating
 the final package's lifecycle matrix.
 
-Remaining stable-release gates: final-artifact identity, clean install/removal,
-quick standby and cold-power behavior, genuine failsafe recovery, emergency/fault
-matrix and multiple-app exits. Keep the working No-root release and all recovery
-mechanisms. Do not set `hardware_validated` or `public_release_ready` globally.
+The fixed-build session below supersedes earlier pending lifecycle gates.
+Cold-power testing is deferred and the isolated first-attempt gesture miss remains
+unexplained. Stable is a model-scoped release designation, not blanket hardware
+certification. Do not set `hardware_validated` or `public_release_ready` globally.
+
+## Fixed-build stabilization session
+
+[The fixed-build acceptance record](../docs/development/ROOT-STABLE-ACCEPTANCE.md)
+now documents matching installed/build manifest identity, UI and emergency exit,
+instrumented frozen-renderer escape, quick standby and controls, genuine failsafe
+with normal init.d skipped, clean uninstall/reinstall, preserved production hashes,
+Kinopoisk and VK Video navigation/exit, and observer-stall recovery in 2.414 seconds.
+Cold-power testing was explicitly deferred by the user. One initial second-attempt
+gesture report was not explained by a trace; later captured triples and the
+instrumented repeat passed. Keep that observation visible rather than claiming
+it was fixed. The user selected the scoped stable designation with these limitations retained.
 
 ## Historical candidate records
 

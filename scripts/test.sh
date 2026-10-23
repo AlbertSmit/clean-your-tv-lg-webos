@@ -23,6 +23,7 @@ for file in root-edition/ui/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 python3 -m unittest discover -s tests/setup
+python3 -m unittest discover -s tests -p test_preview.py
 for test in tests/updates/*.cjs; do node "$test"; done
 for file in updater-service/*.js updater-app/*.js; do node --check "$file"; done
 cmp launcher/user-data.js updater-service/user-data.js

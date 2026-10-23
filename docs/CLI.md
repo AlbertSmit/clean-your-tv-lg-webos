@@ -7,13 +7,13 @@ builds embed the TV packages, Python runtime and SSH/control libraries. End user
 do not need Git, Node.js, Python, Bash, Zig or a separate SSH client.
 
 This is a new installer, not an expansion of the hardware compatibility claim.
-Root remains a preview. Source/automated checks cannot replace real TV acceptance.
+Hardware evidence remains scoped to the documented models. Source/automated checks cannot replace real TV acceptance.
 
 ## Run
 
-Download the artifact matching your computer from the **cytv standalone builds**
-GitHub Actions workflow and unzip it. The workflow produces artifacts, not a public
-release. Supported build targets are Windows x64, Linux x64, macOS ARM64 and macOS
+Download the console executable matching your computer from the
+[v0.10.0 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.0).
+Development artifacts are also available from the **cytv standalone builds** workflow. Supported build targets are Windows x64, Linux x64, macOS ARM64 and macOS
 x64. Linux builds use Ubuntu 22.04; macOS builds use macOS 15. Older desktop OS
 compatibility is not established.
 

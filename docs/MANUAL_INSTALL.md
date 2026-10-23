@@ -292,7 +292,7 @@ From the source root; this operation does not connect to the TV:
 
 ```bash
 mkdir -p build
-python3 root-edition/build.py --output build/root-candidate --version 0.1.2
+python3 root-edition/build.py --output build/root-candidate --version 0.1.3
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with

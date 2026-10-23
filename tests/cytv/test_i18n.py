@@ -96,3 +96,38 @@ class LanguageTests(unittest.TestCase):
         prompt = Prompt('SSH key passphrase: ', secret=True)
         self.assertEqual(lang.translate(prompt.title), 'Кодовая фраза SSH-ключа')
         self.assertEqual(prompt.kind, 'secret')
+
+    def test_all_static_installer_messages_have_complete_translations(self):
+        import ast
+        import re
+        lang = self.language()
+        for path in (Path(__file__).resolve().parents[2] / 'cytv').glob('*.py'):
+            if path.stem in ('translations', 'i18n'):
+                continue
+            for node in ast.walk(ast.parse(path.read_text())):
+                if not isinstance(node, ast.Call) or not node.args:
+                    continue
+                name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ''
+                if name not in ('write', 'progress', 'heading', 'text', 'confirm', 'UserError', 'ExistingRoot', 'TVNotReady'):
+                    continue
+                arg = node.args[0]
+                if not isinstance(arg, ast.Constant) or not isinstance(arg.value, str) or len(arg.value) < 9:
+                    continue
+                source = arg.value.replace(' | ', ' / ')
+                if source in lang.MESSAGES:
+                    continue
+                for sentence in re.split(r'(?<=[.!?]) +', source):
+                    if not any(c.isalpha() for c in sentence):
+                        continue
+                    for code in set(lang.LANGUAGES) - {'en', 'auto'}:
+                        lang.set_language(code)
+                        with self.subTest(file=path.name, line=node.lineno, language=code, text=sentence):
+                            self.assertNotEqual(lang.translate(sentence), sentence)
+
+    def test_package_removal_progress_preserves_app_id_in_every_language(self):
+        lang = self.language()
+        message = 'Removing com.cleanyourtv.root.updater…'
+        for code in set(lang.LANGUAGES) - {'en', 'auto'}:
+            lang.set_language(code)
+            self.assertNotEqual(lang.translate(message), message)
+            self.assertIn('com.cleanyourtv.root.updater', lang.translate(message))

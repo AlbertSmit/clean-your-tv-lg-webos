@@ -1,5 +1,7 @@
 # cytv standalone installer
 
+For double-click setup without a terminal, use the [desktop application](DESKTOP_INSTALL.md).
+
 `cytv` is one terminal wizard for **No-root Edition** and **Root**. Native
 builds embed the TV packages, Python runtime and SSH/control libraries. End users
 do not need Git, Node.js, Python, Bash, Zig or a separate SSH client.

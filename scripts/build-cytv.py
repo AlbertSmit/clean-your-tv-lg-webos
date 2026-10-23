@@ -100,6 +100,7 @@ def build_payload():
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
     (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
+    shutil.copytree(ROOT / 'cytv/licenses', payload / 'licenses/Qt', dirs_exist_ok=True)
     # Ship dependency license metadata as well as application notices in the executable.
     import importlib.metadata
     for name in ('paramiko', 'websockets', 'cryptography', 'bcrypt', 'PyNaCl', 'cffi', 'psutil'):
@@ -125,6 +126,7 @@ def build_payload():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--payload-only', action='store_true', help='Build and verify TV assets, without freezing')
+    parser.add_argument('--desktop', action='store_true', help='Also build the windowed macOS app or Debian package')
     args = parser.parse_args()
     payload = build_payload()
     print('Public TV payload verified:', payload)
@@ -139,6 +141,10 @@ def main():
     subprocess.run([str(executable), '--version'], check=True)
     subprocess.run([str(executable), '--check-payload'], check=True)
     print('Built:', executable)
+    if args.desktop:
+        from desktop_packaging import build_desktop
+        from cytv import __version__
+        build_desktop(ROOT, payload, environment, __version__)
 
 
 if __name__ == '__main__':

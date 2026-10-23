@@ -104,7 +104,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
     if args.version:
         write('cytv ' + __version__)
         return 0
-    write = Console(write, interactive=False if args.non_interactive else None)
+    write = write if isinstance(write, Console) else Console(write, interactive=False if args.non_interactive else None)
     ask = write.reader(ask)
     remote = None
     store, profile, phase, tv_info = state.Store(args.data_dir), None, 'select-tv', {}

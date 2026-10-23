@@ -5,6 +5,9 @@ import tempfile
 import unittest
 from cytv.root_updater_remove import SCRIPT
 
+if os.name != 'posix':
+    raise unittest.SkipTest('TV cleanup script requires POSIX locks and filesystem semantics')
+
 namespace={'__name__':'cleanup_test'}
 exec(SCRIPT,namespace)
 

@@ -6,6 +6,7 @@ import unittest
 from unittest.mock import Mock
 from cytv.app_permissions_remove import SCRIPT
 
+@unittest.skipUnless(os.name == 'posix', 'TV cleanup script requires POSIX filesystem semantics')
 class AppPermissionsTests(unittest.TestCase):
     def test_owned_permissions_removed_and_repeat_safe(self):
         self.check()

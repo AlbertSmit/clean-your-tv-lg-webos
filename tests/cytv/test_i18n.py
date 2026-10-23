@@ -104,7 +104,7 @@ class LanguageTests(unittest.TestCase):
         for path in (Path(__file__).resolve().parents[2] / 'cytv').glob('*.py'):
             if path.stem in ('translations', 'i18n'):
                 continue
-            for node in ast.walk(ast.parse(path.read_text())):
+            for node in ast.walk(ast.parse(path.read_text(encoding='utf-8'))):
                 if not isinstance(node, ast.Call) or not node.args:
                     continue
                 name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ''

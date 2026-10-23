@@ -8,9 +8,9 @@ The production No-root application and helper are not upgraded by this installer
 
 | Priority | Deliverable | Current evidence / remaining gate |
 | --- | --- | --- |
-| P0 | Isolated application, native Home and Back routing | Real UI passed an earlier bounded TV test; final package requires repeat |
-| P0 | Independent 60-second rollback, exact profile restoration | Local fault tests; final package requires TV verification |
-| P0 | Recovery service, interrupted install handling, uninstall | Implemented and locally tested; boot and failsafe delivery require TV verification |
+| P0 | Isolated application, native Home and Back routing | Corrected installed candidate passed Home and Back; clean final bundle still needs acceptance |
+| P0 | Independent 60-second rollback, exact profile restoration | Corrected candidate passed independent timer and software-reboot rollback |
+| P0 | Recovery service, interrupted install handling, uninstall | Software-reboot delivery passed; final clean install, failsafe and uninstall remain |
 | P0 | Preserve existing Home, preferences and helper latch | Installer refuses conflicts; never clears the helper's emergency stop |
 | P1 | Reboot, fast standby, cold boot, failsafe acceptance | Test together on the final candidate |
 | P1 | Persistent activation and clean emergency escape | Locked pending acceptance; not a supported feature of this candidate |
@@ -93,3 +93,5 @@ commands.
 Unknown removal is also fail-closed: a recorded `remove-submitting` or
 `remove-observed` stage blocks automatic resubmission. Inspect the retained
 terminal evidence and candidate directories before any manual recovery decision.
+
+Track the remaining evidence in [release acceptance](RELEASE-ACCEPTANCE.md).

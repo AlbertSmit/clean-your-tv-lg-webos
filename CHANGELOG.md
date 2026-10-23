@@ -6,7 +6,8 @@
 - Add a read-only root doctor with optional launcher-category inspection.
 - Add a local-only Home-category metadata plan and conflict-aware rollback decisions.
 - Document bounded diagnostic successes, the production Home category failure, and remaining hardware/recovery gates.
-- Include Root Edition Python checks in CI. No production launcher/helper behavior changes and no Root Edition installer in this update.
+- Include Root Edition Python checks in CI and a separate bounded-test candidate builder, installer and recovery service. Production launcher/helper behavior remains unchanged.
+- Verify isolated native Home/Back routing, timed rollback and software-reboot recovery on OLED55C3RLA / 43.21.71. Permanent activation remains unavailable pending remaining hardware acceptance.
 
 ## v0.8.1 — signed Home updates and recovery
 

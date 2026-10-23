@@ -55,9 +55,9 @@ changing the manifest alone is not enough.
 
 ## Goals still requiring validation
 
-- Native Home and confirmed Back return to the real launcher without an LG flash.
+- Repeat native Home and confirmed Back acceptance on the final clean-installed bundle.
 - Persistent startup with one clear emergency exit and complete uninstall/rollback.
-- Automatic recovery after interrupted installation, reboot and failsafe.
+- Final-bundle interrupted-install, failsafe and uninstall acceptance; software-reboot recovery passed on the corrected installed candidate.
 
 Earlier boot graphics and elimination of the initial black interval are research
 questions, not features delivered by this edition.

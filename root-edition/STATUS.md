@@ -1,6 +1,6 @@
 # Root Edition status and evidence
 
-Updated 2026-10-22. Test device: **LG OLED55C3RLA / firmware 43.21.71**.
+Updated 2026-10-23. Test device: **LG OLED55C3RLA / firmware 43.21.71**.
 This is a record of bounded tests on one device, not a compatibility promise.
 
 ## What passed
@@ -66,9 +66,9 @@ shipping.
 ## Scope of public tools
 
 The public doctor is read-only. The metadata planner and tests are local-only.
-The device-specific lab activator is intentionally not shipped as an installer:
-it depends on the test device's recovery service and contains unresolved release
-gates. No Root Edition IPK is produced by the standard build.
+The separate candidate builder includes an installer and recovery runtime for
+supervised hardware tests. It does not enable permanent routing. No Root Edition
+IPK is produced by the standard No-root build.
 
 ## Release preparation
 
@@ -82,8 +82,9 @@ rejection, reproducibility and refusing to overwrite existing output.
 
 The separate `com.cleanyourtv.root.preview` package now includes a recovery-only
 service, host installer, persisted installation journal and bounded routing runtime.
-Local tests cover these components. The final integrated package has not yet been
-tested on the TV. Persistent enable/confirm are deliberately blocked.
+Local tests cover these components. An installed candidate with audited recovery corrections has passed bounded routing
+and software-reboot recovery on the test TV. A clean install of the final bundle
+still requires acceptance. Persistent enable/confirm are deliberately blocked.
 
 Unlike earlier lab trials, this candidate does not automatically resume the legacy
 helper: stopping it sets the same latch as the user's emergency exit. The user must
@@ -104,3 +105,30 @@ is essential to inspect the stored definition rather than live trigger results.
 The owned task and recovery integrity passed readback. All three Home destinations
 remained LG; no routing trial ran during this preparation. Boot/failsafe delivery
 of the final candidate remains a separate hardware acceptance gate.
+
+## Integrated routing and reboot recovery — 2026-10-23
+
+With the legacy helper explicitly stopped, the isolated real-UI candidate passed
+short Home, arrows/OK and confirmed Kinopoisk Back exit without an observed LG
+flash. The independent 60-second guardian restored all three original routing
+values. The user explicitly resumed the production helper and confirmed controls.
+
+A second trial was interrupted by an acknowledged software reboot. At post-boot
+uptime 36 seconds, its journal was already restored, all three Home destinations
+were stock, and recovery integrity verified. No manual restore was invoked.
+The persistent recovery activity retained its expected creator, callback, trigger
+and type. The old guardian's monotonic deadline was still over 3,100 seconds;
+this was boot recovery, not expiry of the old timer.
+
+The kernel boot ID did not change on this device despite the uptime reset. Do not
+use boot ID alone to classify restarts on this firmware.
+
+After recovery, the user reported a black screen and then returned to production
+Home with the Home button. Logs showed Live TV foreground before that press;
+production Home and the legacy helper were active afterward. This visual transition
+is deferred, not fixed, and does not invalidate the routing restoration readback.
+
+These results apply to the installed candidate with audited corrections through
+RC5, not a pristine RC5 installation. They do not establish permanent startup,
+power-loss recovery or failsafe delivery for this exact deployment. Persistent
+activation remains locked. See [release acceptance](RELEASE-ACCEPTANCE.md).

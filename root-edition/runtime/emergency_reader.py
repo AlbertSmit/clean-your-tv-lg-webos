@@ -2,6 +2,7 @@
 
 No EVIOCGRAB, input writes, reinjection, system library patches or key filtering.
 """
+import errno
 import fcntl
 import os
 import select
@@ -27,7 +28,11 @@ def open_remote():
     found = []
     try:
         for path in sorted(Path('/dev/input').glob('event*')):
-            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC | os.O_NOFOLLOW)
+            try:
+                fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC | os.O_NOFOLLOW)
+            except OSError as exc:
+                if exc.errno in (errno.ENXIO, errno.ENODEV, errno.ENOENT): continue
+                raise
             try:
                 if not stat.S_ISCHR(os.fstat(fd).st_mode): raise ValueError('Not an input device')
                 if bytes(query(fd, 6, 256)).split(b'\0')[0] != NAME: continue

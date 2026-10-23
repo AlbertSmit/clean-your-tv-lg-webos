@@ -22,3 +22,15 @@ class ReaderTests(unittest.TestCase):
   self.assertEqual(self.run_input(struct.pack('<IIHHi',1,0,0,3,0)),'input_lost')
  def test_partial_event_recovers(self):
   self.assertEqual(self.run_input(b'bad'),'input_lost')
+
+class DiscoveryTests(unittest.TestCase):
+ def test_disconnected_unrelated_node_is_skipped(self):
+  import emergency_reader as r,errno
+  from unittest.mock import patch,Mock
+  paths=[Path('/dev/input/event11'),Path('/dev/input/event3')]
+  def opened(path,flags):
+   self.assertEqual(flags & os.O_ACCMODE,os.O_RDONLY)
+   if path==paths[0]:raise OSError(errno.ENXIO,'inactive')
+   return 42
+  with patch.object(r.struct,'calcsize',side_effect=lambda fmt:16 if fmt=='@llHHi' else 4),patch.object(r.Path,'glob',return_value=paths),patch.object(r.os,'open',side_effect=opened),patch.object(r.os,'fstat',return_value=Mock(st_mode=0o020600)),patch.object(r,'query',return_value=r.NAME+b'\0'),patch.object(r.os,'close'):
+   self.assertEqual(r.open_remote(),42)

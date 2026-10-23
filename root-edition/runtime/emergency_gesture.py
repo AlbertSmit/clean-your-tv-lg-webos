@@ -13,6 +13,10 @@ class TripleHome:
         if self.last is not None and now < self.last:
             self.down = None; self.taps = []
         self.last = now
+        # Firmware cursor-show notification is not a physical button press.
+        # Observing it must not discard Home taps; input is never consumed.
+        if code == 1198:
+            return False
         if code != 773:
             if value: self.down = None; self.taps = []
             return False

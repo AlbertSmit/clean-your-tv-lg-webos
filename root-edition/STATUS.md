@@ -196,3 +196,37 @@ the renderer, with a separate heartbeat supervisor and unchanged independent
 helper change. Readiness is required before activation and recovery is bound to the
 original transaction. Hardware acceptance, including a suspended renderer, remains
 pending. This does not unlock permanent activation.
+
+## RC13 bounded emergency exit accepted — 2026-10-23
+
+On OLED55C3RLA / 43.21.71, three short Home presses restored LG Home on
+the first attempt, without observed zoom, both normally and with the separate
+candidate renderer stopped by SIGSTOP. The legacy helper was stopped throughout.
+The observer does not grab, consume or reinject keys.
+
+RC11 exposed an inactive input node returning ENXIO; discovery now skips only
+ENXIO/ENODEV/ENOENT and still rejects ambiguous or inaccessible active channels.
+RC12 required a second gesture attempt. A passive trace showed cursor-show 1198
+cleared the first Home tap. RC13 excludes that notification from gesture resets;
+physical buttons, repeats, long holds and the existing time limits remain unchanged.
+The exact recorded failing sequence is now a regression test. Both corrected
+passive sequences were recognized (approximately 599 and 522 ms).
+
+Normal trial a477d2ff-0b36-40ec-a8d4-98e30ee8d341 restored all three stock
+Home destinations by uptime 2246.19, before deadline 2269.64, with reason `escape`.
+Frozen-renderer trial ee8889b2-0bc5-4943-b901-19558a774e51 recorded restoration
+at uptime 2306.37 while the renderer was still `T (stopped)`. The separate
+resumer then issued SIGCONT because the journal was restored, not because its
+45-second timeout expired. The independent Home deadline was 2351.15. The user
+confirmed first-attempt LG Home and no zoom in both trials. Subsequent readback
+showed stock SAM/defaultApps/idleApp, no active guardian and verified integrity.
+
+Full local suite passed (171 Python tests, 11 additional tests and remaining
+script checks). RC13 bundle.json SHA-256: `f85fb75dc77cec7a867fdb927711ddb560e4d292161dcc53370e9e2edd9f5e56`.
+The installed candidate includes locally migrated packaged preferences; private
+inventory and raw device logs are not published. RC12 artifacts/state are retained
+for rollback. Production launcher and helper files were not modified.
+
+This closes the **bounded-trial** frozen-UI escape check on this model. Permanent
+observer lifecycle, persistent activation and final-bundle lifecycle acceptance
+remain separate gates; `hardware_validated` and permanent activation stay locked.

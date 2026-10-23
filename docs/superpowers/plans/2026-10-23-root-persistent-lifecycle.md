@@ -1,0 +1,60 @@
+# Root persistent lifecycle implementation plan
+
+Goal: retain user intent across reboot without re-enabling Root mode after an
+emergency exit, failsafe, failed recovery or interrupted startup. Keep the RC13
+bounded escape implementation and production applications untouched.
+
+Architecture: a durable intent journal is separate from the existing routing
+recovery journal. The latter remains authoritative for restoring exact Home
+state. A pure transition policy decides whether startup may be attempted. An
+atomic root-private store serializes transitions and rejects stale generations.
+A boot adapter may activate only after recovery, input readiness and independent
+watchdog readiness. No persistent command is unlocked by this local milestone.
+
+## Invariants
+- An explicit enable first records a trial; only confirmed healthy trial enables
+  persistent intent. Timer expiry is not confirmation.
+- Emergency exit/failsafe/health loss writes disabled intent before recovery.
+- Boot recovery restores previous routing before any new activation.
+- A duplicate boot callback is a no-op. An interrupted startup never retries
+  automatically; a new explicit enable is required.
+- Every asynchronous result carries a generation and startup token. Stale events
+  cannot enable, disable or recover a newer attempt.
+- A failed or incomplete restoration prevents activation.
+- No writes to the TV or changes to production launcher/helper in this phase.
+
+## Execution (inline, test first)
+- [x] Add lifecycle tests covering explicit confirmation, reboot, duplicate
+  callbacks, interrupted startup, failsafe and stale event results.
+- [x] Implement transition(state, event), returning durable state and one effect
+  (`none`, `recover`, or `start_guarded`). Effects run only after state is saved.
+- [x] Add atomic journal tests: symlink rejection, stale generation, failed
+  replace, restart replay. Implement a store that uses the existing trusted_dir,
+  safe_json and fsync primitives, with a separate lifecycle lock.
+- [x] Exercise power-loss points by reloading the actual persisted journal and
+  replaying callbacks; run complete repository checks.
+- [x] Record local acceptance and exact remaining device integration gates.
+
+Next integration: connect durable effects to transaction-bound restoration and
+RC13 observer readiness; implement a renewable, independently watched lease,
+then validate normal/failsafe boots and frozen-UI escape on the final TV bundle.
+Until then, enable/confirm remain unavailable and no persistent package is shipped.
+
+## Local verification record
+
+Implemented `runtime/persistent_lifecycle.py`, `persistent_store.py` and
+`persistent_lease.py`; no device commands/import hooks invoke them. They are
+intentionally excluded from deploy.RUNTIME_FILES until transaction binding and
+boot wiring have been reviewed and tested.
+
+30 targeted tests cover state transitions, real atomic disk persistence/failures,
+stale event rejection, lease validation and an independent guard surviving a
+SIGSTOP of its heartbeat publisher. Existing CLI enable/confirm fail-closed tests
+remain passing. The saved intent generation/token must be explicitly bound to the
+routing journal transaction by the adapter; never substitute one ID for the other.
+
+Outstanding integration (not completed by the local policy tests): durable
+transaction binding, heartbeat publication driven only by input-loop PING,
+independent watchdog process readiness, normal/failsafe boot adapter, explicit
+confirmation UI, and final-bundle device acceptance. Persistent mode is not ready
+to install or advertise as supported.

@@ -230,3 +230,19 @@ for rollback. Production launcher and helper files were not modified.
 This closes the **bounded-trial** frozen-UI escape check on this model. Permanent
 observer lifecycle, persistent activation and final-bundle lifecycle acceptance
 remain separate gates; `hardware_validated` and permanent activation stay locked.
+
+## Persistent-mode lifecycle foundation — local only
+
+The intent state machine, private atomic state store and independent two-second
+lease policy are implemented and locally tested. Emergency/fault/failsafe intent
+is disabled before recovery; a healthy explicitly confirmed trial is required
+before retaining enabled intent. Boot restores prior routing before requesting
+activation; interrupted startup disables retry. Stale generations and attempt
+tokens cannot authorize a later transition.
+
+An actual subprocess test stops the heartbeat publisher with SIGSTOP while a
+separate guard detects lease expiry. This validates the local guard policy, not
+on-TV persistent recovery. These modules are deliberately not in the install
+bundle and are not called by existing RC13 paths. The production TV was untouched.
+Transaction binding, device orchestration and boot/UI integration remain required;
+persistent enable/confirm remain locked. See the dated lifecycle plan.

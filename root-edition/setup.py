@@ -19,7 +19,7 @@ def ssh_options(alias, identity=None):
 
 
 def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migrate=False):
-    if action not in ('install', 'status', 'trial', 'restore', 'uninstall'):
+    if action not in ('install', 'status', 'trial', 'emergency-trial', 'restore', 'uninstall'):
         raise ValueError('Unsupported action')
     if migrate and action != 'install':
         raise ValueError('Migration is only available with install')
@@ -55,7 +55,7 @@ def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migra
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'status', 'trial', 'restore', 'uninstall'))
+    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'restore', 'uninstall'))
     parser.add_argument('--ssh', required=True, help='Explicit, preconfigured OpenSSH alias')
     parser.add_argument('--identity', type=Path)
     parser.add_argument('--bundle', type=Path)

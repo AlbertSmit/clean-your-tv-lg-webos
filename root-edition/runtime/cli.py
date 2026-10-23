@@ -11,6 +11,9 @@ def main(mode):
         raise PermissionError('Root required')
     if mode in ('enable', 'confirm'):
         raise ValueError('hardware-validation-required: persistent activation is unavailable in this candidate')
+    if mode == 'emergency-trial':
+        from emergency_trial import start
+        return start()
     if mode == 'trial':
         from bounded_profile_trial import begin, spawn
         return begin(spawn)
@@ -28,7 +31,7 @@ def main(mode):
         result['candidate'] = d.CANDIDATE
         result['persistent_enable_available'] = False
         return result
-    raise ValueError('Expected status, trial, restore, boot, enable or confirm')
+    raise ValueError('Expected status, trial, emergency-trial, restore, boot, enable or confirm')
 
 
 if __name__ == '__main__':

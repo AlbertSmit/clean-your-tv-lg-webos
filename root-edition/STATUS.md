@@ -187,3 +187,12 @@ restore was sent. The old helper remained stopped with its latch set. The produc
 launcher was opened for explicit helper resumption. The user then confirmed
 short Home and arrows work in the production setup. This validates the normal UI
 exit, not escape from a frozen interface. Permanent activation remains locked.
+
+## Independent triple-Home observer — local candidate
+
+Added an opt-in emergency-trial path. Three short Home presses are observed outside
+the renderer, with a separate heartbeat supervisor and unchanged independent
+60-second guardian. No key grab/filter, system-library modification or production
+helper change. Readiness is required before activation and recovery is bound to the
+original transaction. Hardware acceptance, including a suspended renderer, remains
+pending. This does not unlock permanent activation.

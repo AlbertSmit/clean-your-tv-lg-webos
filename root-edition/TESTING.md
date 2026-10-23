@@ -66,3 +66,34 @@ Local tests cover independent installer completion, unknown outcomes, exact
 payload hashes, recovery provisioning and the helper stop latch. They cannot
 prove delivery of a boot activity on this firmware. Permanent activation remains
 unavailable until lifecycle tests and an emergency exit are accepted.
+
+## Triple-Home emergency candidate (local, hardware acceptance pending)
+
+`setup.py emergency-trial --ssh my-tv` is an explicit bounded test, not permanent
+activation. Stop the No-root helper first. The command requires the ARM32 input
+ABI and the previously observed `LGE M-RCU - Builtin [0]` channel. Input is opened
+read-only: no grab, injection or system-library patch.
+
+Three completed Home presses within two seconds request recovery. Each press must
+last 40–500 ms; repeats, long holds, another key and invalid sequences reset it.
+The observer runs outside the web interface. A separate supervisor monitors its
+private heartbeat pipe; input loss, exit or a two-second stall requests verified
+rollback. The original independent 60-second guardian remains armed. Failure to
+acknowledge observer readiness prevents Home publication. Production helper state
+is never changed.
+
+Required supervised tests on the final package:
+
+1. Ordinary Home and navigation still work; triple short Home restores LG Home
+   before the deadline without magnification.
+2. Suspend only the candidate renderer after verifying its process identity.
+   Triple Home must still restore routing. Always resume that exact process in
+   cleanup; never suspend WebAppMgr, system UI or the production launcher.
+3. Suspend only the diagnostic observer. Its supervisor must restore routing
+   before the independent deadline.
+4. Confirm the production launcher and explicit helper resumption work afterward.
+
+Local tests exercise the gesture, synthetic input pipe, real stopped/killed child
+processes, malformed health messages, startup refusal and transaction-bound
+recovery. They do not establish TV key delivery or frozen-renderer recovery.
+Permanent-mode supervision and rearming are not implemented by this bounded test.

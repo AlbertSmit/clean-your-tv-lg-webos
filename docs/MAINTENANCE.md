@@ -14,7 +14,7 @@ actual device name. Manual installations below use the profile `lgtv`.
 
 ## Update
 
-Read the release notes. Pause interception with long Home before updating. Keep
+Read the release notes. Pause interception with triple Home before updating. Keep
 known-working packages locally. Do not uninstall first: that can remove app data.
 
 Build the new version, then install helper followed by launcher. Refresh app inventory
@@ -31,11 +31,11 @@ ares-novacom -d lgtv --run "luna-send-pub -n 1 luna://com.webos.service.eim/dele
 ```
 
 Check for `returnValue: true`. This removes the input registration; it does not
-uninstall the applications. First hold Home for two seconds to stop interception.
+uninstall the applications. First press Home three times within two seconds to stop interception.
 
 ## Uninstall
 
-1. Hold Home for two seconds to stop interception.
+1. Press Home three times within two seconds to stop interception.
 2. Remove input restoration using the command above.
 3. Remove the startup task if the service is still installed:
 

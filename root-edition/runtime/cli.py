@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Isolated Root candidate: status, 60-second trial, restore, boot recovery."""
+"""Root activation, status, restore, boot recovery and diagnostic trials."""
 import json
 import os
 import sys
@@ -23,7 +23,10 @@ def execute(mode, transaction=None):
     if mode == 'confirm':
         from intent_runtime import confirm
         return confirm(transaction)
-    if mode in ('enable','intent-trial'):
+    if mode == 'enable':
+        from intent_runtime import enable
+        return enable()
+    if mode == 'intent-trial':
         from intent_runtime import start
         return start()
     if mode == 'emergency-trial':

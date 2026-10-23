@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""Build public TV payload and a native single-file cytv executable. Never contacts a TV."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from cytv import package
+
+
+def tracked_files(prefix):
+    result = subprocess.run(['git', 'ls-files', '--', prefix], cwd=ROOT, capture_output=True, check=True, text=True)
+    files = {}
+    # Explicit public runtime dependencies may be new files in a source checkout.
+    # Do not include arbitrary untracked files or local profile data.
+    required = {'launcher': ['launcher/app-library.js'],
+                'native/service': ['native/service/app-inventory.js']}
+    for name in sorted(set(result.stdout.splitlines()) | set(required.get(prefix, []))):
+        path = ROOT / name
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('Missing or indirect public source: ' + name)
+        files[str(Path(name).relative_to(prefix)).replace('\\', '/')] = path.read_bytes()
+    return files
+
+
+def pack_app(appfiles, servicefiles, architecture='all', helper=False):
+    info = json.loads(appfiles['appinfo.json'])
+    app, version = info['id'], info['version']
+    service = json.loads(servicefiles['services.json'])['id']
+    files = {'usr/palm/applications/' + app + '/' + n: b for n, b in appfiles.items()}
+    files.update({'usr/palm/services/' + service + '/' + n: b for n, b in servicefiles.items()})
+    files['usr/palm/packages/' + app + '/packageinfo.json'] = json.dumps({
+        'id': app, 'version': version, 'app': app, 'services': [service]}).encode()
+    executables = set()
+    if helper:
+        executables = {'usr/palm/applications/' + app + '/' + n for n in ('detach', 'relay', 'resume')}
+        files['usr/palm/applications/' + app + '/state/.keep'] = b''
+        files['usr/palm/services/' + service + '/state/.keep'] = b''
+    return package.ipk(app, version, files, executables, helper_state=helper, architecture=architecture)
+
+
+def verify_release_versions(payload, versions):
+    from cytv import __version__
+    if __version__ != versions['cytv']:
+        raise ValueError('cytv version does not match release metadata')
+    root = payload / 'root'
+    bundle = json.loads((root / 'bundle.json').read_text())
+    if json.loads((root / 'release.json').read_text())['version'] != versions['root']:
+        raise ValueError('Root release version does not match release metadata')
+    for filename, app, service, version in (
+        ('launcher.ipk', 'com.gathin.tvhome', 'com.gathin.tvhome.renewal', versions['home']),
+        ('helper.ipk', 'com.local.nativehome', 'com.local.nativehome.service', versions['helper']),
+        ('root/' + bundle['package'], package.ROOT_APP, package.ROOT_APP + '.service', versions['root']),
+    ):
+        files = package.data_files((payload / filename).read_bytes())
+        info = json.loads(files['usr/palm/applications/' + app + '/appinfo.json'])
+        metadata = json.loads(files['usr/palm/services/' + service + '/package.json'])
+        if info['id'] != app or info['version'] != version or metadata['version'] != version:
+            raise ValueError('Embedded application/service version does not match release metadata: ' + app)
+
+
+def build_payload():
+    import ziglang
+    versions = json.loads((ROOT / "release-versions.json").read_text())
+    work = (ROOT / 'build/cytv').resolve()
+    payload = work / 'payload'
+    if payload.exists():
+        shutil.rmtree(payload)
+    payload.mkdir(parents=True)
+    zig = Path(ziglang.__file__).parent / ('zig.exe' if os.name == 'nt' else 'zig')
+    environment = dict(os.environ, ZIG_GLOBAL_CACHE_DIR=str(work / 'zig-global-cache'), ZIG_LOCAL_CACHE_DIR=str(work / 'zig-cache'))
+    app = tracked_files('native/app')
+    # A developer's local state must never enter the public helper.
+    app = {n: b for n, b in app.items() if (n.endswith(('.js', '.json', '.png')) or n.startswith('vendor/')) and not n.startswith('state/')}
+    for name, sources in {
+        'detach': ['native/app/detach.c'],
+        'relay': ['native/prototype/relay.c', 'native/prototype/filter.c'],
+        'resume': ['native/app/resume.c'],
+    }.items():
+        output = work / name
+        subprocess.run([str(zig), 'cc', '-target', 'arm-linux-musleabi', '-Os', '-static', '-s',
+                        *sources, '-o', str(output)], cwd=ROOT, env=environment, check=True)
+        app[name] = output.read_bytes()
+    service = {n: b for n, b in tracked_files('native/service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
+    (payload / 'helper.ipk').write_bytes(pack_app(app, service, architecture='arm', helper=True))
+    launcher = {n: b for n, b in tracked_files('launcher').items() if n != 'apps.js' and not n.startswith('icons/')}
+    launcher['config.js'] = b'window.CONFIG = {columns:5,dockApps:[],hiddenApps:["com.gathin.tvhome","com.local.nativehome"]};\n'
+    launcher['apps.js'] = b'window.TV_APPS = {apps:[],inputs:[]};\n'
+    renewal = {n: b for n, b in tracked_files('renewal-service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
+    (payload / 'launcher.ipk').write_bytes(pack_app(launcher, renewal))
+    (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
+    subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
+    (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
+    (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
+    # Ship dependency license metadata as well as application notices in the executable.
+    import importlib.metadata
+    for name in ('paramiko', 'websockets', 'cryptography', 'bcrypt', 'PyNaCl', 'cffi', 'psutil'):
+        distribution = importlib.metadata.distribution(name)
+        for item in distribution.files or ():
+            if any('license' in part.lower() or part.lower() == 'copying' for part in item.parts):
+                path = Path(distribution.locate_file(item))
+                if path.is_file():
+                    target = payload / 'licenses' / name / path.name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(path.read_bytes())
+    manifest = {'schema': 1, 'launcher': 'launcher.ipk', 'helper': 'helper.ipk',
+                'home_version': json.loads(launcher['appinfo.json'])['version'],
+                'helper_version': json.loads(app['appinfo.json'])['version'],
+                'files': {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                          for p in sorted(payload.rglob('*')) if p.is_file()}}
+    (payload / 'payload.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
+    package.verify_payload(payload)
+    verify_release_versions(payload, versions)
+    return payload
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--payload-only', action='store_true', help='Build and verify TV assets, without freezing')
+    args = parser.parse_args()
+    payload = build_payload()
+    print('Public TV payload verified:', payload)
+    if args.payload_only:
+        return
+    environment = dict(os.environ, PYINSTALLER_CONFIG_DIR=str(ROOT / 'build/cytv/pyinstaller-cache'))
+    subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onefile', '--console',
+                    '--name', 'cytv', '--paths', str(ROOT), '--add-data', str(payload) + os.pathsep + 'payload',
+                    '--workpath', str(ROOT / 'build/cytv/freeze'), '--specpath', str(ROOT / 'build/cytv'),
+                    '--distpath', str(ROOT / 'dist'), str(ROOT / 'cytv/__main__.py')], cwd=ROOT, env=environment, check=True)
+    executable = ROOT / 'dist' / ('cytv.exe' if os.name == 'nt' else 'cytv')
+    subprocess.run([str(executable), '--version'], check=True)
+    subprocess.run([str(executable), '--check-payload'], check=True)
+    print('Built:', executable)
+
+
+if __name__ == '__main__':
+    main()

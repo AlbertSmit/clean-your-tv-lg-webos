@@ -10,7 +10,7 @@ APP_ID = 'com.cleanyourtv.root.preview'
 SOURCE = Path(__file__).resolve().parents[1] / 'launcher'
 # Explicit public-source inventory: never recursively copy a developer workspace.
 FILES = (
-    'appinfo.json', 'index.html', 'app.js', 'style.css',
+    'appinfo.json', 'index.html', 'app.js', 'app-library.js', 'style.css',
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
     'fonts/outfit.ttf', 'fonts/OFL.txt',
 )

@@ -25,3 +25,10 @@ service.register('tick',function(m){try{
 function readDebug(p){try{return JSON.parse(fs.readFileSync(p,'utf8'));}catch(e){return null;}}
 
 function blocked(){try{fs.statSync('/media/developer/apps/usr/palm/applications/com.local.nativehome/state/blocked');return true;}catch(e){return e.code!=='ENOENT';}}
+
+var inventoryPending=null;
+service.register('listApps',function(message){
+ if(!inventoryPending)inventoryPending=require('./app-inventory')();
+ var request=inventoryPending;
+ request.then(function(apps){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:true,apps:apps});},function(){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:false,errorText:'App inventory unavailable'});});
+});

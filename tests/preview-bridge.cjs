@@ -1,14 +1,25 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const context = {window: {TV_APPS: {apps: []}}, document: {getElementById: () => null}, setTimeout, clearTimeout};
+let now = 0, timerId = 0;
+const timers = new Map();
+function advance(ms) {
+  now += ms;
+  for (const [id, timer] of timers) {
+    if (timer.at <= now) { timers.delete(id); timer.fn(); }
+  }
+}
+const context = {window: {TV_APPS: {apps: []}}, document: {getElementById: () => null},
+  setTimeout: (fn, delay) => { const id = ++timerId; timers.set(id, {fn, at: now + delay}); return id; },
+  clearTimeout: id => timers.delete(id)};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('preview/bridge.js', 'utf8'), context);
-function call(method, payload = {}) {
+function call(method, payload = {}, service = 'com.cleanyourtv.root.preview.service') {
   return new Promise(resolve => {
     const bridge = new context.window.PalmServiceBridge();
     bridge.onservicecallback = raw => resolve(JSON.parse(raw));
-    bridge.call('luna://com.cleanyourtv.root.preview.service/' + method, JSON.stringify(payload));
+    bridge.call('luna://' + service + '/' + method, JSON.stringify(payload));
+    advance(30);
   });
 }
 (async () => {
@@ -16,24 +27,24 @@ function call(method, payload = {}) {
   assert.equal(reply.result.result.intent.phase, 'disabled');
   await call('enable');
   reply = await call('status');
-  assert.equal(reply.result.result.intent.phase, 'trial');
-  const transaction = reply.result.result.journal.transaction;
-  assert.equal((await call('confirm', {transaction: 'wrong'})).returnValue, false);
-  assert.equal((await call('confirm', {transaction})).returnValue, true);
+  assert.equal(reply.result.result.intent.phase, 'active');
+  advance(120000);
   assert.equal((await call('status')).result.result.intent.phase, 'active');
+  assert.equal((await call('confirm', {transaction: 'preview-root-activation'})).returnValue, false, 'Persistent activation has no Keep confirmation');
   assert.equal((await call('restore')).result.result, 'restored');
   reply = await call('status');
   assert.equal(reply.result.result.intent.phase, 'disabled');
   assert.equal(reply.result.result.effective.sam_home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.defaultApps.categories.home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.idleApp.appId, 'com.webos.app.home');
-  async function updater(method) {
-    return new Promise(resolve => {
-      const bridge = new context.window.PalmServiceBridge();
-      bridge.onservicecallback = raw => resolve(JSON.parse(raw));
-      bridge.call('luna://com.cleanyourtv.root.updater.service/' + method, '{}');
-    });
+  context.window.TV_APPS.apps = [{id: 'preview.youtube', title: 'YouTube'}];
+  for (const service of ['com.local.nativehome.service', 'com.cleanyourtv.root.preview.service']) {
+    reply = await call('listApps', {}, service);
+    assert.equal(reply.returnValue, true);
+    assert.equal(reply.apps[0].id, 'preview.youtube');
+    assert.equal(reply.apps[1].id, 'preview.gallery');
   }
+  function updater(method) { return call(method, {}, 'com.cleanyourtv.root.updater.service'); }
   context.window.ROOT_VERSION = '0.1.1';
   reply = await updater('restoreProfile');
   assert.equal(reply.returnValue, true);
@@ -44,5 +55,5 @@ function call(method, payload = {}) {
   assert.equal(reply.result.reason, 'current');
   assert.equal((await updater('status')).result, null);
   assert.equal((await updater('install')).returnValue, false, 'Browser preview cannot install packages');
-  console.log('PASS browser Root demo trial, confirmation and restore');
+  console.log('PASS browser app management, persistent Root activation/restore and Software updates preview');
 })().catch(error => { console.error(error); process.exit(1); });

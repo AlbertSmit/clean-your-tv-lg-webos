@@ -22,7 +22,7 @@
   if(profileError){cb(Error('stored-profile-unreadable'));return;}
   var inventory=JSON.parse(JSON.stringify(window.TV_APPS||{apps:[],inputs:[]}));
   var s={schema:1,inventory:inventory,config:JSON.parse(JSON.stringify(CONFIG)),settings:{}};
-  try{var order=localStorage.getItem('tvhome.order');if(order!==null)s.settings['tvhome.order']=order;}catch(e){cb(e);return;}
+  try{['tvhome.order','tvhome.layout'].forEach(function(key){var value=localStorage.getItem(key);if(value!==null)s.settings[key]=value;});}catch(e){cb(e);return;}
   var index=0;function next(error,value){if(error){cb(error);return;}if(index>0)inventory.apps[index-1].icon=value;
    if(index<inventory.apps.length){icon(inventory.apps[index++].icon,next);return;}
    rpc('status',{},function(state){if(!state||typeof state.enabled!=='boolean'){cb(Error('renewal-state-unavailable'));return;}

@@ -46,10 +46,10 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(output.getvalue(), '')
         self.assertIn('temporary', errors.getvalue())
 
-    def test_enable_dispatches_guarded_trial_and_confirm_requires_existing_intent(self):
+    def test_enable_dispatches_persistent_activation_and_confirm_requires_existing_intent(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(d,'STATE',Path(tmp).resolve()),patch.object(d,'EXPECTED_UID',os.getuid()):
-            with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.start',return_value={'persistent':False}) as start:
-                self.assertFalse(cli.main('enable')['persistent'])
+            with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.enable',return_value={'persistent':True}) as start:
+                self.assertTrue(cli.main('enable')['persistent'])
                 start.assert_called_once_with()
             with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.coordinator',return_value=None):
                 with self.assertRaisesRegex(ValueError,'No intent'): cli.main('confirm')

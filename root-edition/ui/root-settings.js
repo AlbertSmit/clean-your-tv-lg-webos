@@ -40,22 +40,20 @@
     return control('status').then(function (status) {
       rootStatus = status;
       var phase = status.intent && status.intent.phase;
-      buttons[3].textContent = phase === 'active' ? 'Home control is on' : phase === 'trial' ? 'Keep using Home' : 'Try Home control';
-      buttons[3].disabled = phase === 'active' || (phase && phase !== 'disabled' && phase !== 'trial');
+      buttons[3].textContent = phase === 'active' ? 'Home control is on' : phase === 'trial' || phase === 'starting' ? 'Turning on Home control…' : 'Turn on Home control';
+      buttons[3].disabled = !!phase && phase !== 'disabled';
       if (!panel.hidden && buttons[selected].disabled) move(1);
       if (confirmExit) return;
-      if (phase === 'disabled' || !phase) message.textContent = 'Home control is off. Try it for one minute, then confirm to keep Home as your home screen.';
-      if (phase === 'trial') message.textContent = 'Press Home and Back to test your remote. Select Keep using Home within one minute, or LG Home will return automatically.';
+      if (phase === 'disabled' || !phase) message.textContent = 'Home control is off. Turn it on to use Home as your home screen. Stop the previous Home Helper first.';
+      if (phase === 'trial' || phase === 'starting') message.textContent = 'Checking input and recovery before turning on Home control. To cancel, select Return to LG Home.';
       if (phase === 'active') message.textContent = 'Home control is on and will stay on after restarting the TV. Return to LG Home below to turn it off.';
     }).catch(function (e) { message.textContent = e.message; });
   }
   function changeMode() {
     if (!rootStatus || buttons[3].disabled) return;
-    var confirming = rootStatus.intent && rootStatus.intent.phase === 'trial';
-    var payload = confirming ? {transaction:rootStatus.journal && rootStatus.journal.transaction} : {};
     busy = true; buttons.forEach(function (b) { b.disabled = true; });
-    message.textContent = confirming ? 'Verifying input and recovery protection…' : 'Starting a one-minute trial… The previous Home Helper must be stopped first.';
-    control(confirming ? 'confirm' : 'enable', payload).then(function () {
+    message.textContent = 'Turning on Home control and checking recovery protection…';
+    control('enable').then(function () {
       busy = false; buttons.forEach(function (b) { b.disabled = false; });
       return refreshMode();
     }).catch(function (e) {

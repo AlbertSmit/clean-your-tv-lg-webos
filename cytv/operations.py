@@ -1,0 +1,445 @@
+"""Edition-specific operations; SSH is the only device mutation boundary."""
+import json
+import hashlib
+from pathlib import Path
+import shlex
+import shutil
+import tempfile
+import uuid
+
+from . import package
+from .errors import UserError, TVRejected, ExistingRoot
+
+HOME = 'com.gathin.tvhome'
+HELPER = 'com.local.nativehome'
+BASE = '/media/developer/apps/usr/palm'
+HELPER_STATE = BASE + '/applications/' + HELPER + '/state'
+ROOT_STATE = '/var/lib/clean-your-tv-root'
+
+
+class Installer:
+    def __init__(self, remote, store, profile, payload, manifest, progress=print):
+        self.remote, self.store, self.profile = remote, store, profile
+        self.payload, self.manifest, self.progress = Path(payload), manifest, progress
+        self.helper_retry = lambda: False
+
+    def root_action(self, action, bundle=None, migrate=False):
+        driver = (bundle or ROOT_STATE) + '/deploy.py'
+        args = ['/usr/bin/python3', driver, action]
+        if bundle:
+            args += ['--bundle', bundle]
+        if migrate:
+            args.append('--migrate-packaged-home')
+        raw = self.remote.run(shlex.join(args), timeout=720 if action == 'restore' else 180)
+        reply = json.loads(raw)
+        if not isinstance(reply, dict) or reply.get('returnValue') is not True:
+            raise UserError('Root operation was not confirmed. Run cytv status; retain recovery state.')
+        return reply
+
+    def preflight(self, install=False):
+        if self.profile['edition'] == 'root':
+            command = ('test "$(id -u)" = 0 && test -x /usr/bin/python3 && '
+                       'test -x /usr/bin/luna-send && test -d /media/developer/apps && '
+                       'test -d /var/luna-service2-dev && /usr/bin/python3 -c "import json,fcntl" && '
+                       'printf CYTV_ROOT_READY')
+            if self.remote.run(command).strip() != 'CYTV_ROOT_READY':
+                raise UserError('Root requires a root SSH login, Python 3, Homebrew services and webOS TV.')
+            if install:
+                paths = [ROOT_STATE, BASE + '/applications/' + package.ROOT_APP,
+                         BASE + '/services/' + package.ROOT_APP + '.service', BASE + '/packages/' + package.ROOT_APP]
+                condition = ' || '.join('[ -e ' + p + ' ] || [ -L ' + p + ' ]' for p in paths)
+                if self.remote.run('if ' + condition + '; then printf CYTV_EXISTING_ROOT; fi').strip():
+                    raise ExistingRoot('Root is already installed or recovery state remains. Connect interactively to review reinstallation; existing state was left unchanged.')
+        else:
+            arch = self.remote.run('uname -m').strip()
+            if arch not in ('armv7l', 'armv7', 'armv8l'):
+                raise UserError('The bundled Home Helper requires ARM32. This TV architecture is not supported.')
+            root_state = self.remote.run(
+                'if [ -e /var/webos-profile/override/clean-your-tv-root.json ] || '
+                '[ -L /var/webos-profile/override/clean-your-tv-root.json ]; then printf CYTV_ROOT_STATE; fi')
+            if root_state.strip():
+                raise UserError('Root Home routing is present. Restore it with cytv --edition root restore first.')
+            if not install:
+                return
+            helper = self.remote.run(
+                'if [ -e ' + HELPER_STATE + '/controller.pid ] || [ -L ' + HELPER_STATE + '/controller.pid ]; then printf CYTV_HELPER_ACTIVE; exit 0; fi; '
+                'for p in /proc/[0-9]*/cmdline; do [ -r "$p" ] || continue; '
+                'if tr "\\000" "\\n" < "$p" 2>/dev/null | grep -Fx ' + shlex.quote(BASE + '/applications/' + HELPER + '/relay') + ' >/dev/null; '
+                'then printf CYTV_HELPER_ACTIVE; break; fi; done')
+            if helper.strip():
+                raise UserError('Home Helper is active or its state is uncertain. Press Home three times within two seconds (older Helper: hold Home for two seconds) to stop it, then rerun installation.')
+
+    def install(self, inventory, ssap_key=None, migrate=False, reinstall=None):
+        # All local validation precedes the durable mutation receipt.
+        if self.store.pending(self.profile):
+            raise UserError('Previous operation is unresolved. Run cytv status or cytv restore; do not retry installation.')
+        if reinstall and migrate:
+            raise UserError('Reinstallation does not support --migrate-home. Omit it to read a fresh TV inventory before replacing Root.')
+        if not migrate:
+            package.inventory_script(inventory)
+        if reinstall not in (None, 'installed', 'removed') or (reinstall and self.profile['edition'] != 'root'):
+            raise UserError('Invalid reinstallation request.')
+        self.preflight(install=not reinstall)
+        if self.profile['edition'] == 'root':
+            return self.install_root(inventory, migrate, reinstall)
+        if not ssap_key:
+            raise ValueError('Remote-control pairing is required for No-root.')
+        launcher, _ = package.personalize((self.payload / self.manifest['launcher']).read_bytes(), HOME, inventory)
+        helper = (self.payload / self.manifest['helper']).read_bytes()
+        expected = {}
+        for data in (helper, launcher):
+            for name, content in package.data_files(data).items():
+                if '/state/' not in name:
+                    expected['/media/developer/apps/' + name] = hashlib.sha256(content).hexdigest()
+        key_data = json.dumps({'key': ssap_key}).encode()
+        ids = [app['id'] for app in inventory['apps'] if app['id'] not in (HOME, HELPER, 'com.webos.app.home', package.ROOT_APP)]
+        apps_data = json.dumps(ids).encode()
+        expected[HELPER_STATE + '/ssap-key.json'] = hashlib.sha256(key_data).hexdigest()
+        expected[HELPER_STATE + '/apps.json'] = hashlib.sha256(apps_data).hexdigest()
+        self.store.begin(self.profile, 'install', expected=expected,
+                         versions={HOME: self.manifest['home_version'], HELPER: self.manifest['helper_version']})
+        stage = '/media/developer/temp/cytv-' + uuid.uuid4().hex
+        self.remote.run('umask 077; mkdir -p /media/developer/temp && mkdir ' + stage)
+        for app, data, name in ((HELPER, helper, 'helper.ipk'), (HOME, launcher, 'launcher.ipk')):
+            self.progress('Installing ' + ('Home Helper' if app == HELPER else 'Home') + '…')
+            path = stage + '/' + name
+            self.remote.upload(path, data, mode=0o644)
+            self.remote.luna('com.webos.appInstallService/dev/install', {'id': app, 'ipkUrl': path, 'subscribe': True}, terminal='installed', timeout=150)
+        self.verify_installed()
+        self.progress('Configuring Home Helper…')
+        self.remote.upload(HELPER_STATE + '/ssap-key.json', key_data, mode=0o640)
+        self.remote.upload(HELPER_STATE + '/apps.json', apps_data, mode=0o644)
+        self.save_eim('unknown')  # Persist uncertainty before submitting registration.
+        try:
+            self.remote.luna('com.webos.service.eim/addDevice', {'appId': HOME, 'pigImage': '', 'mvpdIcon': ''})
+            self.save_eim(True)
+        except TVRejected:
+            self.save_eim(self.read_eim())
+            self.progress('Warning: early input restoration is unavailable; startup will use the guarded fallback.')
+        except RuntimeError:
+            self.store.checkpoint(self.profile, eim_registered='unknown')
+            self.progress('Warning: early input restoration was not confirmed; startup will use the guarded fallback.')
+        self.remote.luna('com.webos.applicationManager/launch', {'id': HELPER})
+        from .state import private_write
+        private_write(self.store.device_dir(self.profile) / 'installation.json',
+                      json.dumps({'eim_registered': self.store.pending(self.profile).get('eim_registered', 'unknown')}).encode())
+        self.store.finish(self.profile)
+        self.remote.run('rm -f ' + stage + '/helper.ipk ' + stage + '/launcher.ipk; rmdir ' + stage)
+        return {'installed': 'no-root', 'launch_requested': True, 'hardware_verified': False}
+
+    def install_root(self, inventory, migrate, reinstall=None):
+        with tempfile.TemporaryDirectory(prefix='cytv-root-') as tmp:
+            bundle = Path(tmp).resolve() / 'root'
+            shutil.copytree(self.payload / 'root', bundle)
+            if not migrate:
+                package.personalize_root(bundle, inventory)
+            manifest = json.loads((bundle / 'bundle.json').read_text())
+            for name, digest in manifest['files'].items():
+                if hashlib.sha256((bundle / package.safe_name(name)).read_bytes()).hexdigest() != digest:
+                    raise ValueError('Prepared Root bundle integrity mismatch')
+            release_sha = hashlib.sha256((bundle / 'release.json').read_bytes()).hexdigest()
+            bundle_sha = hashlib.sha256((bundle / 'bundle.json').read_bytes()).hexdigest()
+            if reinstall:
+                self.prepare_root_reinstall(already_removed=reinstall == 'removed')
+                self.preflight(install=True)
+            self.store.begin(self.profile, 'install',
+                                  release_sha=release_sha, bundle_sha=bundle_sha, migrate=migrate)
+            stage = '/tmp/cytv-root-' + uuid.uuid4().hex
+            self.remote.run('umask 077; mkdir ' + stage)
+            names = [*manifest['files'], 'bundle.json']
+            for directory in sorted({str(Path(n).parent).replace('\\', '/') for n in names} - {'.'}):
+                self.remote.run('mkdir -p ' + shlex.quote(stage + '/' + directory))
+            self.progress('Uploading Root and recovery runtime…')
+            for name in names:
+                self.remote.upload(stage + '/' + package.safe_name(name), (bundle / name).read_bytes())
+            result = self.root_action('install', bundle=stage, migrate=migrate)
+            if result.get('installed') != package.ROOT_APP or result.get('home_changed') is not False:
+                raise UserError('Root installation readback is unexpected. Keep recovery state and run cytv status.')
+            self.store.checkpoint(self.profile, action='activate-root', stage='stop-helper')
+            self.activate_root()
+            return dict(result, home_changed=True, launch_requested=True)
+
+    @staticmethod
+    def root_active(result):
+        return (result.get('recovery', {}).get('integrity_verified') is True
+                and (result.get('intent') or {}).get('enabled') is True
+                and (result.get('intent') or {}).get('phase') == 'active'
+                and result.get('guardian_active') is True
+                and result.get('effective', {}).get('sam_home') == package.ROOT_APP
+                and result.get('effective', {}).get('profiles', {}).get('idleApp', {}).get('appId') == package.ROOT_APP
+                and result.get('effective', {}).get('profiles', {}).get('defaultApps', {}).get('categories', {}).get('home') == package.ROOT_APP)
+
+    def activate_root(self):
+        self.progress('Checking Root recovery…')
+        if self.root_action('status').get('result', {}).get('recovery', {}).get('integrity_verified') is not True:
+            raise UserError('Root is installed, but recovery could not be verified. Run cytv status; activation has not started.')
+        self.progress('Stopping the old Home Helper…')
+        while True:
+            try:
+                self.stop_helper()
+                check = "import sys; sys.path.insert(0, '/var/lib/clean-your-tv-root/runtime'); from helper_bridge import require_idle; require_idle(); print('CYTV_HELPER_IDLE')"
+                if self.remote.run(shlex.join(['/usr/bin/python3', '-c', check])).strip() != 'CYTV_HELPER_IDLE':
+                    raise RuntimeError('Helper idle state is unconfirmed')
+                break
+            except RuntimeError:
+                if not self.helper_retry():
+                    raise UserError('Root is installed, but Home Helper has not stopped. Press Home three times within two seconds (older Helper: hold Home for two seconds), release all buttons, then use Home settings > Turn on Home control. Run cytv status or cytv restore before reinstalling.') from None
+        self.store.checkpoint(self.profile, stage='enable')
+        self.progress('Turning on Root Home control…')
+        try:
+            self.root_action('enable')
+            self.store.checkpoint(self.profile, stage='launch')
+            self.progress('Opening Clean Your TV Home…')
+            self.remote.luna('com.webos.applicationManager/launch', {'id': package.ROOT_APP})
+            self.store.checkpoint(self.profile, launch_requested=True)
+            if not self.root_active(self.root_action('status').get('result', {})):
+                raise UserError('Root activation or recovery readback was not confirmed. Run cytv status or cytv restore. Recovery data was kept.')
+        except (RuntimeError, ValueError):
+            raise UserError('Root is installed, but activation or opening Home could not be confirmed. Run cytv status to inspect it, or cytv restore to return to LG Home. Recovery data was kept; do not reinstall blindly.') from None
+        self.store.finish(self.profile)
+
+    def stop_helper(self):
+        apps = {app['id'] for app in self.installed_apps()}
+        if HELPER in apps:
+            self.remote.luna('com.local.nativehome.service/disable', {})
+        self.remote.run(
+            'if [ -f ' + HELPER_STATE + '/controller.pid ]; then '
+            'printf \'{"cmd":"stop"}\' > ' + HELPER_STATE + '/control.json; '
+            'n=0; while [ -e ' + HELPER_STATE + '/controller.pid ]; do '
+            'n=$((n+1)); [ "$n" -le 15 ] || exit 1; sleep 1; done; fi', timeout=25)
+
+    def installed_apps(self):
+        reply = self.remote.luna('com.webos.applicationManager/dev/listApps', {})
+        apps = reply.get('apps')
+        if not isinstance(apps, list):
+            raise UserError('Could not read installed applications.')
+        return apps
+
+    def verify_installed(self):
+        apps = {app['id']: app for app in self.installed_apps()}
+        for app, key in ((HOME, 'home_version'), (HELPER, 'helper_version')):
+            if apps.get(app, {}).get('version') != self.manifest[key]:
+                raise UserError('Installed version did not match the package. Run cytv status; do not retry blindly.')
+
+    def status(self):
+        pending = self.store.pending(self.profile)
+        reconciled = None
+        if self.profile['edition'] == 'root':
+            raw = self.remote.run('if [ -f ' + ROOT_STATE + '/deploy.json ]; then cat ' + ROOT_STATE + '/deploy.json; '
+                                  'elif [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf \'{"stage":"incomplete-state"}\'; '
+                                  'else printf \'{"stage":"absent"}\'; fi')
+            journal = json.loads(raw)
+            stage = journal.get('stage')
+            result = {'deployment_stage': stage}
+            if pending and pending['action'] == 'archive-root-state':
+                readback = self.root_archive('reconcile', pending.get('archive'), pending.get('identity'))
+                if readback.get('state') in ('archived', 'not-archived'):
+                    self.store.finish(self.profile)
+                    pending = None
+                    reconciled = 'root-archive-' + readback['state']
+            if stage == 'installed-recovery-only':
+                result = self.root_action('status')
+                if (pending and pending['action'] == 'activate-root'
+                        and self.root_active(result.get('result', {}))):
+                    self.store.finish(self.profile)
+                    reconciled = ('root-activation-verified' if pending.get('launch_requested') is True
+                                  else 'root-activation-verified; screen launch unconfirmed, press Home to open it')
+                if (pending and pending['action'] == 'install'
+                        and result.get('result', {}).get('recovery', {}).get('integrity_verified') is True
+                        and self.root_files_match(pending)):
+                    self.store.finish(self.profile)
+                    reconciled = 'root-installation-verified'
+            elif stage == 'uninstalled-state-retained':
+                self.verify_absent(package.ROOT_APP)
+                if pending and pending['action'] == 'uninstall':
+                    self.store.finish(self.profile)
+                    reconciled = 'root-removal-verified; TV evidence retained'
+            elif stage == 'absent' and pending and pending['action'] == 'install':
+                self.verify_absent(package.ROOT_APP)
+                self.store.finish(self.profile)
+                reconciled = 'no-root-installation-submitted'
+        else:
+            result = {'apps': [{k: app.get(k) for k in ('id', 'version')} for app in self.installed_apps() if app.get('id') in (HOME, HELPER)]}
+            if pending and pending['action'] == 'install' and pending.get('expected'):
+                expected = pending['expected']
+                versions = pending.get('versions', {HOME: self.manifest.get('home_version'), HELPER: self.manifest.get('helper_version')})
+                actual = {app['id']: app.get('version') for app in result['apps']}
+                if actual == versions:
+                    try:
+                        raw = self.remote.run('sha256sum ' + ' '.join(shlex.quote(n) for n in sorted(expected)))
+                        hashes = {line.split(None, 1)[1]: line.split(None, 1)[0] for line in raw.splitlines()}
+                        if hashes == expected:
+                            self.save_eim(pending.get('eim_registered', 'unknown'))
+                            self.store.finish(self.profile)
+                            reconciled = 'installed-files-verified; helper launch requires TV check'
+                    except (RuntimeError, ValueError, IndexError):
+                        pass  # An incomplete readback retains the receipt.
+            elif pending and pending['action'] == 'uninstall' and pending.get('stage') == 'removing' and not result['apps']:
+                self.verify_absent(HOME)
+                self.verify_absent(HELPER)
+                self.store.finish(self.profile)
+                reconciled = 'removal-verified'
+        return {'device': result, 'pending': self.store.pending(self.profile), 'reconciled': reconciled,
+                **({'deployment_stage': stage} if self.profile['edition'] == 'root' else {})}
+
+    def prepare_root_reinstall(self, already_removed=False):
+        if self.profile['edition'] != 'root' or self.store.pending(self.profile):
+            raise UserError('Reinstallation needs a resolved Root deployment. Run cytv status first.')
+        if not already_removed:
+            self.progress('Restoring LG Home and removing the previous Root…')
+            self.uninstall()
+        self.verify_absent(package.ROOT_APP)
+        inspected = self.root_archive('inspect')
+        if inspected.get('busy') is not False:
+            raise UserError('Previous Root was removed. Restart the TV with its remote, wait for LG Home, then run cytv again. Old Root processes must stop before reinstallation. Recovery data was kept.')
+        archive = ROOT_STATE + '.archive-' + uuid.uuid4().hex
+        self.store.begin(self.profile, 'archive-root-state', archive=archive, identity=inspected['identity'])
+        self.progress('Keeping the previous recovery state in an archive…')
+        reply = self.root_archive('archive', archive, inspected['identity'])
+        if reply.get('archived') != archive:
+            raise UserError('Recovery archive was not confirmed. Run cytv status; do not retry blindly.')
+        self.store.finish(self.profile)
+        self.progress('Previous recovery state retained: ' + archive)
+        return archive
+
+    def root_archive(self, action, destination=None, identity=None):
+        from .root_archive import SCRIPT
+        args = ['/usr/bin/python3', '-c', SCRIPT, action]
+        if destination is not None:
+            args += [destination, json.dumps(identity)]
+        reply = json.loads(self.remote.run(shlex.join(args)))
+        if not isinstance(reply, dict):
+            raise UserError('Recovery archive could not be verified. Keep recovery state and run cytv status.')
+        return reply
+
+    def verify_absent(self, app):
+        service = HOME + '.renewal' if app == HOME else app + '.service'
+        paths = [BASE + '/applications/' + app, BASE + '/services/' + service, BASE + '/packages/' + app]
+        condition = ' || '.join('[ -e ' + shlex.quote(p) + ' ] || [ -L ' + shlex.quote(p) + ' ]' for p in paths)
+        if self.remote.run('if ' + condition + '; then printf CYTV_REMAINS; fi').strip():
+            raise UserError('Application, service or package files remain on the TV. Keep recovery evidence; removal is not complete.')
+
+    def read_eim(self):
+        try:
+            reply = self.remote.luna('com.webos.service.eim/getAllInputStatus', {})
+            devices = reply.get('devices')
+            if not isinstance(devices, list) or not all(isinstance(d, dict) and isinstance(d.get('id'), str) for d in devices):
+                return 'unknown'
+            return any(d.get('appId') == HOME or d.get('id') == HOME for d in devices)
+        except RuntimeError:
+            return 'unknown'
+
+    def save_eim(self, value):
+        from .state import private_write
+        if self.store.pending(self.profile):
+            self.store.checkpoint(self.profile, eim_registered=value)
+        private_write(self.store.device_dir(self.profile) / 'installation.json', json.dumps({'eim_registered': value}).encode())
+
+    def root_files_match(self, pending):
+        if not pending.get('release_sha') or not pending.get('bundle_sha'):
+            return False
+        script = '''import sys,json,hashlib
+from pathlib import Path
+sys.path.insert(0,'/var/lib/clean-your-tv-root')
+import deploy
+state=Path('/var/lib/clean-your-tv-root')
+for name,digest in [('release.json',sys.argv[1]),('bundle.json',sys.argv[2])]:
+    if hashlib.sha256(deploy.checked_file(state,name)).hexdigest()!=digest: raise ValueError('Different release')
+release=json.loads(deploy.checked_file(state,'release.json'))
+files=dict(release['files'])
+if sys.argv[3]=='migrate':
+    private=json.loads(deploy.checked_file(state,'personalization.json'))
+    for name,digest in private['files'].items():
+        files['usr/palm/applications/com.cleanyourtv.root.preview/'+name]=digest
+for name,digest in files.items():
+    if hashlib.sha256(deploy.checked_file(deploy.INSTALLED,name)).hexdigest()!=digest: raise ValueError('Changed payload')
+print('CYTV_ROOT_FILES_OK')
+'''
+        try:
+            args = ['/usr/bin/python3', '-c', script, pending['release_sha'], pending['bundle_sha'], 'migrate' if pending.get('migrate') else 'fresh']
+            return self.remote.run(shlex.join(args)).strip() == 'CYTV_ROOT_FILES_OK'
+        except RuntimeError:
+            return False
+
+    def restore(self):
+        from .state import private_write
+        receipt = self.store.recovery(self.profile, 'restore')
+        result = self.restore_device()
+        private_write(receipt, b'{"action":"restore","stage":"complete"}')
+        pending = self.store.pending(self.profile)
+        if pending and pending['action'] in ('trial', 'activate-root'):
+            self.store.finish(self.profile)
+        return result
+
+    def restore_device(self):
+        if self.profile['edition'] == 'root':
+            return self.root_action('restore')
+        self.stop_helper()
+        receipt = self.store.device_dir(self.profile) / 'installation.json'
+        installation = json.loads(receipt.read_text()) if receipt.exists() else {}
+        pending = self.store.pending(self.profile) or {}
+        eim = pending.get('eim_registered', installation.get('eim_registered', 'unknown'))
+        eim_error = False
+        if eim is not False:
+            try:
+                self.remote.luna('com.webos.service.eim/deleteDevice', {'appId': HOME})
+                self.save_eim(False)
+            except RuntimeError:
+                if self.read_eim() is False:
+                    self.save_eim(False)
+                else:
+                    eim_error = True
+        self.remote.luna('com.webos.applicationManager/launch', {'id': 'com.webos.app.home'})
+        if eim_error:
+            raise UserError('LG Home launch was requested, but input restoration removal is unconfirmed. Keep recovery state and run cytv doctor before uninstalling.')
+        return {'restored': True, 'pending': self.store.pending(self.profile)}
+
+    def uninstall(self):
+        pending = self.store.pending(self.profile)
+        if pending:
+            # Repeated remove requests are just as uncertain as repeated installs.
+            resuming_remove = pending['action'] == 'uninstall' and self.profile['edition'] == 'no-root'
+            if pending['action'] != 'install' and not resuming_remove:
+                raise UserError('Previous operation is unresolved. Run cytv status and retain recovery evidence before removal.')
+            idle = self.remote.luna('com.webos.appInstallService/status', {'subscribe': True})
+            if idle.get('status', {}).get('apps') != []:
+                raise UserError('TV installer is not confirmed idle. Keep the receipt and run cytv status before removal.')
+            if not resuming_remove:
+                self.store.checkpoint(self.profile, previous=pending, action='uninstall', stage='pending')
+        else:
+            self.store.begin(self.profile, 'uninstall')
+        if self.profile['edition'] == 'root':
+            result = self.root_action('uninstall')
+            if result.get('removed') != package.ROOT_APP or result.get('state_retained') != ROOT_STATE:
+                raise UserError('Root removal readback was unexpected. Keep recovery state and run cytv status before reinstalling.')
+        else:
+            self.restore()
+            self.store.checkpoint(self.profile, stage='removing')
+            apps = {app['id'] for app in self.installed_apps()}
+            removals = dict(self.store.pending(self.profile).get('removals', {}))
+            for app in (HELPER, HOME):
+                previous = removals.get(app)
+                if previous == 'submitted' and app in apps:
+                    raise UserError('Previous package removal outcome is unknown. It was not resubmitted; run cytv status and retain evidence.')
+                if previous in ('done', 'terminal') and app in apps:
+                    raise UserError('A removed package is present again. Keep recovery evidence; it was not removed again.')
+                if app in apps:
+                    removals[app] = 'submitted'
+                    self.store.checkpoint(self.profile, removals=removals)
+                    self.remote.luna('com.webos.appInstallService/dev/remove', {'id': app, 'subscribe': True}, terminal='removed', timeout=150)
+                    removals[app] = 'terminal'
+                    self.store.checkpoint(self.profile, removals=removals)
+                if removals.get(app) == 'terminal':
+                    # Only a terminal removal receipt permits empty package metadata cleanup.
+                    directory = BASE + '/packages/' + app
+                    self.remote.run('if [ -d ' + directory + ' ] && [ ! -L ' + directory + ' ]; then rmdir ' + directory + ' 2>/dev/null || true; fi')
+                self.verify_absent(app)
+                removals[app] = 'done'
+                self.store.checkpoint(self.profile, removals=removals)
+            if any(app['id'] in (HOME, HELPER) for app in self.installed_apps()):
+                raise UserError('Removal could not be verified. Keep the operation journal.')
+            self.verify_absent(HOME)
+            self.verify_absent(HELPER)
+            result = {'removed': True}
+        self.store.finish(self.profile)
+        return result

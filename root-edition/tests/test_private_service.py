@@ -15,15 +15,18 @@ class PrivateServiceTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as tmp:
    root=Path(tmp).resolve();src=root/'installed';src.mkdir();state=root/'state';state.mkdir()
    files={}
-   for name in p.PRIVATE_FILES:
+   for name in (*p.PRIVATE_FILES, 'app-inventory.js'):
     data=(name+' fixture').encode();(src/name).write_bytes(data)
     files['usr/palm/services/'+p.NAME+'/'+name]=p.sha(data)
    (state/'release.json').write_text(json.dumps({'files':files}))
    with patch.object(p,'STATE',state),patch.object(p,'SERVICE',src),patch.object(p,'PRIVATE_SERVICE',state/'service'),patch.object(p,'RUNNER',state/'run-service'),patch.object(p,'SYSTEM_FILES',()),patch.object(p,'secure',side_effect=lambda path:path.read_bytes()):
     p.prepare_private_service();p.prepare_private_service()
     self.assertEqual((state/'service/service.js').read_bytes(),(src/'service.js').read_bytes())
+    inventory=state/'service/app-inventory.js'
+    self.assertTrue(inventory.is_file(), 'Privileged service inventory dependency must be copied')
+    self.assertEqual(inventory.read_bytes(),(src/'app-inventory.js').read_bytes())
     self.assertEqual((state/'run-service').stat().st_mode & 0o777,0o700)
-    (state/'service/service.js').write_text('changed')
+    inventory.write_text('changed')
     with self.assertRaises(ValueError):p.prepare_private_service()
  def test_hash_mismatch_creates_no_runner(self):
   with tempfile.TemporaryDirectory() as tmp:

@@ -22,7 +22,7 @@ touch build/native-app/state/.keep build/native-service/state/.keep
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/prototype/relay.c native/prototype/filter.c -o build/native-app/relay
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/app/resume.c -o build/native-app/resume
 "$ARES_PACKAGE" build/native-app build/native-service -o dist
-python3 scripts/fix-package-data.py dist/com.local.nativehome_0.6.13_arm.ipk
+python3 scripts/fix-package-data.py dist/com.local.nativehome_0.6.14_arm.ipk
 "$ARES_PACKAGE" launcher renewal-service -o dist
 python3 - <<'PY'
 from pathlib import Path

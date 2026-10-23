@@ -37,6 +37,14 @@ def start():
     return c.start_trial(intent, boot_identity(), str(uuid.uuid4()))
 
 
+def enable():
+    from provision import verify
+    from helper_bridge import require_idle
+    verify(); require_idle()
+    c = Coordinator(Store(d.STATE))
+    return c.enable(c.store.read(), boot_identity(), str(uuid.uuid4()))
+
+
 def later_legacy_trial(c):
     if not os.path.lexists(c.binding) or not os.path.lexists(d.STATE/'profile-trial.json'):
         return False

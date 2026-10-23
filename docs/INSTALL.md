@@ -184,7 +184,7 @@ Existing assignments should be changed explicitly.
 
 - Check arrows and held arrows, OK, Back, volume, pointer and wheel.
 - Open an app and press short Home: the launcher should return.
-- Hold Home for two seconds: LG Home should appear and navigation should work.
+- Press Home three times within two seconds: LG Home should appear and navigation should work.
 - Open Home Helper manually to resume interception.
 - Test standby/wake separately from a cold boot. Record what happens without pressing Home.
 

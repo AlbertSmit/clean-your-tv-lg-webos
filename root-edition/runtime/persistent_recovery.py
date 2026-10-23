@@ -218,6 +218,26 @@ class Coordinator:
                     self.event(current,'fault')
                 raise
 
+    def enable(self, expected, boot, token):
+        """Activate persistently once input and recovery are ready."""
+        import time
+        from persistent_health import require_fresh
+        try:
+            result = self.start_trial(expected, boot, token)
+            for attempt in range(20):
+                try:
+                    require_fresh(result['trial']['transaction'])
+                    break
+                except (OSError, ValueError):
+                    if attempt == 19: raise
+                    time.sleep(.1)
+            return self.confirm(result['intent'])
+        except Exception:
+            current = self.store.read()
+            if (current['generation'], current['token']) == (expected['generation'] + 1, token):
+                self.exit(current, reason='fault')
+            raise
+
     def start_trial(self, expected, boot, token):
         # The existing independent 60-second deadline is never removed here.
         import emergency_trial

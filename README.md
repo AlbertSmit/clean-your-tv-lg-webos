@@ -12,7 +12,7 @@ active; local networking is needed for the helper’s power/foreground monitorin
 - **No root or firmware flashing** — installed through LG Developer Mode.
 - **No always-on computer, Raspberry Pi or router script** — Home-button handling runs on the TV.
 - **Home opens your launcher** — a short press returns to it while Home Helper is active.
-- **A way back to LG Home** — hold Home for about two seconds to stop the helper.
+- **A way back to LG Home** — press Home three times within two seconds to stop the helper.
 
 Based on [webos-vibehack](https://github.com/OmkarK97/webos-vibehack), with Home-button
 handling moved from an external watcher to an on-TV native helper.
@@ -20,12 +20,21 @@ handling moved from an external watcher to an on-TV native helper.
 [Live preview](https://razdva122.github.io/clean-your-tv-lg-webos/) · [Install](docs/INSTALL.md) · [Recovery](docs/RECOVERY.md) ·
 [Compatibility](docs/COMPATIBILITY.md) · [Build](docs/BUILD.md) · [Update & remove](docs/MAINTENANCE.md)
 
+[Manual installation of both editions without cytv](docs/MANUAL_INSTALL.md) — requirements, commands, recovery and reinstallation limits.
+
+## Install with cytv
+
+[Download v0.9.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.9.0)
+for Windows, macOS or Linux. One wizard installs either edition. Root activates
+and opens Home immediately, without a trial or Keep confirmation.
+[Installer guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.9.0.md)
+
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.1 with Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.2 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -53,14 +62,14 @@ before installing. Not affiliated with LG.
 | --- | --- |
 | Personal home screen | Local app grid, configurable dock, hidden tiles and tile ordering; no sponsored rows in this launcher |
 | Short Home | Native on-TV interception returns to the launcher without passing through LG Home on the tested setup |
-| Hold Home for 2 seconds | Stops interception and returns to LG Home |
+| Three short Home presses within two seconds | Stops interception and returns to LG Home |
 | Resume interception | Select **Resume Home** in Home, or manually open **Home Helper** from LG Apps |
 | Wi-Fi shortcut | Opens LG's network setup overlay |
 | Automatic startup | Returns after standby and cold boot using input restoration plus a guarded fallback helper; no external device runs the startup logic |
 | Exit with Back | Returns after watched apps exit, preserving in-app navigation and exit confirmation; LG Home can briefly flash |
 | Quick standby/resume | Avoids relaunching a launcher already restored by webOS, preserving arrows and OK after a fast power cycle |
 | Remote controls | Arrows, held arrows, OK, volume and pointer remain usable; wheel events are forwarded |
-| Failure recovery | Watchdog cleanup releases interception if the handler stalls; long Home provides a manual escape |
+| Failure recovery | Watchdog cleanup releases interception if the handler stalls; triple Home provides a manual escape |
 | Local interface | App tiles, font and splash assets are stored locally; the menu does not wait for an Internet download |
 
 This does not remove system advertisements, uninstall apps, or replace the operating
@@ -73,11 +82,11 @@ an initial black interval; early display timing is under investigation.
 for exits from configured apps. Both run on the TV. The helper leaves ordinary
 in-app Back navigation, exit confirmations and the other remote controls intact.
 
-![Remote controls: short Home opens our launcher; hold Home stops the helper; hold Back exits to LG Home; resume via the launcher button or Home Helper app](docs/remote-controls.png)
+![Remote controls: short Home opens our launcher; three short Home presses within two seconds stop the helper; hold Back exits to LG Home; resume via Resume Home or the Home Helper app](docs/remote-controls.png)
 
 *Illustrated controls and example screens; button layout varies by remote.*
 
-**Hold Back exits the app; hold Home stops the helper.** When the helper is active,
+**Hold Back exits the app; three short Home presses stop the helper.** When the helper is active,
 it returns to our launcher after a watched app exits through LG Home. That path
 can briefly show LG Home; it is not the same direct path as short Home.
 
@@ -88,7 +97,7 @@ can briefly show LG Home; it is not the same direct path as short Home.
 | **Arrows / hold an arrow** | Move through tiles and menus; normal navigation inside apps. |
 | **OK / pointer click** | Open the selected app or activate a control. |
 | **Short Home** | Return directly to our launcher while Home Helper is active. With the helper stopped, LG handles Home normally. |
-| **Hold Home ~2 seconds** | Emergency exit: stop the helper and open LG Home. Preferences are kept; this is **not a factory reset**. |
+| **Three short Home presses within two seconds** | Emergency exit: stop the helper and open LG Home. Preferences are kept; this is **not a factory reset**. |
 | **Short Back** | Go back inside the current app. Its exit dialog and Cancel action still work normally. On a confirmed exit from a watched app, the helper returns to our launcher. |
 | **Hold Back** | Use webOS's exit-to-Home action. It **does not stop the helper**; the exit watcher can then return to our launcher. |
 | **Volume + / −, mute** | Normal TV/audio controls. |
@@ -116,6 +125,13 @@ app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubl
 
 ## Get started
 
+**New standalone installer:** `cytv` provides one setup wizard for No-root and Root,
+with TV discovery, connection checks, saved profiles, diagnostics and recovery. Its native build embeds
+the required runtime and TV packages. Windows/macOS/Linux build artifacts are
+produced by the **cytv standalone builds** workflow; this new installer still needs
+real-TV and target-OS acceptance. See [cytv installation and build guide](docs/CLI.md).
+The existing source installer below remains available.
+
 On the TV, enable **Developer Mode** and **Key Server**. On a Mac or Linux computer
 with **Node.js 20+ (including npm), Python 3.9+ and Git**, run:
 
@@ -131,7 +147,7 @@ and requests its launch. Enter the Developer Mode passphrase when prompted and
 accept the remote-control pairing request on the TV. No manual helper build or
 configuration is needed. No root or `sudo` is used.
 
-Once installed, check short Home, hold Home for two seconds to test recovery, and
+Once installed, check short Home, press Home three times within two seconds to test recovery, and
 check standby/wake and cold boot. **Hardware compatibility still needs to be
 verified on your TV.** See the [installation guide](docs/INSTALL.md) for prerequisites,
 manual installation and recovery. Windows installation has not been tested.
@@ -140,7 +156,7 @@ manual installation and recovery. Windows installation has not been tested.
 
 [Try the live launcher preview](https://razdva122.github.io/clean-your-tv-lg-webos/).
 Switch between **No-root Edition** and **Root Edition** in the top bar. Both use
-demo apps and simulated TV functions; Root mode trial, confirmation and exit
+demo apps and simulated TV functions; Root mode activation and exit
 only change the browser simulation. [Open Root Edition directly](https://razdva122.github.io/clean-your-tv-lg-webos/#root).
 GitHub Pages automatically deploys
 the latest `main` after tests pass.

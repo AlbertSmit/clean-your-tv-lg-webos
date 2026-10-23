@@ -1,5 +1,7 @@
 # Contributing
 
+Write all project documentation in English.
+
 Keep changes small and reproducible. Run `scripts/test.sh`; describe the test model,
 firmware, expected behavior and actual behavior. Separate standby tests from cold
 boots. Never claim compatibility from a successful package installation alone.

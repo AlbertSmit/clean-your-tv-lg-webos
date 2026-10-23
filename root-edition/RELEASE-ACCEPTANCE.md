@@ -96,3 +96,21 @@ Kinopoisk and launcher arrows work. The first UI-triggered helper restart stoppe
 safely with `FAIL source-held`; after the user released all keys, an explicit
 normal helper application launch reached READY. No safety latch was bypassed and
 no production helper code was changed.
+
+## RC14 intent-bound escape — 2026-10-23
+
+On OLED55C3RLA / 43.21.71 the user confirmed first-attempt triple-short-Home exit
+without zoom. At uptime 3802.40, before deadline 3832.55, transaction
+`afabfc61-62e7-415a-b25f-bc01e81a762e` was restored with reason `escape`.
+Readback showed all three stock Home destinations, no active guardian and verified
+recovery integrity. The separately persisted intent was disabled and its binding
+marked restored. Replaying the boot entry point in the same boot returned restored
+without activation. This is not evidence of a reboot or permanent-mode acceptance.
+
+A second RC14 transaction `e6b4e33a-82b1-44b5-8854-bfbbf790e426` was left
+untouched. At uptime 3886.89 it was pending with deadline 3891.95; at 3909.14
+the independent guardian had restored all three Home destinations, disabled the
+intent and marked the binding restored. No manual restore command was sent.
+The working helper was subsequently launched normally after released-key and
+baseline checks; its relay reported READY and production Home was foreground.
+No production helper code or control latch was edited directly.

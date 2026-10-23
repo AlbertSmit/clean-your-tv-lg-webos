@@ -58,3 +58,17 @@ transaction binding, heartbeat publication driven only by input-loop PING,
 independent watchdog process readiness, normal/failsafe boot adapter, explicit
 confirmation UI, and final-bundle device acceptance. Persistent mode is not ready
 to install or advertise as supported.
+
+## RC14 integration follow-up
+
+Implemented durable transaction binding and an opt-in `intent-trial` adapter.
+Binding happens before any profile publication; gesture and deadline recovery
+use the intent coordinator. CLI restore/boot preserve legacy dispatch and do not
+unlock permanent activation. Coordinator recovery uses RC13's real restore path,
+checks the full baseline, and retains evidence on conflicts/interruption.
+
+The C3 accepted the bound gesture exit and unattended timer exit; evidence is in
+RELEASE-ACCEPTANCE.md. Boot callback replay passed in the same boot. A physical
+reboot/failsafe test of this exact binding is still pending. Renewable lease
+publication/guard process, controlled promotion and confirmation UI remain the
+next integration tasks; the persistent lease policy is still not shipped.

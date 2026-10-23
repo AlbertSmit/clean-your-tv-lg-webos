@@ -90,3 +90,9 @@ for rollback. Production launcher and helper files were not modified.
 This closes the **bounded-trial** frozen-UI escape check on this model. Permanent
 observer lifecycle, persistent activation and final-bundle lifecycle acceptance
 remain separate gates; `hardware_validated` and permanent activation stay locked.
+
+Production restoration after RC13 was confirmed by the user: short Home from
+Kinopoisk and launcher arrows work. The first UI-triggered helper restart stopped
+safely with `FAIL source-held`; after the user released all keys, an explicit
+normal helper application launch reached READY. No safety latch was bypassed and
+no production helper code was changed.

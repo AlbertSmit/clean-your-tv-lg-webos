@@ -44,9 +44,12 @@
       save:save,
       add:function(id) { if (!find(id)) throw Error('app-unavailable'); save(visible().map(function(a) { return a.id; }).concat(id), hidden.filter(function(h) { return h !== id; })); },
       refresh:function(apps) {
+        // TV queries can return only part of the installed inventory. Absence
+        // from a response must not erase saved tiles or apps hidden from Home.
         // Preserve packaged icons when the service supplies metadata without an icon.
         var previous = catalog;
-        catalog = clean(apps).map(function(a) { var old = previous.filter(function(b) { return b.id === a.id; })[0]; if (old && old.icon) a.icon = old.icon; return a; });
+        var updates = clean(apps).map(function(a) { var old = previous.filter(function(b) { return b.id === a.id; })[0]; if (old && old.icon) a.icon = old.icon; return a; });
+        catalog = clean(updates.concat(previous));
       }
     };
   }

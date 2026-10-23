@@ -10,11 +10,14 @@ const assert=require('node:assert/strict');
   window.PalmServiceBridge=function(){this.cancel=()=>{};this.call=(uri,raw)=>{calls.push({uri,p:JSON.parse(raw)});setTimeout(()=>{
    let r={returnValue:false};
    if(uri.endsWith('/listApps')&&!window.offline)r={returnValue:true,apps:[{id:'a',title:'Alpha'},{id:'b',title:'Beta'},{id:'c',title:'Gamma'}]};
+   if(uri.endsWith('/listApps')&&window.inventoryOverride)r={returnValue:true,apps:window.inventoryOverride};
    if(uri.endsWith('/launch'))r={returnValue:true};
    this.onservicecallback(JSON.stringify(r));
   },10);};};
  });
  await page.route('**/apps.js',r=>r.fulfill({body:'window.TV_APPS={apps:[{id:"a",title:"Alpha",icon:"brand-v2-icon.png"},{id:"b",title:"Beta",icon:"brand-v2-icon.png"}],inputs:[]};'}));
+ // Home Helper polling has its own tests; isolate app editing from its startup RPCs.
+ await page.route('**/helper-control.js',r=>r.fulfill({body:''}));
  await page.goto('file://'+require('path').resolve(__dirname,'../../launcher/index.html'));
  await page.locator('#tiles .item').first().waitFor();
  assert.equal(await page.locator('#tiles .add-app').count(),1,'last tile adds apps');
@@ -70,6 +73,30 @@ const assert=require('node:assert/strict');
  // Releasing OK after the page loses focus must not launch or start editing.
  await page.keyboard.down('Enter');await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
  await page.waitForTimeout(650);await page.keyboard.up('Enter');assert.equal(await page.locator('.moving').count(),0);
+ // A successful but partial TV response must preserve hidden apps and Undo's other tiles.
+ await page.evaluate(()=>{
+  let state=JSON.parse(localStorage.getItem('tvhome.layout'));
+  state.ids=['a','b','c'];state.hidden=[];localStorage.setItem('tvhome.layout',JSON.stringify(state));
+ });
+ await page.reload();await page.locator('.add-app').waitFor();
+ await page.evaluate(()=>{window.inventoryOverride=[{id:'a',title:'Alpha'}];});
+ await page.locator('.add-app').click();
+ await page.locator('#appPickerStatus').filter({hasText:'All installed'}).waitFor();
+ await page.keyboard.press('Escape');
+ const hideFirst=async()=>{
+  await page.locator('#tiles [data-app-id="a"]').hover();
+  await page.keyboard.down('Enter');await page.waitForTimeout(680);await page.keyboard.up('Enter');
+  await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+ };
+ await hideFirst();await page.keyboard.press('Enter');
+ assert.deepEqual(await ids(),['a','b','c','+'],'Undo retains apps missing from TV response');
+ await hideFirst();
+ await page.evaluate(()=>{window.inventoryOverride=[{id:'b',title:'Beta'}];});
+ await page.locator('.add-app').click();
+ await page.locator('#appPicker [data-app-id="a"]').click();
+ assert.deepEqual(await ids(),['b','c','a','+'],'plus restores hidden app without dropping other tiles');
+ await page.reload();await page.locator('.add-app').waitFor();
+ assert.deepEqual(await ids(),['b','c','a','+'],'restored layout persists');
  await page.unroute('**/apps.js');
  await page.route('**/apps.js',r=>r.fulfill({body:'window.TV_APPS='+JSON.stringify({apps:Array.from({length:7},(_,i)=>({id:'row'+i,title:'App '+i,icon:'brand-v2-icon.png'})),inputs:[]})+';'}));
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('.add-app').waitFor();

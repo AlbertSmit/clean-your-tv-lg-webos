@@ -134,7 +134,9 @@ class Store:
             stream.seek(0)
             if os.name == 'nt':
                 import msvcrt
-                if not stream.read(1):
+                # Windows denies reads of a byte locked by another session.
+                # Inspect its size without reading before attempting the lock.
+                if os.fstat(stream.fileno()).st_size == 0:
                     stream.write(b'0'); stream.flush()
                 stream.seek(0)
                 try:

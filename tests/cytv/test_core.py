@@ -11,6 +11,24 @@ from cytv import package, state
 
 
 class StateTests(unittest.TestCase):
+    def test_windows_busy_lock_does_not_read_the_locked_byte(self):
+        from unittest.mock import patch, MagicMock
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as tmp:
+            store=state.Store(tmp)
+            profile=state.target('192.0.2.10','root')
+            stream=MagicMock()
+            stream.__enter__.return_value=stream
+            stream.read.side_effect=PermissionError('Windows denies reads of locked byte')
+            locking=MagicMock(side_effect=PermissionError('already locked'))
+            module=SimpleNamespace(locking=locking,LK_NBLCK=1,LK_UNLCK=0)
+            with patch.object(state.os,'name','nt'), patch.dict('sys.modules',msvcrt=module), \
+                 patch.object(Path,'open',return_value=stream), \
+                 patch.object(state.os,'fstat',return_value=SimpleNamespace(st_size=1)):
+                with self.assertRaisesRegex(state.UserError,'Another cytv session'):
+                    with store.lock(profile):self.fail('busy lock entered')
+            stream.read.assert_not_called()
+
     def test_same_tv_cannot_run_root_and_no_root_sessions_at_once(self):
         with tempfile.TemporaryDirectory() as tmp:
             store = state.Store(tmp)

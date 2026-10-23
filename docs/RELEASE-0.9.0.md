@@ -54,8 +54,10 @@ step in that guide. Internal diagnostic trial commands are not part of the wizar
 
 Hardware evidence remains scoped to LG C3; other models are unverified. Existing
 Root compatibility and emergency-gesture limitations remain documented in
-[release acceptance](../root-edition/RELEASE-ACCEPTANCE.md). This GitHub release does
-not replace or publish a signed automatic-update feed.
+[release acceptance](../root-edition/RELEASE-ACCEPTANCE.md). This GitHub release keeps
+the previous signed update feeds unchanged so existing updaters remain reachable.
+The new packages are installed with cytv or the complete manual bundles; they are
+not offered as an infrastructure-changing automatic update.
 
 Builds assert application/service versions against `release-versions.json` and
 verify embedded hashes. `SHA256SUMS` covers downloadable assets; it is not a code

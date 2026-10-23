@@ -1,7 +1,8 @@
 /* Browser-only webOS simulation. Injected by scripts/preview.py, never packaged. */
 (function () {
   'use strict';
-  var enabled = false;
+  var enabled = false, rootPhase = 'disabled', rootTrialTimer;
+  var rootTransaction = 'preview-root-trial';
   var toastTimer;
   function message(text) {
     var toast = document.getElementById('toast');
@@ -27,6 +28,26 @@
         result = {returnValue: true, isInternetConnectionAvailable: true, wifi: {state: 'connected', ssid: 'Demo Wi-Fi'}};
       } else if (uri === 'luna://com.webos.service.bus/signal/registerServerStatus') {
         result = {returnValue: true, connected: true};
+      } else if (uri.indexOf('luna://com.cleanyourtv.root.preview.service/') === 0) {
+        var rootMethod = uri.split('/').pop();
+        if (rootMethod === 'enable') {
+          clearTimeout(rootTrialTimer);
+          rootPhase = 'trial';
+          rootTrialTimer = setTimeout(function () { rootPhase = 'disabled'; }, 60000);
+        } else if (rootMethod === 'confirm' && rootPhase === 'trial' && payload.transaction === rootTransaction) {
+          clearTimeout(rootTrialTimer);
+          rootPhase = 'active';
+        } else if (rootMethod === 'restore') {
+          clearTimeout(rootTrialTimer);
+          rootPhase = 'disabled';
+        }
+        if (['status', 'enable', 'restore'].indexOf(rootMethod) >= 0 ||
+            (rootMethod === 'confirm' && rootPhase === 'active' && payload.transaction === rootTransaction)) {
+          var home = rootPhase === 'disabled' ? 'com.webos.app.home' : 'com.cleanyourtv.root.preview';
+          var state = {intent: {phase: rootPhase}, journal: {transaction: rootTransaction},
+            effective: {sam_home: home, profiles: {defaultApps: {categories: {home: home}}, idleApp: {appId: home}}}};
+          result = {returnValue: true, result: {returnValue: true, result: rootMethod === 'restore' ? 'restored' : state}};
+        }
       } else if (uri.indexOf('luna://com.gathin.tvhome.renewal/') === 0) {
         var method = uri.split('/').pop();
         if (['status', 'enable', 'disable', 'check'].indexOf(method) >= 0) {

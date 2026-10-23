@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import mimetypes
 import shutil
+import runpy
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 import webbrowser
@@ -28,6 +29,11 @@ DEMO_APPS = [
     ('twitch', 'Twitch', '#9146ff'),
     ('hbomax', 'HBO Max', '#5822b4'),
 ]
+ROOT_LAUNCHER_FILES = {
+    'index.html', 'app.js', 'style.css', 'config.js', 'apps.js',
+    'fonts/outfit.ttf', 'fonts/OFL.txt',
+    'root-exit.js', 'root-settings.js', 'root-settings.css',
+}
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}
 
 
@@ -43,6 +49,8 @@ def inventory():
 
 def revision():
     files = [ROOT / 'launcher' / name for name in sorted(LAUNCHER_FILES)]
+    files += [ROOT / 'root-edition/preview.py']
+    files += [ROOT / 'root-edition/ui' / name for name in ('root-exit.js', 'root-settings.js', 'root-settings.css')]
     files += [ROOT / 'preview/index.html', ROOT / 'preview/bridge.js', ROOT / 'preview/live-reload.js']
     files += [ROOT / 'preview/icons' / name for name in sorted(ICON_FILES)]
     stamps = []
@@ -58,6 +66,16 @@ def revision():
 def launcher_html():
     return (ROOT / 'launcher/index.html').read_text().replace(
         '<head>', '<head>\n  <script src="../preview/bridge.js"></script>', 1)
+
+
+def root_launcher():
+    # Reuse the isolated Root UI staging, without any installer or runtime services.
+    staged = runpy.run_path(str(ROOT / 'root-edition/preview.py'))['prepare']()
+    files = {name: staged[name] for name in ROOT_LAUNCHER_FILES}
+    files['apps.js'] = ('window.TV_APPS = ' + json.dumps(inventory()) + ';\n').encode()
+    files['index.html'] = files['index.html'].replace(
+        b'<head>', b'<head>\n  <script src="../preview/bridge.js"></script>', 1)
+    return files
 
 
 def preview_html(live=True):
@@ -81,6 +99,10 @@ def export_site(destination):
         target = destination / 'preview' / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / 'preview' / name, target)
+    for name, data in root_launcher().items():
+        target = destination / 'root-launcher' / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
     (destination / 'index.html').write_text(preview_html(live=False), encoding='utf-8')
     (destination / '.nojekyll').touch()
     for name in ['LICENSE', 'THIRD_PARTY_NOTICES.md']:
@@ -93,6 +115,10 @@ class Handler(BaseHTTPRequestHandler):
         file = None
         if path == '/preview/version':
             self.respond(revision().encode(), 'text/plain; charset=utf-8')
+            return
+        if path.startswith('/root-launcher/') and path[len('/root-launcher/'):] in ROOT_LAUNCHER_FILES:
+            name = path[len('/root-launcher/'):]
+            self.respond(root_launcher()[name], mimetypes.guess_type(name)[0] or 'application/octet-stream')
             return
         if path == '/':
             file = ROOT / 'preview/index.html'

@@ -24,10 +24,10 @@ handling moved from an external watcher to an on-TV native helper.
 
 ## Install with cytv
 
-[Download v0.10.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.0)
+[Download v0.10.1](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1)
 for Windows, macOS or Linux. One wizard installs either edition. Root activates
 and opens Home immediately, without a trial or Keep confirmation.
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.0.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.1.md)
 
 ## Choose your edition
 

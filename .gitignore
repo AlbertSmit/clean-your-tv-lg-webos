@@ -12,3 +12,10 @@ venv/
 .venv/
 __pycache__/
 .DS_Store
+
+# Private local Root Edition captures/plans
+doctor-report*.json
+metadata-plan*.json
+appinfo-copy.json
+app-info.json
+saved-probe.txt

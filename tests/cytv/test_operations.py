@@ -340,6 +340,16 @@ class OperationTests(unittest.TestCase):
                 self.assertEqual(self.store.pending(installer.profile)['action'], 'setup-root-updater')
                 self.assertFalse(any(c[0] == 'run' and c[1].endswith(' enable') for c in remote.calls))
 
+    def test_bad_rollback_format_stops_before_removing_existing_root(self):
+        self.root_bundle()
+        remote = Remote()
+        installer = self.installer(remote, 'root')
+        # Migration retains the supplied package; this fixture has directory entries.
+        with self.assertRaisesRegex(ValueError, 'rollback'):
+            installer.install_root(self.inventory, migrate=True, reinstall='installed')
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertFalse(any(c[0] == 'upload' or ' uninstall' in c[1] for c in remote.calls))
+
     def test_corrupt_updater_stops_before_removing_existing_root(self):
         self.root_bundle()
         (self.payload / 'root-updater/root-updater.ipk').write_bytes(b'corrupt')

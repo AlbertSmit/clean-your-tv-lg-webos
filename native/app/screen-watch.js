@@ -8,6 +8,7 @@ module.exports=function(data,log,onForeground,onReset,onPower){
  function connect(){
   if(closed)return;
   onReset();
+  if(!require('./state-permissions')(data,log)){log({event:'screen-watch-unavailable',reason:'state-permissions'});return;}
   var key,addresses=[];
   try{key=JSON.parse(fs.readFileSync(data+'/ssap-key.json','utf8')).key;
    if(typeof key!=='string'||!key)throw Error('missing-key');

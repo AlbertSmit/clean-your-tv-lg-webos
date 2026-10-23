@@ -4,7 +4,7 @@
 | --- | --- |
 | LG OLED55C3RLA, firmware 43.21.71 | Hardware used for development and tests |
 | Launcher 1.0.13 + helper 0.6.13 | Recovery UI, app icons and hover labels tested on the same TV; underlying 0.6.12 input/watchdog behavior unchanged |
-| LG OLED55C46LA (C4), firmware 33.31.68, webOS 24 (SDK 10.3.1) | Community test: launcher, short Home, long-Home stop and Resume Home, hold-Back exit and cold boot work. EIM registration gets no response, so cold boot shows LG Home for a few seconds before the guarded fallback opens the launcher |
+| LG OLED55C46LA (C4), firmware 33.31.68, webOS 24 (SDK 10.3.1) | Community report with Helper 0.6.13: launcher and short Home work. Long Back briefly shows LG Home then redirects to our launcher; holding OK on Resume Home can block interception. After remote power-off/on with Quick Start+ off, one run showed LG Home at boot +31.6 s and our launcher at +33.1 s. EIM registration is unconfirmed because Developer Mode shell calls return no reply. Fixes below await C4 hardware verification |
 | Other LG models / firmware / remotes | Unverified |
 | macOS build / CLI | Used locally |
 | Linux | Scripts intended to support it; not hardware-tested here |
@@ -16,8 +16,9 @@ Do not remove these checks to force compatibility.
 
 - Developer Mode expiry may remove sideloaded apps.
 - On some firmware (seen on webOS 24) `luna-send-pub` from the Developer Mode shell
-  returns no response for `com.webos.service.eim`; `configure-tv.sh` then warns that
-  early input restoration is not registered and startup uses the guarded fallback.
+  returns no response even for otherwise working services. An empty reply does not
+  establish that EIM rejected registration. Setup distinguishes no reply, an explicit
+  rejection, a command error and a confirmed success; the guarded fallback remains available.
 - Back navigation inside apps remains theirs; exiting may briefly show LG Home.
 - Cold startup is not instant and can begin with a black screen. No fixed startup
   time or improvement across firmware is promised.
@@ -30,3 +31,23 @@ Do not remove these checks to force compatibility.
 This is an alternative launcher, not an LG-supported system Home replacement.
 
 Triple-Home recovery in the updated No-root Helper still needs verification on a physical TV; the reports above describe earlier releases.
+
+## C4 follow-up fixes (hardware verification pending)
+
+- At controller/service startup, known state directories are restored to 0770,
+  the pairing key to 0640 and app IDs to 0644 without changing contents or owners.
+  The key permissions are checked again before SSAP use. A permission failure is
+  reported and SSAP is disabled rather than using an unprotected key. Ordinary
+  relay input remains independent of SSAP. Firmware can still expose a window
+  between boot-time permission changes and runtime startup; the boot-time writer
+  has not been identified. Device ownership may prevent chmod and must be checked.
+- Resume Home waits up to five seconds for source/destination keys to be released,
+  without grabbing the remote, while continuing controller heartbeat/stop handling.
+  A timeout or device error retains the persistent stop behavior.
+- Back events (code 412) still pass through. A hold of at least 700 ms marks the
+  next LG Home transition as intentional; the marker lasts 2.5 seconds after release
+  and is consumed once. Holds older than ten seconds are treated as stale.
+  Short Home clears the marker and still opens our launcher. These thresholds and
+  event ordering need confirmation on C4 and regression testing on C3.
+- The C4 report measured a full remote power cycle with Quick Start+ disabled,
+  not standby/resume. It does not establish that EIM caused the startup delay.

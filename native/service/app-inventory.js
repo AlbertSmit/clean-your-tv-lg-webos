@@ -7,6 +7,7 @@ module.exports=function(options){
   function finish(error,apps){if(done)return;done=true;clearTimeout(timer);clearTimeout(attemptTimer);if(socket)socket.terminate();if(error)reject(Error(error));else resolve(apps);}
   try{
    var base='/media/developer/apps/usr/palm/applications/com.local.nativehome';
+   if(!options.readKey&&!require(base+'/state-permissions')(base+'/state')){finish('state-permissions');return;}
    var key=(options.readKey||function(){return JSON.parse(require('fs').readFileSync(base+'/state/ssap-key.json','utf8'));})();
    if(!key||typeof key.key!=='string'||!key.key){finish('missing-pairing');return;}
    var interfaces=(options.interfaces||require('os').networkInterfaces)(),hosts=[];

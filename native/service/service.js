@@ -1,6 +1,9 @@
 'use strict';
 var fs=require('fs'),Service=require('webos-service'),claim=require('./boot-state').claim;
 var service=new Service('com.local.nativehome.service');
+var secureState=require('/media/developer/apps/usr/palm/applications/com.local.nativehome/state-permissions');
+secureState(__dirname+'/state',function(x){console.error(JSON.stringify(x));});
+secureState('/media/developer/apps/usr/palm/applications/com.local.nativehome/state',function(x){console.error(JSON.stringify(x));});
 var statePath=__dirname+'/state/startup-state.json',name='com.local.nativehome.boot';
 function read(){try{return JSON.parse(fs.readFileSync(statePath,'utf8'));}catch(e){return {enabled:false};}}
 function save(state){fs.writeFileSync(statePath+'.tmp',JSON.stringify(state));fs.renameSync(statePath+'.tmp',statePath);}

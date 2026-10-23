@@ -54,7 +54,17 @@ def build_desktop(root, payload, environment, version):
                '--workpath', str(root / 'build/cytv/desktop-freeze'), '--specpath', str(root / 'build/cytv/desktop-spec'),
                '--distpath', str(output)]
     if sys.platform == 'darwin':
-        command += ['--osx-bundle-identifier', 'org.cleanyourtv.cytv']
+        iconset = root / 'build/cytv/cytv.iconset'
+        iconset.mkdir(parents=True, exist_ok=True)
+        for size in (16, 32, 128, 256, 512):
+            for scale in (1, 2):
+                target = iconset / (f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png')
+                subprocess.run(['sips', '-z', str(size * scale), str(size * scale),
+                                str(root / 'launcher/brand-v2-icon.png'), '--out', str(target)],
+                               check=True, stdout=subprocess.DEVNULL)
+        icon = iconset.with_suffix('.icns')
+        subprocess.run(['iconutil', '-c', 'icns', str(iconset), '-o', str(icon)], check=True)
+        command += ['--osx-bundle-identifier', 'org.cleanyourtv.cytv', '--icon', str(icon)]
     command += [str(root / 'cytv/desktop_entry.py')]
     subprocess.run(command, cwd=root, env=environment, check=True)
     if sys.platform == 'darwin':

@@ -47,12 +47,27 @@ push() {
 }
 push build/setup/ssap-key.json ssap-key.json 640
 push build/setup/apps.json apps.json 644
-EIM=$(ares-novacom -d "$DEVICE" --run "luna-send-pub -n 1 luna://com.webos.service.eim/addDevice '{\"appId\":\"com.gathin.tvhome\",\"pigImage\":\"\",\"mvpdIcon\":\"\"}'" 2>&1 | grep -v '^\[Info\]' || true)
-echo "EIM response: ${EIM:-<none>}"
-if grep -q '"returnValue" *: *true' <<<"$EIM"; then
-  echo 'Early input restoration registered. Now launch Home Helper explicitly.'
+eim_status=0
+EIM=$(ares-novacom -d "$DEVICE" --run "luna-send-pub -n 1 luna://com.webos.service.eim/addDevice '{\"appId\":\"com.gathin.tvhome\",\"pigImage\":\"\",\"mvpdIcon\":\"\"}'" 2>&1) || eim_status=$?
+EIM=$(printf '%s\n' "$EIM" | grep -v '^\[Info\]' || true)
+eim_result=$(printf '%s' "$EIM" | python3 -c '
+import json,sys
+raw=sys.stdin.read().strip()
+try:
+    value=json.loads(raw)
+except ValueError:
+    value=None
+result=value.get("returnValue") if isinstance(value,dict) else None
+print("empty" if not raw else "success" if result is True else "denied" if result is False else "unknown")
+')
+if [ "$eim_status" -ne 0 ]; then
+  echo 'WARNING: EIM command failed; registration not confirmed. The guarded startup fallback remains available.'
 else
-  echo 'WARNING: EIM registration not confirmed (no returnValue:true). Startup will rely on the'
-  echo 'guarded fallback: LG Home first, then the launcher. See docs/COMPATIBILITY.md.'
-  echo 'Now launch Home Helper explicitly.'
+  case "$eim_result" in
+    success) echo 'Early input restoration registered.' ;;
+    denied) echo 'WARNING: EIM registration rejected. The guarded startup fallback remains available.' ;;
+    empty) echo 'WARNING: EIM registration not confirmed (no reply from the dev shell). This does not prove rejection; the guarded startup fallback remains available.' ;;
+    *) echo 'WARNING: EIM registration not confirmed (unrecognized reply). The guarded startup fallback remains available.' ;;
+  esac
 fi
+echo 'Now launch Home Helper explicitly.'

@@ -33,17 +33,17 @@ may predate these features.
 
 ## Install with cytv
 
-[Download v0.9.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.9.0)
+[Download v0.10.1](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1)
 for Windows, macOS or Linux. One wizard installs either edition. Root activates
 and opens Home immediately, without a trial or Keep confirmation.
-[Desktop app setup (next release)](docs/DESKTOP_INSTALL.md) · [Installer guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.9.0.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.1.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.2 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.3 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -108,7 +108,7 @@ can briefly show LG Home; it is not the same direct path as short Home.
 | **Short Home** | Return directly to our launcher while Home Helper is active. With the helper stopped, LG handles Home normally. |
 | **Three short Home presses within two seconds** | Emergency exit: stop the helper and open LG Home. Preferences are kept; this is **not a factory reset**. |
 | **Short Back** | Go back inside the current app. Its exit dialog and Cancel action still work normally. On a confirmed exit from a watched app, the helper returns to our launcher. |
-| **Hold Back** | Use webOS's exit-to-Home action. It **does not stop the helper**; the exit watcher can then return to our launcher. |
+| **Hold Back** | Use webOS's exit-to-Home action and stay in LG Home. It **does not stop the helper**; a subsequent short Home opens our launcher. The new hold detection awaits C3/C4 hardware verification. |
 | **Volume + / −, mute** | Normal TV/audio controls. |
 | **Move the Magic Remote / wheel** | Pointer and wheel events pass through. Wheel-to-tile selection is not implemented in our launcher. |
 | **Power** | Normal TV standby/wake. With startup configured and the helper not stopped, our launcher returns automatically; cold boot still takes time. |

@@ -11,12 +11,23 @@ on:
       - 'root-edition/**'
       - 'renewal-service/**'
       - 'lgtv.py'
+      - 'release-versions.json'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
       - '.github/workflows/cytv.yml'
   pull_request:
     paths:
       - 'cytv/**'
       - 'scripts/build-cytv.py'
       - 'tests/cytv/**'
+      - 'launcher/**'
+      - 'native/**'
+      - 'root-edition/**'
+      - 'renewal-service/**'
+      - 'lgtv.py'
+      - 'release-versions.json'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
       - '.github/workflows/cytv.yml'
 permissions:
   contents: read

@@ -1,1 +1,6 @@
-{"name":"com.cleanyourtv.root.preview.service","version":"0.1.0","main":"service.js","private":true}
+{
+  "name": "com.cleanyourtv.root.preview.service",
+  "version": "0.1.2",
+  "main": "service.js",
+  "private": true
+}

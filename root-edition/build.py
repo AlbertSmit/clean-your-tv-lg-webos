@@ -45,15 +45,15 @@ def ar(parts):
     return buffer.getvalue()
 
 
-def build(output):
+def build(output, version='0.0.1'):
     output = Path(output).absolute()
     if '..' in output.parts or any(path.is_symlink() for path in (output, *output.parents)):
         raise ValueError('Output must not traverse symlinks or parent segments')
-    files = preview.prepare()
+    files = preview.prepare(version=version)
     info = json.loads(files['appinfo.json'])
     app_id = info['id']
     version = info['version']
-    if app_id != 'com.cleanyourtv.root.preview' or version != '0.0.1':
+    if app_id != 'com.cleanyourtv.root.preview':
         raise ValueError('Unexpected isolated candidate identity')
     payload = {'usr/palm/applications/' + app_id + '/' + name: data for name, data in files.items()}
     service_prefix = 'usr/palm/services/' + SERVICE_ID + '/'
@@ -110,9 +110,10 @@ def build(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True, help='New directory; parent must exist')
+    parser.add_argument('--version', default='0.0.1', help='Root release version, X.Y.Z')
     args = parser.parse_args()
     try:
-        package = build(args.output)
+        package = build(args.output, version=args.version)
     except (ValueError, OSError) as exc:
         parser.exit(1, 'Candidate build failed: ' + str(exc) + '\n')
     print('Built ' + str(package) + '. Offline only; hardware validation pending.')

@@ -1,6 +1,12 @@
 # Root Edition updates from Settings
 
-Status: proposed for user review; implementation has not started.
+Status: approved by the user on 2026-10-23; implemented locally, release acceptance remains open.
+
+Implementation note: the production adapter currently classifies successful
+installer completion only. Automatic rollback follows a verified completed
+install with failed payload/readiness checks. Raw installer failures remain
+blocked until firmware-specific terminal failure evidence is validated; the
+core's definite-failure branch must not be confused with a device classifier.
 
 ## Outcome
 
@@ -187,5 +193,5 @@ authorize publishing a release, handling signing secrets or changing a TV.
 
 The local source checkout is on `feat/cytv-installer` and contains unrelated
 installer work. Implementation should use a separate branch/worktree based on
-local `main` without carrying or reverting those changes. This proposal is the
-only file added during design review; no application code has been modified.
+local `main` without carrying or reverting those changes. Implementation uses `feat/root-settings-updates` in a separate worktree.
+Concurrent settings redesign edits are preserved outside the update commits.

@@ -139,7 +139,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             write.step(3, 'Prepare the TV connection')
             if profile['edition'] == 'root':
                 write('Root requires existing root and SSH access.')
-                write('Preview release: validated on one C3; other models unverified.')
+                write('Hardware validation: LG C3; other models are unverified.')
             else:
                 write('On the TV: LG Apps > Developer Mode. Sign in, then enable:')
                 write('  1. Dev Mode Status')
@@ -151,7 +151,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             write('Edition: ' + ('Root' if profile['edition'] == 'root' else 'No-root'))
             write('SSH port: ' + str(profile['port']))
             if profile['edition'] == 'root':
-                write('Preview release: validated on one C3; other models unverified.')
+                write('Hardware validation: LG C3; other models are unverified.')
                 write('Automatic SSH sign-in first; credentials only if needed.')
             write('Next: verify SSH, read your apps, then install.')
             if profile['edition'] == 'root':

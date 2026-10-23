@@ -47,11 +47,12 @@ class ReleaseTests(unittest.TestCase):
         self.assertIn('temporary', errors.getvalue())
 
     def test_enable_dispatches_persistent_activation_and_confirm_requires_existing_intent(self):
-        with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.enable',return_value={'persistent':True}) as start:
-            self.assertTrue(cli.main('enable')['persistent'])
-            start.assert_called_once_with()
-        with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.coordinator',return_value=None):
-            with self.assertRaisesRegex(ValueError,'No intent'): cli.main('confirm')
+        with tempfile.TemporaryDirectory() as tmp, patch.object(d,'STATE',Path(tmp).resolve()),patch.object(d,'EXPECTED_UID',os.getuid()):
+            with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.enable',return_value={'persistent':True}) as start:
+                self.assertTrue(cli.main('enable')['persistent'])
+                start.assert_called_once_with()
+            with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.coordinator',return_value=None):
+                with self.assertRaisesRegex(ValueError,'No intent'): cli.main('confirm')
 
     def test_restore_works_without_provision_manifest(self):
         with patch.object(cli.os,'geteuid',return_value=0), patch.object(d,'main', return_value='restored') as adapter, patch('provision.verify',side_effect=ValueError('missing')):

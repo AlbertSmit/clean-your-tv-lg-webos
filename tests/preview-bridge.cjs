@@ -14,11 +14,11 @@ const context = {window: {TV_APPS: {apps: []}}, document: {getElementById: () =>
   clearTimeout: id => timers.delete(id)};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('preview/bridge.js', 'utf8'), context);
-function call(method, payload = {}) {
+function call(method, payload = {}, service = 'com.cleanyourtv.root.preview.service') {
   return new Promise(resolve => {
     const bridge = new context.window.PalmServiceBridge();
     bridge.onservicecallback = raw => resolve(JSON.parse(raw));
-    bridge.call('luna://com.cleanyourtv.root.preview.service/' + method, JSON.stringify(payload));
+    bridge.call('luna://' + service + '/' + method, JSON.stringify(payload));
     advance(30);
   });
 }
@@ -30,11 +30,30 @@ function call(method, payload = {}) {
   assert.equal(reply.result.result.intent.phase, 'active');
   advance(120000);
   assert.equal((await call('status')).result.result.intent.phase, 'active');
+  assert.equal((await call('confirm', {transaction: 'preview-root-activation'})).returnValue, false, 'Persistent activation has no Keep confirmation');
   assert.equal((await call('restore')).result.result, 'restored');
   reply = await call('status');
   assert.equal(reply.result.result.intent.phase, 'disabled');
   assert.equal(reply.result.result.effective.sam_home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.defaultApps.categories.home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.idleApp.appId, 'com.webos.app.home');
-  console.log('PASS browser Root demo activation and restore');
+  context.window.TV_APPS.apps = [{id: 'preview.youtube', title: 'YouTube'}];
+  for (const service of ['com.local.nativehome.service', 'com.cleanyourtv.root.preview.service']) {
+    reply = await call('listApps', {}, service);
+    assert.equal(reply.returnValue, true);
+    assert.equal(reply.apps[0].id, 'preview.youtube');
+    assert.equal(reply.apps[1].id, 'preview.gallery');
+  }
+  function updater(method) { return call(method, {}, 'com.cleanyourtv.root.updater.service'); }
+  context.window.ROOT_VERSION = '0.1.1';
+  reply = await updater('restoreProfile');
+  assert.equal(reply.returnValue, true);
+  assert.equal(reply.result, null, 'Demo profile bootstrap must proceed without a real updater');
+  reply = await updater('check');
+  assert.equal(reply.result.installed.version, '0.1.1');
+  assert.equal(reply.result.canInstall, false);
+  assert.equal(reply.result.reason, 'current');
+  assert.equal((await updater('status')).result, null);
+  assert.equal((await updater('install')).returnValue, false, 'Browser preview cannot install packages');
+  console.log('PASS browser app management, persistent Root activation/restore and Software updates preview');
 })().catch(error => { console.error(error); process.exit(1); });

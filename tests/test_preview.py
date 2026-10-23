@@ -99,6 +99,11 @@ class PreviewTest(unittest.TestCase):
                 self.assertEqual(get('/preview/version'), before)
                 style.write_text('body { color: black; background: white; }')
                 self.assertNotEqual(get('/preview/version'), before)
+                root_profile = Path(directory) / 'root-edition/ui/root-profile.js'
+                root_profile.parent.mkdir(parents=True)
+                before_profile = get('/preview/version')
+                root_profile.write_text('/* changed Root bootstrap */')
+                self.assertNotEqual(get('/preview/version'), before_profile)
             for path in ['/README.md', '/.lgtv-key.json', '/launcher/../config.js',
                          '/launcher/%2e%2e/.env', '/launcher/icons/private.png', '/scripts/build.sh',
                          '/preview/icons/%2e%2e/bridge.js', '/preview/icons/private.png']:

@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 APP_ID = 'com.cleanyourtv.root.preview'
@@ -14,10 +15,12 @@ FILES = (
     'fonts/outfit.ttf', 'fonts/OFL.txt',
 )
 UI = Path(__file__).resolve().parent / 'ui'
-UI_FILES = ('root-exit.js', 'root-settings.js', 'root-settings.css')
+UI_FILES = ('root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')
 
 
-def prepare():
+def prepare(version='0.0.1'):
+    if not isinstance(version, str) or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', version) or len(version) > 32:
+        raise ValueError('Invalid Root release version')
     files = {}
     for name in FILES:
         path = SOURCE / name
@@ -27,7 +30,7 @@ def prepare():
     info = json.loads(files['appinfo.json'])
     if (info.get('id'), info.get('type'), info.get('main')) != ('com.gathin.tvhome', 'web', 'index.html'):
         raise ValueError('Unexpected launcher manifest')
-    info.update(id=APP_ID, title='Home Root Preview', version='0.0.1', appCategory=['home'])
+    info.update(id=APP_ID, title='Home Root Preview', version=version, appCategory=['home'])
     for field in ('icon', 'largeIcon', 'splashBackground'):
         if info.get(field) not in files:
             raise ValueError('Unpackaged manifest resource: ' + field)
@@ -40,11 +43,11 @@ def prepare():
         if html.count(tag) != 1:
             raise ValueError('Unexpected launcher HTML: ' + tag)
         html = html.replace(tag, '')
-    # Root preview must not restore production profiles or send updater health signals.
+    # Root's independent profile bootstrap never loads ordinary updater/renewal code.
     entry = '<script src="profile-bootstrap.js"></script>'
     if html.count(entry) != 1:
         raise ValueError('Unexpected launcher entry')
-    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script src="root-exit.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="app.js"></script>').encode()
+    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script>window.ROOT_VERSION = ' + json.dumps(version) + ';</script>\n  <script src="root-exit.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="root-updates.js"></script>\n  <script src="root-profile-data.js"></script>\n  <script src="root-profile.js"></script>').encode()
     files['appinfo.json'] = (json.dumps(info, indent=2) + '\n').encode()
     for name in UI_FILES:
         path = UI / name

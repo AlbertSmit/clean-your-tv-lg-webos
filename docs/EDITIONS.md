@@ -1,12 +1,12 @@
 # Choose your edition
 
 Both editions share the Home interface and run on the TV after setup. Root
-Preview is separate from the stable No-root release; installing it does not
+Stable is separate from the stable No-root release; installing it does not
 upgrade or remove your ordinary launcher.
 
-| | No-root Edition | Root Preview |
+| | No-root Edition | Root Stable |
 | --- | --- | --- |
-| Status | Stable release | Separate preview; permanent mode tested on one C3 |
+| Status | Stable release | 0.1.2, based on scoped evidence on OLED55C3RLA / 43.21.71 |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |
@@ -17,7 +17,7 @@ upgrade or remove your ordinary launcher.
 | Normal exit | Three short Home presses stop helper | Settings → Exit Root mode → Confirm exit |
 | Startup evidence | Standby and cold boot on tested setup | Permanent software-reboot startup confirmed; final cold/standby/failsafe matrix pending |
 | Developer Mode | Session must remain active; auto-renewal is opt-in Beta | Not used by Root installer; do not install Developer Mode over root |
-| Updates | Signed Home update path in stable release | Separate Root package; no in-app production updater |
+| Updates | Signed Home update path in stable release | Settings updates with separate Root Updater, saved profile and rollback; isolated C3 validation, one-time host setup required ([guide](../root-edition/UPDATES.md)) |
 | Early black screen | Known limitation | Not solved |
 
 ## Get started
@@ -25,8 +25,10 @@ upgrade or remove your ordinary launcher.
 - **Without cytv:** [Manual installation of No-root and Root](MANUAL_INSTALL.md), including requirements for each edition and recovery commands.
 
 - **No-root:** [Install](INSTALL.md), [recover](RECOVERY.md), [compatibility](COMPATIBILITY.md).
-- **Root Preview:** [Overview](../root-edition/README.md), [install and activate](../root-edition/ROLLOUT.md), [evidence and gates](../root-edition/RELEASE-ACCEPTANCE.md).
+- **Root Stable:** [Overview](../root-edition/README.md), [install and activate](../root-edition/ROLLOUT.md), [evidence and gates](../root-edition/RELEASE-ACCEPTANCE.md).
 
 The Root hardware evidence is from **LG OLED55C3RLA, firmware 43.21.71** with a
 Magic Remote. Other hardware is unvalidated. Keep your working installation and
 private backups; never publish credentials, pairing data or device inventories.
+
+See [release scope and known limitations](../root-edition/ROOT-0.1.1.md), including the unresolved intermittent emergency-gesture observation.

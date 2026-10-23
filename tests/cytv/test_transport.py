@@ -81,7 +81,7 @@ class TransportTests(unittest.TestCase):
             root_auth(lambda _: self.fail('Password requested'), profile=profile,
                       identity_prompt=choose).authenticate(Transport())
         self.assertEqual(calls, ['none', 'agent-key', 'choose-key', 'selected-key', 'agent-close'])
-        self.assertEqual(profile['identity'], '/chosen/private-key')
+        self.assertEqual(profile['identity'], str(Path('/chosen/private-key')))
 
     def test_root_failed_agent_then_password_and_cancel_are_not_swallowed(self):
         import paramiko

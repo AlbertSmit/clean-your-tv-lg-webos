@@ -45,8 +45,29 @@ def pack_app(appfiles, servicefiles, architecture='all', helper=False):
     return package.ipk(app, version, files, executables, helper_state=helper, architecture=architecture)
 
 
+def verify_release_versions(payload, versions):
+    from cytv import __version__
+    if __version__ != versions['cytv']:
+        raise ValueError('cytv version does not match release metadata')
+    root = payload / 'root'
+    bundle = json.loads((root / 'bundle.json').read_text())
+    if json.loads((root / 'release.json').read_text())['version'] != versions['root']:
+        raise ValueError('Root release version does not match release metadata')
+    for filename, app, service, version in (
+        ('launcher.ipk', 'com.gathin.tvhome', 'com.gathin.tvhome.renewal', versions['home']),
+        ('helper.ipk', 'com.local.nativehome', 'com.local.nativehome.service', versions['helper']),
+        ('root/' + bundle['package'], package.ROOT_APP, package.ROOT_APP + '.service', versions['root']),
+    ):
+        files = package.data_files((payload / filename).read_bytes())
+        info = json.loads(files['usr/palm/applications/' + app + '/appinfo.json'])
+        metadata = json.loads(files['usr/palm/services/' + service + '/package.json'])
+        if info['id'] != app or info['version'] != version or metadata['version'] != version:
+            raise ValueError('Embedded application/service version does not match release metadata: ' + app)
+
+
 def build_payload():
     import ziglang
+    versions = json.loads((ROOT / "release-versions.json").read_text())
     work = (ROOT / 'build/cytv').resolve()
     payload = work / 'payload'
     if payload.exists():
@@ -74,7 +95,7 @@ def build_payload():
     renewal = {n: b for n, b in tracked_files('renewal-service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
     (payload / 'launcher.ipk').write_bytes(pack_app(launcher, renewal))
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
-    subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root')], cwd=ROOT, check=True)
+    subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
     (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
     # Ship dependency license metadata as well as application notices in the executable.
@@ -95,6 +116,7 @@ def build_payload():
                           for p in sorted(payload.rglob('*')) if p.is_file()}}
     (payload / 'payload.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     package.verify_payload(payload)
+    verify_release_versions(payload, versions)
     return payload
 
 

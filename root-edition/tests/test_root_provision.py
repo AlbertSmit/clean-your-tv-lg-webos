@@ -22,6 +22,7 @@ class ProvisionTests(unittest.TestCase):
         self.assertNotIn('*',role['permissions'][0]['outbound'])
         api=json.loads(result['api'])
         self.assertEqual(api['activities.callbacks'],[p.NAME+'/boot'])
+        self.assertEqual(json.loads(result['client']),{p.NAME:['activity.operation']})
         self.assertNotIn(p.NAME+'/trial',str(api))
     def test_unexpected_launcher_and_app_refused(self):
         original=self.original();original['service']=original['service'].replace('/usr/bin/run-js-service','/bin/sh')
@@ -105,4 +106,25 @@ class ProvisionTests(unittest.TestCase):
                 self.assertTrue(p.rollback()['already_rolled_back'])
                 self.assertTrue(all(path.read_bytes()==b'original' for path in paths.values()))
 
-if __name__=='__main__':unittest.main()
+
+
+    def test_pending_permission_repair_is_journaled_and_resumable(self):
+        original=self.original(); old={key:value.encode() for key,value in original.items()}
+        saved={'version':1,'service':p.NAME,'files':{str(file):{'original':original[key],'original_sha256':p.sha(old[key]),'installed_sha256':p.sha(old[key]),'mode':0o644,'uid':0,'gid':0} for key,file in p.FILES.items()}}
+        snapshot=p.STATE/'ls2-provision-snapshot.json'
+        data={file:old[key] for key,file in p.FILES.items()};data[snapshot]=p.encoded(saved)
+        writes=[]
+        def write(path,content,mode=0o600):
+            writes.append(path);data[path]=content
+            if len(writes)==2: raise OSError('simulated interruption')
+        with patch.object(p,'secure',side_effect=lambda path:data[path]),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'write',side_effect=write),patch.object(p.os,'chown'):
+            with self.assertRaises(OSError):p.repair_pending()
+            self.assertEqual(writes[0],snapshot)
+            writes.append(None)
+            self.assertTrue(p.repair_pending()['repaired_pending'])
+        for key,file in p.FILES.items():self.assertEqual(data[file],p.plan(original)[key])
+
+    def test_pending_repair_refuses_active_ready_state(self):
+        with patch.object(p.os.path,'lexists',return_value=True),patch.object(p,'write') as write:
+            with self.assertRaises(ValueError):p.repair_pending()
+            write.assert_not_called()

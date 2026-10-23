@@ -15,7 +15,10 @@ NAME = 'com.cleanyourtv.root.preview.service'
 SERVICE = Path('/media/developer/apps/usr/palm/services') / NAME
 STATE = Path('/var/lib/clean-your-tv-root')
 BASE = Path('/var/luna-service2-dev')
-RUNNER = Path('/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/run-js-service')
+PRIVATE_SERVICE = STATE/'service'
+RUNNER = STATE/'run-recovery-service'
+PRIVATE_FILES = ('service.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
+SYSTEM_FILES = tuple(Path(x) for x in ('/usr/bin/node','/usr/palm/services/jsservicelauncher/bootstrap-node.js','/usr/palm/services/jsservicelauncher/bootstrap.js'))
 RUNTIME = STATE / 'runtime'
 FILES = {'service': BASE/'services.d'/(NAME+'.service'),
          'role': BASE/'roles.d'/(NAME+'.service.json'),
@@ -53,6 +56,41 @@ def write(path, data, mode=0o600):
 def encoded(value):
     return (json.dumps(value, sort_keys=True, indent=2)+'\n').encode()
 
+def runner_bytes():
+    # Follow the firmware's bootstrap argument contract, without evaluating a
+    # writable Homebrew wrapper or modifying the system run-js-service script.
+    return ('#!/bin/sh\nset -eu\n[ "$#" -eq 0 ] || exit 2\n'
+            'cd '+str(PRIVATE_SERVICE)+'\n'
+            'export NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules\n'
+            'exec /usr/bin/node /usr/palm/services/jsservicelauncher/bootstrap-node.js -- '
+            +str(STATE/'bootstrap.pid')+' /var/palm/ls2-dev '+str(PRIVATE_SERVICE)+'\n').encode()
+
+def prepare_private_service():
+    for path in SYSTEM_FILES:
+        secure(path)
+    # release.json was copied into the private root state before installation.
+    release = json.loads(secure(STATE/'release.json'))
+    from deploy import checked_file
+    contents = {}
+    for name in PRIVATE_FILES:
+        data = checked_file(SERVICE, name)
+        key = 'usr/palm/services/'+NAME+'/'+name
+        if sha(data) != release.get('files',{}).get(key):
+            raise ValueError('Installed recovery payload mismatch: '+name)
+        contents[name] = data
+    if PRIVATE_SERVICE.is_symlink(): raise ValueError('Indirect private service')
+    PRIVATE_SERVICE.mkdir(mode=0o700,exist_ok=True)
+    if PRIVATE_SERVICE.stat().st_mode & 0o022: raise ValueError('Writable private service directory')
+    for name,data in contents.items():
+        path=PRIVATE_SERVICE/name
+        if os.path.lexists(path):
+            if secure(path)!=data: raise ValueError('Private recovery service drift: '+name)
+        else: write(path,data,0o700 if name=='boot-recover.sh' else 0o600)
+    if os.path.lexists(RUNNER):
+        if secure(RUNNER)!=runner_bytes(): raise ValueError('Private runner drift')
+    else: write(RUNNER,runner_bytes(),0o700)
+
+
 def plan(original):
     expected = 'Exec=/usr/bin/run-js-service -n '+str(SERVICE)
     if original['service'].splitlines().count(expected) != 1:
@@ -63,25 +101,23 @@ def plan(original):
     role['permissions'] = [{'service':NAME,
         'inbound':['com.webos.lunasend-*','com.webos.service.activitymanager'],
         'outbound':['com.webos.service.activitymanager','com.palm.activitymanager']}]
-    return {'service': original['service'].replace(expected,'Exec='+str(RUNNER)+' -n '+str(SERVICE)).encode(),
+    return {'service': original['service'].replace(expected,'Exec='+str(RUNNER)).encode(),
             'role':encoded(role), 'client':encoded({NAME:['activity.operation']}),
             'api':encoded({'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
 
 def manifest():
-    callback = SERVICE/'boot-recover.sh'
+    callback = PRIVATE_SERVICE/'boot-recover.sh'
     if b'/var/lib/clean-your-tv-root/runtime/cli.py boot' not in secure(callback):
         raise ValueError('Unexpected boot callback')
-    paths = [callback] + sorted(RUNTIME.glob('*.py'))
+    paths = [RUNNER] + [PRIVATE_SERVICE/name for name in PRIVATE_FILES] + sorted(RUNTIME.glob('*.py'))
     if RUNTIME/'cli.py' not in paths: raise ValueError('Missing runtime')
     return {'version':1,'mode':'recovery-only','boot_callback':str(callback),
             'files':{str(path):sha(secure(path)) for path in paths}}
 
 def apply():
     if os.geteuid() != 0: raise ValueError('Root required')
-    secure(RUNNER)
-    for name in ('service.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh'):
-        secure(SERVICE/name)
-    if json.loads(secure(SERVICE/'services.json')).get('id') != NAME: raise ValueError('Wrong installed service')
+    prepare_private_service()
+    if json.loads(secure(PRIVATE_SERVICE/'services.json')).get('id') != NAME: raise ValueError('Wrong installed service')
     pending = manifest()
     original = {key:secure(path).decode() for key,path in FILES.items()}
     updated = plan(original)
@@ -101,7 +137,36 @@ def apply():
         os.chown(path,saved['files'][str(path)]['uid'],saved['files'][str(path)]['gid'])
     return {'returnValue':True,'next':'Refresh LS2 registration, then finalize. Trials remain disabled.'}
 
+def repair_pending():
+    """Upgrade only incomplete recovery provisioning, never an active trial."""
+    if os.path.lexists(STATE/'recovery-provision.json') or os.path.lexists(STATE/'profile-trial.json'):
+        raise ValueError('Only never-activated provisioning may be repaired')
+    path=STATE/'ls2-provision-snapshot.json'
+    saved=json.loads(secure(path))
+    if saved.get('phase') is not None or saved.get('service')!=NAME or set(saved['files'])!={str(p) for p in FILES.values()}:
+        raise ValueError('Unexpected pending snapshot')
+    original={key:saved['files'][str(file)]['original'] for key,file in FILES.items()}
+    updated=plan(original)
+    for key,file in FILES.items():
+        entry=saved['files'][str(file)]
+        if sha(entry['original'].encode())!=entry['original_sha256'] or sha(secure(file)) not in (entry['installed_sha256'],entry.get('previous_installed_sha256')):
+            raise ValueError('Pending provision drift')
+        newhash=sha(updated[key])
+        if newhash!=entry['installed_sha256']:
+            if entry.get('previous_installed_sha256'): raise ValueError('Only one pending repair supported')
+            entry['previous_installed_sha256']=entry['installed_sha256']
+            entry['installed_sha256']=newhash
+    write(path,encoded(saved))
+    for key,file in FILES.items():
+        entry=saved['files'][str(file)]
+        write(file,updated[key],entry['mode']);os.chown(file,entry['uid'],entry['gid'])
+    return {'returnValue':True,'repaired_pending':True}
+
+
 def rpc(method):
+    if method in ('register','unregister'):
+        import activity
+        return activity.manage(method,secure,write)
     if method not in ('status','register','restore','unregister'):
         raise ValueError('Unsupported recovery method')
     uri = 'luna://'+NAME+'/'+method
@@ -175,6 +240,8 @@ def rollback():
             info = file.stat()
             if (stat.S_IMODE(info.st_mode),info.st_uid,info.st_gid) != (entry['mode'],entry['uid'],entry['gid']):
                 raise ValueError('Restored LS2 metadata drift: '+path)
+        import system_permissions
+        system_permissions.remove(secure)
         return {'returnValue':True,'already_rolled_back':True,'next':'Refresh LS2 registration before package removal.'}
     if saved.get('phase') not in (None, 'restoring'):
         raise ValueError('Unknown provisioning phase')
@@ -183,7 +250,7 @@ def rollback():
     # Refuse any drift before canceling activity or touching files. A partial apply
     # can contain original or installed bytes, both exactly recorded here.
     for path, entry in saved['files'].items():
-        if sha(entry['original'].encode()) != entry['original_sha256'] or sha(secure(Path(path))) not in (entry['original_sha256'],entry['installed_sha256']):
+        if sha(entry['original'].encode()) != entry['original_sha256'] or sha(secure(Path(path))) not in (entry['original_sha256'],entry['installed_sha256'],entry.get('previous_installed_sha256')):
             raise ValueError('LS2 file drift: '+path)
     if saved.get('phase') != 'restoring':
         disable_trials()
@@ -194,6 +261,8 @@ def rollback():
         rpc('unregister')
         saved['phase'] = 'restoring'
         write(STATE/'ls2-provision-snapshot.json',encoded(saved))
+    import system_permissions
+    system_permissions.remove(secure)
     for path,entry in saved['files'].items():
         write(Path(path),entry['original'],entry['mode'])
         os.chown(path,entry['uid'],entry['gid'])
@@ -205,12 +274,12 @@ def rollback():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback'])
+    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback','repair_pending'])
     command = parser.parse_args().command
     if os.geteuid() != 0 and command != 'plan': raise ValueError('Root required')
     if command == 'plan':
         print(json.dumps({'service':NAME,'files':{k:str(v) for k,v in FILES.items()},
-                          'runner':str(RUNNER),'activity':json.loads((Path(__file__).parent/'service/activity.json').read_text()),
+                          'runner':str(RUNNER),'activity':json.loads((SERVICE/'activity.json').read_text()),
                           'sequence':['install package and runtime','apply','refresh LS2','finalize'],
                           'rollback':['restore runtime','cancel owned activity','restore exact LS2 snapshots','refresh LS2']} ,indent=2))
     else:

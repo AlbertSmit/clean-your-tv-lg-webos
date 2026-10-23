@@ -19,7 +19,9 @@ def verify():
     if not required.issubset(files):
         raise ValueError('Incomplete recovery manifest')
     import os, stat
-    for name in required:
+    for name in files:
+        if not Path(name).is_absolute() or not Path(name).is_relative_to(d.STATE):
+            raise ValueError('Recovery files must remain inside private root state')
         path = Path(name)
         for parent in path.parents:
             d.trusted_dir(parent)

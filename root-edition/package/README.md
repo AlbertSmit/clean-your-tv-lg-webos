@@ -25,3 +25,9 @@ By default the launcher inventory is empty. Explicitly add `--migrate-packaged-h
 The driver records stages in `/var/lib/clean-your-tv-root/deploy.json` before installation submission. Installation proceeds only after an independent matching terminal backend event and installed-file hash verification. Existing candidate files or state block installation. A timeout, disconnect, or uncertain result requires inspection; do not blindly retry. Remote staging remains available after failure.
 
 Uninstall first requires successful Home recovery, rolls back this candidate's LS2 provisioning, refreshes registration, and requests removal. It requires a terminal removal reply and absence of all candidate app/service/package directories. State and recovery evidence remain on disk; the driver never deletes retained state automatically. The production app and legacy helper are never written by these drivers.
+
+Recovery implementation: service code and its fixed runner are copied by verified
+hash into root-owned private state. The firmware's immutable Node bootstrap runs
+that service; the Homebrew runner and system launcher are not patched. Registration
+of the one recovery activity uses the root installer with a fixed bus sender and
+checks the complete stored definition and creator before reuse or cancellation.

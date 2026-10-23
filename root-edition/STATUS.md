@@ -89,3 +89,18 @@ Unlike earlier lab trials, this candidate does not automatically resume the lega
 helper: stopping it sets the same latch as the user's emergency exit. The user must
 stop it explicitly before a trial and explicitly resume it after rollback. No
 production helper protocol or system library is modified. See [rollout](ROLLOUT.md).
+
+## Integrated recovery preparation — 2026-10-23
+
+Merged main `b182393` (v0.8.1 signed-update fixes). On the C3, the initial candidate
+failed closed before Home activation because packaged data and the Homebrew runner
+had desktop/world-writable permissions. The recovery service now executes from
+private root-owned state using the firmware's Node bootstrap. Homebrew is unchanged.
+
+Activity registration is performed by the root installer with a fixed sender,
+not by granting the web service broad management rights. This firmware requires
+the compatible ActivityManager URI and explicit list flags; `current:false`
+is essential to inspect the stored definition rather than live trigger results.
+The owned task and recovery integrity passed readback. All three Home destinations
+remained LG; no routing trial ran during this preparation. Boot/failsafe delivery
+of the final candidate remains a separate hardware acceptance gate.

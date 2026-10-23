@@ -17,7 +17,7 @@ INSTALLED = Path('/media/developer/apps')
 RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'device_adapter.py', 'guardian_device.py',
                  'helper_bridge.py', 'profile_guardian.py', 'profile_plan.py', 'profile_recovery.py', 'provision.py',
                  'staged_publication.py', 'transport.py')
-SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py')
+SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py')
 
 
 def require_device():

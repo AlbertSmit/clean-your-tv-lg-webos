@@ -1,6 +1,6 @@
-# In-app updates (development)
+# Signed Home updates and recovery
 
-This draft adds signed Home updates and recovery. It is not in the released v0.7.1. The isolated update/rollback path passed on an LG OLED55C3RLA with firmware 43.21.71; production permission setup across reboot remains a release gate. Do not install these development packages over a working installation as a stable upgrade.
+Available in v0.8.1. Published signed Home update and rollback were verified on LG OLED55C3RLA / 43.21.71, including app preservation, remote controls and disabled renewal. Installation from the TV requires root, Homebrew Channel and the scoped setup below.
 
 ## What users get
 
@@ -47,7 +47,7 @@ node scripts/update-permissions.cjs remove production
 
 Removal deletes only files matching the receipt, removes the manifest first and refreshes LS2. Changed files or stale lock/staging files require inspection, not deletion by guesswork. After removal verify that cross-package calls are denied; cached permissions may require provider re-registration. The lab's post-removal check was rejected.
 
-`/var/luna-service2-dev` persistence through reboot and permission retention across all service lifecycles still need a defined production setup path. Do not silently add a boot hook, change the root to `/var/luna-service2`, or claim reboot-safe setup from this test. The alternative root is accepted by the CLI but was not tested here. These are release gates, not changes to the working no-root installation.
+On the tested C3, scoped grants persisted through a software reboot. Activity Manager required that reboot to adopt the new canonical API grants. Keep the same setup directory to remove/update its owned permissions. The alternative `/var/luna-service2` root, factory reset and all power-loss cases are not validated. No additional boot hook is installed.
 
 ## Build, signing and release checklist
 
@@ -57,7 +57,7 @@ scripts/build.sh
 scripts/build-updater.sh
 ```
 
-The updater package is `com.cleanyourtv.updater_0.1.0_all.ipk`. Its service creates private state with its actual runtime UID (directory 0700, files 0600); no fixed UID is packaged. Earlier prototypes with incorrectly owned state require explicit migration.
+The updater package is `com.cleanyourtv.updater_0.1.2_all.ipk`. Its service creates private state with its actual runtime UID (directory 0700, files 0600); no fixed UID is packaged. Earlier prototypes with incorrectly owned state require explicit migration.
 
 The feed is `https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/update.json`. Requests are user-triggered. The HTTPS reader restricts redirects to this project's release assets and GitHub's asset CDN. RSA-SHA256 metadata is verified against the packaged `updater-service/release-public.pem`; it fixes the package URL, Home version, exact helper requirement and SHA-256. Homebrew checks the downloaded hash.
 
@@ -77,7 +77,7 @@ The signer validates the result against the pinned public key and validates the 
 
 Before publishing:
 
-- Resolve production permission activation and reboot behavior; do not present the lab setup as a finished consumer installer.
+- Verify scoped permissions after setup; running providers may require a controlled reboot before the update can start.
 - Build public packages from clean sources, never personalized/live-TV backups. Exclude lab identifiers, loopback URLs, fake LG adapters, test keys and runtime state.
 - Compute hashes from the final IPKs; sign with the real pinned key. Verify the candidate and previous IPK version, helper requirement, URLs and hashes against both signed descriptors.
 - Keep the previous package downloadable. Test the public asset URLs before making the release latest. Do not publish the lab's signed envelopes to the stable feed.
@@ -90,3 +90,11 @@ On 2026-10-22, the corrected service completed a user-triggered isolated 1.2.0 â
 An earlier attempt required manual journal recovery after the terminal installer reply was lost. It is not counted as unattended success. The subscription fix was then tested with a fresh transaction, without manual recovery. See [the detailed lab record](development/UPDATE-LAB-RUNBOOK.md).
 
 The lab used fake LG responses/scheduling, an ephemeral signing key, loopback package delivery and a rooted TV. It does not prove real LG renewal, unrooted installation, maximum profile sizes, power-loss recovery, production permission persistence or public GitHub delivery. Local tests cover signature/policy checks, transaction failures, erased service state, manual preference overrides, service restart between UI actions and remote navigation. No new feature work is required for this PR.
+
+### Renewal pause permissions
+
+The scoped setup also grants only Activity Manager `create` and `cancel` to the renewal service, using the canonical `com.webos.service.activitymanager` API identity rather than the legacy call alias. On the tested C3, the installer derived service grants from the application and ignored the service-level `requiredACG`; declaring it in `services.json` alone was insufficient. Without these grants, even disabled renewal can stop an update at `renewal-recovery` before installation. Do not bypass pause confirmation or clear the transaction. Upgrade the scoped setup (remove the matching old plan, apply the new plan), then use Recovery to reconcile the pre-install transaction. Re-registration may be required for running providers.
+
+### Published-package C3 validation (2026-10-23)
+
+Home 1.2.0 â†’ 1.2.1 using public GitHub assets completed, followed by signed rollback to 1.2.0. Journals confirmed complete/rolled-back and renewalRestored; renewal remained disabled. The user confirmed app order, arrows/OK, short Home and normal helper behavior. This release adds the scoped canonical Activity Manager grants needed to avoid the initial cancel-unconfirmed failure, plus Recovery refresh on relaunch. These final UI changes have regression tests; the exact v0.8.1 binaries have not yet had another on-TV cycle.

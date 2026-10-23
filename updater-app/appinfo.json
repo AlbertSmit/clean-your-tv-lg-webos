@@ -1,1 +1,13 @@
-{"id":"com.cleanyourtv.updater","version":"0.1.0","vendor":"Clean Your TV","type":"web","main":"index.html","title":"Home Updater","icon":"icon.png","resolution":"1920x1080","requiredACG":["application.launcher"]}
+{
+  "id": "com.cleanyourtv.updater",
+  "version": "0.1.2",
+  "vendor": "Clean Your TV",
+  "type": "web",
+  "main": "index.html",
+  "title": "Home Updater",
+  "icon": "icon.png",
+  "resolution": "1920x1080",
+  "requiredACG": [
+    "application.launcher"
+  ]
+}

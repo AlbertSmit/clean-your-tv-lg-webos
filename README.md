@@ -164,3 +164,7 @@ See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 No firmware images, extracted proprietary binaries, TV credentials or personal
 app inventories are included. Please redact logs before opening an issue.
+
+## Software updates
+
+Rooted TVs with Homebrew Channel can use **Settings → Software updates** with a separate Home Updater recovery app. Signed releases preserve your apps and settings and pause renewal automatically during installation. Start with the [setup and recovery guide](docs/UPDATES.md). No-root users continue updating from their computer. Existing Home versions below 1.2.0 require a personalized rebuild first; generic release packages do not contain your app inventory.

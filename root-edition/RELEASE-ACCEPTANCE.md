@@ -115,3 +115,16 @@ The working helper was subsequently launched normally after released-key and
 baseline checks; its relay reported READY and production Home was foreground.
 No production helper code or control latch was edited directly.
 The user then confirmed production short Home, arrows and OK work as before.
+
+## RC15 local permanent-mode candidate — 2026-10-23
+
+Implemented explicit promotion, volatile two-second health leases, reciprocal
+watchdog pulses, boot restore-before-restart and settings controls. Full local
+suite passes: 314 Root Python tests, 11 setup tests and all JS/native/update checks.
+Independent code review identified a timestamp/read race; a failing regression
+was added and the watcher now samples validation time after reading a lease.
+
+Reproducible bundle.json SHA-256:
+`a7d1db3a3da27123a8dc860ae45d3380c849dea28d714954b1ab46f55101b0f7`.
+RC15 device acceptance is pending. Do not inherit RC14 bounded acceptance as proof
+of permanent operation. Production launcher/helper remain separate.

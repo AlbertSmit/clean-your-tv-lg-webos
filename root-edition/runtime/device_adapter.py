@@ -32,8 +32,11 @@ def active_guardian(journal):
         if FAILSAFE.exists() or journal['state']!='pending': return False
         ready=safe_json(STATE/'profile-guardian-ready.json')
         pid=ready['pid']; deadline=journal['deadline']
-        if type(pid) is not int or pid<=0 or not time.monotonic()<deadline<=time.monotonic()+90:
-            return False
+        if type(pid) is not int or pid<=0: return False
+        if not time.monotonic()<deadline<=time.monotonic()+90:
+            from persistent_health import authorized, require_fresh
+            if not authorized(journal['transaction']): return False
+            require_fresh(journal['transaction'])
         if ready['transaction']!=journal['transaction'] or ready['deadline']!=deadline: return False
         if (PROC/str(pid)).stat().st_uid!=EXPECTED_UID: return False
         command=(PROC/str(pid)/'cmdline').read_bytes().split(b'\0')

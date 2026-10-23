@@ -40,3 +40,8 @@ class Tests(unittest.TestCase):
   p=subprocess.Popen([sys.executable,'-c',code,str(w)],pass_fds=(w,));os.close(w)
   try:self.assertEqual(watch(r,lambda why:True,timeout=.3),'observer_exit')
   finally:p.wait();os.close(r)
+ def test_health_callback_only_follows_valid_input_loop_ping(self):
+  r=self.stream(b'READY\nPING\nPING\nESCAPE\n');seen=[]
+  try:watch(r,lambda why:True,on_ping=lambda:seen.append('ping'))
+  finally:os.close(r)
+  self.assertEqual(seen,['ping','ping'])

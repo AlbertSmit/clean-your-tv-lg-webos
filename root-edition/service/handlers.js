@@ -9,13 +9,15 @@ module.exports = function (execute) {
   }
   function handler(command) {
     return async function (payload) {
-      if (!valid(payload, command === 'boot')) return {returnValue:false,errorText:'Invalid recovery request'};
+      var confirmation = command === 'confirm';
+      var allowed = confirmation ? payload && Object.keys(payload).length === 1 && typeof payload.transaction === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(payload.transaction) : valid(payload, command === 'boot');
+      if (!allowed) return {returnValue:false,errorText:'Invalid recovery request'};
       if (busy) return {returnValue:false,errorText:'Recovery busy'};
       busy = true;
-      try { return {returnValue:true,result:await execute(command)}; }
+      try { return {returnValue:true,result:await execute(command, confirmation ? payload.transaction : undefined)}; }
       catch (error) { return {returnValue:false,errorText:error.message}; }
       finally { busy = false; }
     };
   }
-  return {boot:handler('boot'),status:handler('status'),restore:handler('restore')};
+  return {boot:handler('boot'),status:handler('status'),restore:handler('restore'),enable:handler('enable'),confirm:handler('confirm')};
 };

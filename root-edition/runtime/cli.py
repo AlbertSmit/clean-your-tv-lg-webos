@@ -6,12 +6,13 @@ import sys
 import device_adapter as d
 
 
-def main(mode):
+def main(mode, transaction=None):
     if os.geteuid() != 0:
         raise PermissionError('Root required')
-    if mode in ('enable', 'confirm'):
-        raise ValueError('hardware-validation-required: persistent activation is unavailable in this candidate')
-    if mode == 'intent-trial':
+    if mode == 'confirm':
+        from intent_runtime import confirm
+        return confirm(transaction)
+    if mode in ('enable','intent-trial'):
         from intent_runtime import start
         return start()
     if mode == 'emergency-trial':
@@ -36,14 +37,17 @@ def main(mode):
         except (OSError, ValueError, TypeError) as exc:
             result['recovery'] = {'integrity_verified':False,'error':str(exc)}
         result['candidate'] = d.CANDIDATE
-        result['persistent_enable_available'] = False
+        result['persistent_enable_available'] = result['recovery'].get('integrity_verified',False)
+        from intent_runtime import coordinator
+        c = coordinator()
+        result['intent'] = c.store.read() if c is not None else None
         return result
     raise ValueError('Expected status, trial, emergency-trial, restore, boot, enable or confirm')
 
 
 if __name__ == '__main__':
     try:
-        result = main(sys.argv[1] if len(sys.argv) == 2 else '')
+        result = main(sys.argv[1] if len(sys.argv) in (2,3) else '', sys.argv[2] if len(sys.argv) == 3 else None)
         print(json.dumps({'returnValue':True,'result':result}), flush=True)
         if isinstance(result, str) and result in ('recovering', 'conflict'):
             sys.exit(2)

@@ -66,3 +66,15 @@ assert g.run('fixture')=='restored'
 
 
 if __name__ == '__main__': unittest.main()
+
+class PromotionGuardianTests(unittest.TestCase):
+    def test_confirmed_continuation_is_guarded_instead_of_expiring(self):
+        now=[100];recovered=[];continuations=[]
+        def continuation():
+            continuations.append(now[0])
+            if now[0]>=101:return 'lease-expired'
+        result=watch('t',lambda:dict(transaction='t',state='pending',deadline=160),
+                     lambda *a:None,recovered.append,lambda:now[0],
+                     lambda n:now.__setitem__(0,now[0]+n),continuation=continuation)
+        self.assertEqual(result,'lease-expired');self.assertFalse(recovered)
+        self.assertLess(now[0],160)

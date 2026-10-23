@@ -7,7 +7,7 @@ must remain armed in the live adapter in case this process itself fails.
 """
 import math,os,select,time
 
-def watch(fd,recover,timeout=2.0,on_ready=lambda:None,finished=lambda:False):
+def watch(fd,recover,timeout=2.0,on_ready=lambda:None,finished=lambda:False,on_ping=lambda:None):
  if not isinstance(timeout,(int,float)) or not math.isfinite(timeout) or timeout<=0:raise ValueError('Invalid timeout')
  ready=False;buffer=b'';deadline=time.monotonic()+timeout;reason=None
  while reason is None:
@@ -25,7 +25,8 @@ def watch(fd,recover,timeout=2.0,on_ready=lambda:None,finished=lambda:False):
    line,buffer=buffer.split(b'\n',1)
    if line==b'READY' and not ready:
     ready=True;deadline=time.monotonic()+timeout;on_ready()
-   elif line==b'PING' and ready:deadline=time.monotonic()+timeout
+   elif line==b'PING' and ready:
+    deadline=time.monotonic()+timeout;on_ping()
    elif line==b'ESCAPE' and ready:reason='escape';break
    elif line==b'LOST':reason='input_lost';break
    else:reason='bad_protocol';break

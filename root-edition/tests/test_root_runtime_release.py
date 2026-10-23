@@ -46,12 +46,12 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(output.getvalue(), '')
         self.assertIn('temporary', errors.getvalue())
 
-    def test_persistent_enable_and_confirm_fail_closed_without_mutation(self):
-        with patch.object(cli.os, 'geteuid', return_value=0), patch.object(d,'main') as adapter:
-            for mode in ('enable','confirm'):
-                with self.assertRaisesRegex(ValueError, 'hardware-validation-required'):
-                    cli.main(mode)
-            adapter.assert_not_called()
+    def test_enable_dispatches_guarded_trial_and_confirm_requires_existing_intent(self):
+        with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.start',return_value={'persistent':False}) as start:
+            self.assertFalse(cli.main('enable')['persistent'])
+            start.assert_called_once_with()
+        with patch.object(cli.os,'geteuid',return_value=0), patch('intent_runtime.coordinator',return_value=None):
+            with self.assertRaisesRegex(ValueError,'No intent'): cli.main('confirm')
 
     def test_restore_works_without_provision_manifest(self):
         with patch.object(cli.os,'geteuid',return_value=0), patch.object(d,'main', return_value='restored') as adapter, patch('provision.verify',side_effect=ValueError('missing')):

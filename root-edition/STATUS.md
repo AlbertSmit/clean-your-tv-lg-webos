@@ -268,3 +268,18 @@ This bundle retains the independent 60-second deadline. It does not renew a leas
 or enable a permanent profile; `enable`/`confirm` remain locked. The renewable
 lease policy is still local and not included in this install. Permanent observer
 lifecycle, promotion/confirmation UI and final device acceptance remain required.
+
+## RC15 permanent lifecycle implementation — 2026-10-23
+
+Implemented explicit enable/transaction-bound confirmation, volatile input-loop
+leases, independent guardian continuation and reciprocal guardian pulse checks.
+Confirmed intent resumes only after verified boot recovery and fresh guarded
+activation. Failsafe, interrupted startup, emergency exit and faults disable intent.
+Settings now provides Try Root mode / Keep Root mode / active status and Exit.
+Production app/helper files are untouched; candidate identity remains isolated.
+
+Full local suite passes (314 Python root tests, 11 setup tests and all JS/native
+checks). Includes a stopped real publisher with an independently running health
+adapter, deadline promotion rejection, and publication-during-read regression.
+Independent review found the timestamp race; it was reproduced and fixed.
+RC15 hardware acceptance is pending; permanent mode is not a public release yet.

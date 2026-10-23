@@ -12,7 +12,7 @@ vm.runInNewContext(fs.readFileSync(__dirname+'/root-settings.js','utf8'),context
 const panel=context.window.RenewalPanel;
 function key(code){let prevented=false,stopped=false;listeners.keydown({keyCode:code,preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});return {prevented,stopped};}
 (async()=>{
- panel.open();assert(panel.isOpen());assert.strictEqual(calls.length,0);
+ panel.open();assert(panel.isOpen());assert.strictEqual(calls.length,1);
  const buttons=elements.filter(e=>e.tag==='button');assert.strictEqual(selected,buttons[0]);
  key(40);assert.strictEqual(selected,buttons[1]);key(13);assert.strictEqual(exitCount,0);
  key(461);assert(!panel.isOpen());assert.strictEqual(selected,'previous');

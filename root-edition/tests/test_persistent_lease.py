@@ -43,6 +43,15 @@ class LeaseTests(unittest.TestCase):
   result=watch('tx','boot',fail,calls.append,lambda:0,lambda _:None)
   self.assertEqual((result,calls),('unreadable-lease',['unreadable-lease']))
 
+ def test_heartbeat_published_during_read_is_not_from_future(self):
+  now=[100.];restored=[];calls=[0]
+  def load():
+   calls[0]+=1;now[0]+=.001
+   if calls[0]>1:return dict(transaction='tx',state='restored')
+   return dict(transaction='tx',boot='boot',state='active',sequence=1,issued=now[0],expires=now[0]+2)
+  result=watch('tx','boot',load,restored.append,lambda:now[0],lambda n:now.__setitem__(0,now[0]+n))
+  self.assertEqual(result,'restored');self.assertFalse(restored)
+
  def test_frozen_publisher_does_not_freeze_independent_guard(self):
   import json,os,signal,subprocess,tempfile,time
   with tempfile.TemporaryDirectory() as tmp:

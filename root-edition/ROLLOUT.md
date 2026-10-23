@@ -95,3 +95,33 @@ Unknown removal is also fail-closed: a recorded `remove-submitting` or
 terminal evidence and candidate directories before any manual recovery decision.
 
 Track the remaining evidence in [release acceptance](RELEASE-ACCEPTANCE.md).
+
+## RC15 permanent-mode acceptance candidate
+
+RC15 implements persistent mode, but is not yet a supported public release. Keep
+the working No-root installation and the previous candidate bundle/state archive.
+Installing RC15 alone does not switch Home. Do not run the old helper concurrently.
+
+1. Verify stock system Home and terminal recovery, back up state, then install the
+   isolated RC15 bundle with the normal installer. Never overwrite a live runtime.
+2. Stop the No-root helper explicitly using its long-Home exit. Leave it stopped.
+3. Open Home Root Preview → Settings → Try Root mode. This starts a protected
+   one-minute trial. Alternatively, `setup.py enable --ssh my-tv` starts the trial.
+4. Verify Home, confirmed Back exit, arrows and OK. In Settings select **Keep Root
+   mode** before the timer expires (at least five seconds must remain). The label
+   becomes **Root mode active**. No confirmation means automatic restoration.
+5. Verify that routing remains active beyond the former 60-second deadline, then
+   test three short Home presses within two seconds. Exit must restore LG Home and
+   disable subsequent Root autostart. A stopped renderer must not prevent exit.
+6. In a separately confirmed attempt, test reboot, failsafe and process-fault
+   recovery. Check the durable intent, binding, routing readback and guardian logs;
+   UI appearance alone does not prove persistent acceptance.
+
+Host confirmation requires the exact transaction ID:
+`setup.py confirm --ssh my-tv --transaction UUID_FROM_STATUS`.
+A stale ID, stale input heartbeat, missing guardian, wrong effective Home or an
+almost-expired trial is rejected. Settings passes the displayed trial's ID.
+
+To return to No-root, use Exit Root mode or host restore and verify original Home.
+Then explicitly resume the existing helper from the normal Home control button.
+Root exit does not remove root, uninstall apps or automatically resume that helper.

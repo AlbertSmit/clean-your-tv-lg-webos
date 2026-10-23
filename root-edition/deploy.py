@@ -18,7 +18,7 @@ RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'device_adapter.py', 'gua
                  'helper_bridge.py', 'profile_guardian.py', 'profile_plan.py', 'profile_recovery.py', 'provision.py',
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
-                 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
+                 'persistent_health.py', 'persistent_lease.py', 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
 SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py')
 
 
@@ -212,7 +212,8 @@ def uninstall(run=command):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'restore', 'uninstall'))
+    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'))
+    parser.add_argument('--transaction')
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--migrate-packaged-home', action='store_true', help='Copy fixed installed Home packaged preferences; excludes browser storage')
     args = parser.parse_args()
@@ -224,6 +225,10 @@ def main():
         result = install(args.bundle, migrate=args.migrate_packaged_home)
     elif args.command == 'uninstall': result = uninstall()
     elif args.command == 'restore': result = restore()
+    elif args.command == 'confirm':
+        import re
+        if not args.transaction or not re.fullmatch(r'[0-9a-f-]{36}',args.transaction): parser.error('confirm requires --transaction')
+        result = command(['/usr/bin/python3',str(STATE/'runtime/cli.py'),'confirm',args.transaction])
     else: result = runtime(args.command)
     print(json.dumps(result), flush=True)
 

@@ -18,11 +18,13 @@ def ssh_options(alias, identity=None):
     return options + [alias]
 
 
-def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migrate=False):
-    if action not in ('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'restore', 'uninstall'):
+def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migrate=False, transaction=None):
+    if action not in ('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'):
         raise ValueError('Unsupported action')
     if migrate and action != 'install':
         raise ValueError('Migration is only available with install')
+    if action == 'confirm' and (not transaction or not re.fullmatch(r'[0-9a-f-]{36}',transaction)):
+        raise ValueError('confirm requires the trial transaction ID')
     options = ssh_options(alias, identity)
     remote_driver = '/var/lib/clean-your-tv-root/deploy.py'
     if action == 'install':
@@ -49,19 +51,22 @@ def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migra
             argv.append('--migrate-packaged-home')
         command = shlex.join(argv)
     else:
-        command = shlex.join(['/usr/bin/python3', remote_driver, action])
+        argv = ['/usr/bin/python3', remote_driver, action]
+        if action == 'confirm': argv += ['--transaction',transaction]
+        command = shlex.join(argv)
     return run(['ssh', *options, command], check=True, stdin=subprocess.DEVNULL)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'restore', 'uninstall'))
+    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'))
     parser.add_argument('--ssh', required=True, help='Explicit, preconfigured OpenSSH alias')
+    parser.add_argument('--transaction')
     parser.add_argument('--identity', type=Path)
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--migrate-packaged-home', action='store_true', help='Copy installed Home packaged preferences only; excludes browser storage')
     args = parser.parse_args()
-    execute(args.command, args.ssh, args.bundle, args.identity, migrate=args.migrate_packaged_home)
+    execute(args.command, args.ssh, args.bundle, args.identity, migrate=args.migrate_packaged_home,transaction=args.transaction)
 
 
 if __name__ == '__main__':

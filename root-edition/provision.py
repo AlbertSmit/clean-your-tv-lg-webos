@@ -103,7 +103,7 @@ def plan(original):
         'outbound':['com.webos.service.activitymanager','com.palm.activitymanager']}]
     return {'service': original['service'].replace(expected,'Exec='+str(RUNNER)).encode(),
             'role':encoded(role), 'client':encoded({NAME:['activity.operation'],'com.cleanyourtv.root.preview':[NAME+'.control'],'com.cleanyourtv.root.preview-*':[NAME+'.control']}),
-            'api':encoded({NAME+'.control':[NAME+'/status',NAME+'/restore'],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
+            'api':encoded({NAME+'.control':[NAME+'/'+x for x in ('status','restore','enable','confirm')],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
 
 def manifest():
     callback = PRIVATE_SERVICE/'boot-recover.sh'

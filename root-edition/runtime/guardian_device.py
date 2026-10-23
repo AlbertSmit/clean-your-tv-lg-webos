@@ -37,8 +37,18 @@ def restore(transaction):
 
 def run(transaction):
     d.trusted_dir(d.STATE)
+    def continuation():
+        from persistent_recovery import Coordinator
+        from persistent_store import Store
+        c = Coordinator(Store(d.STATE))
+        if not os.path.lexists(c.binding): return None
+        if c.read_binding()['transaction'] != transaction: return None
+        from persistent_health import authorized, run, guardian_ping
+        guardian_ping(transaction)
+        if authorized(transaction): return run(transaction, restore)
+        return None
     return watch(transaction, lambda:d.safe_json(d.STATE/'profile-trial.json'),
-                 ready,restore,time.monotonic,time.sleep)
+                 ready,restore,time.monotonic,time.sleep,continuation=continuation)
 
 
 if __name__ == '__main__':

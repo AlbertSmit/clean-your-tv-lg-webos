@@ -1,4 +1,4 @@
-"""Independent persistent-mode lease policy, not yet connected to activation.
+"""Independent persistent-mode input-loop lease policy.
 
 A device adapter must authenticate the root-owned lease and hold the transaction
 lock inside restore. Only successful input-loop heartbeats may advance sequence;
@@ -25,6 +25,11 @@ def watch(transaction, boot, load, restore, clock, sleep):
         previous_clock = now
         try: lease = load()
         except (OSError, ValueError): return fail('unreadable-lease')
+        # A heartbeat can be published while load() is reading. Validate against
+        # a time sampled after that read, not a stale pre-read timestamp.
+        now = clock()
+        if not finite(now) or now < previous_clock: return fail('clock-reset')
+        previous_clock = now
         if not isinstance(lease, dict): return fail('invalid-lease')
         if not isinstance(lease.get('transaction'), str): return fail('invalid-lease')
         if lease['transaction'] != transaction: return 'superseded'

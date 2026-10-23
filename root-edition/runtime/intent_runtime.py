@@ -1,4 +1,4 @@
-"""Opt-in intent-bound 60-second trial and boot recovery; not permanent mode."""
+"""Intent-bound trial, explicit promotion and guarded boot recovery."""
 import os
 from pathlib import Path
 import uuid
@@ -68,7 +68,12 @@ def boot():
         return 'restored'
     result = c.boot(intent, identity, str(uuid.uuid4()), failsafe)
     if result['effect'] == 'start_guarded':
-        # Persistent lease/confirmation integration is not accepted yet. Even a
-        # pre-existing enabled intent must not bypass this explicit release gate.
-        c.exit(result['intent'], reason='fault')
+        return c.restart(result['intent'])
     return 'restored'
+
+
+def confirm(transaction=None):
+    c = coordinator()
+    if c is None: raise ValueError('No intent-bound trial to confirm')
+    if transaction != c.read_binding()['transaction']: raise ValueError('Stale confirmation transaction')
+    return c.confirm(c.store.read())

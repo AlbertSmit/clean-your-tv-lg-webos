@@ -60,9 +60,21 @@ def supervise(transaction):
         observer = subprocess.Popen(['/usr/bin/python3', str(Path(__file__).with_name('emergency_reader.py')), str(w)],
                                     pass_fds=(w,), stdin=subprocess.DEVNULL, close_fds=True)
         os.close(w); w = None
+        sequence = [0]
+        def ping():
+            # Legacy trials have no durable binding and keep their fixed timer.
+            from persistent_recovery import Coordinator
+            from persistent_store import Store
+            c = Coordinator(Store(d.STATE))
+            if not os.path.lexists(c.binding): return
+            if c.read_binding()['transaction'] != transaction: return
+            from persistent_health import publish, require_guardian
+            require_guardian(transaction)
+            sequence[0] += 1
+            publish(transaction, sequence[0])
         reason = watch(r, lambda why:recover(transaction, why), timeout=2,
                        on_ready=lambda:save_ready(transaction, observer),
-                       finished=lambda:completed(transaction))
+                       finished=lambda:completed(transaction), on_ping=ping)
         print(json.dumps({'event':'emergency-monitor-ended','reason':reason,'transaction':transaction}), flush=True)
     except Exception:
         recover(transaction, 'supervisor_error')

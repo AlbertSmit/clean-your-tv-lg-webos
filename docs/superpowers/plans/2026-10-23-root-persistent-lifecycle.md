@@ -72,3 +72,16 @@ RELEASE-ACCEPTANCE.md. Boot callback replay passed in the same boot. A physical
 reboot/failsafe test of this exact binding is still pending. Renewable lease
 publication/guard process, controlled promotion and confirmation UI remain the
 next integration tasks; the persistent lease policy is still not shipped.
+
+## RC15 implementation
+
+- [x] Publish volatile leases only from valid input-loop PING.
+- [x] Independent guardian continues while confirmed intent and input lease hold.
+- [x] Supervisor verifies guardian pulses; observer/supervisor stalls expire leases.
+- [x] Explicit transaction-bound promotion under routing lock, with deadline margin.
+- [x] Restore-before-restart boot integration and fail-closed failsafe/startup.
+- [x] Settings enable/confirm/status/exit and scoped LS2 methods.
+- [x] Full local tests and independent code review; timestamp race fixed.
+- [ ] RC15 hardware: promotion past 60s, emergency exit, reboot and failsafe.
+- [ ] RC15 hardware: independent process fault recovery and clean uninstall.
+- [ ] Supported release after final acceptance.

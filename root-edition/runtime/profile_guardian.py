@@ -2,7 +2,7 @@
 import math
 
 
-def watch(transaction, load, ready, restore, clock, sleep):
+def watch(transaction, load, ready, restore, clock, sleep, continuation=lambda:None):
     journal = load()
     if journal.get('transaction') != transaction: return 'superseded'
     if journal.get('state') in ('restored','conflict'): return journal['state']
@@ -13,6 +13,8 @@ def watch(transaction, load, ready, restore, clock, sleep):
         raise ValueError('Invalid or excessive trial deadline')
     if deadline > clock(): ready(transaction,deadline)
     while clock() < deadline:
+        ongoing = continuation()
+        if ongoing is not None: return ongoing
         sleep(min(0.25,deadline-clock()))
         current = load()
         if current.get('transaction') != transaction: return 'superseded'

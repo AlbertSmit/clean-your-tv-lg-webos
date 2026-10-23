@@ -34,8 +34,9 @@ class RuntimeTests(unittest.TestCase):
   c.boot.return_value={'effect':'none','intent':{'phase':'disabled'}}
   with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='same'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=True),patch.object(r.d,'active_guardian',return_value=True):r.boot()
   self.assertTrue(c.boot.call_args.args[-1])
- def test_boot_cannot_unlock_persistent_activation(self):
+ def test_boot_restarts_only_after_coordinator_verified_recovery(self):
   c=Mock(binding=self.root/'missing-binding');c.store.read.return_value={'boot':'old','phase':'active'}
   new={'phase':'starting'};c.boot.return_value={'effect':'start_guarded','intent':new}
   with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False):r.boot()
-  c.exit.assert_called_once_with(new,reason='fault')
+  c.restart.assert_called_once_with(new)
+  c.exit.assert_not_called()

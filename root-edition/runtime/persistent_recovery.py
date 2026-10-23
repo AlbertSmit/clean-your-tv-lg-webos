@@ -1,4 +1,4 @@
-"""Bind durable intent to RC13 recovery. No activation, CLI or boot hook is wired.
+"""Bind durable intent, guarded activation and transaction-specific recovery.
 
 All effectful orchestration must use this operation lock. Intent is disabled
 before an emergency restore; failures retain the binding and recovery evidence.
@@ -142,6 +142,63 @@ class Coordinator:
             if self.store.read() == intent and intent['enabled']:
                 self.event(intent, 'fault')
             raise
+
+    def _healthy(self, intent):
+        from persistent_health import require_fresh, require_guardian
+        binding = self.read_binding()
+        if (binding['generation'],binding['token']) != (intent['generation'],intent['token']) or binding['restored']:
+            raise ValueError('Inactive transaction binding')
+        tx = binding['transaction']; journal = self.route(tx)
+        require_fresh(tx)
+        require_guardian(tx)
+        if not d.active_guardian(journal): raise ValueError('Independent guardian is not ready')
+        current = d.read(); candidate = journal['candidate']
+        if (current['sam_home'] != candidate
+                or current['profiles']['defaultApps']['categories']['home'] != candidate
+                or current['profiles']['idleApp']['appId'] != candidate):
+            raise ValueError('Candidate Home is not effective')
+        return tx
+
+    def confirm(self, expected):
+        from provision import verify
+        from helper_bridge import require_idle
+        verify(); require_idle()
+        with self.locked(expected):
+            if expected['phase'] != 'trial': raise ValueError('No unconfirmed trial')
+            # Serialize promotion with actual routing restore, not only intent
+            # changes; the legacy recovery fallback holds this same lock.
+            fd = os.open(d.STATE/'profile-trial.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
+            try:
+                fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                tx = self._healthy(expected)
+                import time
+                if self.route(tx)['deadline'] - time.monotonic() < 5:
+                    raise ValueError('Too close to rollback deadline; start a new trial')
+                intent, effect = self.event(expected, 'confirmed')
+                return dict(intent=intent,effect=effect,transaction=tx,persistent=True)
+            finally: os.close(fd)
+
+    def restart(self, expected):
+        import emergency_trial
+        with self.locked(expected):
+            if expected['phase'] != 'starting': raise ValueError('No verified boot recovery')
+            try:
+                result = emergency_trial.start(before_publish=lambda tx:self._bind(expected,tx))
+                import time
+                from persistent_health import require_fresh
+                for attempt in range(20):
+                    try:
+                        require_fresh(result['transaction']); break
+                    except (OSError,ValueError): time.sleep(.1)
+                self._healthy(expected)
+                intent, effect = self.event(expected,'ready')
+                d.sam_transport().call('luna://com.webos.applicationManager/launch', {'id':d.CANDIDATE})
+                return dict(intent=intent,effect=effect,trial=result,persistent=True)
+            except Exception:
+                current = self.store.read()
+                if (current['generation'],current['token']) == (expected['generation'],expected['token']):
+                    self.event(current,'fault')
+                raise
 
     def start_trial(self, expected, boot, token):
         # The existing independent 60-second deadline is never removed here.

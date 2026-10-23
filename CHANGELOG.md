@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.2 — Localized setup and complete project removal
+
+- Complete cytv translations for interrupted setup, reinstallation, removal and recovery messages across all supported languages.
+- Reconcile interrupted Root setup in the installer and verify the updater connection before activation.
+- Remove Root Updater, its service, startup hook and retained app permissions through cytv; preserve inactive recovery records.
+- Include the Home startup and bounded standby recovery fixes described in issue #10, plus ten-language TV and installer localization. QNED80T feedback is still pending.
+- Versions: cytv 0.2.5, Home 1.3.2, Helper 0.6.16, Root 0.1.4 and No-root Updater 0.1.4.
+
 ## Unreleased — C4 helper follow-up
 
 - Restore and verify known state permissions at runtime; avoid SSAP use if permission repair fails.

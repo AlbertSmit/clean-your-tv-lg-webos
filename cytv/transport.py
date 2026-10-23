@@ -321,7 +321,7 @@ class SSH:
 
     def luna(self, uri, payload, terminal=None, timeout=30, app_id=None):
         args = ['/usr/bin/luna-send' if self.root else '/usr/bin/luna-send-pub', '-i' if terminal else '-n', *([] if terminal else ['1']),
-                *(['-a', app_id] if app_id else []),
+                *(['-a', app_id, '-m', app_id + '-cytv'] if app_id else []),
                 'luna://' + uri, json.dumps(payload, separators=(',', ':'))]
         channel, parser = self.channel(shlex.join(args)), JsonReplies()
         try:

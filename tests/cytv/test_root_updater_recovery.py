@@ -47,3 +47,33 @@ class UpdaterRecoveryTests(unittest.TestCase):
                     self.assertEqual(json.loads(saved[0].read_text())['previous'],pending)
                 else:self.assertIsNotNone(store.pending(profile))
                 remote.upload.assert_not_called()
+
+    def test_verified_installed_updater_can_resume_without_reinstalling(self):
+        for failure in (None, 'files', 'updater', 'intent', 'baseline', 'stage'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as tmp:
+                store = state.Store(tmp); profile = state.target('tv.local', 'root')
+                remote = MagicMock()
+                remote.run.return_value = '{"stage":"installed-recovery-only"}'
+                installer = operations.Installer(remote, store, profile, Path(tmp), {}, lambda *_: None)
+                store.begin(profile, 'setup-root-updater', stage='verify' if failure != 'stage' else 'setup', requires_updater=True, baseline_sha='a'*64 if failure != 'baseline' else '')
+                device = {'recovery':{'integrity_verified':True},'journal_exists':False,'intent':None,
+                          'effective':{'sam_home':'com.webos.app.home','profiles':{
+                              'defaultApps':{'categories':{'home':'com.webos.app.home'}},'idleApp':{'appId':'com.webos.app.home'}}}}
+                if failure == 'intent': device['intent'] = {'enabled':True}
+                installer.root_action = MagicMock(return_value={'returnValue':True,'result':device})
+                installer.root_files_match = MagicMock(return_value=failure != 'files')
+                installer.verify_root_updater = MagicMock(side_effect=RuntimeError('rejected') if failure == 'updater' else None)
+                installer.activate_root = MagicMock(side_effect=lambda: store.finish(profile))
+                status = installer.status()
+                self.assertEqual(status.get('can_resume_root_setup', False), failure is None)
+                self.assertIsNotNone(store.pending(profile))
+                installer.activate_root.assert_not_called()
+                if failure is None:
+                    self.assertTrue(installer.resume_root_setup()['updates_ready'])
+                    installer.activate_root.assert_called_once()
+                    self.assertIsNone(store.pending(profile))
+                else:
+                    with self.assertRaises(RuntimeError): installer.resume_root_setup()
+                    installer.activate_root.assert_not_called()
+                    self.assertIsNotNone(store.pending(profile))
+                remote.upload.assert_not_called()

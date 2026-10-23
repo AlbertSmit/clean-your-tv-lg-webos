@@ -95,8 +95,32 @@ On failure, read the explanation, click **Save diagnostic report…**, then
 **Open an issue**. Include your steps, expected/actual results, TV model and firmware.
 Review the JSON report before attaching it. Do not attach your profile folder or keys.
 
+When an earlier installation was interrupted, **Set up my TV** checks its state
+before proceeding. If Root and Root Updater are already installed and verified,
+choose **Finish Root setup** to activate Home without reinstalling the packages.
+If the earlier attempt stopped before updater setup, the wizard verifies recovery
+and offers reinstallation in the same flow. Unverified states remain blocked;
+save the diagnostic report instead of deleting recovery files.
+
 The start page also offers status, diagnostics, return to LG Home and uninstall.
 Existing console commands remain available in the separately distributed CLI.
+
+## Remove the project from a rooted TV
+
+Choose **Uninstall Clean Your TV** with the saved **Root** connection. The wizard
+restores LG Home and removes Root, Root Updater, its service and boot hook, plus
+any installed No-root Home, Helper and Home Updater packages. It also removes
+owned updater bus permissions. Other TV applications stay installed.
+
+This also works if an older cytv already removed Root but left Root Updater behind.
+The wizard checks that the updater is idle before stopping it and verifies that
+project apps, service registrations and startup hooks are gone. If a removal was
+interrupted, run the same action again; an ambiguous package removal is never
+submitted twice automatically.
+
+Root recovery records and the archived updater state remain for diagnostics.
+They have no active service or startup registration. The Mac application and its
+local reports remain installed on your computer.
 
 ## Build and validation
 

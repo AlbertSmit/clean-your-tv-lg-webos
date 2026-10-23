@@ -55,6 +55,31 @@ class CLITests(unittest.TestCase):
                 ssap.assert_not_called()
                 self.assertFalse(any('uninstall' in command for command in remote.calls))
 
+    def test_install_checks_pending_state_and_offers_inline_completion(self):
+        from unittest.mock import MagicMock
+        for resolved, resume, accept in ((True, False, False), (False, True, True), (False, True, False), (False, False, False)):
+            with self.subTest(resolved=resolved, resume=resume, accept=accept), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.cli.package.verify_payload', return_value={}), \
+                 patch('cytv.cli.Installer') as cls, patch('cytv.tv.SSAP') as ssap:
+                store = state.Store(tmp); profile = state.target('192.0.2.10', 'root')
+                store.begin(profile, 'setup-root-updater', stage='verify', requires_updater=True)
+                inst = cls.return_value
+                def status():
+                    if resolved: store.finish(profile)
+                    return {'can_resume_root_setup': resume, 'deployment_stage':'installed-recovery-only', 'device':{'result':{'recovery':{'integrity_verified':True}}}}
+                inst.status.side_effect = status
+                if resolved:
+                    from cytv.errors import ExistingRoot
+                    inst.preflight.side_effect = ExistingRoot('existing')
+                inst.resume_root_setup.return_value = {'updates_ready':True}
+                code, output, _ = self.run_cli(['--host','192.0.2.10','--edition','root','--data-dir',tmp], ['', 'y' if accept else 'n'], remote=MagicMock())
+                self.assertEqual(code, 0 if resolved or resume else 2, output)
+                inst.status.assert_called()
+                self.assertEqual(inst.resume_root_setup.call_count, int(resume and accept))
+                inst.install.assert_not_called()
+                ssap.assert_not_called()
+                if not resolved and not (resume and accept): self.assertIsNotNone(store.pending(profile))
+
     def test_first_question_explains_how_to_find_the_tv_address(self):
         with tempfile.TemporaryDirectory() as tmp:
             messages = []

@@ -14,7 +14,7 @@ from observed_install import install as observed_install, OutcomeUnknown
 APP = 'com.cleanyourtv.root.preview'
 STATE = Path('/var/lib/clean-your-tv-root')
 INSTALLED = Path('/media/developer/apps')
-RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'device_adapter.py', 'guardian_device.py',
+RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'device_adapter.py', 'guardian_device.py',
                  'helper_bridge.py', 'profile_guardian.py', 'profile_plan.py', 'profile_recovery.py', 'provision.py',
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
@@ -45,15 +45,19 @@ def checked_file(root, name):
 def verify_bundle(bundle):
     bundle = Path(bundle).resolve()
     manifest = json.loads(checked_file(bundle, 'bundle.json'))
-    package = APP + '_0.0.1_all.ipk'
+    release = json.loads(checked_file(bundle, 'release.json'))
+    import re
+    version = release.get('version')
+    if not isinstance(version,str) or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}',version):
+        raise ValueError('Invalid Root release version')
+    package = APP + '_' + version + '_all.ipk'
     expected = set(SUPPORT_FILES) | {'runtime/' + n for n in RUNTIME_FILES} | {package, 'release.json', 'SHA256SUMS'}
     if manifest.get('package') != package or set(manifest.get('files', {})) != expected:
         raise ValueError('Unexpected bundle inventory')
     for name, digest in manifest['files'].items():
         if hashlib.sha256(checked_file(bundle, name)).hexdigest() != digest:
             raise ValueError('Bundle integrity mismatch: ' + name)
-    release = json.loads(checked_file(bundle, 'release.json'))
-    if release.get('application_id') != APP or release.get('version') != '0.0.1':
+    if release.get('application_id') != APP:
         raise ValueError('Wrong candidate release')
     return manifest
 

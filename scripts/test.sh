@@ -20,7 +20,11 @@ node root-edition/service/test-persistent.js
 node root-edition/ui/test-exit.cjs
 node root-edition/ui/test-settings.cjs
 node root-edition/ui/test-persistent.cjs
+node root-edition/ui/test-profile.cjs
+node root-edition/ui/test-updates.cjs
+for test in root-edition/tests/test_update_*.cjs; do node "$test"; done
 for file in root-edition/ui/*.js; do node --check "$file"; done
+for file in root-edition/updater/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 python3 -m unittest discover -s tests/setup

@@ -5,8 +5,9 @@ Updated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
 ## Current release boundary
 
 The implementation supports protected trials and explicit permanent activation.
-Release designation: **Root Stable 0.1.0**, scoped to the tested C3 and firmware,
-separate from No-root. See [scope and limitations](ROOT-STABLE-0.1.0.md).
+Current distribution: **Root Edition 0.1.1**, with Settings updates and separate
+update recovery. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
+routing/lifecycle evidence below applies to its earlier fixed artifact.
 No blanket hardware certification is claimed for the final public artifact.
 
 Latest evidence (RC19 with atomic-read correction): actual launcher app selection,
@@ -36,6 +37,18 @@ Cold-power testing was explicitly deferred by the user. One initial second-attem
 gesture report was not explained by a trace; later captured triples and the
 instrumented repeat passed. Keep that observation visible rather than claiming
 it was fixed. The user selected the scoped stable designation with these limitations retained.
+
+## Root Settings updates — isolated hardware validation
+
+On 2026-10-23 the C3 passed a real Settings update from 0.1.0 to 0.1.1 and
+automatic timeout rollback from 0.1.2 to 0.1.1 under isolated lab identities.
+The complete 30-app/five-input profile, settings and tile order matched after
+both operations, and the user confirmed the physical remote and application
+launch. Pre-existing application manifests, ordinary Home profile and LG routing
+were unchanged. See the [update validation record](../docs/development/ROOT-UPDATES-TV-VALIDATION.md).
+Production artifact acceptance, updates from active Root routing and interrupted
+update/reboot cases remain separate gates. This does not change global
+`hardware_validated` or `public_release_ready` flags.
 
 ## Historical candidate records
 

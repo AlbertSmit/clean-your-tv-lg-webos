@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.2 — Root Edition 0.1.1 updates and recovery
+
+- Add Root Settings → Software updates with an independent Root Updater and signed, edition-specific metadata.
+- Preserve applications, embedded icons, inputs, configuration and tile order across compatible application updates.
+- Add a durable one-attempt rollback after verified installation and failed launch confirmation; unknown installer outcomes remain blocked.
+- Keep recovery/updater infrastructure pinned and require one-time computer setup; legacy Root Stable 0.1.0 needs supervised infrastructure migration.
+- Validate a real Settings update and automatic timeout rollback on OLED55C3RLA / 43.21.71 using isolated lab identities; retain the exact-artifact and power-loss limitations.
+- Retain No-root v0.8.1 packages and signed update metadata unchanged in the shared latest release.
+
 ## Root Stable 0.1.0 — OLED55C3RLA / 43.21.71
 
 - Add a separate Root launcher, installer and recovery service without changing the stable No-root launcher, helper or updater implementation.

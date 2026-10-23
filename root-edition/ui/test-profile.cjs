@@ -1,0 +1,38 @@
+const assert=require('assert'),fs=require('fs'),vm=require('vm');
+const path=__dirname+'/root-profile-data.js';
+assert(fs.existsSync(path),'Root-specific bounded profile validator is missing');
+const data=require(path),icon='data:image/png;base64,YWJj';
+const profile={schema:1,inventory:{apps:[{id:'app.one',title:'One',icon}],inputs:[{appId:'hdmi.one',label:'Console'}]},config:{columns:5,dockApps:['app.one'],hiddenApps:[],liveTvApp:'tv'},settings:{'tvhome.order':'{"dock":"app.one","ids":["app.one"]}'}};
+assert.deepStrictEqual(data.validate(profile),profile);
+for(const mutate of [p=>p.renewal={},p=>p.config.extra=true,p=>p.inventory.apps[0].icon='icons/missing.png',p=>p.inventory.apps.push(p.inventory.apps[0]),p=>p.config.hiddenApps=['x','x'],p=>p.inventory.inputs[0].path='/tmp',p=>p.inventory.apps[0].title='я'.repeat(129),p=>p.inventory.apps[0].icon='data:image/png;base64,YQ=',p=>p.settings['tvhome.order']='broken',p=>p.settings['tvhome.order']='{"dock":"","ids":["same","same"]}',p=>p.inventory.apps[0].iconColor=['#123456']]) {
+ const p=JSON.parse(JSON.stringify(profile));mutate(p);assert.throws(()=>data.validate(p));
+}
+const tick=()=>new Promise(r=>setImmediate(r));
+function harness({restore=null,saved=null,tiles=['app.one'],version='0.0.1',packaged=profile.inventory,unavailable=false,memory=new Map(),iconStatus=200}={}){
+ const calls=[],scripts=[],errors=[];if(saved!==null)memory.set(data.key,typeof saved==='string'?saved:JSON.stringify(saved));
+ const storage={getItem:k=>memory.has(k)?memory.get(k):null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};
+ const window={ROOT_VERSION:version,RootProfileData:data,TV_APPS:packaged,CONFIG:profile.config,RootUpdates:{rpc:async(method,payload)=>{calls.push([method,payload]);if(unavailable)throw Error('not provisioned');return restore;},open:o=>errors.push(o),confirmLaunch:t=>calls.push(['confirmLaunch',t])}};
+ const document={body:{appendChild:s=>{scripts.push(s);}},createElement:()=>({}),querySelectorAll:()=>tiles.map(id=>({getAttribute:()=>id}))};
+ const ctx={window,document,localStorage:storage,Promise,setTimeout,clearTimeout,XMLHttpRequest:class{open(method,url){assert.strictEqual(method,'GET');assert.strictEqual(url,'icons/one.png');}send(){this.status=iconStatus;this.response={size:3};this.onload();}},FileReader:class{readAsDataURL(){this.result=icon;this.onload();}}};
+ vm.runInNewContext(fs.readFileSync(__dirname+'/root-profile.js','utf8'),ctx);return {window,calls,scripts,errors,memory};
+}
+(async()=>{
+ let h=harness({restore:{profile,transaction:'tx',version:'0.0.1',phase:'verifying'}});await tick();
+ assert.strictEqual(h.scripts.length,1);assert.deepStrictEqual(h.window.TV_APPS,profile.inventory);assert.strictEqual(h.memory.get('tvhome.order'),profile.settings['tvhome.order']);
+ h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert.deepStrictEqual(h.calls.map(x=>x[0]),['restoreProfile','ready','confirmLaunch']);assert.strictEqual(h.calls[1][1].transaction,'tx');assert.strictEqual(h.calls[1][1].version,'0.0.1');
+ const captured=await h.window.RootProfile.capture();assert.deepStrictEqual(JSON.parse(JSON.stringify(captured)),profile);assert.strictEqual(h.calls.length,3);
+ h=harness({restore:{profile,transaction:'tx',version:'0.0.1',phase:'verifying'},tiles:['wrong']});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));assert(h.errors.length);
+ h=harness({restore:{profile,transaction:'tx',version:'0.0.2',phase:'verifying'}});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
+ h=harness({saved:'{broken'});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
+ h=harness({packaged:{apps:[],inputs:[]},unavailable:true});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
+ h=harness({restore:null,packaged:{apps:[],inputs:[]}});await tick();assert.strictEqual(h.scripts.length,1);h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));
+ const empty=JSON.parse(JSON.stringify(profile));empty.config.hiddenApps=['app.one'];h=harness({restore:{profile:empty,transaction:'empty',version:'0.0.1',phase:'verifying'},tiles:[]});await tick();h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));assert(h.errors.length);
+ h=harness({restore:{profile:empty,transaction:'empty',version:'0.0.1',phase:'verifying'},tiles:[]});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(h.calls.some(x=>x[0]==='ready'));
+ h=harness({restore:{profile,transaction:'rollback',version:'0.0.1',phase:'verifying-rollback'}});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(h.calls.some(x=>x[0]==='ready'));assert(!h.calls.some(x=>x[0]==='confirmLaunch'));
+ h=harness({restore:{profile,transaction:'stable',version:'0.0.1',phase:'complete'}});await tick();const memory=h.memory;memory.set('tvhome.order','{"dock":"app.one","ids":[]}');h=harness({memory,restore:{profile,transaction:'stable',version:'0.0.1',phase:'complete'}});await tick();assert.strictEqual(memory.get('tvhome.order'),'{"dock":"app.one","ids":[]}');
+ memory.delete(data.key);h=harness({memory,restore:{profile,transaction:'stable',version:'0.0.1',phase:'complete'}});await tick();assert.strictEqual(memory.get('tvhome.order'),profile.settings['tvhome.order']);
+ const abortedMemory=new Map([[data.key,JSON.stringify(profile)],['tvhome.order','{"dock":"app.one","ids":[]}']]);h=harness({memory:abortedMemory,restore:{profile,transaction:'aborted',version:'0.0.1',phase:'aborted'}});await tick();assert.strictEqual(abortedMemory.get('tvhome.order'),'{"dock":"app.one","ids":[]}');
+ const packaged=JSON.parse(JSON.stringify(profile.inventory));packaged.apps[0].icon='icons/one.png';h=harness({packaged});await tick();assert.strictEqual((await h.window.RootProfile.capture()).inventory.apps[0].icon,icon);assert.deepStrictEqual(h.calls.map(x=>x[0]),['restoreProfile']);
+ h=harness({packaged,iconStatus:404});await tick();await assert.rejects(h.window.RootProfile.capture(),/missing/);assert.deepStrictEqual(h.calls.map(x=>x[0]),['restoreProfile']);
+ console.log('PASS Root strict profile capture, restore before launcher, exact tiles/version, corrupt and unavailable backup, legitimate empty grid');
+})().catch(e=>{console.error(e);process.exit(1);});

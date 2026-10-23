@@ -25,7 +25,7 @@ handling moved from an external watcher to an on-TV native helper.
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root Stable 0.1.0, scoped to OLED55C3RLA / 43.21.71; see limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.1 with Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.

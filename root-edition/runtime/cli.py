@@ -9,6 +9,17 @@ import device_adapter as d
 def main(mode, transaction=None):
     if os.geteuid() != 0:
         raise PermissionError('Root required')
+    if mode in ('enable','intent-trial','confirm','trial','emergency-trial','boot'):
+        from update_guard import control
+        # Boot during an update must restore, never reactivate a prior intent.
+        if mode == 'boot' and os.path.lexists(d.STATE/'update-block.json'):
+            return main('restore')
+        with control(d.STATE,d.EXPECTED_UID):
+            return execute(mode,transaction)
+    return execute(mode,transaction)
+
+
+def execute(mode, transaction=None):
     if mode == 'confirm':
         from intent_runtime import confirm
         return confirm(transaction)

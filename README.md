@@ -24,17 +24,17 @@ handling moved from an external watcher to an on-TV native helper.
 
 ## Install with cytv
 
-[Download v0.9.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.9.0)
+[Download v0.10.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.0)
 for Windows, macOS or Linux. One wizard installs either edition. Root activates
 and opens Home immediately, without a trial or Keep confirmation.
-[Installer guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.9.0.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.0.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.2 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.3 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.

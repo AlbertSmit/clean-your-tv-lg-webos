@@ -28,7 +28,7 @@ reboot evidence still applies to the earlier corrected deployment. No cross-mode
 | --- | --- | --- |
 | 1 | Final bundle identity | Reproducible build, passing local suite, retained hashes, no private inventory |
 | 2 | Clean install and removal | Passed on RC7; production static hashes unchanged and helper active |
-| 3 | Failsafe recovery | Candidate profile restored without ordinary init.d; normal mode verified afterward |
+| 3 | Failsafe recovery | RC7 automatic restoration passed; normal mode returned; physical controls confirmation pending |
 | 4 | Input/lifecycle matrix | Cancel and in-app Back, held arrows, volume, pointer/wheel, quick standby and cold boot on final bundle |
 | 5 | Permanent-mode escape | Validated exit restores routing without zoom, reactivation or dependence on a reachable host |
 | 6 | Permanent activation | Implement and accept after recovery/escape gates; preserve exact original state |

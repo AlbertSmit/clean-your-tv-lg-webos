@@ -146,3 +146,18 @@ Home and helper static-file hashes matched before/after installation, and the
 helper remained active. The installer did not change the three system Home values.
 Recovery integrity passed after installation. Retained state was archived rather
 than discarded. These tests do not activate permanent routing.
+
+## RC7 failsafe recovery — 2026-10-23
+
+After clean installation, a bounded trial selected the candidate in all three
+Home destinations, with the legacy helper explicitly stopped. The standard
+Homebrew failsafe flag was set and a software reboot acknowledged. The user
+observed the Homebrew failsafe prompt. SSH was unavailable as expected; the
+readback was collected through Homebrew's emergency Telnet.
+
+At uptime 67 seconds, the same transaction was restored, all three Home values
+were stock and recovery integrity verified. The old guardian deadline was 764
+seconds on the previous uptime clock; no manual restore was sent. After the
+failsafe flag had cleared, another software reboot returned SSH and normal mode.
+The recovery journal remained restored and the legacy helper's stop latch was
+preserved. User-visible control verification after explicit resumption is pending.

@@ -24,6 +24,18 @@ quick standby and cold-power behavior, genuine failsafe recovery, emergency/faul
 matrix and multiple-app exits. Keep the working No-root release and all recovery
 mechanisms. Do not set `hardware_validated` or `public_release_ready` globally.
 
+## Root Settings updates — isolated hardware validation
+
+On 2026-10-23 the C3 passed a real Settings update from 0.1.0 to 0.1.1 and
+automatic timeout rollback from 0.1.2 to 0.1.1 under isolated lab identities.
+The complete 30-app/five-input profile, settings and tile order matched after
+both operations, and the user confirmed the physical remote and application
+launch. Pre-existing application manifests, ordinary Home profile and LG routing
+were unchanged. See the [update validation record](../docs/development/ROOT-UPDATES-TV-VALIDATION.md).
+Production artifact acceptance, updates from active Root routing and interrupted
+update/reboot cases remain separate gates. This does not change global
+`hardware_validated` or `public_release_ready` flags.
+
 ## Historical candidate records
 
 The sections below record what was known at each earlier RC. Statements about

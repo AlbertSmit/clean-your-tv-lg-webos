@@ -2,8 +2,10 @@
 
 Root Settings → Software updates checks the separate signed `root-update.json`
 release feed. Ordinary Home's updater cannot install Root Edition. This
-implementation has local automated coverage; the update path still requires
-isolated TV acceptance before publication or daily use.
+implementation has local automated coverage and an isolated TV validation of
+Settings update, automatic timeout rollback and profile preservation on an LG C3.
+See the [hardware record](../docs/development/ROOT-UPDATES-TV-VALIDATION.md) for
+the tested commit, isolation and remaining release gates.
 
 ## One-time setup
 

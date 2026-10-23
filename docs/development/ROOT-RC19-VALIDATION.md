@@ -34,7 +34,11 @@ Continuous replacement fails closed. Local suite: 367 tests passed.
 
 ## Remaining release gates
 
-- Observe the corrected active mode beyond the previous failure interval.
+- Completed: corrected mode remained active for over eight minutes after activation,
+  beyond the earlier failure interval. Nine read-only samples confirmed fresh
+  input and guardian health; final system Home still targeted the candidate,
+  both profile fields matched, and emergency/guardian logs were empty.
+  This bounded observation is not proof that no other runtime fault exists.
 - Reboot-test the serialized boot dispatcher and current candidate together.
 - Do not equate successful local tests with permanent hardware validation.
 - Preserve independent rollback, emergency exit and the untouched ordinary launcher.

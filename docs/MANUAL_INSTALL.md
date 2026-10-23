@@ -297,7 +297,7 @@ python3 root-edition/build.py --output build/root-candidate --version 0.1.3
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.0.1_all.ipk`, `setup.py`,
+The bundle contains `com.cleanyourtv.root.preview_0.1.3_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.
@@ -449,12 +449,17 @@ Home and your Quick Access assignment. See [No-root maintenance](MAINTENANCE.md)
 
 ### Root
 
-Root has **no** production in-app updater and `setup.py` has no manual
+Root supports compatible signed application updates through Settings after the
+[one-time Root Updater setup](../root-edition/UPDATES.md). Manual installations
+require that separate setup with the exact installed rollback baseline; cytv
+performs it automatically for fresh installations. `setup.py` has no manual
 `reinstall` command. Do not install a new IPK over a live runtime: the package,
 recovery files, manifests and journals must match. Retain the original bundle
 and private backups outside the TV.
 
-The supported removal sequence is:
+If Root Updater is installed, retain its state and follow the
+[Root update/recovery guide](../root-edition/UPDATES.md) before replacing its
+pinned recovery runtime. The Root Home removal sequence is:
 
 ```bash
 python3 build/root-candidate/setup.py restore --ssh my-tv

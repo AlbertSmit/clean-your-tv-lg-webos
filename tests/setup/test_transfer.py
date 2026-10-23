@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 STATE = '/media/developer/apps/usr/palm/applications/com.local.nativehome/state'
 
 class TransferTests(unittest.TestCase):
-    def run_setup(self, fault=''):
+    def run_setup(self, fault='', eim='success'):
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp)
             shutil.copytree(ROOT / 'scripts', p / 'scripts')
@@ -28,8 +28,11 @@ if os.environ['FAULT'] == 'transport':
     print(command, file=sys.stderr)
     sys.exit(1)
 if 'luna-send-pub' in command:
-    print('{"returnValue":true}')
-    sys.exit(0)
+    mode=os.environ['EIM_TEST']
+    if mode=='success': print('{"returnValue":true}')
+    elif mode=='denied': print('{"returnValue":false,"errorText":"denied"}')
+    elif mode=='nested': print('{"result":{"returnValue":true}}')
+    sys.exit(1 if mode=='command-error' else 0)
 command = command.replace(os.environ['REMOTE_STATE'], os.environ['TEST_STATE'])
 print('[Info] test connection', flush=True)
 sys.exit(subprocess.call(['sh', '-c', command]))
@@ -58,7 +61,7 @@ if '-d' in sys.argv:
 else: sys.stdout.buffer.write(base64.b64encode(raw)+b'\\n')
 '''); decoder.chmod(0o755)
             env = dict(os.environ, PATH=str(bindir)+':'+os.environ['PATH'], TV_HOST='test-tv',
-                       FAULT=fault, REMOTE_STATE=STATE, TEST_STATE=str(state))
+                       FAULT=fault, EIM_TEST=eim, REMOTE_STATE=STATE, TEST_STATE=str(state))
             result = subprocess.run(['bash', 'scripts/configure-tv.sh'], cwd=p, env=env, capture_output=True, text=True)
             output=result.stdout+result.stderr
             self.assertNotIn('SECRET-TEST-KEY', output)
@@ -72,6 +75,24 @@ else: sys.stdout.buffer.write(base64.b64encode(raw)+b'\\n')
                 self.assertEqual(key.stat().st_mode & 0o777, 0o640)
                 self.assertEqual((state/'apps.json').stat().st_mode & 0o777, 0o644)
             self.assertEqual(sorted(x.name for x in state.iterdir()), ['ssap-key.json'] if fault else ['apps.json','ssap-key.json'])
+
+            return output
+
+    def test_eim_empty_is_unknown(self):
+        output=self.run_setup(eim='empty')
+        self.assertIn('no reply from the dev shell',output)
+        self.assertNotIn('Startup will rely',output)
+
+    def test_eim_explicit_denial(self):
+        self.assertIn('EIM registration rejected',self.run_setup(eim='denied'))
+
+    def test_eim_command_failure(self):
+        self.assertIn('EIM command failed',self.run_setup(eim='command-error'))
+
+    def test_eim_nested_success_is_not_confirmation(self):
+        output=self.run_setup(eim='nested')
+        self.assertNotIn('Early input restoration registered',output)
+        self.assertIn('unrecognized reply',output)
 
     def test_success(self): self.run_setup()
     def test_chmod_failure(self): self.run_setup('chmod')

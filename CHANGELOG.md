@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — C4 helper follow-up
+
+- Restore and verify known state permissions at runtime; avoid SSAP use if permission repair fails.
+- Wait up to five seconds for held startup keys without grabbing the remote or losing heartbeat/stop handling.
+- Preserve intentional LG Home after long Back while retaining short Home and normal app-exit returns.
+- Distinguish EIM rejection, command failure, empty reply and confirmed registration.
+- Add permission, startup relay, Back/controller and setup regressions. C3/C4 hardware verification remains pending.
+
 ## v0.8.2 — Root Edition 0.1.1 updates and recovery
 
 - Add Root Settings → Software updates with an independent Root Updater and signed, edition-specific metadata.

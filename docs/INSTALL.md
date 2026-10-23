@@ -168,8 +168,11 @@ leaves that destination unchanged. The two files are verified individually, not 
 a single transaction. Remote `mktemp`, `base64`, `sha256sum`, and `stat -c` are required.
 Do not run setup with shell tracing (`bash -x`): the transfer command contains the
 pairing key in Base64. The script then requests input-source registration. It checks the EIM response
-for `returnValue: true` and prints a warning when it is missing: early input
-restoration has then not been enabled, and startup relies on the guarded fallback.
+for a top-level `returnValue: true`. Empty output means registration is unconfirmed,
+not rejected: some firmware returns no bus replies from the Developer Mode shell.
+An explicit rejection and a command failure have separate warnings. The guarded
+startup fallback remains available. Runtime restores state permissions after startup;
+see the C4 follow-up limits in COMPATIBILITY.md.
 
 ```sh
 ares-launch -d lgtv com.local.nativehome

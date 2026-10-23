@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),a=require('node:assert/strict'),{EventEmitter}=require('events');
 const source=fs.readFileSync(require.resolve('../app/screen-watch'),'utf8');
-function setup(withPower){
+function setup(withPower,secure=true){
  let seq=0,timers=new Map(),logs=[],events=[],power=[],resets=0;
  class WS extends EventEmitter{
   constructor(url,opts){super();this.url=url;this.sent=[];WS.last=this;}
@@ -8,7 +8,7 @@ function setup(withPower){
   terminate(){if(!this.ended){this.ended=true;this.emit('close',1006);}}
   ping(){this.pings=(this.pings||0)+1;}
  }
- const sandbox={module:{exports:{}},require(n){return n==='fs'?{readFileSync:()=>'{"key":"private-test-key"}'}:n==='os'?{networkInterfaces:()=>({lo:[{internal:true,family:'IPv4',address:'127.0.0.1'}],wlan:[{internal:false,family:'IPv4',address:'192.0.2.50'}]})}:WS;},setTimeout(f,ms){timers.set(++seq,{f,ms});return seq;},clearTimeout(i){timers.delete(i);},setInterval(f,ms){timers.set(++seq,{f,ms,interval:true});return seq;},clearInterval(i){timers.delete(i);}};
+ const sandbox={module:{exports:{}},require(n){return n==='./state-permissions'?()=>secure:n==='fs'?{readFileSync:()=>'{"key":"private-test-key"}'}:n==='os'?{networkInterfaces:()=>({lo:[{internal:true,family:'IPv4',address:'127.0.0.1'}],wlan:[{internal:false,family:'IPv4',address:'192.0.2.50'}]})}:WS;},setTimeout(f,ms){timers.set(++seq,{f,ms});return seq;},clearTimeout(i){timers.delete(i);},setInterval(f,ms){timers.set(++seq,{f,ms,interval:true});return seq;},clearInterval(i){timers.delete(i);}};
  vm.runInNewContext(source,sandbox);
  let watcher=sandbox.module.exports('/state',x=>logs.push(x),x=>events.push(x),()=>resets++,withPower?x=>power.push(x):undefined);
  return {watcher,WS,logs,events,power,timers,resets:()=>resets};
@@ -35,3 +35,5 @@ a.equal(t.power[0].state,'Active Standby');
 s.emit('message',JSON.stringify({id:'power',type:'error',error:'403 access denied'}));a.equal(s.ended,undefined);
 t.watcher.close();s.emit('message',JSON.stringify({id:'power',payload:{state:'Active'}}));a.equal(t.power.length,1);
 console.log('PASS: power subscription, isolated permission failure, stopped power callback');
+
+t=setup(false,false);a.equal(t.WS.last,undefined);a.equal(t.logs[0].reason,'state-permissions');a.equal(t.timers.size,0);

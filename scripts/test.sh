@@ -15,6 +15,11 @@ node tests/controller-resume.cjs
 for test in native/prototype/test-*.cjs; do node "$test"; done
 mkdir -p build/tests
 cc -std=c99 -Wall -Wextra -Werror native/prototype/filter.c native/prototype/test_filter.c -o build/tests/test-filter
+cc -std=c99 -Wall -Wextra -Werror native/prototype/test_startup.c -o build/tests/test-startup
+build/tests/test-startup
+cc -std=c99 -Wall -Wextra -Werror native/prototype/test_relay_startup.c native/prototype/filter.c -o build/tests/test-relay-startup
+build/tests/test-relay-startup > build/tests/relay-startup.log
+tail -1 build/tests/relay-startup.log
 build/tests/test-filter
 for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.js; do node --check "$file"; done
 

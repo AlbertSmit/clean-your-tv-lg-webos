@@ -19,7 +19,8 @@ def tracked_files(prefix):
     files = {}
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
-    required = {'launcher': ['launcher/app-library.js'],
+    required = {'native/app': ['native/app/state-permissions.js'],
+                'launcher': ['launcher/app-library.js'],
                 'native/service': ['native/service/app-inventory.js']}
     for name in sorted(set(result.stdout.splitlines()) | set(required.get(prefix, []))):
         path = ROOT / name

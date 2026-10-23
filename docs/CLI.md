@@ -290,3 +290,10 @@ References: [LG CLI protocol and commands](https://webostv.developer.lge.com/dev
 [PyInstaller standalone operation](https://pyinstaller.org/en/stable/operating-mode.html).
 
 For older No-root Helper releases (through 0.6.13), use the previous emergency gesture: hold Home for about two seconds. The updated Helper uses three short Home presses within two seconds.
+
+## Release version checks
+
+The production builder reads `release-versions.json` and rejects mismatched Home,
+Helper, Root or cytv versions, including packaged service metadata. Build from the
+release commit with `python scripts/build-cytv.py`; no separate local source tree
+is required. The wizard has no trial or Keep step.

@@ -13,17 +13,8 @@ FILES = (
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
     'fonts/outfit.ttf', 'fonts/OFL.txt',
 )
-SETTINGS = '''window.RenewalPanel = {
-  isOpen: function () { return false; },
-  open: function () {
-    var bridge = new PalmServiceBridge();
-    bridge.onservicecallback = function () { bridge.cancel(); };
-    bridge.call("luna://com.webos.applicationManager/launch", JSON.stringify({
-      id: "com.palm.app.settings", params: {}
-    }));
-  }
-};
-'''
+UI = Path(__file__).resolve().parent / 'ui'
+UI_FILES = ('root-exit.js', 'root-settings.js', 'root-settings.css')
 
 
 def prepare():
@@ -53,9 +44,13 @@ def prepare():
     entry = '<script src="profile-bootstrap.js"></script>'
     if html.count(entry) != 1:
         raise ValueError('Unexpected launcher entry')
-    files['index.html'] = html.replace(entry, '<script src="root-settings.js"></script>\n  <script src="app.js"></script>').encode()
+    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script src="root-exit.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="app.js"></script>').encode()
     files['appinfo.json'] = (json.dumps(info, indent=2) + '\n').encode()
-    files['root-settings.js'] = SETTINGS.encode()
+    for name in UI_FILES:
+        path = UI / name
+        if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(UI.resolve()):
+            raise ValueError('Missing or indirect Root UI: ' + name)
+        files[name] = path.read_bytes()
     files['apps.js'] = b'window.TV_APPS = {apps: [], inputs: []};\n'
     config = {'columns': 5, 'dockApps': [], 'hiddenApps': ['com.gathin.tvhome', 'com.local.nativehome', APP_ID]}
     files['config.js'] = ('window.CONFIG = ' + json.dumps(config) + ';\n').encode()

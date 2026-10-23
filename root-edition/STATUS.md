@@ -161,3 +161,14 @@ seconds on the previous uptime clock; no manual restore was sent. After the
 failsafe flag had cleared, another software reboot returned SSH and normal mode.
 The recovery journal remained restored and the legacy helper's stop latch was
 preserved. After explicitly resuming Home control, the user confirmed arrows, OK and short Home all work after both reboots.
+
+## RC8 local exit UI
+
+The isolated candidate now includes a remote-navigable Settings panel with a
+confirmed Exit Root mode action. It calls only recovery, verifies all three stock
+Home destinations, then launches LG Home. Requests are serialized and service
+errors/timeouts do not count as successful restoration. The candidate receives a
+narrow control group for status/restore, without activation or boot privileges.
+Local tests cover malformed readbacks, conflicts, duplicate requests, confirmation,
+Back cancellation and focus handling. On-TV permissions and visual behavior remain
+unverified. This does not close the frozen-UI emergency-escape gate.

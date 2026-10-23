@@ -15,6 +15,9 @@ build/tests/test-filter
 for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.js; do node --check "$file"; done
 
 node root-edition/service/test-handlers.js
+node root-edition/ui/test-exit.cjs
+node root-edition/ui/test-settings.cjs
+for file in root-edition/ui/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 python3 -m unittest discover -s tests/setup

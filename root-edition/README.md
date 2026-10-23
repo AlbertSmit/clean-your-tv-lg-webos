@@ -63,3 +63,17 @@ Earlier boot graphics and elimination of the initial black interval are research
 questions, not features delivered by this edition.
 
 Follow the [ordered rollout plan](ROLLOUT.md) for release scope and remaining gates.
+
+## Exit Root mode (candidate UI)
+
+Open **Settings → Exit Root mode → Confirm exit**. Back cancels before confirmation.
+The recovery service restores original Home routing, then the interface reads all
+three Home destinations before opening LG Home. It does not remove root, uninstall
+apps or restart the No-root helper. Resume that helper explicitly from production
+Home if desired.
+
+On failure, the panel reports the error and retains recovery state. Keep the TV
+powered on during restoration. The candidate's independent deadline and host
+`restore` command remain available. This UI exit is locally tested but awaits TV
+acceptance; it is not an emergency escape from a frozen launcher. Permanent Root
+activation remains disabled.

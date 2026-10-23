@@ -16,8 +16,6 @@ const assert=require('node:assert/strict');
   },10);};};
  });
  await page.route('**/apps.js',r=>r.fulfill({body:'window.TV_APPS={apps:[{id:"a",title:"Alpha",icon:"brand-v2-icon.png"},{id:"b",title:"Beta",icon:"brand-v2-icon.png"}],inputs:[]};'}));
- // Home Helper polling has its own tests; isolate app editing from its startup RPCs.
- await page.route('**/helper-control.js',r=>r.fulfill({body:''}));
  await page.goto('file://'+require('path').resolve(__dirname,'../../launcher/index.html'));
  await page.locator('#tiles .item').first().waitFor();
  assert.equal(await page.locator('#tiles .add-app').count(),1,'last tile adds apps');

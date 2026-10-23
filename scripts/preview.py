@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_FILES = {
     'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'app-library.js', 'config.js',
     'user-data.js', 'update-panel.js', 'renewal-panel.js', 'profile-bootstrap.js',
-    'native-bootstrap.js', 'helper-control.js', 'fonts/outfit.ttf', 'fonts/OFL.txt',
+    'native-bootstrap.js', 'fonts/outfit.ttf', 'fonts/OFL.txt',
 }
 DEMO_APPS = [
     ('youtube', 'YouTube', '#ffffff'),
@@ -123,7 +123,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == '/':
             file = ROOT / 'preview/index.html'
-        elif path in ('/preview/bridge.js', '/preview/live-reload.js'):
+        elif path in ('/preview/bridge.js', '/preview/live-reload.js', '/preview/settings.html'):
             file = ROOT / path.lstrip('/')
         elif path.startswith('/preview/icons/') and path[len('/preview/icons/'):] in ICON_FILES:
             file = ROOT / path.lstrip('/')

@@ -1,30 +1,27 @@
-const assert=require('assert'),vm=require('vm'),fs=require('fs');
-const elements=[],listeners={},calls=[];let selected,exitCount=0,resolveExit;
+const assert=require('node:assert/strict'),vm=require('vm'),fs=require('fs');
+const buttons=[],listeners={},calls=[];let selected,phase='active',restores=0,failLaunch=false;
 class Element {
- constructor(tag){this.tag=tag;this.children=[];this.hidden=false;this.disabled=false;elements.push(this);}
- appendChild(e){this.children.push(e);}
- setAttribute(){}
- focus(){selected=this;}
+ constructor(tag){this.tag=tag;this.hidden=false;this.disabled=false;this.attrs={};if(tag==='button')buttons.push(this);}
+ appendChild(){} setAttribute(k,v){this.attrs[k]=v;} focus(){selected=this;if(this.onfocus)this.onfocus();}
 }
-const document={body:new Element('body'),activeElement:{focus(){selected='previous';}},createElement:t=>new Element(t),addEventListener:(n,f)=>{listeners[n]=f;}};
-let updateOptions;
-const context={window:{RootUpdates:{open:o=>{updateOptions=o;}}},document,Promise,setTimeout,clearTimeout,createRootExit:()=>()=>{exitCount++;return new Promise(r=>{resolveExit=r;});},PalmServiceBridge:class{call(uri,p){calls.push(uri);this.onservicecallback('{"returnValue":true}');}cancel(){}}};
+const document={body:new Element('body'),activeElement:{focus(){selected='previous';}},createElement:t=>new Element(t),addEventListener:(n,f)=>listeners[n]=f};
+const context={window:{RootUpdates:{open(){}}},document,Promise,setTimeout,clearTimeout,
+ createRootExit:(call,launch)=>async()=>{restores++;phase='disabled';await launch();},
+ PalmServiceBridge:class{cancel(){}call(uri,raw){calls.push({uri,payload:JSON.parse(raw)});let r={returnValue:true};
+ if(uri.endsWith('/status'))r.result={returnValue:true,result:{intent:{phase}}};
+ if(uri.endsWith('/enable')){phase='active';r.result={returnValue:true,result:{}};}
+ if(uri.endsWith('/launch')&&failLaunch)r.returnValue=false;
+ this.onservicecallback(JSON.stringify(r));}}
+};
 vm.runInNewContext(fs.readFileSync(__dirname+'/root-settings.js','utf8'),context);
-const panel=context.window.RenewalPanel;
-function key(code){let prevented=false,stopped=false;listeners.keydown({keyCode:code,preventDefault(){prevented=true;},stopImmediatePropagation(){stopped=true;}});return {prevented,stopped};}
+const panel=context.window.RenewalPanel,tick=()=>new Promise(r=>setImmediate(r));
+function key(keyCode){listeners.keydown({keyCode,preventDefault(){},stopImmediatePropagation(){}});}
 (async()=>{
- panel.open();assert(panel.isOpen());assert.strictEqual(calls.length,1);
- const buttons=elements.filter(e=>e.tag==='button');assert.strictEqual(selected,buttons[1]);
- key(40);key(40);assert.strictEqual(selected,buttons[3]);key(13);assert.strictEqual(exitCount,0);
- key(461);assert(!panel.isOpen());assert.strictEqual(selected,'previous');
- panel.open();key(40);key(40);key(13);key(13);assert.strictEqual(exitCount,1);
- key(13);assert.strictEqual(exitCount,1);key(461);assert(panel.isOpen());
- resolveExit();await new Promise(r=>setImmediate(r));assert(!panel.isOpen());assert.strictEqual(selected,'previous');
- assert.deepStrictEqual(key(40),{prevented:false,stopped:false});
- panel.open();buttons[3].onclick();assert.strictEqual(buttons[3].textContent,'Confirm return');
- buttons[1].onclick();assert(!panel.isOpen());updateOptions.onClose();
- await new Promise(r=>setImmediate(r));
- assert.strictEqual(buttons[3].textContent,'Return to LG Home','Leaving for updates must cancel the previous exit confirmation');
- buttons[3].onclick();assert.strictEqual(exitCount,1,'Return must ask for confirmation again');key(461);
- console.log('PASS Root settings remote focus, confirmation, Back, duplicate and busy handling');
+ panel.open();await tick();assert.equal(selected,buttons[0]);assert.equal(buttons[0].attrs['aria-checked'],'true');
+ key(39);assert.equal(selected,buttons[1]);key(13);key(13);await tick();
+ assert.equal(calls.filter(c=>c.uri.endsWith('/launch')).length,1);assert.equal(restores,0);assert.equal(phase,'active');assert(!panel.isOpen());
+ panel.open();await tick();buttons[0].onclick();await tick();assert.equal(restores,1);assert.equal(buttons[0].attrs['aria-checked'],'false');assert(panel.isOpen());
+ buttons[0].onclick();await tick();assert.equal(phase,'active');assert.equal(buttons[0].attrs['aria-checked'],'true');assert(!buttons[0].disabled);
+ failLaunch=true;buttons[1].onclick();await tick();assert(panel.isOpen());assert.equal(phase,'active');assert(!buttons[1].disabled);key(461);assert(!panel.isOpen());
+ console.log('PASS Root switch, one-time visit, failure recovery, duplicate suppression and remote focus');
 })().catch(e=>{console.error(e);process.exit(1);});

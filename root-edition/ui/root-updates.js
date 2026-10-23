@@ -58,7 +58,7 @@
       'recovery-required':'Recovery required. LG Home remains selected. Recover status first; rollback stays blocked until the installer has definitely stopped.',
       aborted:'Update stopped before replacement. Check status before trying again.'
     };
-    message.textContent = errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : 'Check for a signed Root release. Your apps, inputs, settings and tile order will be preserved.');
+    message.textContent = errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : busy ? 'Checking for updates…' : offer && offer.canInstall ? 'A new version of Home is available.' : 'Your apps and settings stay saved.');
     if (transaction && transaction.error) message.textContent += ' ' + transaction.error;
     var installed = offer && offer.installed;
     details.textContent = 'Installed: ' + (installed && installed.version || installed || window.ROOT_VERSION || 'unknown');
@@ -67,7 +67,7 @@
       var reasons = {current:'This Root version is up to date.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
       details.textContent += '\n' + (reasons[offer.reason] || 'This release cannot be installed with the current setup.');
     }
-    show(0, !recovery && !health, busy || active());
+    show(0, !recovery && !health && !!errorText, busy || active());
     show(1, !recovery && !health && !installing, busy || active() || !offer || !offer.canInstall);
     show(2, !recovery && installing, busy || active());
     show(3, true, busy);
@@ -121,7 +121,7 @@
     var title = document.createElement('h1'); title.textContent = 'Software updates'; card.appendChild(title);
     message = document.createElement('p'); message.setAttribute('aria-live', 'polite'); card.appendChild(message);
     details = document.createElement('p'); details.className = 'root-update-details'; card.appendChild(details);
-    buttons = ['Check for updates', 'Update', 'Install update', 'Recover status', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
+    buttons = ['Try again', 'Update', 'Install update', 'Recover status', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
       var button = document.createElement('button'); button.textContent = label; button.onclick = function () { activate(index); }; card.appendChild(button); return button;
     });
     document.body.appendChild(panel);

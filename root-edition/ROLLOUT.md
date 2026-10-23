@@ -110,8 +110,7 @@ through automatic reactivation. Other lifecycle cases remain final release gates
 
 Release Home between taps. Long Home is **not** the Root emergency action and can
 trigger LG behavior such as zoom. Exiting Root mode does not remove root or resume
-the old helper. To use No-root again, open the ordinary Home and explicitly choose
-its Resume Home / Enable Home control action, or open Home Helper.
+the old helper. To use No-root again, open Home Helper.
 
 Host recovery and readback:
 

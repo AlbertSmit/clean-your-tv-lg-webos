@@ -18,7 +18,7 @@ actual device name. Manual installations below use the profile `lgtv`.
 
 Triple Home is an emergency stop, not a factory reset. It preserves preferences but
 leaves a persistent stop flag. Automatic startup respects that flag. To resume,
-select **Resume Home** in the launcher or open **Home Helper** manually from LG's app list, or run:
+open **Home Helper** manually from LG's app list, or run:
 
 ```sh
 ares-launch -d lgtv com.local.nativehome

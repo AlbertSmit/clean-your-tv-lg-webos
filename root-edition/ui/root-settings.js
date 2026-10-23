@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var panel, message, buttons, selected = 0, busy = false, confirmExit = false, previous, rootStatus = null;
+  var panel, message, buttons, selected = 0, busy = false, previous, rootStatus = null;
   function request(uri, payload, timeout) {
     return new Promise(function (resolve, reject) {
       var bridge, timer, done = false;
@@ -22,12 +22,12 @@
   }
   function launch(id) {
     return request('luna://com.webos.applicationManager/launch', {id:id}, 10000).then(function (r) {
-      if (r.returnValue !== true) throw new Error('Home restored, but screen could not open. Press Home.');
+      if (r.returnValue !== true) throw new Error('Could not open LG Home. Try again.');
     });
   }
   var exit = createRootExit(function (method) {
     return request('luna://com.cleanyourtv.root.preview.service/' + method, {}, method === 'restore' ? 620000 : 15000);
-  }, function () { return launch('com.webos.app.home'); });
+  }, function () { return Promise.resolve(); });
   function control(method, payload) {
     return request('luna://com.cleanyourtv.root.preview.service/' + method, payload || {}, 30000).then(function (reply) {
       if (!reply || reply.returnValue !== true || !reply.result || reply.result.returnValue !== true)
@@ -36,33 +36,32 @@
     });
   }
   function refreshMode() {
-    rootStatus = null; buttons[3].disabled = true; buttons[3].textContent = 'Checking Home control…';
+    rootStatus = null; buttons[3].disabled = true;
+    message.textContent = 'Checking Home control…';
     return control('status').then(function (status) {
       rootStatus = status;
-      var phase = status.intent && status.intent.phase;
-      buttons[3].textContent = phase === 'active' ? 'Home control is on' : phase === 'trial' || phase === 'starting' ? 'Turning on Home control…' : 'Turn on Home control';
-      buttons[3].disabled = !!phase && phase !== 'disabled';
+      var phase = status.intent && status.intent.phase, active = phase === 'active';
+      buttons[3].setAttribute('aria-checked', String(active));
+      buttons[3].disabled = !!phase && phase !== 'active' && phase !== 'disabled';
+      message.textContent = active ? 'Home and return from apps open Clean Your TV.' : buttons[3].disabled ? 'Changing Home control…' : 'Home and return from apps open LG Home.';
       if (!panel.hidden && buttons[selected].disabled) move(1);
-      if (confirmExit) return;
-      if (phase === 'disabled' || !phase) message.textContent = 'Home control is off. Turn it on to use Home as your home screen. Stop the previous Home Helper first.';
-      if (phase === 'trial' || phase === 'starting') message.textContent = 'Checking input and recovery before turning on Home control. To cancel, select Return to LG Home.';
-      if (phase === 'active') message.textContent = 'Home control is on and will stay on after restarting the TV. Return to LG Home below to turn it off.';
     }).catch(function (e) { message.textContent = e.message; });
   }
   function changeMode() {
-    if (!rootStatus || buttons[3].disabled) return;
+    if (!rootStatus || buttons[3].disabled || busy) return;
+    var active = rootStatus.intent && rootStatus.intent.phase === 'active';
     busy = true; buttons.forEach(function (b) { b.disabled = true; });
-    message.textContent = 'Turning on Home control and checking recovery protection…';
-    control('enable').then(function () {
+    message.textContent = active ? 'Turning off Home control…' : 'Turning on Home control…';
+    (active ? exit() : control('enable')).then(function () {
       busy = false; buttons.forEach(function (b) { b.disabled = false; });
-      return refreshMode();
+      return refreshMode().then(function () { if (!panel.hidden) focus(3); });
     }).catch(function (e) {
       busy = false; buttons.forEach(function (b) { b.disabled = false; });
       var error = e.message;
       refreshMode().then(function () { message.textContent = error; });
     });
   }
-  var order = [3, 4, 0, 1, 2];
+  var order = [3, 1, 4, 0, 2];
   function focus(index) {
     selected = index;
     if (!buttons[selected].disabled) buttons[selected].focus();
@@ -76,7 +75,7 @@
   }
   function close() {
     if (busy) return;
-    panel.hidden = true; confirmExit = false;
+    panel.hidden = true;
     if (previous && previous.focus) previous.focus();
   }
   function activate(index) {
@@ -84,21 +83,15 @@
     if (index === 2) return close();
     if (index === 3) return changeMode();
     if (index === 4) {
-      confirmExit = false; buttons[1].textContent = 'Return to LG Home';
       if (!window.RootUpdates) { message.textContent = 'Software updates require the one-time computer setup.'; return; }
       panel.hidden = true;
       window.RootUpdates.open({onClose:function () { panel.hidden = false; focus(4); refreshMode(); }}); return;
     }
     if (index === 0) { launch('com.palm.app.settings').catch(function (e) { message.textContent = e.message; }); return; }
-    if (!confirmExit) {
-      confirmExit = true;
-      message.textContent = 'Return to LG Home and turn off Home control? Your apps and settings will be kept. Select Confirm return, or press Back to cancel.';
-      buttons[1].textContent = 'Confirm return'; focus(1); return;
-    }
     busy = true; buttons.forEach(function (b) { b.disabled = true; });
-    message.textContent = 'Restoring original Home… Keep the TV powered on.';
-    exit().then(function () { busy = false; close(); }).catch(function (e) {
-      busy = false; confirmExit = false; buttons[1].textContent = 'Return to LG Home'; message.textContent = e.message;
+    message.textContent = 'Opening LG Home…';
+    launch('com.webos.app.home').then(function () { busy = false; close(); }).catch(function (e) {
+      busy = false; message.textContent = e.message;
     }).finally(function () { buttons.forEach(function (b) { b.disabled = false; }); if (!panel.hidden) focus(1); });
   }
   function build() {
@@ -114,28 +107,27 @@
     text(heading, 'h1', 'Home settings'); text(heading, 'span', 'Root Edition', 'settings-edition');
     text(card, 'p', 'Manage Home, software updates and your TV.');
     var home = document.createElement('section'); home.className = 'settings-section'; card.appendChild(home);
-    text(home, 'h2', 'Home control');
-    text(home, 'p', 'Choose what opens when you press Home on your remote.');
+    text(home, 'h2', 'Your Home screen');
+    text(home, 'p', 'Choose where Home and return from apps take you.');
     message = text(home, 'p', '', 'settings-status'); message.setAttribute('aria-live','polite');
-    var homeActions = document.createElement('div'); homeActions.className = 'renewal-actions'; home.appendChild(homeActions);
+    var homeActions = document.createElement('div'); homeActions.className = 'renewal-actions home-routing-actions'; home.appendChild(homeActions);
     var more = document.createElement('section'); more.className = 'settings-section'; card.appendChild(more);
     text(more, 'h2', 'Updates and TV');
     text(more, 'p', 'Update Home or open LG settings for picture, sound and network.');
     var links = document.createElement('div'); links.className = 'renewal-actions settings-links'; more.appendChild(links);
-    var leave = document.createElement('section'); leave.className = 'settings-section'; card.appendChild(leave);
-    text(leave, 'h2', 'Return to LG Home');
-    text(leave, 'p', 'Turn off Home control and restore the LG home screen. Your apps and settings are kept.');
-    var leaveActions = document.createElement('div'); leaveActions.className = 'renewal-actions'; leave.appendChild(leaveActions);
+    text(home, 'p', 'Open LG Home once without changing this switch or your settings.', 'home-visit-hint');
     var footer = document.createElement('div'); footer.className = 'settings-footer'; card.appendChild(footer);
-    text(footer, 'p', 'Emergency exit: press Home 3 times within 2 seconds.');
+    text(footer, 'p', 'Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.');
     var back = document.createElement('div'); back.className = 'renewal-actions'; footer.appendChild(back);
     buttons = [];
     order.forEach(function (i) {
-      var labels = ['TV settings','Return to LG Home','Back to Home','Checking Home control…','Software updates'];
+      var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates'];
       var b = document.createElement('button'); b.textContent = labels[i];
+      if (i === 3) { b.className = 'home-routing-switch'; b.setAttribute('role','switch'); b.setAttribute('aria-checked','false'); }
+      if (i === 1) b.className = 'home-visit-button';
       b.onclick = function () { selected = i; activate(i); };
       b.onfocus = function () { selected = i; };
-      (i === 3 ? homeActions : i === 4 || i === 0 ? links : i === 1 ? leaveActions : back).appendChild(b);
+      (i === 3 || i === 1 ? homeActions : i === 4 || i === 0 ? links : back).appendChild(b);
       buttons[i] = b;
     });
     document.body.appendChild(panel);
@@ -154,9 +146,9 @@
     open: function () {
       if (!panel) build();
       if (!panel.hidden) return;
-      previous = document.activeElement; confirmExit = false;
+      previous = document.activeElement;
       message.textContent = 'Checking whether Home control is on…';
-      buttons[1].textContent = 'Return to LG Home'; panel.hidden = false; focus(4); refreshMode();
+      panel.hidden = false; focus(3); refreshMode().then(function () { if (!panel.hidden && !busy && !buttons[3].disabled) focus(3); });
     }
   };
 }());

@@ -36,7 +36,7 @@ def prepare(version='0.0.1'):
             raise ValueError('Unpackaged manifest resource: ' + field)
     html = files['index.html'].decode()
     tags = ['<script src="' + name + '"></script>' for name in (
-        'native-bootstrap.js', 'helper-control.js', 'renewal-panel.js',
+        'native-bootstrap.js', 'renewal-panel.js',
         'user-data.js', 'update-panel.js')]
     tags.append('<link rel="stylesheet" href="renewal-panel.css">')
     for tag in tags:

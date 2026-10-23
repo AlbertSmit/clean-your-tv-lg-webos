@@ -139,7 +139,10 @@ manual installation and recovery. Windows installation has not been tested.
 ## Browser preview
 
 [Try the live launcher preview](https://razdva122.github.io/clean-your-tv-lg-webos/).
-It uses demo apps and simulated TV functions. GitHub Pages automatically deploys
+Switch between **No-root Edition** and **Root Edition** in the top bar. Both use
+demo apps and simulated TV functions; Root mode trial, confirmation and exit
+only change the browser simulation. [Open Root Edition directly](https://razdva122.github.io/clean-your-tv-lg-webos/#root).
+GitHub Pages automatically deploys
 the latest `main` after tests pass.
 
 ### Run locally

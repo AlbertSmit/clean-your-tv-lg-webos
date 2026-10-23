@@ -35,7 +35,7 @@ class PreviewTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / 'clean-your-tv-lg-webos'
             preview.export_site(output)
-            for page in ['index.html', 'launcher/index.html']:
+            for page in ['index.html', 'launcher/index.html', 'root-launcher/index.html']:
                 resources = Resources()
                 resources.feed((output / page).read_text())
                 self.assertTrue(resources.urls)
@@ -50,6 +50,9 @@ class PreviewTest(unittest.TestCase):
                 self.assertTrue(url.startswith('/clean-your-tv-lg-webos/preview/icons/'))
                 self.assertTrue((Path(directory) / urlsplit(url).path.lstrip('/')).is_file())
             self.assertTrue((output / 'launcher/fonts/outfit.ttf').is_file())
+            self.assertTrue((output / 'root-launcher/root-settings.js').is_file())
+            self.assertFalse((output / 'root-launcher/native-bootstrap.js').exists())
+            self.assertFalse((output / 'root-launcher/renewal-panel.js').exists())
             self.assertFalse((output / '.lgtv-key.json').exists())
             self.assertFalse((output / 'scripts').exists())
 
@@ -70,6 +73,11 @@ class PreviewTest(unittest.TestCase):
                     return response.read().decode()
 
             self.assertIn('launcher/index.html', get('/'))
+            root = get('/root-launcher/index.html')
+            self.assertIn('root-settings.js', root)
+            self.assertNotIn('native-bootstrap.js', root)
+            self.assertNotIn('profile-bootstrap.js', root)
+            self.assertEqual(json.loads(get('/root-launcher/apps.js').removeprefix('window.TV_APPS = ').rstrip(';\n'))['apps'][0]['id'], 'preview.youtube')
             page = get('/launcher/index.html')
             self.assertLess(page.index('/preview/bridge.js'), page.index('profile-bootstrap.js'))
             self.assertEqual(get('/launcher/style.css'), (ROOT / 'launcher/style.css').read_text())

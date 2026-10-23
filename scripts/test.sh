@@ -5,6 +5,7 @@ node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
+node tests/preview-bridge.cjs
 node tests/helper-control.cjs
 node tests/resume.cjs
 node tests/controller-resume.cjs

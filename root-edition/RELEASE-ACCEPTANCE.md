@@ -114,3 +114,4 @@ intent and marked the binding restored. No manual restore command was sent.
 The working helper was subsequently launched normally after released-key and
 baseline checks; its relay reported READY and production Home was foreground.
 No production helper code or control latch was edited directly.
+The user then confirmed production short Home, arrows and OK work as before.

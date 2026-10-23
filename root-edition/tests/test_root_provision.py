@@ -39,8 +39,9 @@ class ProvisionTests(unittest.TestCase):
             write.assert_not_called()
     def test_finalize_owned_registration(self):
         data={'version':1}
-        with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write:
+        with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write,patch('startup_hook.install') as hook:
             p.finalize()
+            hook.assert_called_once_with(p.secure,p.write)
             self.assertEqual(write.call_args[0][0],p.STATE/'recovery-provision.json')
     def test_runtime_drift_refuses_registration(self):
         with patch.object(p,'secure',return_value=b'{}'),patch.object(p,'manifest',return_value={'changed':True}),patch.object(p,'rpc') as rpc:

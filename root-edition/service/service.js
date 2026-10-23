@@ -10,7 +10,7 @@ var handlers = require('./handlers')(function (command, transaction) {
     var executable = command === 'boot' ? '/bin/sh' : '/usr/bin/python3';
     var args = command === 'boot' ? [__dirname + '/boot-recover.sh'] : [runtime, command];
     if (command === 'confirm') args.push(transaction);
-    execFile(executable, args, {timeout:command === 'restore' ? 600000 : 30000,maxBuffer:65536}, function (error, stdout) {
+    execFile(executable, args, {timeout:command === 'restore' ? 600000 : command === 'boot' ? 120000 : 30000,maxBuffer:65536}, function (error, stdout) {
       if (error) return reject(new Error('Recovery operation failed; inspect runtime status'));
       try { resolve(JSON.parse(stdout)); } catch (_) { reject(new Error('Invalid runtime response')); }
     });

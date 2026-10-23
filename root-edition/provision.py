@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Device-side recovery provisioning. Never changes Home or Homebrew files."""
+"""Device-side recovery provisioning. Never changes Home or upstream Homebrew files."""
 import argparse
 import hashlib
 import fcntl
@@ -210,6 +210,8 @@ def finalize():
     reply = rpc('register')
     if reply.get('root') is not True or reply.get('registered') is not True or reply.get('activityName') != NAME+'.recovery':
         raise ValueError('Recovery activity not verified')
+    import startup_hook
+    startup_hook.install(secure,write)
     write(STATE/'recovery-provision.json',encoded(expected))
     return {'returnValue':True,'mode':'recovery-only','activity':reply}
 
@@ -242,6 +244,8 @@ def rollback():
                 raise ValueError('Restored LS2 metadata drift: '+path)
         import system_permissions
         system_permissions.remove(secure)
+        import startup_hook
+        startup_hook.remove(secure)
         return {'returnValue':True,'already_rolled_back':True,'next':'Refresh LS2 registration before package removal.'}
     if saved.get('phase') not in (None, 'restoring'):
         raise ValueError('Unknown provisioning phase')
@@ -263,6 +267,8 @@ def rollback():
         write(STATE/'ls2-provision-snapshot.json',encoded(saved))
     import system_permissions
     system_permissions.remove(secure)
+    import startup_hook
+    startup_hook.remove(secure)
     for path,entry in saved['files'].items():
         write(Path(path),entry['original'],entry['mode'])
         os.chown(path,entry['uid'],entry['gid'])

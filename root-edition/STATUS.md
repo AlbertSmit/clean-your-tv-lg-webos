@@ -283,3 +283,35 @@ checks). Includes a stopped real publisher with an independently running health
 adapter, deadline promotion rejection, and publication-during-read regression.
 Independent review found the timestamp race; it was reproduced and fixed.
 RC15 hardware acceptance is pending; permanent mode is not a public release yet.
+
+## RC18: Homebrew normal-startup gate (2026-10-23)
+
+RC15–RC17 did not retain Root routing after reboot. Local review of Homebrew
+0.7.3 `services/startup.sh` found that its failsafe flag is also set during normal
+startup. Normal startup runs init.d, then waits ten seconds before clearing it;
+real failsafe skips init.d but also clears the flag later. Absence of the flag
+alone is therefore not proof of normal startup.
+
+RC18 restores the recorded stock route before waiting. A dedicated, owned
+`50-clean-your-tv-root` hook writes a private current-kernel-boot marker and
+returns immediately. Reactivation requires both that marker and a cleared flag;
+a bounded timeout disables intent. The independent recovery activity still runs
+when init.d is skipped. The hook never activates Home or changes Homebrew code.
+Its ownership receipt is retained for repeatable removal and rejects name/content
+collisions. Boot decisions are recorded in private `boot-decision.json`.
+
+Local verification: 349 Python tests pass, including real-failsafe flag clearing,
+normal startup ordering, missing/stale marker, private marker storage, hook
+collision/removal, and restore-before-gate ordering. Hardware reboot acceptance
+is pending; these results do not constitute release approval.
+
+RC18 hardware result: normal-startup marker was present and bound to new boot
+`7bff50ef-5612-4f23-b295-e0eabf1833b3:1792740634`. Boot audit at uptime 28.81s
+recorded *prior* intent already `recovering`, `enabled:false`, generation 1.
+Therefore this reboot did not exercise successful reactivation: shutdown had
+revoked intent before the boot callback. At 46.22s all three Home routes were
+stock and the old transaction `62755c54-da0b-482c-aa80-eee35461c084` was restored.
+The emergency log reports input ENODEV / observer_exit. Root cause of the missed
+shutdown evidence is still unresolved; do not attribute this run to the failsafe
+gate or weaken watchdog behavior. Production launcher and helper were relaunched
+through their normal application entry points after the test.

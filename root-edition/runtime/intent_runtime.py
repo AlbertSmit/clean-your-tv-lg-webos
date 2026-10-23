@@ -66,8 +66,18 @@ def boot():
         # never infer health from an application merely existing in /proc.
         c.exit(intent, reason='fault')
         return 'restored'
-    result = c.boot(intent, identity, str(uuid.uuid4()), failsafe)
+    # Restore first. Normal startup also sets FAILSAFE temporarily; only the
+    # current-boot init.d marker plus a cleared flag permits reactivation.
+    from boot_gate import audit, observation
+    audit('recover-before-gate',prior=intent,boot=identity,observation=observation())
+    result = c.boot(intent, identity, str(uuid.uuid4()), False if identity != intent['boot'] else failsafe)
     if result['effect'] == 'start_guarded':
+        from boot_gate import wait
+        ready = wait()
+        audit('gate-complete',prior=intent,boot=identity,ready=ready,observation=observation())
+        if not ready:
+            c.exit(result['intent'], reason='fault')
+            return 'restored'
         return c.restart(result['intent'])
     return 'restored'
 

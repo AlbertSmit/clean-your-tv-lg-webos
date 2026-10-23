@@ -7,6 +7,8 @@ import intent_runtime as r
 class RuntimeTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
+  self.audit=patch('boot_gate.audit');self.audit.start();self.addCleanup(self.audit.stop)
+  self.observation=patch('boot_gate.observation',return_value=(False,False));self.observation.start();self.addCleanup(self.observation.stop)
  def tearDown(self):self.tmp.cleanup()
  def test_snapshot_boot_identity_includes_kernel_start_time(self):
   with tempfile.TemporaryDirectory() as tmp:
@@ -37,6 +39,15 @@ class RuntimeTests(unittest.TestCase):
  def test_boot_restarts_only_after_coordinator_verified_recovery(self):
   c=Mock(binding=self.root/'missing-binding');c.store.read.return_value={'boot':'old','phase':'active'}
   new={'phase':'starting'};c.boot.return_value={'effect':'start_guarded','intent':new}
-  with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False):r.boot()
+  with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch('boot_gate.wait',return_value=True),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False):r.boot()
   c.restart.assert_called_once_with(new)
   c.exit.assert_not_called()
+
+ def test_true_failsafe_restores_before_refusing_restart(self):
+  c=Mock(binding=self.root/'missing-binding');c.store.read.return_value={'boot':'old','phase':'active'}
+  new={'phase':'starting'};c.boot.return_value={'effect':'start_guarded','intent':new}
+  def refused():
+   c.boot.assert_called_once();c.restart.assert_not_called();return False
+  with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=True),patch('boot_gate.wait',side_effect=refused):
+   self.assertEqual(r.boot(),'restored')
+  c.exit.assert_called_once_with(new,reason='fault');c.restart.assert_not_called()

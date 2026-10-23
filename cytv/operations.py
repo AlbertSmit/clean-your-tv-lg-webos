@@ -329,7 +329,7 @@ print('CYTV_UPDATER_VERIFIED')
                     reconciled = 'root-installation-verified'
             elif stage == 'uninstalled-state-retained':
                 self.verify_absent(package.ROOT_APP)
-                if pending and pending['action'] == 'uninstall':
+                if pending and pending['action'] == 'uninstall' and not pending.get('full_project'):
                     self.store.finish(self.profile)
                     reconciled = 'root-removal-verified; TV evidence retained'
             elif stage == 'absent' and pending and pending['action'] == 'install':
@@ -559,7 +559,119 @@ print('CYTV_ROOT_FILES_OK')
             raise UserError('LG Home launch was requested, but input restoration removal is unconfirmed. Keep recovery state and run cytv doctor before uninstalling.')
         return {'restored': True, 'pending': self.store.pending(self.profile)}
 
-    def uninstall(self):
+    def root_updater_cleanup(self, action, archive):
+        from .root_updater_remove import COMMAND
+        reply = json.loads(self.remote.run(shlex.join(['/usr/bin/python3', '-c', COMMAND, action, archive]), timeout=60))
+        if not isinstance(reply, dict):
+            raise UserError('Root Updater cleanup could not be verified.')
+        return reply
+
+    def cleanup_legacy_permissions(self):
+        from .legacy_permissions_remove import SCRIPT
+        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT]), timeout=30).strip() != 'CYTV_LEGACY_PERMISSIONS_REMOVED':
+            raise UserError('Updater permissions removal could not be verified.')
+
+    def verify_project_removed(self):
+        script = """import os
+from pathlib import Path
+apps=('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater','com.cleanyourtv.updater','com.gathin.tvhome','com.local.nativehome')
+paths=['/var/lib/webosbrew/init.d/50-clean-your-tv-root','/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
+       '/var/luna-service2/manifests.d/com.cleanyourtv.root.preview.recovery.json',
+       '/var/webos-profile/override/clean-your-tv-root.json']
+if any(os.path.lexists(p) for p in paths): raise ValueError('Project startup or routing remains')
+for folder in ('services.d','roles.d','client-permissions.d','api-permissions.d','manifests.d'):
+    for p in (Path('/var/luna-service2-dev')/folder).iterdir():
+        if any(p.name.startswith(app+'.') for app in apps): raise ValueError('Project bus registration remains')
+print('CYTV_PROJECT_REMOVED')
+"""
+        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script])).strip() != 'CYTV_PROJECT_REMOVED':
+            raise UserError('Project startup or service registrations remain. Removal is not complete.')
+        settings = self.remote.luna('com.webos.settingsservice/getSystemSettings', {'category': 'general', 'keys': ['defaultApps']})
+        reply = self.remote.luna('com.webos.service.systemprofile/getProfiles', {'names': ['defaultApps', 'idleApp'], 'subscribe': False})
+        try:
+            profiles = reply['profiles']
+            routes = (settings['settings']['defaultApps']['home'], profiles['defaultApps']['categories']['home'], profiles['idleApp']['appId'])
+            if settings.get('returnValue') is not True or reply.get('returnValue') is not True or any(route != 'com.webos.app.home' for route in routes):
+                raise ValueError('LG Home routing differs')
+        except (KeyError, TypeError, ValueError):
+            raise UserError('LG Home routing could not be verified. Keep recovery data.') from None
+
+    def uninstall_project(self):
+        pending = self.store.pending(self.profile)
+        if pending and (pending.get('action') != 'uninstall' or pending.get('full_project') is not True):
+            raise UserError('An earlier operation needs recovery before full removal. Recovery data was kept.')
+        idle = self.remote.luna('com.webos.appInstallService/status', {'subscribe': True})
+        if idle.get('returnValue') is not True or idle.get('status', {}).get('apps') != []:
+            raise UserError('TV installer is not idle. Removal has not restarted.')
+        apps = {app['id'] for app in self.installed_apps()}
+        legacy = 'com.cleanyourtv.updater'
+        if legacy in apps:
+            reply = self.remote.luna(legacy + '.service/status', {}, app_id=HOME)
+            result = reply.get('result')
+            if not isinstance(result, dict) or 'transaction' not in result:
+                raise UserError('No-root Updater state is unknown. Removal stopped.')
+            tx = result['transaction']
+            if tx is not None and (not isinstance(tx, dict) or tx.get('status') not in ('complete', 'rolled-back')):
+                raise UserError('No-root update needs recovery before removal.')
+        if not pending:
+            self.store.begin(self.profile, 'uninstall', full_project=True,
+                             updater_archive=UPDATER_STATE + '.archive-' + uuid.uuid4().hex, removals={})
+        pending = self.store.pending(self.profile)
+        archive = pending['updater_archive']
+        self.progress('Stopping Root Updater and removing its startup registration…')
+        if self.root_updater_cleanup('disable', archive).get('disabled') is not True:
+            raise UserError('Root Updater was not confirmed stopped. Removal paused.')
+        # Restore LG Home through the existing guarded Root removal driver.
+        if package.ROOT_APP in apps:
+            if pending.get('root_submitted'):
+                raise UserError('Previous Root removal outcome is unknown; it was not submitted again.')
+            self.store.checkpoint(self.profile, root_submitted=True)
+            self.progress('Restoring LG Home and removing Root…')
+            result = self.root_action('uninstall')
+            if result.get('removed') != package.ROOT_APP or result.get('state_retained') != ROOT_STATE:
+                raise UserError('Root removal was not confirmed. Recovery data was kept.')
+        self.verify_absent(package.ROOT_APP)
+        if HOME in apps or HELPER in apps:
+            self.progress('Stopping Home Helper and restoring LG Home…')
+            legacy_installer = Installer(self.remote, self.store, dict(self.profile, edition='no-root'), self.payload, {}, self.progress)
+            legacy_installer.restore_device()
+        self.cleanup_legacy_permissions()
+        removals = dict(self.store.pending(self.profile).get('removals', {}))
+        for app in (UPDATER_APP, legacy, HELPER, HOME):
+            previous = removals.get(app)
+            if app in apps:
+                if previous is not None:
+                    raise UserError('Previous package removal outcome is unknown or the app reappeared; it was not submitted again.')
+                removals[app] = 'submitted'
+                self.store.checkpoint(self.profile, removals=removals)
+                self.progress('Removing ' + app + '…')
+                self.remote.luna('com.webos.appInstallService/dev/remove', {'id': app, 'subscribe': True}, terminal='removed', timeout=150)
+                removals[app] = 'terminal'
+                self.store.checkpoint(self.profile, removals=removals)
+            if removals.get(app) == 'terminal':
+                directory = BASE + '/packages/' + app
+                self.remote.run('if [ -d ' + directory + ' ] && [ ! -L ' + directory + ' ]; then rmdir ' + directory + ' 2>/dev/null || true; fi')
+            self.verify_absent(app)
+            removals[app] = 'done'
+            self.store.checkpoint(self.profile, removals=removals)
+        if any(app['id'] in (package.ROOT_APP, UPDATER_APP, legacy, HELPER, HOME) for app in self.installed_apps()):
+            raise UserError('Project applications remain. Removal is not complete.')
+        self.progress('Verifying removal and preserving recovery records…')
+        final = self.root_updater_cleanup('finalize', archive)
+        if final.get('removed') is not True:
+            raise UserError('Root Updater cleanup is incomplete. Recovery data was kept.')
+        self.verify_project_removed()
+        retained = self.remote.run('if [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf CYTV_ROOT_RETAINED; fi').strip()
+        if retained:
+            if self.root_archive('inspect').get('busy') is not False:
+                raise UserError('Apps were removed, but an old Root process is still running. Restart the TV, then run removal again to verify completion.')
+        self.store.finish(self.profile)
+        return {'removed': True, 'applications_services_startup_removed': True,
+                'recovery_retained': ROOT_STATE, 'updater_archive': final.get('archive')}
+
+    def uninstall(self, full_project=False):
+        if full_project and self.profile['edition'] == 'root':
+            return self.uninstall_project()
         pending = self.store.pending(self.profile)
         if pending:
             # Repeated remove requests are just as uncertain as repeated installs.

@@ -97,6 +97,23 @@ save the diagnostic report instead of deleting recovery files.
 The start page also offers status, diagnostics, return to LG Home and uninstall.
 Existing console commands remain available in the separately distributed CLI.
 
+## Remove the project from a rooted TV
+
+Choose **Uninstall Clean Your TV** with the saved **Root** connection. The wizard
+restores LG Home and removes Root, Root Updater, its service and boot hook, plus
+any installed No-root Home, Helper and Home Updater packages. It also removes
+owned updater bus permissions. Other TV applications stay installed.
+
+This also works if an older cytv already removed Root but left Root Updater behind.
+The wizard checks that the updater is idle before stopping it and verifies that
+project apps, service registrations and startup hooks are gone. If a removal was
+interrupted, run the same action again; an ambiguous package removal is never
+submitted twice automatically.
+
+Root recovery records and the archived updater state remain for diagnostics.
+They have no active service or startup registration. The Mac application and its
+local reports remain installed on your computer.
+
 ## Build and validation
 
 Install `cytv/build-requirements.txt`, then run:

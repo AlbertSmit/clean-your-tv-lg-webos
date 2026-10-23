@@ -158,6 +158,9 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('Root will stop the old Home Helper, turn on Home control and open Clean Your TV Home.')
             write('Check controls on the TV after installation.')
         if args.command in ('install', 'uninstall', 'restore') and not args.yes:
+            if args.command == 'uninstall' and profile['edition'] == 'root':
+                write('This removes Root, Root Updater, their services and startup hooks, plus any installed No-root Home, Helper and Updater.')
+                write('Recovery records are retained for diagnostics. Other TV apps stay installed.')
             verb = {'install': 'Install this edition', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home'}[args.command]
             if not prompts.confirm(verb + '?', ask, write, default=args.command == 'install'):
                 write('Cancelled. No TV changes were made.')
@@ -310,8 +313,12 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write.raw('  ' + str(diagnostics.create_report(store, args.command, profile, 'doctor-complete', tv_info=tv_info)))
             else:
                 phase = args.command
-                result = getattr(installer, args.command)()
-                if (result.get('reconciled') or '').startswith('updater-not-started'):
+                result = installer.uninstall(full_project=True) if args.command == 'uninstall' else getattr(installer, args.command)()
+                if result.get('applications_services_startup_removed'):
+                    write.heading('Clean Your TV removed')
+                    write('Project apps, Root Updater service and startup registration were removed. LG Home is restored.')
+                    write('Recovery records were retained for diagnostics; they do not start automatically.')
+                elif (result.get('reconciled') or '').startswith('updater-not-started'):
                     write.heading('Ready to reinstall Root')
                     write('The previous attempt stopped before Root Updater setup. Recovery and installed files are verified; the previous operation report was saved.')
                     write('Return to the start screen, choose Set up my TV and confirm reinstallation. In the console, run cytv install.')

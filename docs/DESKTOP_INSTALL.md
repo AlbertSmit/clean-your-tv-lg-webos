@@ -87,6 +87,13 @@ On failure, read the explanation, click **Save diagnostic report…**, then
 **Open an issue**. Include your steps, expected/actual results, TV model and firmware.
 Review the JSON report before attaching it. Do not attach your profile folder or keys.
 
+When an earlier installation was interrupted, **Set up my TV** checks its state
+before proceeding. If Root and Root Updater are already installed and verified,
+choose **Finish Root setup** to activate Home without reinstalling the packages.
+If the earlier attempt stopped before updater setup, the wizard verifies recovery
+and offers reinstallation in the same flow. Unverified states remain blocked;
+save the diagnostic report instead of deleting recovery files.
+
 The start page also offers status, diagnostics, return to LG Home and uninstall.
 Existing console commands remain available in the separately distributed CLI.
 

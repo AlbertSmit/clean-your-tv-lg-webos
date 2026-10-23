@@ -164,8 +164,6 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 return 0
         payload, manifest = payload_dir(), {}
         if args.command == 'install':
-            if store.pending(profile):
-                raise UserError('Previous operation is unresolved. Run cytv status or cytv restore before installation.')
             try:
                 manifest = package.verify_payload(payload)
             except FileNotFoundError:
@@ -206,7 +204,23 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             installer = Installer(remote, store, profile, payload, manifest, write)
             if args.command == 'install':
                 reinstall = None
-                if profile['edition'] == 'root':
+                resume = False
+                if store.pending(profile):
+                    phase = 'inspect-installation'
+                    write('Checking the previous installation on the TV…')
+                    existing = installer.status()
+                    if existing.get('can_resume_root_setup') is True:
+                        if args.non_interactive:
+                            raise UserError('Root setup is ready to finish. Open cytv interactively to confirm Home activation.')
+                        write.heading('Ready to finish Root setup')
+                        write('Root and Root Updater are installed and verified. Continue to stop the old Helper, turn on Home control and open Clean Your TV Home.')
+                        if not prompts.confirm('Finish Root setup?', ask, write, default=True):
+                            write('Setup left unchanged. You can continue here next time.')
+                            return 0
+                        resume = True
+                    elif store.pending(profile):
+                        raise UserError('The previous operation could not be safely resolved. Recovery data was kept. Save the diagnostic report; installation has not restarted.')
+                if profile['edition'] == 'root' and not resume:
                     phase = 'inspect-installation'
                     try:
                         installer.preflight(install=True)
@@ -233,7 +247,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                             return 0
                 phase = 'read-inventory'
                 inventory, key = None, None
-                if not args.migrate_home:
+                if not args.migrate_home and not resume:
                     from .tv import SSAP
                     while True:
                         try:
@@ -271,7 +285,10 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write('Press Home three times within two seconds (older Helper: hold Home for two seconds), then release all buttons and wait for LG Home.')
                     return prompts.confirm('Try stopping Helper again?', ask, write, default=True)
                 installer.helper_retry = helper_retry
-                result = installer.install(inventory, key, args.migrate_home, reinstall=reinstall) if reinstall else installer.install(inventory, key, args.migrate_home)
+                if resume:
+                    result = installer.resume_root_setup()
+                else:
+                    result = installer.install(inventory, key, args.migrate_home, reinstall=reinstall) if reinstall else installer.install(inventory, key, args.migrate_home)
                 if profile['edition'] == 'root':
                     write.heading('Root is ready')
                     write('Home control is on and Clean Your TV Home was opened.')

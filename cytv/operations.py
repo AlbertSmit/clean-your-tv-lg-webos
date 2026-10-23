@@ -297,6 +297,7 @@ print('CYTV_UPDATER_VERIFIED')
     def status(self):
         pending = self.store.pending(self.profile)
         reconciled = None
+        can_resume = False
         if self.profile['edition'] == 'root':
             raw = self.remote.run('if [ -f ' + ROOT_STATE + '/deploy.json ]; then cat ' + ROOT_STATE + '/deploy.json; '
                                   'elif [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf \'{"stage":"incomplete-state"}\'; '
@@ -317,6 +318,7 @@ print('CYTV_UPDATER_VERIFIED')
                     self.store.finish(self.profile)
                     reconciled = ('root-activation-verified' if pending.get('launch_requested') is True
                                   else 'root-activation-verified; screen launch unconfirmed, press Home to open it')
+                can_resume = self.can_resume_root_setup(pending, result.get('result', {}))
                 if self.recover_unstarted_root_updater(pending, result.get('result', {})):
                     pending = None
                     reconciled = 'updater-not-started; recovery verified; reinstallation available'
@@ -356,14 +358,11 @@ print('CYTV_UPDATER_VERIFIED')
                 self.store.finish(self.profile)
                 reconciled = 'removal-verified'
         return {'device': result, 'pending': self.store.pending(self.profile), 'reconciled': reconciled,
+                'can_resume_root_setup': can_resume,
                 **({'deployment_stage': stage} if self.profile['edition'] == 'root' else {})}
 
-    def recover_unstarted_root_updater(self, pending, device):
-        """Resolve only a proven pre-bootstrap failure; never change TV state."""
-        if (self.profile['edition'] != 'root' or not pending
-                or pending.get('action') != 'setup-root-updater' or pending.get('stage') != 'setup'
-                or pending.get('requires_updater') is not True):
-            return False
+    @staticmethod
+    def root_setup_inactive(device):
         try:
             effective = device.get('effective', {})
             profiles = effective.get('profiles', {})
@@ -378,6 +377,44 @@ print('CYTV_UPDATER_VERIFIED')
                     or effective.get('sam_home') != 'com.webos.app.home'
                     or profiles.get('defaultApps', {}).get('categories', {}).get('home') != 'com.webos.app.home'
                     or profiles.get('idleApp', {}).get('appId') != 'com.webos.app.home'):
+                return False
+            return True
+        except (AttributeError, TypeError):
+            return False
+
+    def can_resume_root_setup(self, pending, device):
+        if (self.profile['edition'] != 'root' or not pending
+                or pending.get('action') != 'setup-root-updater'
+                or pending.get('stage') != 'verify' or pending.get('requires_updater') is not True
+                or not isinstance(pending.get('baseline_sha'), str)
+                or len(pending['baseline_sha']) != 64
+                or any(c not in '0123456789abcdef' for c in pending['baseline_sha'])
+                or not self.root_setup_inactive(device)):
+            return False
+        try:
+            if not self.root_files_match(pending):
+                return False
+            self.verify_root_updater(pending['baseline_sha'])
+            return True
+        except (RuntimeError, ValueError, TypeError, KeyError):
+            return False
+
+    def resume_root_setup(self):
+        # Revalidate after the user's confirmation; never resubmit package setup.
+        if self.status().get('can_resume_root_setup') is not True:
+            raise UserError('Root setup could not be verified for continuation. Recovery data was kept.')
+        self.store.checkpoint(self.profile, action='activate-root', stage='stop-helper', updates_ready=True)
+        self.activate_root()
+        return {'installed': package.ROOT_APP, 'home_changed': True, 'launch_requested': True, 'updates_ready': True}
+
+    def recover_unstarted_root_updater(self, pending, device):
+        """Resolve only a proven pre-bootstrap failure; never change TV state."""
+        if (self.profile['edition'] != 'root' or not pending
+                or pending.get('action') != 'setup-root-updater' or pending.get('stage') != 'setup'
+                or pending.get('requires_updater') is not True):
+            return False
+        try:
+            if not self.root_setup_inactive(device):
                 return False
             # A disconnected SSH session may leave bootstrap validating its bundle.
             # Check this before paths: bootstrap creates state before any mutation.

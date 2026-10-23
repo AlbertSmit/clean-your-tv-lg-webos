@@ -31,6 +31,12 @@ for version in ('1.2.0','1.2.1'):
     (home/'apps.js').write_text('window.TV_APPS='+json.dumps({'apps':[{'id':'com.webos.app.browser','title':'Test Browser Tile','icon':'brand-v2-icon.png'}] if version=='1.2.0' else [],'inputs':[]})+';')
     package(home,renewal)
 service=clone('updater-service','service');ui=clone('updater-app','updater')
+for name in ('i18n.js', 'catalogs.js', 'i18n.css'):
+    shutil.copy2(ROOT/'launcher'/name, ui/name)
+shutil.copy2(ROOT/'root-edition/ui/root-locales.js', ui/'root-locales.js')
+(ui/'fonts').mkdir(exist_ok=True)
+for font in (ROOT/'launcher/fonts').glob('NotoSans*'):
+    shutil.copy2(font, ui/'fonts'/font.name)
 p=ui/'appinfo.json';info=json.loads(p.read_text());info.update(title='Updater Lab');p.write_text(json.dumps(info))
 p=service/'service.js';s=p.read_text().replace("await require('./transport').get(channel)","fs.readFileSync(__dirname+'/update.json','utf8')")
 s=s.replace("helper:(await app('com.local.nativehome')).version","helper:'0.6.13'");p.write_text(s)

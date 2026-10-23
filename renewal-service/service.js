@@ -56,3 +56,12 @@ function fromUpdater(m){
   manager[method](method==='importUpdatePause'?(m.payload||{}).receipt:(m.payload||{}).id).then(function(s){respond(m,s);});
  });
 });
+
+var homeControl=require('./home-control')(fs,'/media/developer/apps/usr/palm/applications/com.local.nativehome/state');
+['homeStatus','setHomeControl','openLGHome'].forEach(function(method){
+ service.register(method,function(m){
+  var raw=m.ls2Message,id=raw&&raw.applicationID&&raw.applicationID();
+  if(typeof id!=='string'||id.split(' ')[0]!=='com.gathin.tvhome'){m.respond({returnValue:false,errorText:'caller-not-authorized'});return;}
+  homeControl(method,m.payload).then(function(r){m.respond(r);});
+ });
+});

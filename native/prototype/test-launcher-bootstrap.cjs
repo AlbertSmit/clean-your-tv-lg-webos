@@ -1,8 +1,8 @@
-const a=require('node:assert/strict'),vm=require('vm'),fs=require('fs');
-const calls=[];let pending,bridge;
-function PalmServiceBridge(){bridge=this;this.call=(uri,payload)=>calls.push({uri,payload:JSON.parse(payload)});this.cancel=()=>this.cancelled=true;}
-const ctx={PalmServiceBridge,setTimeout(fn){pending=fn;return 1;},clearTimeout(){pending=null;}};
-vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../../launcher/native-bootstrap.js'),'utf8'),ctx);
-a.equal(calls.length,1);a.equal(calls[0].payload.id,'com.local.nativehome');a.equal(calls[0].payload.params.nativeHomeAuto,true);
-bridge.onservicecallback('{"returnValue":true}');a.equal(pending,null);a.equal(calls.length,1);
-console.log('PASS: launcher requests only guarded automatic start, no retry/relaunch loop');
+// Reintroducing a launch here can make SAM close the visible Home on low-RAM TVs.
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
+test('legacy bootstrap never launches a native app when Home loads',()=>{
+ const calls=[];
+ function PalmServiceBridge(){this.call=(uri,p)=>calls.push({uri,p});this.cancel=()=>{};}
+ vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../../launcher/native-bootstrap.js'),'utf8'),{PalmServiceBridge,setTimeout(){return 1;},clearTimeout(){}});
+ assert.deepEqual(calls,[]);
+});

@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import threading
 import device_adapter as d
 import bounded_profile_trial as bounded
 from emergency_watchdog import watch
@@ -72,9 +73,18 @@ def supervise(transaction):
             require_guardian(transaction)
             sequence[0] += 1
             publish(transaction, sequence[0])
+        visit = [None]
+        def open_lg_home():
+            # Luna may take seconds; never block the input health channel.
+            if visit[0] is not None and visit[0].is_alive(): return
+            def launch():
+                try: d.sam_transport().call('luna://com.webos.applicationManager/launch', {'id':'com.webos.app.home'})
+                except Exception as exc: print(json.dumps({'screen_launch_error':str(exc)}), flush=True)
+            visit[0] = threading.Thread(target=launch, daemon=True)
+            visit[0].start()
         reason = watch(r, lambda why:recover(transaction, why), timeout=2,
                        on_ready=lambda:save_ready(transaction, observer),
-                       finished=lambda:completed(transaction), on_ping=ping)
+                       finished=lambda:completed(transaction), on_ping=ping, on_lg_home=open_lg_home)
         print(json.dumps({'event':'emergency-monitor-ended','reason':reason,'transaction':transaction}), flush=True)
     except Exception:
         recover(transaction, 'supervisor_error')

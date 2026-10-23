@@ -36,8 +36,12 @@ def build(output):
     files[prefix+'appinfo.json']=(json.dumps(app)+'\n').encode()
     files[prefix+'icon.png']=source(ROOT.parent/'launcher/brand-v2-icon.png')
     files[prefix+'root-settings.css']=source(ROOT/'ui/root-settings.css')
+    files[prefix+'i18n.js']=source(ROOT.parent/'launcher/i18n.js')
+    for name in ('catalogs.js', 'i18n.css', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt'):
+        files[prefix+name]=source(ROOT.parent/'launcher'/name)
+    files[prefix+'root-locales.js']=source(ROOT/'ui/root-locales.js')
     files[prefix+'root-updates.js']=source(ROOT/'ui/root-updates.js')
-    files[prefix+'index.html']=b'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>Root Updater</title><link rel="stylesheet" href="root-settings.css"></head><body style="background:#10121a;color:white"><script src="root-updates.js"></script><script>RootUpdates.open({recovery:true});</script></body></html>\n'
+    files[prefix+'index.html']=b'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>Root Updater</title><link rel="stylesheet" href="root-settings.css"><link rel="stylesheet" href="i18n.css"></head><body style="background:#10121a;color:white"><script src="i18n.js"></script><script src="catalogs.js"></script><script src="root-locales.js"></script><script src="root-updates.js"></script><script>HomeI18n.ready(function(){document.title=HomeI18n.t("Root Updater");RootUpdates.open({recovery:true});});</script></body></html>\n'
     sp='usr/palm/services/'+APP+'.service/'
     files[sp+'service.js']=b"'use strict';require('/var/lib/clean-your-tv-root-updater/code/service.js');\n"
     files[sp+'package.json']=code['package.json'];files[sp+'services.json']=code['services.json']

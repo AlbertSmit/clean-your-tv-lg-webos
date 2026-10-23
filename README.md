@@ -22,6 +22,15 @@ handling moved from an external watcher to an on-TV native helper.
 
 [Manual installation of both editions without cytv](docs/MANUAL_INSTALL.md) — requirements, commands, recovery and reinstallation limits.
 
+## Languages
+
+Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
+
+The next build/source version selects the system language automatically and saves
+an explicit choice in the installer or **Settings → Language** on the TV.
+See [language availability and guides](docs/LANGUAGES.md); existing release downloads
+may predate these features.
+
 ## Install with cytv
 
 [Download v0.10.1](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1)
@@ -63,7 +72,7 @@ before installing. Not affiliated with LG.
 | Personal home screen | Local app grid, configurable dock, hidden tiles and tile ordering; no sponsored rows in this launcher |
 | Short Home | Native on-TV interception returns to the launcher without passing through LG Home on the tested setup |
 | Three short Home presses within two seconds | Stops interception and returns to LG Home |
-| Resume interception | Select **Resume Home** in Home, or manually open **Home Helper** from LG Apps |
+| Resume interception | Manually open **Home Helper** from LG Apps |
 | Wi-Fi shortcut | Opens LG's network setup overlay |
 | Automatic startup | Returns after standby and cold boot using input restoration plus a guarded fallback helper; no external device runs the startup logic |
 | Exit with Back | Returns after watched apps exit, preserving in-app navigation and exit confirmation; LG Home can briefly flash |
@@ -82,7 +91,7 @@ an initial black interval; early display timing is under investigation.
 for exits from configured apps. Both run on the TV. The helper leaves ordinary
 in-app Back navigation, exit confirmations and the other remote controls intact.
 
-![Remote controls: short Home opens our launcher; three short Home presses within two seconds stop the helper; hold Back exits to LG Home; resume via Resume Home or the Home Helper app](docs/remote-controls.png)
+![Remote controls: short Home opens our launcher; three short Home presses within two seconds stop the helper; hold Back exits to LG Home; resume via the Home Helper app](docs/remote-controls.png)
 
 *Illustrated controls and example screens; button layout varies by remote.*
 
@@ -107,19 +116,12 @@ can briefly show LG Home; it is not the same direct path as short Home.
 
 ### Resume after an emergency exit
 
-1. Open **Home** from LG's app list, or use your assigned Quick Access shortcut.
-2. Select **Resume Home** in the top action row.
-3. The helper starts and the button disappears. Short Home works again.
+Open **Home Helper** from LG's app list to restart the stopped helper.
+Opening Home alone does **not** clear the emergency stop. A single-instance lock
+prevents duplicate controllers. Regular Home routing is controlled by the
+**Change Home** switch in Home settings; there is no recovery button in the top menu.
+Older packages may call the helper **Native Home Prototype**.
 
-Opening Home alone does **not** clear the emergency stop. The Resume Home button
-uses the system's helper-presence signal: it appears when the helper is disconnected
-and stays hidden while it is connected. If that status cannot be read, open
-**Home Helper** directly from LG's app list instead. No additional LS2 permission
-is required. A single-instance lock prevents duplicate controllers.
-
-The UI above describes the **1.1.0 launcher** with helper **0.6.13**.
-Older release packages may call the helper **Native Home Prototype** and lack the
-Resume Home button; manually opening that helper performs the same recovery.
 The long-Back action is documented by [LG's remote guide](https://webostv.developer.lge.com/develop/guides/magic-remote);
 app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubleshooting.
 

@@ -1,5 +1,7 @@
+(window.HomeI18n && window.HomeI18n.ready ? window.HomeI18n.ready : function (callback) { callback(); })(function () {
 (function () {
   'use strict';
+  function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var panel, message, details, buttons, previous, selected = 0, timer, onClose;
   var busy = false, recovery = false, offer = null, transaction = null, health = null, installing = false, errorText = '';
   var terminal = ['complete', 'rolled-back', 'aborted'];
@@ -58,16 +60,16 @@
       'recovery-required':'Recovery required. LG Home remains selected. Recover status first; rollback stays blocked until the installer has definitely stopped.',
       aborted:'Update stopped before replacement. Check status before trying again.'
     };
-    message.textContent = errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : 'Check for a signed Root release. Your apps, inputs, settings and tile order will be preserved.');
+    message.textContent = t(errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : busy ? 'Checking for updates…' : offer && offer.canInstall ? 'A new version of Home is available.' : 'Your apps and settings stay saved.'));
     if (transaction && transaction.error) message.textContent += ' ' + transaction.error;
     var installed = offer && offer.installed;
-    details.textContent = 'Installed: ' + (installed && installed.version || installed || window.ROOT_VERSION || 'unknown');
-    if (offer && offer.candidate) details.textContent += '\nAvailable: ' + offer.candidate.version + '\n' + (offer.candidate.notes || '');
+    details.textContent = t('Installed: {version}', {version:installed && installed.version || installed || window.ROOT_VERSION || t('unknown')});
+    if (offer && offer.candidate) details.textContent += '\n' + t('Available: {version}', {version:offer.candidate.version}) + '\n' + (offer.candidate.notes || '');
     if (offer && !offer.canInstall && offer.reason) {
       var reasons = {current:'This Root version is up to date.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
-      details.textContent += '\n' + (reasons[offer.reason] || 'This release cannot be installed with the current setup.');
+      details.textContent += '\n' + t(reasons[offer.reason] || 'This release cannot be installed with the current setup.');
     }
-    show(0, !recovery && !health, busy || active());
+    show(0, !recovery && !health && !!errorText, busy || active());
     show(1, !recovery && !health && !installing, busy || active() || !offer || !offer.canInstall);
     show(2, !recovery && installing, busy || active());
     show(3, true, busy);
@@ -103,7 +105,7 @@
     if (index === 7) return close();
     if (busy) return;
     if (index === 0) return refresh(true);
-    if (index === 1) { installing = true; message.textContent = 'Install Root ' + offer.candidate.version + '? LG Home will be selected during installation. Keep the TV powered on; confirm the updated launcher within two minutes.'; show(1, false); show(2, true); focus(0); return; }
+    if (index === 1) { installing = true; message.textContent = t('Install Root {version}? LG Home will be selected during installation. Keep the TV powered on; confirm the updated launcher within two minutes.', {version:offer.candidate.version}); show(1, false); show(2, true); focus(0); return; }
     if (index === 2) {
       if (recovery || active() || !offer || !offer.canInstall || !window.RootProfile) return;
       busy = true; render();
@@ -116,13 +118,13 @@
   }
   function build() {
     panel = document.createElement('section'); panel.className = 'root-settings root-updates'; panel.hidden = true;
-    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', 'Root Software updates');
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', t('Root Software updates'));
     var card = document.createElement('div'); card.className = 'root-settings-card'; panel.appendChild(card);
-    var title = document.createElement('h1'); title.textContent = 'Software updates'; card.appendChild(title);
+    var title = document.createElement('h1'); title.textContent = t('Software updates'); card.appendChild(title);
     message = document.createElement('p'); message.setAttribute('aria-live', 'polite'); card.appendChild(message);
     details = document.createElement('p'); details.className = 'root-update-details'; card.appendChild(details);
-    buttons = ['Check for updates', 'Update', 'Install update', 'Recover status', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
-      var button = document.createElement('button'); button.textContent = label; button.onclick = function () { activate(index); }; card.appendChild(button); return button;
+    buttons = ['Try again', 'Update', 'Install update', 'Recover status', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
+      var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; card.appendChild(button); return button;
     });
     document.body.appendChild(panel);
     document.addEventListener('keydown', function (event) {
@@ -143,3 +145,5 @@
   }
   window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }, confirmLaunch:function (identity) { health = identity; open(); }};
 }());
+
+});

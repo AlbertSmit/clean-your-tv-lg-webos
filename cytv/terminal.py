@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import textwrap
+from .i18n import translate as tr
 
 
 def supports_ansi():
@@ -33,7 +34,7 @@ class Console:
         self.text(message)
 
     def text(self, message, bold=False):
-        for line in str(message).split('\n'):
+        for line in tr(message).split('\n'):
             if not line:
                 self.raw('')
                 continue
@@ -47,7 +48,7 @@ class Console:
 
     def heading(self, title):
         self.raw('')
-        self.raw('  ' + self.bold(title))
+        self.raw('  ' + self.bold(tr(title)))
 
     def step(self, number, title, clear=True):
         if self.interactive and clear:
@@ -55,18 +56,18 @@ class Console:
             self.raw('\n' * max(1, shutil.get_terminal_size((80, 24)).lines))
             self.raw('\x1b[2J\x1b[H')
         self.heading(f'CYTV  /  STEP {number} / 4')
-        self.raw('  ' + self.bold(title))
+        self.raw('  ' + self.bold(tr(title)))
         self.raw('  ' + '-' * (self.width - 4))
         self.raw('')
 
     def option(self, key, label, detail=''):
         self.raw('')
-        self.text('[' + str(key) + '] ' + label, bold=True)
+        self.text('[' + str(key) + '] ' + tr(label), bold=True)
         if detail:
             self('    ' + detail)
 
     def prompt(self, text):
-        return '\n  ' + self.bold('> ' + text)
+        return '\n  ' + self.bold('> ' + tr(text))
 
     def reader(self, ask):
         return lambda prompt: ask(self.prompt(prompt))

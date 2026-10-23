@@ -69,6 +69,14 @@ After installation, cytv runs as your normal user. It does not ask for your Linu
 administrator password when connecting to the TV. Uninstall cytv using your
 software manager; this does not uninstall TV apps or delete saved recovery data.
 
+## Language selection (next build/source)
+
+The source version with localization chooses the computer’s language automatically.
+Use the language selector to save another language, or choose **Auto** to follow
+system settings. On the TV, use **Settings → Language**; this is a separate preference.
+These language controls are not a claim about the existing v0.10.1 download.
+See the [ten localized installation, use and recovery guides](LANGUAGES.md).
+
 ## In the wizard
 
 - Turn on the TV and connect it to the same home network as your computer.

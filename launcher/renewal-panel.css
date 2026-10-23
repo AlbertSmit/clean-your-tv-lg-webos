@@ -25,3 +25,16 @@
 .root-updates h1{margin-bottom:18px}
 .root-updates .root-update-details{max-height:180px;overflow:auto}
 @media(max-width:1000px){.renewal-card,.root-settings-card{padding:24px;max-height:94vh}.renewal-card h2,.root-settings h1{font-size:32px}.renewal-card p,.root-settings p,.renewal-actions button,.root-settings button{font-size:22px}.settings-heading{gap:12px}.settings-edition{font-size:18px}.settings-footer p{font-size:18px}}
+
+/* Routing is the first remote-control action, with a stable, labelled switch. */
+.home-routing-actions{display:flex;align-items:stretch;gap:18px}
+.home-routing-actions .home-routing-switch{position:relative;flex:1;min-height:88px;padding-right:128px;text-align:left;background:#303740}
+.home-routing-switch:before{content:"";position:absolute;right:24px;top:50%;width:72px;height:38px;margin-top:-19px;border:2px solid #aab3be;border-radius:24px;background:#444b55;box-sizing:border-box}
+.home-routing-switch:after{content:"";position:absolute;right:62px;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:#f5f7fa}
+.home-routing-switch[aria-checked="true"]:before{background:#b8d3ff;border-color:#b8d3ff}
+.home-routing-switch[aria-checked="true"]:after{right:30px;background:#202329}
+.home-routing-actions .home-visit-button{flex:1;min-height:88px;background:transparent;border-color:#687381;text-align:center}
+.renewal-card .home-visit-hint,.root-settings .home-visit-hint{font-size:21px;margin:14px 0 0;color:#bfc8d4}
+#homeRoutingStatus{min-height:32px;color:#e2e8f1}
+.home-routing-actions button:focus{outline:4px solid #b8d3ff;outline-offset:4px;border-color:#f5f7fa;background:#46556c}
+@media(max-width:700px){.home-routing-actions{flex-direction:column}.home-routing-actions button{width:100%;flex:auto}.settings-footer{flex-wrap:wrap}}

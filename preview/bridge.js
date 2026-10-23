@@ -1,6 +1,7 @@
 /* Browser-only webOS simulation. Injected by scripts/preview.py, never packaged. */
 (function () {
   'use strict';
+  var homeEnabled = true;
   var enabled = false, rootPhase = 'disabled';
   var rootTransaction = 'preview-root-activation';
   var toastTimer;
@@ -24,6 +25,11 @@
           message(app ? app.title : payload.id === 'com.webos.app.firstuse-overlay' ? 'Network settings' : payload.id === 'com.palm.app.settings' ? 'TV settings' : payload.id);
         }
         result = {returnValue: true};
+      } else if (uri.indexOf('luna://com.gathin.tvhome.renewal/') === 0 && ['homeStatus','setHomeControl','openLGHome'].indexOf(uri.split('/').pop()) >= 0) {
+        var homeMethod=uri.split('/').pop();
+        if(homeMethod==='setHomeControl')homeEnabled=payload.enabled;
+        if(homeMethod==='openLGHome')message('LG Home · settings kept');
+        if(['homeStatus','setHomeControl','openLGHome'].indexOf(homeMethod)>=0)result={returnValue:true,enabled:homeEnabled};
       } else if (uri === 'luna://com.local.nativehome.service/listApps' || uri === 'luna://com.cleanyourtv.root.preview.service/listApps') {
         result = {returnValue:true, apps:(window.TV_APPS.apps || []).concat([{id:'preview.gallery', title:'Photo & Video', icon:'../preview/icons/browser.svg'}])};
       } else if (uri === 'luna://com.palm.connectionmanager/getStatus') {

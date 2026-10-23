@@ -5,7 +5,8 @@
   if(!s||s.schema!==1||!s.inventory||!Array.isArray(s.inventory.apps)||!Array.isArray(s.inventory.inputs)||!s.config||typeof s.settings!=='object'||!s.settings)throw Error('invalid-profile');
   if(JSON.stringify(s).length>LIMIT||s.inventory.apps.length>200||s.inventory.inputs.length>100)throw Error('profile-too-large');
   s.inventory.apps.forEach(function(a){if(!a||typeof a.id!=='string'||!a.id.length||typeof a.title!=='string'||a.title.length>256||typeof a.icon!=='string'||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(a.icon))throw Error('invalid-app-icon');});
-  Object.keys(s.settings).forEach(function(k){if((k!=='tvhome.order'&&k!=='tvhome.layout')||typeof s.settings[k]!=='string')throw Error('invalid-settings');});
+  Object.keys(s.settings).forEach(function(k){if((k!=='tvhome.order'&&k!=='tvhome.layout'&&k!=='tvhome.language')||typeof s.settings[k]!=='string')throw Error('invalid-settings');});
+  if(s.settings['tvhome.language']!==undefined&&['auto','en','de','es','pt-BR','fr','it','ko','hi','pl','ru'].indexOf(s.settings['tvhome.language'])<0)throw Error('invalid-language');
   if(!Number.isInteger(s.config.columns)||s.config.columns<1||s.config.columns>8||!Array.isArray(s.config.dockApps)||!Array.isArray(s.config.hiddenApps))throw Error('invalid-config');
   if(s.renewal){if(s.renewal.enabled!==false||JSON.stringify(s.renewal).length>4096)throw Error('disable-renewal-first');
    var allowed=['enabled','last','lastRenewedAt','error'];if(Object.keys(s.renewal).some(function(k){return allowed.indexOf(k)<0;}))throw Error('invalid-renewal-settings');

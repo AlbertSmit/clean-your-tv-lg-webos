@@ -30,6 +30,10 @@ class PreviewTests(unittest.TestCase):
                 self.assertNotIn(name, html)
                 self.assertFalse((app / name).exists())
             self.assertIn('root-settings.js', html)
+            self.assertLess(html.index('i18n.js'),html.index('root-locales.js'))
+            self.assertLess(html.index('root-locales.js'),html.index('root-settings.js'))
+            for name in ('i18n.js','catalogs.js','i18n.css','root-locales.js','fonts/NotoSans.ttf','fonts/NotoSansDevanagari.ttf','fonts/NotoSansKR.ttf'):
+                self.assertTrue((app/name).is_file(),name)
             self.assertNotIn('<script src="app.js"></script>', html)
             self.assertIn('root-profile.js', html)
             self.assertIn('root-updates.js', html)
@@ -74,6 +78,24 @@ class SourceIsolationTests(unittest.TestCase):
             self.assertNotIn('secret.key', result)
             self.assertNotIn('state.json', result)
             self.assertFalse(any(b'PRIVATE_SENTINEL' in value for value in result.values()))
+
+    def test_bootstrap_tag_is_optional_and_never_in_root_output(self):
+        import shutil
+        from unittest.mock import patch
+        sys.path.insert(0, str(SCRIPT.parent))
+        import preview
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / 'launcher'
+            shutil.copytree(ROOT / 'launcher', source)
+            page = source / 'index.html'
+            tag = '<script src="native-bootstrap.js"></script>'
+            clean = page.read_text().replace(tag, '')
+            for html in (clean, clean.replace('</body>', tag + '</body>')):
+                page.write_text(html)
+                with patch.object(preview, 'SOURCE', source):
+                    result = preview.prepare()
+                self.assertNotIn(b'native-bootstrap.js', result['index.html'])
+                self.assertNotIn('native-bootstrap.js', result)
 
     def test_indirect_source_rejected_before_output_created(self):
         import shutil

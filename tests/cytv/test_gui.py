@@ -4,6 +4,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 try:
     from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox
@@ -19,6 +20,52 @@ class GuiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        from cytv import i18n
+        self.addCleanup(i18n.set_language, 'en')
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        prefs = patch('cytv.state.default_dir', return_value=Path(self.directory.name))
+        prefs.start()
+        self.addCleanup(prefs.stop)
+        languages = patch('cytv.i18n.system_languages', return_value=['en'])
+        languages.start()
+        self.addCleanup(languages.stop)
+
+    def test_language_selection_rerenders_and_persists_all_locales(self):
+        from cytv import i18n
+        w = Wizard()
+        for code in i18n.LANGUAGES:
+            w.language.setCurrentIndex(list(i18n.LANGUAGES).index(code))
+            self.assertEqual(i18n.language_choice(), code)
+            self.assertEqual(i18n.configure(), i18n.resolve_language(code))
+            if code not in ('en', 'auto'):
+                self.assertNotEqual(w.title.text(), 'Make your TV feel like yours')
+        w.close()
+
+    def test_translated_secret_and_confirmation_keep_semantics(self):
+        from cytv import i18n
+        w = Wizard()
+        w.language.setCurrentIndex(list(i18n.LANGUAGES).index('ru'))
+        w.show_prompt(Prompt('Connect and remember this TV? [Y/n]: '))
+        self.assertTrue(any(b.isDefault() and 'Подключиться' in b.text() for b in w.form.findChildren(QPushButton)))
+        w.show_prompt(Prompt('SSH key passphrase: ', secret=True))
+        self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
+        w.close()
+
+    def test_failed_language_save_keeps_visible_and_active_selection(self):
+        from cytv import i18n
+        w = Wizard()
+        old_index = w.language.currentIndex()
+        old_title = w.title.text()
+        with patch('cytv.state.private_write', side_effect=OSError('read only')), patch('cytv.gui.QMessageBox.warning'):
+            w.language.setCurrentIndex(list(i18n.LANGUAGES).index('ru'))
+        self.assertEqual(w.language.currentIndex(), old_index)
+        self.assertEqual(i18n.language_choice(), 'auto')
+        self.assertEqual(i18n.resolved_language(), 'en')
+        self.assertEqual(w.title.text(), old_title)
+        w.close()
 
     def pump(self, predicate):
         deadline = time.monotonic() + 3

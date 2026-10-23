@@ -5,14 +5,18 @@ cd "$(dirname "$0")/.."
 python3 - <<'PYCLEAN'
 from pathlib import Path
 import shutil
-for p in (Path('build/updater-service'), Path('dist/updater-setup')):
+for p in (Path('build/updater-service'), Path('build/updater-app'), Path('dist/updater-setup')):
     if p.exists(): shutil.rmtree(p)
 PYCLEAN
 mkdir -p build/updater-service dist
 cp updater-service/*.js updater-service/*.json build/updater-service/
 cp updater-service/release-public.pem build/updater-service/
 cp launcher/user-data.js build/updater-service/user-data.js
-"$ARES_PACKAGE" updater-app build/updater-service -o dist
+cp -R updater-app build/updater-app
+cp launcher/i18n.js launcher/catalogs.js launcher/i18n.css root-edition/ui/root-locales.js build/updater-app/
+mkdir -p build/updater-app/fonts
+cp launcher/fonts/NotoSans* build/updater-app/fonts/
+"$ARES_PACKAGE" build/updater-app build/updater-service -o dist
 
 mkdir -p dist/updater-setup/scripts/lib dist/updater-setup/updater-service
 cp scripts/update-permissions.cjs dist/updater-setup/scripts/

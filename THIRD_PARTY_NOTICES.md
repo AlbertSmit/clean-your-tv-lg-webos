@@ -25,3 +25,7 @@ The LGPL-3.0 and accompanying GPL-3.0 license texts are included in the payload'
 `licenses/Qt` directory. The pinned desktop runtime is Qt for Python 6.10.2;
 its corresponding source is available under tag `v6.10.2` in the repositories above. Desktop packages use an unpacked application directory so
 users can replace the dynamically linked libraries with compatible builds.
+
+## Noto language fonts
+
+Noto Sans, Noto Sans Devanagari and Noto Sans KR from the Google Fonts repository (https://github.com/google/fonts), distributed under the SIL Open Font License 1.1. Static regular subsets for Latin, Cyrillic, Devanagari and Hangul are bundled locally in `launcher/fonts/`; original copyright and license texts are included as `NotoSans-OFL.txt`, `NotoSansDevanagari-OFL.txt`, and `NotoSansKR-OFL.txt`.

@@ -221,8 +221,7 @@ Test standby/wake and cold boot separately.
 - **Press Home three times within two seconds** to stop Helper and return to LG Home.
   The stop flag persists and prevents automatic startup; this does not reset
   your settings.
-- To resume, select **Resume Home / Enable Home control** in ordinary Home
-  or open **Home Helper**. Command: `ares-launch -d lgtv com.local.nativehome`.
+- To resume, open **Home Helper**. Command: `ares-launch -d lgtv com.local.nativehome`.
 - Opening Home alone does not clear the emergency stop. Holding Back does
   not stop Helper either. If a fault recurs, leave Helper stopped.
 
@@ -418,8 +417,7 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=yes my-tv '/usr/bin/python3 /var/l
 ```
 
 Exiting does not remove root, uninstall apps or resume the old Helper.
-Only after verified restoration, open ordinary Home and explicitly select
-Resume Home / Enable Home control, or open Home Helper, if you want No-root again.
+Only after verified restoration, open Home Helper if you want No-root again.
 
 ## 9. Update, remove and reinstall
 

@@ -1,10 +1,12 @@
+(window.HomeI18n && window.HomeI18n.ready ? window.HomeI18n.ready : function (callback) { callback(); })(function () {
 (function () {
   'use strict';
+  function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var data = window.RootProfileData, failed = false, booted = false;
   var marker = 'tvhome.root.restored.v1';
   function recovery(error) {
     failed = true;
-    window.RootUpdates.open({recovery:true, error:'Launcher profile could not be restored. ' + error.message});
+    window.RootUpdates.open({recovery:true, error:t('Launcher profile could not be restored.') + ' ' + t(error.message)});
   }
   function save(profile) {
     profile = data.validate(profile);
@@ -29,7 +31,7 @@
     if (failed) return Promise.reject(Error('Stored profile is unreadable. Open Recovery.'));
     return Promise.resolve().then(function () {
       var snapshot = {schema:1, inventory:JSON.parse(JSON.stringify(window.TV_APPS)), config:JSON.parse(JSON.stringify(window.CONFIG)), settings:{}};
-      var order = localStorage.getItem('tvhome.order'); if (order !== null) snapshot.settings['tvhome.order'] = order;
+      ['tvhome.order', 'tvhome.language'].forEach(function (key) { var value = localStorage.getItem(key); if (value !== null) snapshot.settings[key] = value; });
       return Promise.all(snapshot.inventory.apps.map(function (app) { return icon(app.icon).then(function (embedded) { app.icon = embedded; }); })).then(function () { return save(snapshot); });
     });
   }};
@@ -64,10 +66,19 @@
       var alreadyRestored = saved && !localError && (restored.phase === 'aborted' || localStorage.getItem(marker) === identity);
       if (alreadyRestored) profile = saved;
       else {
+        var previousLanguage = window.HomeI18n ? window.HomeI18n.preference() : null;
         save(profile);
         if (profile.settings['tvhome.order'] === undefined) localStorage.removeItem('tvhome.order');
         else localStorage.setItem('tvhome.order', profile.settings['tvhome.order']);
+        if (profile.settings['tvhome.language'] !== undefined) localStorage.setItem('tvhome.language', profile.settings['tvhome.language']);
         localStorage.setItem(marker, identity);
+        if (window.HomeI18n) {
+          if (previousLanguage !== window.HomeI18n.preference() && window.location && window.location.reload) {
+            window.location.reload();
+            return;
+          }
+          window.HomeI18n.refresh();
+        }
       }
       window.TV_APPS = profile.inventory; window.CONFIG = profile.config;
     } else {
@@ -84,3 +95,5 @@
     } else recovery(error);
   });
 }());
+
+});

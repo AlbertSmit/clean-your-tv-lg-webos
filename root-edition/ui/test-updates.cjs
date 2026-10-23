@@ -14,7 +14,7 @@ function harness({recovery=false,unavailable=false,delayed=false}={}){
  return {api,calls,timers,elements,buttons,button,resolve:()=>pending.splice(0).forEach(f=>f()),get focus(){return focus;},get captures(){return captures;},setTx:t=>tx=t,key(code){listeners.forEach(f=>f({keyCode:code,preventDefault(){},stopImmediatePropagation(){}}));}};
 }
 (async()=>{
- let h=harness();h.api.open();await tick();assert(h.button('Update'));assert(h.button('Update').disabled===false);assert.strictEqual(h.captures,0);
+ let h=harness();h.api.open();await tick();assert.strictEqual(h.calls.filter(c=>c[0]==='check').length,1);assert(!h.button('Try again'));assert(h.button('Update'));assert(h.button('Update').disabled===false);assert.strictEqual(h.captures,0);
  h.button('Update').onclick();await tick();assert(h.button('Install update'));assert.strictEqual(h.captures,0);h.button('Install update').onclick();await tick();assert.strictEqual(h.captures,1);assert.strictEqual(h.calls.filter(c=>c[0]==='install').length,1);
  h.button('Install update').onclick();await tick();assert.strictEqual(h.calls.filter(c=>c[0]==='install').length,1);
  h.key(461);assert.strictEqual(h.focus,'previous');

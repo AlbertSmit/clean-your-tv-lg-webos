@@ -4,14 +4,20 @@ cd "$(dirname "$0")/.."
 for test in tests/apps/*.cjs; do
   if [[ "$test" != *"/ui.cjs" ]]; then node "$test"; fi
 done
+for test in tests/i18n/*.cjs; do
+  if [[ "$test" != *"/browser.cjs" ]]; then node "$test"; fi
+done
 node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
 node tests/preview-bridge.cjs
-node tests/helper-control.cjs
+node tests/home-control.cjs
+node tests/home-control-bridge.cjs
 node tests/resume.cjs
 node tests/controller-resume.cjs
+node --test tests/controller-resume-home.cjs
+node tests/controller-home.cjs
 for test in native/prototype/test-*.cjs; do node "$test"; done
 mkdir -p build/tests
 cc -std=c99 -Wall -Wextra -Werror native/prototype/filter.c native/prototype/test_filter.c -o build/tests/test-filter
@@ -25,6 +31,9 @@ for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.
 
 node root-edition/service/test-handlers.js
 node root-edition/service/test-persistent.js
+node root-edition/ui/test-catalogs.cjs
+node root-edition/ui/test-localization.cjs
+node root-edition/ui/test-updater-localization.cjs
 node root-edition/ui/test-exit.cjs
 node root-edition/ui/test-settings.cjs
 node root-edition/ui/test-persistent.cjs

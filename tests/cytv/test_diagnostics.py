@@ -2,11 +2,20 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from cytv import cli, diagnostics, state
 
 
 class DiagnosticTests(unittest.TestCase):
+    def setUp(self):
+        from cytv import i18n
+        i18n.set_language('en')
+        self.addCleanup(i18n.set_language, 'en')
+        language = patch('cytv.i18n.system_languages', return_value=['en'])
+        language.start()
+        self.addCleanup(language.stop)
+
     def test_ssap_protocol_metadata_is_allowlisted_without_remote_reason_text(self):
         from cytv.errors import TVConnectionError
         with tempfile.TemporaryDirectory() as tmp:

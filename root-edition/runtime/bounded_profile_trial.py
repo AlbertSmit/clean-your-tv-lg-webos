@@ -13,7 +13,7 @@ from profile_recovery import prepare, validate, payload_for, REAL_HOME
 from staged_publication import publish
 
 
-def begin(spawn, candidate=CANDIDATE):
+def begin(spawn, candidate=CANDIDATE, before_publish=None):
     from provision import verify
     verify()
     from helper_bridge import require_idle
@@ -47,6 +47,7 @@ def begin(spawn, candidate=CANDIDATE):
             os.link(oldpath,d.STATE/('completed-profile-'+str(uuid.uuid4())+'.json'))
             oldpath.unlink(); d.sync(d.STATE)
         d.save(journal); armed=True
+        if before_publish is not None: before_publish(tx)
         child=spawn(tx)
         for attempt in range(30):
             try: ready=d.safe_json(d.STATE/'profile-guardian-ready.json')

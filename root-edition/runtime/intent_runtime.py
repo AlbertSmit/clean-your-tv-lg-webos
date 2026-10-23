@@ -1,0 +1,74 @@
+"""Opt-in intent-bound 60-second trial and boot recovery; not permanent mode."""
+import os
+from pathlib import Path
+import uuid
+import device_adapter as d
+from persistent_store import Store
+from persistent_recovery import Coordinator
+from persistent_lifecycle import identifier
+
+
+def boot_identity(proc=None):
+    proc = d.PROC if proc is None else Path(proc)
+    boot = (proc/'sys/kernel/random/boot_id').read_text().strip()
+    starts = [line.split()[1:] for line in (proc/'stat').read_text().splitlines()
+              if line.startswith('btime ')]
+    if len(starts) != 1 or len(starts[0]) != 1 or not starts[0][0].isdigit():
+        raise ValueError('Invalid kernel boot time')
+    result = boot+':'+starts[0][0]
+    if not identifier(result): raise ValueError('Invalid kernel boot identity')
+    return result
+
+
+def coordinator():
+    if not os.path.lexists(d.STATE/'persistent-intent.json'): return None
+    return Coordinator(Store(d.STATE))
+
+
+def start():
+    from provision import verify
+    from helper_bridge import require_idle
+    verify(); require_idle()
+    c = Coordinator(Store(d.STATE)); intent = c.store.read()
+    if intent['phase'] != 'disabled':
+        raise ValueError('Restore previous intent before starting another trial')
+    return c.start_trial(intent, boot_identity(), str(uuid.uuid4()))
+
+
+def later_legacy_trial(c):
+    if not os.path.lexists(c.binding) or not os.path.lexists(d.STATE/'profile-trial.json'):
+        return False
+    from profile_recovery import validate
+    binding = c.read_binding()
+    journal = d.safe_json(d.STATE/'profile-trial.json'); validate(journal)
+    return binding['restored'] and journal.get('transaction') != binding['transaction']
+
+
+def restore():
+    c = coordinator()
+    if c is None or later_legacy_trial(c): return None
+    intent = c.store.read()
+    if intent['phase'] == 'disabled': return None
+    result = c.exit(intent)
+    return 'restored' if result.get('restored_transaction') else None
+
+
+def boot():
+    c = coordinator()
+    if c is None or later_legacy_trial(c): return None
+    intent = c.store.read(); identity = boot_identity(); failsafe = d.FAILSAFE.exists()
+    if not failsafe and identity == intent['boot']:
+        try: journal = d.safe_json(d.STATE/'profile-trial.json')
+        except FileNotFoundError: journal = None
+        if journal is not None and d.active_guardian(journal): return 'guarded-intent-trial'
+        if intent['phase'] == 'disabled': return 'restored'
+        # Expired trial or interrupted startup in this same boot: disable intent,
+        # never infer health from an application merely existing in /proc.
+        c.exit(intent, reason='fault')
+        return 'restored'
+    result = c.boot(intent, identity, str(uuid.uuid4()), failsafe)
+    if result['effect'] == 'start_guarded':
+        # Persistent lease/confirmation integration is not accepted yet. Even a
+        # pre-existing enabled intent must not bypass this explicit release gate.
+        c.exit(result['intent'], reason='fault')
+    return 'restored'

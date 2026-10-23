@@ -24,7 +24,10 @@ def ready(transaction, deadline):
 
 def restore(transaction):
     for attempt in range(12):
-        try: result=d.restore_once(expected_transaction=transaction)
+        try:
+            from persistent_recovery import bound_exit
+            bound = bound_exit(transaction)
+            result = 'restored' if bound is True else d.restore_once(expected_transaction=transaction)
         except Exception as exc:
             print(str(exc),flush=True); result='recovering'
         if result not in ('pending','recovering'): return result

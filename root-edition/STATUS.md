@@ -246,3 +246,25 @@ on-TV persistent recovery. These modules are deliberately not in the install
 bundle and are not called by existing RC13 paths. The production TV was untouched.
 Transaction binding, device orchestration and boot/UI integration remain required;
 persistent enable/confirm remain locked. See the dated lifecycle plan.
+
+## RC14 intent-bound trial integration — 2026-10-23
+
+A separate `intent-trial` command durably binds lifecycle generation/attempt to
+its routing transaction before publication. Gesture, timer and explicit restore
+use this binding to disable intent before RC13 recovery. Successful recovery must
+match the journal baseline across SAM and both profile destinations. Boot dispatch
+preserves a live bounded guardian, restores after a new kernel start/failsafe,
+and does not adopt a later unrelated legacy trial. An interrupted first start can
+be reconciled only after independently verifying stock and no unresolved evidence.
+
+Local integration tests use the real recovery adapter and actual temporary profile
+files, with only the TV service replies substituted. They cover foreign routing,
+concurrent stop, disk reload, failed binding before publication and readback drift.
+Full suite passed: 227 root Python tests, 11 setup tests and remaining scripts.
+Two complete builds were byte-identical; RC14 bundle.json SHA-256:
+`edfd23229df3fe0a918ff1eb2a385d55569a95d4578e0c5ac22a368bf25aa8d8`.
+
+This bundle retains the independent 60-second deadline. It does not renew a lease
+or enable a permanent profile; `enable`/`confirm` remain locked. The renewable
+lease policy is still local and not included in this install. Permanent observer
+lifecycle, promotion/confirmation UI and final device acceptance remain required.

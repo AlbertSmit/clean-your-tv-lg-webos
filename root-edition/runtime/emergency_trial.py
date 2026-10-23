@@ -32,7 +32,10 @@ def completed(transaction):
 def recover(transaction, reason):
     print(json.dumps({'event':'emergency-recovery','transaction':transaction,'reason':reason}), flush=True)
     for _ in range(30):
-        try: result = d.restore_once(expected_transaction=transaction)
+        try:
+            from persistent_recovery import bound_exit
+            bound = bound_exit(transaction)
+            result = 'restored' if bound is True else d.restore_once(expected_transaction=transaction)
         except (OSError, ValueError, RuntimeError): result = 'recovering'
         if result == 'superseded': return True  # No writes to a later transaction.
         if result == 'restored':
@@ -72,7 +75,7 @@ def supervise(transaction):
         if w is not None: os.close(w)
 
 
-def start():
+def start(before_publish=None):
     def spawn(transaction):
         guardian = bounded.spawn(transaction)
         fd = os.open(d.STATE/'emergency.log', os.O_CREAT|os.O_APPEND|os.O_WRONLY|os.O_NOFOLLOW, 0o600)
@@ -100,7 +103,8 @@ def start():
                 except (OSError, ValueError): return 1
                 return None
         return Guarded()
-    return bounded.begin(spawn)
+    if before_publish is None: return bounded.begin(spawn)
+    return bounded.begin(spawn, before_publish=before_publish)
 
 
 if __name__ == '__main__':

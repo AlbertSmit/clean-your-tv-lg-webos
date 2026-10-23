@@ -11,6 +11,9 @@ def main(mode):
         raise PermissionError('Root required')
     if mode in ('enable', 'confirm'):
         raise ValueError('hardware-validation-required: persistent activation is unavailable in this candidate')
+    if mode == 'intent-trial':
+        from intent_runtime import start
+        return start()
     if mode == 'emergency-trial':
         from emergency_trial import start
         return start()
@@ -18,9 +21,13 @@ def main(mode):
         from bounded_profile_trial import begin, spawn
         return begin(spawn)
     if mode == 'restore':
-        return d.main('recover')
+        from intent_runtime import restore
+        result = restore()
+        return d.main('recover') if result is None else result
     if mode == 'boot':
-        return d.main('boot')
+        from intent_runtime import boot
+        result = boot()
+        return d.main('boot') if result is None else result
     if mode == 'status':
         from provision import verify
         result = d.main('status')

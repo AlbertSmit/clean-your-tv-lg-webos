@@ -17,7 +17,8 @@ INSTALLED = Path('/media/developer/apps')
 RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'device_adapter.py', 'guardian_device.py',
                  'helper_bridge.py', 'profile_guardian.py', 'profile_plan.py', 'profile_recovery.py', 'provision.py',
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
-                 'emergency_watchdog.py', 'emergency_trial.py')
+                 'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
+                 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
 SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py')
 
 
@@ -211,7 +212,7 @@ def uninstall(run=command):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'restore', 'uninstall'))
+    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'restore', 'uninstall'))
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--migrate-packaged-home', action='store_true', help='Copy fixed installed Home packaged preferences; excludes browser storage')
     args = parser.parse_args()

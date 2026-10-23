@@ -5,7 +5,14 @@ This is a separate Root Stable package for an already rooted TV. Tested device:
 The ordinary launcher and Home Helper remain installed. Keep a working backup
 and root SSH connection before changing routing.
 
-## 1. Build and verify
+## 1. Download or build, then verify
+
+For the published Root Stable archive, extract it and open a terminal in its top
+folder. It includes source instructions and the tested bundle at `build/root-candidate`.
+Skip the build commands below and continue with checksum verification. Do not
+replace the bundled runtime with an untested build while following this release.
+
+To build from source instead:
 
 On your computer, use Python 3.9+, Node.js and OpenSSH. From the repository root:
 

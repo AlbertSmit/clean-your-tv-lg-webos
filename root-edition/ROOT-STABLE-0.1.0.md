@@ -7,7 +7,8 @@ This designation does not claim that every lifecycle scenario has passed.
 ## Install and recover
 
 Download the complete Root bundle, extract it, and follow [installation and activation](ROLLOUT.md).
-Use the included `setup.py` for doctor, installation, status, restoration and removal.
+Use `root-edition/doctor.py` for read-only diagnosis and the bundled `setup.py`
+for installation, status, restoration and removal.
 Do not install the IPK alone: the recovery service, permissions and startup registration
 are required. Existing root and verified SSH access are prerequisites; this installer
 does not obtain root. Keep the existing launcher and private recovery backups.

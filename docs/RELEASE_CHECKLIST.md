@@ -11,7 +11,8 @@
 ## Root Edition gate
 
 - Keep development-only tools out of production IPKs.
-- Do not publish a Root Edition installer until the hardware gates in
+- Source integration as Root Preview does not certify a stable binary release.
+- Do not publish a stable Root Edition installer until the hardware gates in
   [Root Edition testing](../root-edition/TESTING.md) pass.
 - Verify exact metadata, registration cache, both profiles and SAM Home rollback.
 - Document native-button emergency behavior separately from No-root controls.

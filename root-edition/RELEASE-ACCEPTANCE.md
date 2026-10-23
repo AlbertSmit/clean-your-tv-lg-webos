@@ -2,12 +2,33 @@
 
 Updated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
 
-## Release boundary
+## Current release boundary
 
-The current deliverable is an isolated 60-second hardware-test candidate, not a
-permanent Home replacement. Keep the supported No-root release available.
-Do not unlock `enable`/`confirm` based on successful timer tests alone.
-Earlier lab tests do not establish acceptance of a different final bundle.
+The implementation supports protected trials and explicit permanent activation.
+Merge status: **Root Preview**, separate from the stable No-root release.
+No blanket hardware certification is claimed for the final public artifact.
+
+Latest evidence (RC19 with atomic-read correction): actual launcher app selection,
+short Home and confirmed Back exit without observed LG flash; over eight minutes
+of active health; normal software reboot with automatic reactivation and fresh
+protections beyond the new trial deadline. User confirmed navigation and app exits
+after that reboot. See [current validation record](../docs/development/ROOT-RC19-VALIDATION.md).
+
+Earlier RC10/13–15 tests established normal UI exit, triple-Home escape (including
+a frozen renderer) and persistent-mode escape. Earlier candidates passed recovery
+in failsafe. These are useful regression evidence, not a substitute for repeating
+the final package's lifecycle matrix.
+
+Remaining stable-release gates: final-artifact identity, clean install/removal,
+quick standby and cold-power behavior, genuine failsafe recovery, emergency/fault
+matrix and multiple-app exits. Keep the working No-root release and all recovery
+mechanisms. Do not set `hardware_validated` or `public_release_ready` globally.
+
+## Historical candidate records
+
+The sections below record what was known at each earlier RC. Statements about
+unimplemented or locked permanent mode describe that historical build only.
+Use [installation instructions](ROLLOUT.md) for current commands.
 
 ## Completed on the corrected installed candidate
 

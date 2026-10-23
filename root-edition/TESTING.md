@@ -64,10 +64,10 @@ private tests do not count as acceptance of this build. Run these steps together
 
 Local tests cover independent installer completion, unknown outcomes, exact
 payload hashes, recovery provisioning and the helper stop latch. They cannot
-prove delivery of a boot activity on this firmware. Permanent activation remains
-unavailable until lifecycle tests and an emergency exit are accepted.
+prove delivery of a boot activity on this firmware. Explicit permanent activation is now implemented and tested on one C3; repeat
+the lifecycle and emergency matrix on the final release artifact.
 
-## Triple-Home emergency candidate (local, hardware acceptance pending)
+## Triple-Home emergency regression matrix
 
 `setup.py emergency-trial --ssh my-tv` is an explicit bounded test, not permanent
 activation. Stop the No-root helper first. The command requires the ARM32 input
@@ -95,5 +95,7 @@ Required supervised tests on the final package:
 
 Local tests exercise the gesture, synthetic input pipe, real stopped/killed child
 processes, malformed health messages, startup refusal and transaction-bound
-recovery. They do not establish TV key delivery or frozen-renderer recovery.
-Permanent-mode supervision and rearming are not implemented by this bounded test.
+recovery. These tests alone do not establish TV key delivery or frozen-renderer recovery;
+see RELEASE-ACCEPTANCE.md for the earlier hardware evidence.
+Permanent-mode supervision is a separate path; test it through `enable` and
+explicit Keep Root mode, using the same emergency and fault matrix.

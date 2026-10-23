@@ -1,7 +1,13 @@
 # Root Edition status and evidence
 
 Updated 2026-10-23. Test device: **LG OLED55C3RLA / firmware 43.21.71**.
-This is a record of bounded tests on one device, not a compatibility promise.
+This file retains historical investigation results. **Current status:** Root Preview
+supports explicit permanent mode; software-reboot reactivation, actual launcher
+Home/Back routing and sustained health passed on this TV. See
+[release acceptance](RELEASE-ACCEPTANCE.md) for current evidence and remaining
+final-artifact gates. Earlier statements below about unimplemented features or
+long-Home blockers refer to historical builds; triple-short-Home is the current
+emergency gesture. This is not a cross-model compatibility promise.
 
 ## What passed
 

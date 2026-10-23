@@ -1,78 +1,58 @@
 # Root Edition
 
-**Native system Home integration, under development.** Root Edition targets TVs
-with existing root access. It shares the Home interface with No-root Edition,
-but aims to let webOS select Home directly instead of redirecting app exits.
+**Native Home and Back routing, with an on-TV emergency exit.** Root Edition
+uses the same launcher interface as No-root Edition, but registers a separate
+application as the system Home. No router script, USB drive or always-on computer
+is needed after setup. A computer is needed for installation and recovery tools.
 
-**An installable hardware-test candidate is available locally; a supported permanent release is not yet available.**
-Use [No-root Edition](../docs/INSTALL.md) for the released setup, or compare both
-paths in [Choose your edition](../docs/EDITIONS.md). Do not replace a working
-setup with the lab findings below.
+**Root Preview:** permanent mode and software-reboot startup have been tested on
+**LG OLED55C3RLA / firmware 43.21.71**. This is not a cross-model compatibility
+claim or a stable release certification. Keep the working No-root installation.
+Final-artifact cold-power, quick-standby and failsafe acceptance remains open.
 
-## Why a separate edition?
+[Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
+[Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)
 
-The released helper already handles short Home and automatic startup on the
-validated setup. Its Back-exit watcher can briefly expose LG Home. Root Edition
-investigates system routing through both the default Home and idle-app profiles,
-with a recovery mechanism that also works outside ordinary `init.d` startup.
+## What works on the tested setup
 
-A bounded diagnostic test on **OLED55C3RLA / 43.21.71** returned after a confirmed
-Back exit without an observed LG flash while the helper was stopped. A later bounded test also passed with the real launcher UI under a separate ID.
-Permanent integration still needs complete recovery and clean emergency-exit
-validation.
-See [test results and open gates](STATUS.md).
+- Short **Home** selects our launcher through system routing, without the old
+  interception helper running.
+- Confirmed **Back** exit returns to our launcher without an observed LG flash.
+  In-app navigation and exit confirmation remain under the application's control.
+- **Keep Root mode** promotes a protected 60-second trial to permanent intent.
+- Normal software reboot restores routing safely, then reactivates after the
+  normal-boot checks and fresh input/guardian health checks pass.
+- **Three short Home presses within two seconds** request emergency restoration
+  independently of the web interface. Release Home between presses; do not hold it.
+- **Settings → Exit Root mode → Confirm exit** restores the original Home routing.
+- Two independent health checks and recovery state protect the system route.
+  An unconfirmed trial automatically restores it after 60 seconds.
 
-## Available now
+The original launcher, helper and their data are separate. Root exit disables
+Root autostart; it does not remove root, uninstall apps or resume the old helper.
+To return to No-root, restore first and then explicitly resume Home Helper from
+the ordinary launcher. Never run both modes' input handling together.
 
-| Tool / document | Purpose | Changes the TV? |
-| --- | --- | --- |
-| [Doctor](DOCTOR.md) | Read-only environment report; optional inspection of captured app registration | No |
-| [Candidate build](ROLLOUT.md#build-and-verify-locally) | Isolated IPK, installer and recovery runtime | Build: no; explicit install/trial: yes |
-| `metadata.py` | Prepare exact original/candidate manifest snapshots locally | No |
-| [Recovery contract](RECOVERY.md) | Recovery requirements and rollback design | No |
-| [Test plan](TESTING.md) | Local verification and hardware acceptance gates | No |
+## Requirements and limits
 
-```sh
-python3 root-edition/doctor.py --ssh my-tv --output doctor-report.json
-python3 -m unittest discover -s root-edition/tests
-```
+An already rooted TV, working root SSH access with a verified host key, Python 3
+on the TV, Homebrew services and the supported ARM32 Magic Remote input interface
+are required. Installation checks fail closed for unexpected state. A doctor
+report alone does not establish compatibility.
 
-`my-tv` is your existing OpenSSH alias with a verified host key. Neither command
-obtains root or installs an application. For saved captures and metadata plans,
-follow the linked guides.
+The installer does not root your TV, change Developer Mode or flash firmware.
+See the [upstream rooting overview](https://www.webosbrew.org/rooting/) separately.
+Do not install Developer Mode over an existing root setup for this guide.
 
-## Root access and compatibility
+The public bundle contains no personal app list. Installation can copy validated
+profile data from an existing Home installation without modifying it. It does not
+migrate arbitrary browser storage. The Root candidate excludes the production
+updater and Developer Mode renewal UI; use its separate installation procedure.
 
-Root availability is separate from Root Edition compatibility. The doctor does
-not select an exploit or predict whether a firmware is rootable. Consult the
-[webOS Homebrew rooting overview](https://www.webosbrew.org/rooting/) and the
-upstream instructions for the exact method/model/firmware you are evaluating.
-Do not infer support for another TV from the C3 test result, or change Developer
-Mode, firmware, update settings or Homebrew configuration just to run this doctor.
+Early boot black screens, faster boot artwork, system-library patches and
+removing system advertisements are **not** delivered by this edition. Long Home
+is not its emergency gesture and can invoke LG behavior such as magnification.
 
-[Registration investigation and next test](REGISTRATION-NOTES.md) explains why
-changing the manifest alone is not enough.
-
-## Goals still requiring validation
-
-- Repeat native Home and confirmed Back acceptance on the final clean-installed bundle.
-- Persistent startup with one clear emergency exit and complete uninstall/rollback.
-- Final-bundle interrupted-install, failsafe and uninstall acceptance; software-reboot recovery passed on the corrected installed candidate.
-
-Earlier boot graphics and elimination of the initial black interval are research
-questions, not features delivered by this edition.
-
-Follow the [ordered rollout plan](ROLLOUT.md) for release scope and remaining gates.
-
-## Exit Root mode (candidate UI)
-
-Open **Settings → Exit Root mode → Confirm exit**. Back cancels before confirmation.
-The recovery service restores original Home routing, then the interface reads all
-three Home destinations before opening LG Home. It does not remove root, uninstall
-apps or restart the No-root helper. Resume that helper explicitly from production
-Home if desired.
-
-On failure, the panel reports the error and retains recovery state. Keep the TV
-powered on during restoration. The candidate's independent deadline and host
-`restore` command remain available. This UI exit passed the RC10 test on OLED55C3RLA / 43.21.71; it is not an emergency escape from a frozen launcher. Permanent Root
-activation remains disabled.
+For exact evidence and outstanding tests, read [release acceptance](RELEASE-ACCEPTANCE.md).
+Historical research is retained in [STATUS.md](STATUS.md); older RC limitations
+are not the current usage instructions.

@@ -33,6 +33,7 @@ ROOT_LAUNCHER_FILES = {
     'index.html', 'app.js', 'style.css', 'config.js', 'apps.js',
     'fonts/outfit.ttf', 'fonts/OFL.txt',
     'root-exit.js', 'root-settings.js', 'root-settings.css',
+    'root-profile-data.js', 'root-profile.js', 'root-updates.js',
 }
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}
 
@@ -50,7 +51,7 @@ def inventory():
 def revision():
     files = [ROOT / 'launcher' / name for name in sorted(LAUNCHER_FILES)]
     files += [ROOT / 'root-edition/preview.py']
-    files += [ROOT / 'root-edition/ui' / name for name in ('root-exit.js', 'root-settings.js', 'root-settings.css')]
+    files += [ROOT / 'root-edition/ui' / name for name in ('root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')]
     files += [ROOT / 'preview/index.html', ROOT / 'preview/bridge.js', ROOT / 'preview/live-reload.js']
     files += [ROOT / 'preview/icons' / name for name in sorted(ICON_FILES)]
     stamps = []

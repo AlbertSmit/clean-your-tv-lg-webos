@@ -27,5 +27,22 @@ function call(method, payload = {}) {
   assert.equal(reply.result.result.effective.sam_home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.defaultApps.categories.home, 'com.webos.app.home');
   assert.equal(reply.result.result.effective.profiles.idleApp.appId, 'com.webos.app.home');
+  async function updater(method) {
+    return new Promise(resolve => {
+      const bridge = new context.window.PalmServiceBridge();
+      bridge.onservicecallback = raw => resolve(JSON.parse(raw));
+      bridge.call('luna://com.cleanyourtv.root.updater.service/' + method, '{}');
+    });
+  }
+  context.window.ROOT_VERSION = '0.1.1';
+  reply = await updater('restoreProfile');
+  assert.equal(reply.returnValue, true);
+  assert.equal(reply.result, null, 'Demo profile bootstrap must proceed without a real updater');
+  reply = await updater('check');
+  assert.equal(reply.result.installed.version, '0.1.1');
+  assert.equal(reply.result.canInstall, false);
+  assert.equal(reply.result.reason, 'current');
+  assert.equal((await updater('status')).result, null);
+  assert.equal((await updater('install')).returnValue, false, 'Browser preview cannot install packages');
   console.log('PASS browser Root demo trial, confirmation and restore');
 })().catch(error => { console.error(error); process.exit(1); });

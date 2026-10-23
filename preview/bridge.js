@@ -48,6 +48,16 @@
             effective: {sam_home: home, profiles: {defaultApps: {categories: {home: home}}, idleApp: {appId: home}}}};
           result = {returnValue: true, result: {returnValue: true, result: rootMethod === 'restore' ? 'restored' : state}};
         }
+      } else if (uri.indexOf('luna://com.cleanyourtv.root.updater.service/') === 0) {
+        var updaterMethod = uri.split('/').pop();
+        if (updaterMethod === 'restoreProfile' || updaterMethod === 'status') {
+          result = {returnValue: true, result: null};
+        } else if (updaterMethod === 'check') {
+          var version = window.ROOT_VERSION || '0.0.1';
+          result = {returnValue: true, result: {installed: {version: version}, canInstall: false,
+            reason: 'current', candidate: {version: version,
+              notes: 'Browser preview: no real updates are checked or installed.'}}};
+        }
       } else if (uri.indexOf('luna://com.gathin.tvhome.renewal/') === 0) {
         var method = uri.split('/').pop();
         if (['status', 'enable', 'disable', 'check'].indexOf(method) >= 0) {

@@ -37,6 +37,17 @@ restores the verified cached prior package and waits for restored UI readiness.
 An unknown installer outcome remains blocked for inspection rather than retrying.
 Other applications and the ordinary Home profile are not replaced.
 
+## Artifact identity
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Root `bundle.json` | `ab33e736af34d6cf676617520b9d8354d1782543079b9d15026b0611ad834cc6` |
+| Root 0.1.1 IPK | `c8500e636c13ca9d2cb181d71eef778e387c358277d3401427c3c364aff1ac40` |
+| Root Updater 0.1.0 IPK | `df4df14d92a86dbc80c60e352a71ded21e7865fb6ee0d80f54902e6c0bc3e935` |
+
+The release asset `SHA256SUMS` also covers the complete archives and signed
+metadata. Builds were repeated and all bundle file hashes matched.
+
 ## Evidence and limits
 
 On **OLED55C3RLA / firmware 43.21.71**, real Settings installation from 0.1.0 to

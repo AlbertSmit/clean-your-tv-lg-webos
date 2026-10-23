@@ -338,3 +338,13 @@ failure, restoration timeout followed by expired evidence, explicit escape after
 shutdown classification, and identical input failure without shutdown evidence.
 The last case disables intent and does not restart it on boot. Hardware acceptance
 of this correction is still required; no release-success claim is made here.
+
+RC19 software reboot successfully restored active generation 2 and all three
+candidate Home routes. The audit recorded prior phase `stopping` and normal gate
+completion at uptime 32.96 s. A later safe rollback around uptime 62 s exposed
+an independent lease arithmetic defect: `(issued + 2) - issued` can exceed two
+by floating-point rounding (for example issued=62.4). Both validators now compare
+`issued < expires <= issued + 2`, matching the producer without a tolerance or
+longer timeout. Publisher/reader and guardian boundary regressions pass, including
+rejection at exact expiry. Full local suite: 361 tests. Hardware persistence
+beyond the original minute remains the next acceptance check.

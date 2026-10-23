@@ -39,7 +39,7 @@ def watch(transaction, boot, load, restore, clock, sleep):
                 or not finite(lease.get('issued')) or not finite(lease.get('expires'))):
             return fail('invalid-lease')
         issued, expires = lease['issued'], lease['expires']
-        if not 0 <= issued <= now or not 0 < expires-issued <= 2:
+        if not 0 <= issued <= now or not issued < expires <= issued+2:
             return fail('invalid-lease')
         if previous is not None:
             if (lease['sequence'] < previous['sequence']

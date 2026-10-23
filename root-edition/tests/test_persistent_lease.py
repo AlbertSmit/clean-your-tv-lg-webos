@@ -92,3 +92,11 @@ watch('tx','boot',lambda:json.loads(p.read_text()),lambda reason:out.write_text(
     if guard is not None:
      if guard.poll() is None:guard.kill();guard.wait()
      guard.stdout.close()
+
+ def test_exact_two_second_publications_across_float_boundaries(self):
+  for issued in (62.4,126.4,254.4,510.4,1022.4):
+   with self.subTest(issued=issued):
+    records=iter([dict(transaction='tx',boot='boot',state='active',sequence=1,issued=issued,expires=issued+2),dict(transaction='tx',state='restored')])
+    restored=[]
+    result=watch('tx','boot',lambda:next(records),restored.append,lambda:issued,lambda _:None)
+    self.assertEqual(result,'restored');self.assertEqual(restored,[])

@@ -35,6 +35,15 @@ class HealthTests(IntegrationTests):
   self.assertEqual(h.path('route-a').stat().st_mode & 0o777,0o600)
   self.assertFalse((self.root/'lease.json').exists())
 
+ # Exercise the actual publisher/reader contract at a binary exponent boundary.
+ def test_publisher_two_seconds_are_valid_at_float_boundaries(self):
+  for seq,issued in enumerate((62.4,126.4,254.4,510.4,1022.4),1):
+   with patch.object(h.time,'monotonic',return_value=issued):
+    h.publish('route-a',seq)
+    self.assertEqual(h.require_fresh('route-a')['sequence'],seq)
+   with patch.object(h.time,'monotonic',return_value=issued+2):
+    with self.assertRaises(ValueError):h.require_fresh('route-a')
+
 if __name__=='__main__':unittest.main()
 
 class GuardianPulseTests(unittest.TestCase):

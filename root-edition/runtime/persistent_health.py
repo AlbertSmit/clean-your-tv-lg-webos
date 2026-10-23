@@ -64,7 +64,7 @@ def require_fresh(transaction):
             or value['sequence'] <= 0 or not finite(value.get('issued'))
             or not finite(value.get('expires'))
             or not 0 <= value['issued'] <= now < value['expires']
-            or not 0 < value['expires']-value['issued'] <= 2):
+            or not value['issued'] < value['expires'] <= value['issued']+2):
         raise ValueError('Input heartbeat is stale or invalid')
     return value
 

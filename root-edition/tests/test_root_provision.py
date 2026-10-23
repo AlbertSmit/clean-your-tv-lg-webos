@@ -78,9 +78,14 @@ class ProvisionTests(unittest.TestCase):
         entries={str(path):{'original':'x','original_sha256':p.sha(b'x'),'installed_sha256':p.sha(b'y'),'mode':0o644,'uid':0,'gid':0} for path in p.FILES.values()}
         saved={'version':1,'service':p.NAME,'phase':'rolled-back','files':entries}
         info=MagicMock(st_mode=0o100644,st_uid=0,st_gid=0)
-        with patch.object(p,'secure',side_effect=[json.dumps(saved).encode()]+[b'x']*4),patch.object(p.Path,'stat',return_value=info),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'rpc') as rpc,patch.object(p,'write') as write:
+        # Keep stat mocked only for restored LS2 metadata. Cleanup ownership is
+        # covered in its own suites; a global stat mock makes receipt.exists()
+        # true on Linux even when no receipt exists on this test host.
+        with patch.object(p,'secure',side_effect=[json.dumps(saved).encode()]+[b'x']*4),patch.object(p.Path,'stat',return_value=info),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'rpc') as rpc,patch.object(p,'write') as write,patch('system_permissions.remove') as permissions,patch('startup_hook.remove') as hook:
             self.assertTrue(p.rollback()['already_rolled_back'])
             rpc.assert_not_called();write.assert_not_called()
+            permissions.assert_called_once_with(p.secure)
+            hook.assert_called_once_with(p.secure)
         with patch.object(p,'secure',side_effect=[json.dumps(saved).encode(),b'drift']),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'rpc') as rpc:
             with self.assertRaises(ValueError):p.rollback()
             rpc.assert_not_called()

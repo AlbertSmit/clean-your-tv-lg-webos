@@ -76,6 +76,27 @@ class BuildTests(unittest.TestCase):
                 self.builder.build(output)
             self.assertEqual(list(output.iterdir()), [output / 'keep'])
 
+    def test_versioned_package_and_bootstrap_match(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp).resolve() / 'candidate'
+            package = self.builder.build(output, version='1.2.3')
+            self.assertEqual(package.name, 'com.cleanyourtv.root.preview_1.2.3_all.ipk')
+            self.assertEqual(json.loads((output / 'release.json').read_text())['version'], '1.2.3')
+            with tarfile.open(fileobj=io.BytesIO(ar_members(package.read_bytes())['data.tar.gz'])) as archive:
+                prefix = 'usr/palm/applications/com.cleanyourtv.root.preview/'
+                self.assertEqual(json.loads(archive.extractfile(prefix + 'appinfo.json').read())['version'], '1.2.3')
+                self.assertIn(b'window.ROOT_VERSION = "1.2.3"', archive.extractfile(prefix + 'index.html').read())
+            from deploy import verify_bundle
+            verify_bundle(output)
+
+    def test_invalid_versions_rejected_before_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for index, version in enumerate(('1', 'v1.2.3', '1.2.3;id', '01.2.3', '1.2.-1', '1.2.3-beta')):
+                output = Path(tmp).resolve() / str(index)
+                with self.assertRaises(ValueError):
+                    self.builder.build(output, version=version)
+                self.assertFalse(output.exists())
+
     def test_archive_rejects_unsafe_paths(self):
         for name in ('../secret', '/absolute', 'a/../b', 'a//b', './a', 'a\\b', 'a\x00b'):
             with self.subTest(name=name), self.assertRaises(ValueError):

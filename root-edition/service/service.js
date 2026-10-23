@@ -22,3 +22,10 @@ Object.keys(handlers).forEach(function (method) {
   });
 });
 // Activity registration belongs to the root installer, not the web service.
+
+var inventoryPending=null;
+service.register('listApps',function(message){
+ if(!inventoryPending)inventoryPending=require('./app-inventory')();
+ var request=inventoryPending;
+ request.then(function(apps){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:true,apps:apps});},function(){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:false,errorText:'App inventory unavailable'});});
+});

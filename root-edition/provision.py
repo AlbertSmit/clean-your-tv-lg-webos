@@ -17,7 +17,7 @@ STATE = Path('/var/lib/clean-your-tv-root')
 BASE = Path('/var/luna-service2-dev')
 PRIVATE_SERVICE = STATE/'service'
 RUNNER = STATE/'run-recovery-service'
-PRIVATE_FILES = ('service.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
+PRIVATE_FILES = ('service.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
 SYSTEM_FILES = tuple(Path(x) for x in ('/usr/bin/node','/usr/palm/services/jsservicelauncher/bootstrap-node.js','/usr/palm/services/jsservicelauncher/bootstrap.js'))
 RUNTIME = STATE / 'runtime'
 FILES = {'service': BASE/'services.d'/(NAME+'.service'),
@@ -103,7 +103,7 @@ def plan(original):
         'outbound':['com.webos.service.activitymanager','com.palm.activitymanager']}]
     return {'service': original['service'].replace(expected,'Exec='+str(RUNNER)).encode(),
             'role':encoded(role), 'client':encoded({NAME:['activity.operation'],'com.cleanyourtv.root.preview':[NAME+'.control'],'com.cleanyourtv.root.preview-*':[NAME+'.control']}),
-            'api':encoded({NAME+'.control':[NAME+'/'+x for x in ('status','restore','enable','confirm')],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
+            'api':encoded({NAME+'.control':[NAME+'/'+x for x in ('status','restore','enable','confirm','listApps')],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
 
 def manifest():
     callback = PRIVATE_SERVICE/'boot-recover.sh'

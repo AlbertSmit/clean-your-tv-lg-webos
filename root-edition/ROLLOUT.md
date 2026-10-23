@@ -47,30 +47,26 @@ an existing candidate or state directory. If installation has an unknown outcome
 retain its journal and inspect it; never blindly retry or delete recovery state.
 Do not overwrite a live runtime with a newer bundle.
 
-## 3. Start a protected trial
+## 3. Turn on Home control
 
 If Home Helper is active, hold Home for about two seconds to stop it, then release
 all buttons. This is the **old helper's** exit action. Root activation refuses to
 run while that helper is present and never clears its safety latch.
 
-Open **Home Root Preview** from LG Apps, then **Settings → Try Root mode**.
+Open **Home Root Preview** from LG Apps, then **Home settings → Turn on Home control**.
 Alternatively:
 
 ```sh
 python3 build/root-candidate/setup.py enable --ssh my-tv
 ```
 
-The trial lasts **60 seconds**. Check arrows/OK and short Home from an ordinary
-app screen. Check Back navigation, Cancel in the exit dialog, then confirmed exit.
-If the result is wrong, do not confirm: automatic recovery restores the original
-Home. You can also select Exit Root mode or run the restore command below.
+Activation checks input, the recovery guardian and effective Home routing
+before recording permanent intent. No countdown or second confirmation is needed.
+If startup fails, it restores LG Home. Check arrows/OK, short Home and Back.
+Use **Return to LG Home**, three short Home presses, or the restore command below
+to turn it off whenever needed.
 
-## 4. Keep Root mode
-
-Before the trial expires, select **Settings → Keep Root mode**. Leave at least
-five seconds for verification. The panel should report **Root mode active**.
-This records permanent intent only after fresh input/guardian and routing checks.
-An expired or unhealthy trial cannot be promoted.
+## 4. Persistent operation
 
 The mode runs on the TV without a computer. On a normal software reboot it first
 restores the previous route, then reactivates only after normal-boot checks and
@@ -85,7 +81,7 @@ through automatic reactivation. Other lifecycle cases remain final release gates
 | Back inside an app | App handles navigation and its exit confirmation |
 | Confirmed Back exit | Returns to our Home on the tested setup |
 | Three short Home presses in two seconds | Emergency restore to LG, independent of the web interface |
-| Settings → Exit Root mode → Confirm exit | Normal restore; disables Root autostart |
+| Home settings → Return to LG Home → Confirm return | Normal restore; disables Root autostart |
 
 Release Home between taps. Long Home is **not** the Root emergency action and can
 trigger LG behavior such as zoom. Exiting Root mode does not remove root or resume

@@ -19,14 +19,14 @@ Final-artifact cold-power, quick-standby and failsafe acceptance remains open.
   interception helper running.
 - Confirmed **Back** exit returns to our launcher without an observed LG flash.
   In-app navigation and exit confirmation remain under the application's control.
-- **Keep Root mode** promotes a protected 60-second trial to permanent intent.
+- **Turn on Home control** enables permanent intent after automatic input and recovery checks.
 - Normal software reboot restores routing safely, then reactivates after the
   normal-boot checks and fresh input/guardian health checks pass.
 - **Three short Home presses within two seconds** request emergency restoration
   independently of the web interface. Release Home between presses; do not hold it.
-- **Settings → Exit Root mode → Confirm exit** restores the original Home routing.
+- **Home settings → Return to LG Home → Confirm return** restores the original Home routing.
 - Two independent health checks and recovery state protect the system route.
-  An unconfirmed trial automatically restores it after 60 seconds.
+  Failed startup or a later health failure automatically restores LG Home.
 
 The original launcher, helper and their data are separate. Root exit disables
 Root autostart; it does not remove root, uninstall apps or resume the old helper.

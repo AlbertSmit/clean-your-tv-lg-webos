@@ -13,7 +13,7 @@ import webbrowser
 
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_FILES = {
-    'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'config.js',
+    'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'app-library.js', 'config.js',
     'user-data.js', 'update-panel.js', 'renewal-panel.js', 'profile-bootstrap.js',
     'native-bootstrap.js', 'helper-control.js', 'fonts/outfit.ttf', 'fonts/OFL.txt',
 }
@@ -30,7 +30,7 @@ DEMO_APPS = [
     ('hbomax', 'HBO Max', '#5822b4'),
 ]
 ROOT_LAUNCHER_FILES = {
-    'index.html', 'app.js', 'style.css', 'config.js', 'apps.js',
+    'index.html', 'app.js', 'app-library.js', 'style.css', 'config.js', 'apps.js',
     'fonts/outfit.ttf', 'fonts/OFL.txt',
     'root-exit.js', 'root-settings.js', 'root-settings.css',
 }

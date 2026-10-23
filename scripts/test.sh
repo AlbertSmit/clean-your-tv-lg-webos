@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+for test in tests/apps/*.cjs; do
+  if [[ "$test" != *"/ui.cjs" ]]; then node "$test"; fi
+done
 node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
 node tests/renewal-manager.cjs
@@ -24,6 +27,7 @@ for file in root-edition/ui/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 python3 -m unittest discover -s tests/setup
+python3 -m unittest discover -s tests/cytv
 python3 -m unittest discover -s tests -p test_preview.py
 for test in tests/updates/*.cjs; do node "$test"; done
 for file in updater-service/*.js updater-app/*.js; do node --check "$file"; done

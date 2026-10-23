@@ -1,4 +1,4 @@
-/* Explicit recovery after long Home. Never clear a stop marker on page load. */
+/* Explicit recovery after triple Home. Never clear a stop marker on page load. */
 (function () {
   'use strict';
   var busy = false, checking = false, stopped = false, statusDenied = false;

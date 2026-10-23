@@ -10,6 +10,7 @@ build/
 dist/
 venv/
 .venv/
+.venv-cytv/
 __pycache__/
 .DS_Store
 

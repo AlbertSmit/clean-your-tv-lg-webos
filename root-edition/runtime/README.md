@@ -6,9 +6,9 @@ Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-o
 - `trial`: activate **com.cleanyourtv.root.preview** for at most 60 seconds using a detached rollback guardian. Refuses any unresolved journal, unexpected baseline, missing Home registration or missing recovery provisioning.
 - `restore`: conflict-checked removal of only the owned override, rescan, restore stock Home and verify the full original profiles. Retries bounded transport failures. Exit 2 means recovery is unresolved; preserve state for retry/investigation.
 - `boot`: restore the previous routing transaction first. A confirmed active intent may then start a fresh protected transaction and open the candidate. Failsafe or interrupted startup disables intent; duplicate callbacks preserve only a healthy matching guardian.
-- `enable`: begin an intent-bound 60-second trial; requires the old helper to be stopped.
-- `confirm TRANSACTION`: explicitly keep that exact live trial. Requires fresh input/guardian heartbeats, effective candidate routing and at least five seconds before rollback. No confirmation means automatic rollback.
-- `intent-trial`: alias for the same guarded trial, useful for regression checks.
+- `enable`: activate persistently after automatic input, guardian and routing checks; requires the old helper to be stopped. Failed readiness restores LG Home. No user confirmation or timed session.
+- `confirm TRANSACTION`: diagnostic promotion of that exact live trial. Requires fresh input/guardian heartbeats, effective candidate routing and at least five seconds before rollback. No confirmation means automatic rollback.
+- `intent-trial`: diagnostic intent-bound trial, useful for regression checks; separate from user activation.
 
 Runtime state is `/var/lib/clean-your-tv-root`; owned profile is `/var/webos-profile/override/clean-your-tv-root.json`. Both directories must be root-owned and not group/world writable, and must reside on the same filesystem for crash-safe hard-link publication. Runtime never edits app files, stock libraries, zoom behavior, or the existing no-root launcher.
 
@@ -26,13 +26,14 @@ During hardware acceptance, use the existing long-Home gesture to disable the No
 
 ## RC15 persistent candidate
 
-Settings exposes Try Root mode, then Keep Root mode. Confirmation records durable
-intent; it does not disable watchdog protection. The independent guardian switches
-from its fixed trial deadline to a renewable two-second input-loop lease. The
+Settings exposes Turn on Home control. Activation automatically records durable
+intent after readiness checks; it does not disable watchdog protection. The
+internal startup deadline remains a recovery backstop until readiness succeeds.
+The independent guardian then uses a renewable two-second input-loop lease. The
 supervisor checks the guardian's own pulse. Volatile health files live under a
 root-owned `/tmp/clean-your-tv-root-health`; frequent heartbeats do not write flash.
 
-Three short Home presses within two seconds or Settings → Exit Root mode disable
+Three short Home presses within two seconds or Home settings → Return to LG Home disable
 intent before restoring original routing. A fault does the same. No-root helper
 is never automatically resumed. A later explicit enable is required after a fault,
 failsafe or emergency exit. Installation alone does not enable Root mode.

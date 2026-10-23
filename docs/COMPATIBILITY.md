@@ -21,10 +21,12 @@ Do not remove these checks to force compatibility.
 - Back navigation inside apps remains theirs; exiting may briefly show LG Home.
 - Cold startup is not instant and can begin with a black screen. No fixed startup
   time or improvement across firmware is promised.
-- Long Home stops interception until a manual helper launch; it does not erase data.
+- Three short Home presses within two seconds stop interception until a manual helper launch; it does not erase data.
 - Network and foreground monitoring depends on local SSAP pairing and connectivity.
 - Wheel-to-tile navigation is not implemented; wheel events are passed through.
 - App inventory is generated on your computer. Re-sync after installing/removing apps.
 - Hiding a tile does not uninstall the app or disable system ads.
 
 This is an alternative launcher, not an LG-supported system Home replacement.
+
+Triple-Home recovery in the updated No-root Helper still needs verification on a physical TV; the reports above describe earlier releases.

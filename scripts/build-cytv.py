@@ -97,6 +97,7 @@ def build_payload():
     (payload / 'launcher.ipk').write_bytes(pack_app(launcher, renewal))
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
+    subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
     (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
     # Ship dependency license metadata as well as application notices in the executable.

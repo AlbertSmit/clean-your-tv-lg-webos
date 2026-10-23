@@ -17,6 +17,16 @@ class RejectedAuthTransport:
 
 
 class TransportTests(unittest.TestCase):
+    def test_updater_status_uses_root_application_identity(self):
+        import shlex
+        commands = []
+        ssh = object.__new__(SSH)
+        ssh.root = True
+        ssh.channel = lambda command: commands.append(shlex.split(command)) or SimpleNamespace(close=lambda: None)
+        ssh.chunks = lambda connection, timeout: [b'{"returnValue":true,"result":null}']
+        ssh.luna('com.cleanyourtv.root.updater.service/status', {}, app_id='com.cleanyourtv.root.preview')
+        self.assertEqual(commands[0][3:5], ['-a', 'com.cleanyourtv.root.preview'])
+
     def test_luna_keeps_stdin_open_until_reply(self):
         class Channel:
             eof = False

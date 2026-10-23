@@ -254,6 +254,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     phase = {'Installing Home Helper…': 'install-helper', 'Installing Home…': 'install-home',
                              'Configuring Home Helper…': 'configure-helper',
                              'Uploading Root and recovery runtime…': 'install-root',
+                             'Installing Root Updater and preparing rollback…': 'install-root-updater',
+                             'Checking Root Updater…': 'verify-root-updater',
                              'Checking Root recovery…': 'verify-root-recovery',
                              'Stopping the old Home Helper…': 'stop-old-helper',
                              'Turning on Root Home control…': 'activate-root',
@@ -273,6 +275,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 if profile['edition'] == 'root':
                     write.heading('Root is ready')
                     write('Home control is on and Clean Your TV Home was opened.')
+                    if result.get('updates_ready'):
+                        write('Root Updater is ready. Install future compatible updates in Settings → Software updates on the TV.')
                     write('Home control stays on until you turn it off. The computer can now be switched off.')
                     write('To restore LG Home, use Return to LG Home in settings or run cytv restore.')
                     write('Root emergency exit: three short Home presses within two seconds.')

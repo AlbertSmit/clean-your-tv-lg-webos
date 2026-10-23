@@ -15,6 +15,8 @@ HELPER = 'com.local.nativehome'
 BASE = '/media/developer/apps/usr/palm'
 HELPER_STATE = BASE + '/applications/' + HELPER + '/state'
 ROOT_STATE = '/var/lib/clean-your-tv-root'
+UPDATER_STATE = '/var/lib/clean-your-tv-root-updater'
+UPDATER_APP = 'com.cleanyourtv.root.updater'
 
 
 class Installer:
@@ -128,6 +130,29 @@ class Installer:
         return {'installed': 'no-root', 'launch_requested': True, 'hardware_verified': False}
 
     def install_root(self, inventory, migrate, reinstall=None):
+        updater = self.payload / 'root-updater'
+        try:
+            updater_manifest = json.loads((updater / 'bundle.json').read_text())
+            names = updater_manifest['files']
+            if updater_manifest.get('schema') != 1 or not isinstance(names, dict) or not {'setup-updater.py', 'root-updater.ipk'} <= names.keys():
+                raise ValueError('Invalid Root Updater bundle')
+            for name, digest in names.items():
+                path = updater / package.safe_name(name)
+                if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                    raise ValueError('Root Updater bundle integrity mismatch')
+        except (OSError, KeyError, TypeError, ValueError) as error:
+            raise UserError('Root Updater bundle is missing or invalid. Use a complete installer build.') from error
+        # A retained updater is pinned to the existing recovery runtime. Never
+        # remove that runtime as part of a generic reinstall.
+        paths = [UPDATER_STATE, '/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
+                 *[BASE + '/' + kind + '/' + UPDATER_APP + suffix
+                   for kind, suffix in (('applications', ''), ('packages', ''), ('services', '.service'))],
+                 *['/var/luna-service2-dev/' + kind + '/' + UPDATER_APP + '.service' + suffix
+                   for kind, suffix in (('services.d', '.service'), ('roles.d', '.service.json'),
+                                        ('client-permissions.d', '.service.json'), ('api-permissions.d', '.api.json'))]]
+        condition = ' || '.join('[ -e ' + p + ' ] || [ -L ' + p + ' ]' for p in paths)
+        if self.remote.run('if ' + condition + '; then printf CYTV_EXISTING_UPDATER; fi').strip():
+            raise UserError('Root Updater already exists or setup state remains. Use Software updates on the TV; if unavailable, inspect recovery before reinstalling.')
         with tempfile.TemporaryDirectory(prefix='cytv-root-') as tmp:
             bundle = Path(tmp).resolve() / 'root'
             shutil.copytree(self.payload / 'root', bundle)
@@ -143,7 +168,7 @@ class Installer:
                 self.prepare_root_reinstall(already_removed=reinstall == 'removed')
                 self.preflight(install=True)
             self.store.begin(self.profile, 'install',
-                                  release_sha=release_sha, bundle_sha=bundle_sha, migrate=migrate)
+                                  release_sha=release_sha, bundle_sha=bundle_sha, migrate=migrate, requires_updater=True)
             stage = '/tmp/cytv-root-' + uuid.uuid4().hex
             self.remote.run('umask 077; mkdir ' + stage)
             names = [*manifest['files'], 'bundle.json']
@@ -155,9 +180,52 @@ class Installer:
             result = self.root_action('install', bundle=stage, migrate=migrate)
             if result.get('installed') != package.ROOT_APP or result.get('home_changed') is not False:
                 raise UserError('Root installation readback is unexpected. Keep recovery state and run cytv status.')
-            self.store.checkpoint(self.profile, action='activate-root', stage='stop-helper')
+            if self.root_action('status').get('result', {}).get('recovery', {}).get('integrity_verified') is not True:
+                raise UserError('Root is installed, but recovery could not be verified. Run cytv status; activation has not started.')
+            baseline_sha = hashlib.sha256((bundle / manifest['package']).read_bytes()).hexdigest()
+            self.store.checkpoint(self.profile, action='setup-root-updater', stage='upload', baseline_sha=baseline_sha)
+            self.progress('Installing Root Updater and preparing rollback…')
+            updater_stage = stage + '/root-updater'
+            for directory in sorted({'.', *[str(Path(n).parent) for n in updater_manifest['files']]}):
+                self.remote.run('mkdir -p ' + shlex.quote(updater_stage + '/' + directory))
+            for name in [*updater_manifest['files'], 'bundle.json']:
+                self.remote.upload(updater_stage + '/' + package.safe_name(name), (updater / name).read_bytes())
+            self.store.checkpoint(self.profile, stage='setup')
+            reply = json.loads(self.remote.run(shlex.join([
+                '/usr/bin/python3', updater_stage + '/setup-updater.py', '--device', '--apply',
+                '--bundle', updater_stage, '--baseline', stage]), timeout=300))
+            if not isinstance(reply, dict) or reply.get('installed') is not True:
+                raise UserError('Root updater setup was not confirmed. Keep recovery state and run cytv status.')
+            self.store.checkpoint(self.profile, stage='verify')
+            self.progress('Checking Root Updater…')
+            self.verify_root_updater(baseline_sha)
+            self.store.checkpoint(self.profile, action='activate-root', stage='stop-helper', updates_ready=True)
             self.activate_root()
-            return dict(result, home_changed=True, launch_requested=True)
+            return dict(result, home_changed=True, launch_requested=True, updates_ready=True)
+
+    def verify_root_updater(self, baseline_sha):
+        script = """
+import hashlib, sys
+from pathlib import Path
+sys.path.insert(0, '/var/lib/clean-your-tv-root-updater/code')
+from updater.device import Device, STATE
+from updater.store import Store
+from updater.package import safe_bytes, inspect_package
+store = Store(STATE)
+Device(store).integrity()
+if store.read('bootstrap').get('phase') != 'complete': raise ValueError('Incomplete updater setup')
+current = store.read('current')
+if current.get('sha256') != sys.argv[1]: raise ValueError('Rollback baseline mismatch')
+raw = safe_bytes(STATE / 'cache' / (sys.argv[1] + '.ipk'), uid=0)
+if hashlib.sha256(raw).hexdigest() != sys.argv[1]: raise ValueError('Rollback cache mismatch')
+inspect_package(raw, current)
+print('CYTV_UPDATER_VERIFIED')
+"""
+        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script, baseline_sha]), timeout=60).strip() != 'CYTV_UPDATER_VERIFIED':
+            raise UserError('Root updater recovery verification failed. Keep recovery state and run cytv status.')
+        reply = self.remote.luna(UPDATER_APP + '.service/status', {}, app_id=package.ROOT_APP, timeout=110)
+        if reply.get('returnValue') is not True or 'result' not in reply or reply['result'] is not None:
+            raise UserError('Root updater service is not ready. Keep recovery state and run cytv status.')
 
     @staticmethod
     def root_active(result):
@@ -244,7 +312,7 @@ class Installer:
                     self.store.finish(self.profile)
                     reconciled = ('root-activation-verified' if pending.get('launch_requested') is True
                                   else 'root-activation-verified; screen launch unconfirmed, press Home to open it')
-                if (pending and pending['action'] == 'install'
+                if (pending and pending['action'] == 'install' and not pending.get('requires_updater')
                         and result.get('result', {}).get('recovery', {}).get('integrity_verified') is True
                         and self.root_files_match(pending)):
                     self.store.finish(self.profile)

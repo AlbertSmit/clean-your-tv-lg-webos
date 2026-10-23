@@ -39,6 +39,14 @@ Continuous replacement fails closed. Local suite: 367 tests passed.
   input and guardian health; final system Home still targeted the candidate,
   both profile fields matched, and emergency/guardian logs were empty.
   This bounded observation is not proof that no other runtime fault exists.
-- Reboot-test the serialized boot dispatcher and current candidate together.
+- Completed: one authorized software reboot with the serialized boot dispatcher
+  and atomic-read correction. Shutdown preserved intent as `stopping`; the
+  normal-boot gate completed at uptime 33.05 s and generation 2 became active.
+  At uptime 112.72 s (trial deadline 93.24 s), system Home and both profile
+  fields still targeted the candidate; input and guardian pulses were fresh.
+  The user confirmed automatic tiles, preserved applications, arrows/OK, short
+  Home and confirmed Back exit without the LG flash after this reboot.
+- This software reboot does not replace a separate cold-power or failsafe test
+  of the final release artifact.
 - Do not equate successful local tests with permanent hardware validation.
 - Preserve independent rollback, emergency exit and the untouched ordinary launcher.

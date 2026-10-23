@@ -51,3 +51,9 @@ class RuntimeTests(unittest.TestCase):
   with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=True),patch('boot_gate.wait',side_effect=refused):
    self.assertEqual(r.boot(),'restored')
   c.exit.assert_called_once_with(new,reason='fault');c.restart.assert_not_called()
+
+ def test_duplicate_callback_during_shutdown_does_not_revoke_or_restart(self):
+  c=Mock(binding=self.root/'missing-binding');intent={'boot':'same','phase':'stopping'};c.store.read.return_value=intent
+  with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='same'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False):
+   self.assertEqual(r.boot(),'shutdown-pending')
+  c.shutdown.assert_called_once_with(intent);c.exit.assert_not_called();c.restart.assert_not_called()

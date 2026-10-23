@@ -315,3 +315,26 @@ The emergency log reports input ENODEV / observer_exit. Root cause of the missed
 shutdown evidence is still unresolved; do not attribute this run to the failsafe
 gate or weaken watchdog behavior. Production launcher and helper were relaunched
 through their normal application entry points after the test.
+
+## Shutdown lifecycle correction (local validation, 2026-10-23)
+
+The RC18 audit narrowed the failure to shutdown, before boot recovery. Two
+mechanisms now address the observed timing and a reproduced recovery race:
+
+- A separate 50 ms observer recognizes a newly created, root-owned, non-writable,
+  single-link `/tmp/poweroff_reason` containing exactly `poweroff_reason=remoteKey`.
+  A file present when observation begins, symlinks, crash/unknown reasons and
+  untrusted files do not authorize preservation. It does not depend on a working
+  systemd RPC. Publication retries are bounded; evidence remains boot/transaction
+  scoped and expires after five seconds until accepted.
+- Once accepted for an already confirmed mode, the coordinator persists `stopping`
+  before routing RPCs. Restoration timeout/retry cannot reclassify the same shutdown
+  as an input fault after the short evidence window expires. Explicit user exit
+  still disables intent. A new boot restores baseline and requires normal-startup
+  evidence plus new input/guardian health before reactivating.
+
+Regression coverage includes a blocked systemctl call, transient evidence-write
+failure, restoration timeout followed by expired evidence, explicit escape after
+shutdown classification, and identical input failure without shutdown evidence.
+The last case disables intent and does not restart it on boot. Hardware acceptance
+of this correction is still required; no release-success claim is made here.

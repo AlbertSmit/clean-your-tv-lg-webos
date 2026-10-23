@@ -4,9 +4,9 @@ Persist the returned state before executing its effect. Recovery effects must us
 an independently recorded routing transaction, never infer a baseline from intent.
 Boot identifiers must distinguish snapshot resumes that reset monotonic uptime.
 """
-PHASES = ('disabled', 'trial', 'active', 'recovering', 'starting')
+PHASES = ('disabled', 'trial', 'active', 'stopping', 'recovering', 'starting')
 FIELDS = {'version', 'generation', 'phase', 'enabled', 'boot', 'token'}
-EVENTS = ('enable', 'confirmed', 'boot', 'restored', 'ready', 'exit', 'fault')
+EVENTS = ('enable', 'confirmed', 'boot', 'restored', 'ready', 'exit', 'fault', 'shutdown')
 
 
 def initial():
@@ -24,7 +24,7 @@ def validate(state):
             or type(state['enabled']) is not bool or state['phase'] not in PHASES
             or not all(isinstance(state[k], str) for k in ('boot', 'token'))):
         raise ValueError('Invalid persistent intent')
-    if state['phase'] in ('active', 'starting') and not state['enabled']:
+    if state['phase'] in ('active', 'starting', 'stopping') and not state['enabled']:
         raise ValueError('Active intent must be enabled')
     if state['phase'] in ('disabled', 'trial') and state['enabled']:
         raise ValueError('Unconfirmed intent cannot be enabled')
@@ -59,10 +59,15 @@ def transition(state, event):
     elif kind == 'boot':
         if not event['failsafe'] and event['boot'] == state['boot']:
             return new, 'none'
-        resume = state['phase'] == 'active' and state['enabled'] and not event['failsafe']
+        resume = state['phase'] in ('active', 'stopping') and state['enabled'] and not event['failsafe']
         new.update(generation=state['generation']+1, phase='recovering', enabled=resume,
                    boot=event['boot'], token=event['token'])
         effect = 'recover'
+    elif kind == 'shutdown':
+        if state['phase'] not in ('active', 'stopping') or not state['enabled']:
+            raise ValueError('Only confirmed mode can enter shutdown')
+        new['phase'] = 'stopping'
+        effect = 'none'
     elif kind in ('exit', 'fault'):
         if state['phase'] == 'disabled': return new, 'none'
         new.update(enabled=False, phase='recovering')

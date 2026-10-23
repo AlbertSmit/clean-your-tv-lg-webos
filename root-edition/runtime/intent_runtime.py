@@ -58,6 +58,9 @@ def boot():
     if c is None or later_legacy_trial(c): return None
     intent = c.store.read(); identity = boot_identity(); failsafe = d.FAILSAFE.exists()
     if not failsafe and identity == intent['boot']:
+        if intent['phase'] == 'stopping':
+            c.shutdown(intent)
+            return 'shutdown-pending'
         try: journal = d.safe_json(d.STATE/'profile-trial.json')
         except FileNotFoundError: journal = None
         if journal is not None and d.active_guardian(journal): return 'guarded-intent-trial'

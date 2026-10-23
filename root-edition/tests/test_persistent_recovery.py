@@ -137,9 +137,47 @@ class ShutdownTests(IntegrationTests):
   with patch('shutdown_state.stopping',return_value=True):
    self.assertTrue(bound_exit('route-a'))
   self.assertEqual(self.read(),self.baseline)
-  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.store.read()['phase'],'active')
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.store.read()['phase'],'stopping')
  def test_explicit_escape_during_shutdown_still_disables_intent(self):
   from persistent_recovery import bound_exit
   with patch('shutdown_state.stopping',return_value=True):
    self.assertTrue(bound_exit('route-a',reason='escape'))
   self.assertFalse(self.store.read()['enabled'])
+
+ def test_firmware_request_preserves_intent_with_systemctl_unavailable(self):
+  import shutdown_state as shutdown,persistent_health as health
+  from persistent_recovery import bound_exit
+  reason=self.root/'poweroff_reason'
+  with patch.object(health,'ROOT',self.root/'health'),patch('intent_runtime.boot_identity',return_value='boot-a'),patch.object(shutdown,'query',return_value=False):
+   observer=shutdown.PowerReason(reason);self.assertFalse(observer.poll())
+   reason.write_text('poweroff_reason=remoteKey')
+   self.assertTrue(observer.poll());shutdown.record('route-a',source='firmware-remoteKey')
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+  outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
+  self.assertEqual(outcome['effect'],'start_guarded')
+ def test_same_input_fault_without_shutdown_revokes_intent(self):
+  import shutdown_state as shutdown,persistent_health as health
+  from persistent_recovery import bound_exit
+  with patch.object(health,'ROOT',self.root/'health'),patch.object(shutdown,'query',return_value=False):
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+  outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
+  self.assertEqual(outcome['effect'],'none')
+
+ def test_recognized_shutdown_is_not_downgraded_on_restore_retry(self):
+  from persistent_recovery import bound_exit
+  original=d.restore_once
+  with patch('shutdown_state.stopping',return_value=True),patch.object(d,'restore_once',side_effect=OSError('manager shutting down')):
+   with self.assertRaises(OSError):bound_exit('route-a',reason='observer_exit')
+  self.assertEqual(self.store.read()['phase'],'stopping')
+  with patch('shutdown_state.stopping',return_value=False):
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+ def test_explicit_escape_overrides_already_recorded_shutdown(self):
+  from persistent_recovery import bound_exit
+  with patch('shutdown_state.stopping',return_value=True),patch.object(d,'restore_once',side_effect=OSError('busy')):
+   with self.assertRaises(OSError):bound_exit('route-a',reason='observer_exit')
+  with patch('shutdown_state.stopping',return_value=True):
+   self.assertTrue(bound_exit('route-a',reason='escape'))
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)

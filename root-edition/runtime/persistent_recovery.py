@@ -148,8 +148,11 @@ class Coordinator:
         # confirmed active intent; restore now if services still answer. A new
         # boot must verify recovery again before creating any replacement route.
         with self.locked(expected):
-            if expected['phase'] != 'active' or not expected['enabled']:
+            if expected['phase'] not in ('active','stopping') or not expected['enabled']:
                 raise ValueError('Shutdown cannot promote unconfirmed intent')
+            # Persist classification before any RPC can stall or shutdown kills us.
+            # Retry cannot turn this confirmed shutdown into an input fault.
+            if expected['phase'] == 'active': self.event(expected,'shutdown')
             binding = self.read_binding(); tx = binding['transaction']
             journal = self.route(tx)
             result = d.restore_once(expected_transaction=tx)
@@ -240,7 +243,11 @@ def bound_exit(transaction, reason=None):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
     from shutdown_state import stopping
-    if reason != 'escape' and intent['phase'] == 'active' and intent['enabled'] and stopping(transaction):
+    shutdown = reason != 'escape' and intent['enabled'] and (
+        intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))
+    print(json.dumps(dict(event='bound-exit-decision',transaction=transaction,reason=reason,
+                         phase=intent['phase'],enabled=intent['enabled'],shutdown=shutdown)),flush=True)
+    if shutdown:
         print('Confirmed system shutdown: retaining active intent for boot recovery', flush=True)
         return c.shutdown(intent)
     result = c.exit(intent, reason='fault')

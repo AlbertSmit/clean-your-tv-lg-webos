@@ -128,3 +128,16 @@ Reproducible bundle.json SHA-256:
 `a7d1db3a3da27123a8dc860ae45d3380c849dea28d714954b1ab46f55101b0f7`.
 RC15 device acceptance is pending. Do not inherit RC14 bounded acceptance as proof
 of permanent operation. Production launcher/helper remain separate.
+
+RC15 device results: user confirmed Settings → Keep Root mode displayed active.
+Transaction d13dcd2c-df65-4a1a-9e89-d50c855a6c5a remained active at uptime
+5198.88, beyond its original deadline 5177.34, with fresh input/guardian pulses.
+Triple Home then restored all three stock destinations and disabled intent.
+
+The next confirmed transaction 041b15c5-a42d-42a3-8e1f-0066fe0bc378 did not
+resume after approved reboot: kernel input removal raised ENODEV during shutdown,
+which correctly triggered the existing fault policy but incorrectly erased the
+user's reboot intent. Stock recovery was verified; permanent reboot acceptance
+failed. RC16 distinguishes PID 1's independently observed `stopping` state from
+ordinary input failure. Explicit escape and UI exit still disable intent. Unknown
+or unavailable manager status remains fail-closed. RC16 device test pending.

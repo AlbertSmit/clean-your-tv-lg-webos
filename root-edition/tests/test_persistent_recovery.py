@@ -130,3 +130,16 @@ class IntegrationTests(unittest.TestCase):
    self.assertIsNone(intent_runtime.boot())
    self.assertIsNone(intent_runtime.restore())
   self.assertEqual(self.home,CANDIDATE)
+
+class ShutdownTests(IntegrationTests):
+ def test_system_shutdown_restores_route_but_preserves_confirmed_intent(self):
+  from persistent_recovery import bound_exit
+  with patch('shutdown_state.stopping',return_value=True):
+   self.assertTrue(bound_exit('route-a'))
+  self.assertEqual(self.read(),self.baseline)
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.store.read()['phase'],'active')
+ def test_explicit_escape_during_shutdown_still_disables_intent(self):
+  from persistent_recovery import bound_exit
+  with patch('shutdown_state.stopping',return_value=True):
+   self.assertTrue(bound_exit('route-a',reason='escape'))
+  self.assertFalse(self.store.read()['enabled'])

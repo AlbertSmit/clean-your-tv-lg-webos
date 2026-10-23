@@ -34,7 +34,7 @@ def recover(transaction, reason):
     for _ in range(30):
         try:
             from persistent_recovery import bound_exit
-            bound = bound_exit(transaction)
+            bound = bound_exit(transaction, reason=reason)
             result = 'restored' if bound is True else d.restore_once(expected_transaction=transaction)
         except (OSError, ValueError, RuntimeError): result = 'recovering'
         if result == 'superseded': return True  # No writes to a later transaction.

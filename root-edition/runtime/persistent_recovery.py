@@ -143,6 +143,21 @@ class Coordinator:
                 self.event(intent, 'fault')
             raise
 
+    def shutdown(self, expected):
+        # PID 1 has independently confirmed shutdown. Preserve only an already
+        # confirmed active intent; restore now if services still answer. A new
+        # boot must verify recovery again before creating any replacement route.
+        with self.locked(expected):
+            if expected['phase'] != 'active' or not expected['enabled']:
+                raise ValueError('Shutdown cannot promote unconfirmed intent')
+            binding = self.read_binding(); tx = binding['transaction']
+            journal = self.route(tx)
+            result = d.restore_once(expected_transaction=tx)
+            if result != 'restored' or d.read() != journal['baseline']:
+                raise ValueError('Shutdown recovery remains pending')
+            self.write_binding(dict(binding,restored=True))
+            return True
+
     def _healthy(self, intent):
         from persistent_health import require_fresh, require_guardian
         binding = self.read_binding()
@@ -213,7 +228,7 @@ class Coordinator:
                 raise
 
 
-def bound_exit(transaction):
+def bound_exit(transaction, reason=None):
     """Return None for a legacy trial; otherwise disable bound intent and restore."""
     from persistent_store import Store
     c = Coordinator(Store(d.STATE))
@@ -224,5 +239,9 @@ def bound_exit(transaction):
     if (binding['generation'], binding['token']) != (intent['generation'], intent['token']):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
+    from shutdown_state import stopping
+    if reason != 'escape' and intent['phase'] == 'active' and intent['enabled'] and stopping():
+        print('Confirmed system shutdown: retaining active intent for boot recovery', flush=True)
+        return c.shutdown(intent)
     result = c.exit(intent, reason='fault')
     return result.get('restored_transaction') == transaction

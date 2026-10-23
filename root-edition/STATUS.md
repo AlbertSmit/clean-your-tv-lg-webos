@@ -172,3 +172,17 @@ narrow control group for status/restore, without activation or boot privileges.
 Local tests cover malformed readbacks, conflicts, duplicate requests, confirmation,
 Back cancellation and focus handling. On-TV permissions and visual behavior remain
 unverified. This does not close the frozen-UI emergency-escape gate.
+
+## RC10 UI exit accepted — 2026-10-23
+
+RC8 failed the web-process inbound check; RC9 passed inbound but failed the method
+security-group check. On this TV WebAppMgr calls as the application ID plus a PID
+suffix. Both the inbound role and narrow status/restore client group now include
+that app-specific suffix pattern, matching the established updater approach.
+
+In RC10 the user confirmed Exit Root mode opened LG Home. Independent readback at
+uptime 1015.42 seconds showed all three stock Home destinations, journal restored,
+and LG Home foreground, before the guardian deadline of 1045.87 seconds. No manual
+restore was sent. The old helper remained stopped with its latch set. The production
+launcher was opened for explicit helper resumption. This validates the normal UI
+exit, not escape from a frozen interface. Permanent activation remains locked.

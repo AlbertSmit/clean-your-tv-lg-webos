@@ -38,6 +38,12 @@ The host `restore` command and bounded deadline are the candidate's current esca
 routes. Long Home is not a promised Root-mode emergency exit. System-library
 patches and boot animations are outside this release.
 
+## Normal UI exit
+
+RC10 passed Settings → Exit Root mode → Confirm exit on the C3. Readback and LG
+Home foreground were confirmed before the independent deadline. The helper stop
+latch remained set. A frozen-UI emergency path is still a separate gate.
+
 ## Deferred observation
 
 After software-reboot recovery, Live TV became foreground and the user reported a

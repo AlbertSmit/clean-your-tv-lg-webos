@@ -74,6 +74,5 @@ Home if desired.
 
 On failure, the panel reports the error and retains recovery state. Keep the TV
 powered on during restoration. The candidate's independent deadline and host
-`restore` command remain available. This UI exit is locally tested but awaits TV
-acceptance; it is not an emergency escape from a frozen launcher. Permanent Root
+`restore` command remain available. This UI exit passed the RC10 test on OLED55C3RLA / 43.21.71; it is not an emergency escape from a frozen launcher. Permanent Root
 activation remains disabled.

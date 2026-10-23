@@ -1,0 +1,42 @@
+#!/usr/bin/python3
+"""Isolated Root candidate: status, 60-second trial, restore, boot recovery."""
+import json
+import os
+import sys
+import device_adapter as d
+
+
+def main(mode):
+    if os.geteuid() != 0:
+        raise PermissionError('Root required')
+    if mode in ('enable', 'confirm'):
+        raise ValueError('hardware-validation-required: persistent activation is unavailable in this candidate')
+    if mode == 'trial':
+        from bounded_profile_trial import begin, spawn
+        return begin(spawn)
+    if mode == 'restore':
+        return d.main('recover')
+    if mode == 'boot':
+        return d.main('boot')
+    if mode == 'status':
+        from provision import verify
+        result = d.main('status')
+        try:
+            result['recovery'] = verify()
+        except (OSError, ValueError, TypeError) as exc:
+            result['recovery'] = {'integrity_verified':False,'error':str(exc)}
+        result['candidate'] = d.CANDIDATE
+        result['persistent_enable_available'] = False
+        return result
+    raise ValueError('Expected status, trial, restore, boot, enable or confirm')
+
+
+if __name__ == '__main__':
+    try:
+        result = main(sys.argv[1] if len(sys.argv) == 2 else '')
+        print(json.dumps({'returnValue':True,'result':result}), flush=True)
+        if isinstance(result, str) and result in ('recovering', 'conflict'):
+            sys.exit(2)
+    except Exception as exc:
+        print(json.dumps({'returnValue':False,'error':str(exc)}), flush=True)
+        sys.exit(1)

@@ -19,7 +19,7 @@ This is a record of bounded tests on one device, not a compatibility promise.
 - Local file-publication tests terminated child processes at each staging
   boundary. Recovery preserved conflicting files instead of overwriting them.
 
-## What failed, and why it matters
+## Earlier registration failure and subsequent isolated success
 
 The production Home 1.1.0 manifest does not declare `appCategory: ["home"]`.
 System profile and settings readback accepted its ID, but pressing Home caused
@@ -29,7 +29,19 @@ investigate, not proof that adding the field alone completes integration.
 
 The production test was rolled back. The user confirmed normal Home and controls
 worked. Production launcher metadata and startup configuration were not changed.
-Native Back without a flash is **not yet established for the production launcher**.
+Native Back without a flash is **not yet established for an in-place production upgrade**.
+
+A subsequent 60-second trial used the real launcher UI under an isolated diagnostic
+ID with the Home category declared. The user confirmed short Home, arrows/OK and
+confirmed Back return without an observed LG flash while the helper was stopped.
+The independent timer restored routing, the helper resumed and the original
+diagnostic package was restored. This does not validate persistent installation
+or migration of the production app’s browser storage.
+
+A physical long-Home test triggered emergency recovery and restored the working
+setup, but also activated LG screen magnification. The user dismissed it with
+Back. A clean long-Home escape is therefore still a release blocker. The local
+library callback experiment is not installed and is not part of the preview.
 
 An early test also revealed repeated boot callbacks while already running.
 The lab recovery hook now defers such a callback only for a matching live,
@@ -57,3 +69,23 @@ The public doctor is read-only. The metadata planner and tests are local-only.
 The device-specific lab activator is intentionally not shipped as an installer:
 it depends on the test device's recovery service and contains unresolved release
 gates. No Root Edition IPK is produced by the standard build.
+
+## Release preparation
+
+The [rollout plan](ROLLOUT.md) separates verified isolated routing from remaining
+persistent-installation gates. `preview.py` stages a sanitized UI under a new ID
+from public source files, with per-file hashes and no services or activation hooks.
+Five offline tests cover isolation, private-file exclusion, indirect-source
+rejection, reproducibility and refusing to overwrite existing output.
+
+## Current installable candidate
+
+The separate `com.cleanyourtv.root.preview` package now includes a recovery-only
+service, host installer, persisted installation journal and bounded routing runtime.
+Local tests cover these components. The final integrated package has not yet been
+tested on the TV. Persistent enable/confirm are deliberately blocked.
+
+Unlike earlier lab trials, this candidate does not automatically resume the legacy
+helper: stopping it sets the same latch as the user's emergency exit. The user must
+stop it explicitly before a trial and explicitly resume it after rollback. No
+production helper protocol or system library is modified. See [rollout](ROLLOUT.md).

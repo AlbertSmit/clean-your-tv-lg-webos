@@ -14,6 +14,7 @@ cc -std=c99 -Wall -Wextra -Werror native/prototype/filter.c native/prototype/tes
 build/tests/test-filter
 for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.js; do node --check "$file"; done
 
+node root-edition/service/test-handlers.js
 python3 -m unittest discover -s root-edition/tests
 
 python3 -m unittest discover -s tests/setup

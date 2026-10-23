@@ -9,7 +9,9 @@ scripts/test.sh
 
 The Python suite checks doctor parsing and privacy filtering, manifest validation,
 exact-byte rollback decisions, preservation of unrelated fields, tampered plans,
-conflicts and refusing to overwrite output files. It does not emulate SAM,
+conflicts and refusing to overwrite output files. Preview tests also verify
+separate identity, exclusion of personal inventory and helper scripts, rejection
+of indirect source files and reproducible content hashes. It does not emulate SAM,
 registration-cache updates, power loss or Homebrew failsafe.
 
 Existing launcher/helper tests remain part of the normal suite. Root tooling is
@@ -44,3 +46,23 @@ Use the Root Edition issue template. Include model, firmware, component versions
 which exact stage ran, expected/actual behavior and whether rollback succeeded.
 Review/redact doctor output. Do not attach root credentials, pairing tokens,
 SSH keys, private backups, firmware images or complete device logs.
+
+## Integrated candidate acceptance record
+
+For the new package, record its `bundle.json` SHA-256 before starting. Earlier
+private tests do not count as acceptance of this build. Run these steps together:
+
+1. Install recovery-only; confirm production Home and startup are unchanged.
+2. Confirm candidate payload hashes, service root identity and owned activity.
+3. Explicitly stop the legacy helper. Start the bounded trial; confirm native
+   Home, Back Cancel, confirmed Back exit and other controls.
+4. Let the deadline expire. Check all original Home destinations and user-visible
+   control. Resume the legacy helper explicitly through its existing UI.
+5. Repeat recovery after worker failure and reboot, then Homebrew failsafe.
+6. Exercise interrupted installation and uninstall only on this isolated package;
+   preserve conflicting/unknown state for inspection.
+
+Local tests cover independent installer completion, unknown outcomes, exact
+payload hashes, recovery provisioning and the helper stop latch. They cannot
+prove delivery of a boot activity on this firmware. Permanent activation remains
+unavailable until lifecycle tests and an emergency exit are accepted.

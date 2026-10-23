@@ -19,15 +19,15 @@ Earlier lab tests do not establish acceptance of a different final bundle.
 - Recovery activity persisted across reboot; recovery integrity passed.
 - Explicit production helper resumption; Home returned to the production launcher.
 
-The TV candidate received audited corrections through RC5. A clean install of the
-final distribution has not yet been accepted. No cross-model support is implied.
+The TV candidate received audited corrections through RC5. RC7 subsequently passed clean installation and normal uninstall; routing and
+reboot evidence still applies to the earlier corrected deployment. No cross-model support is implied.
 
 ## Ordered remaining work
 
 | Priority | Gate | Pass condition |
 | --- | --- | --- |
 | 1 | Final bundle identity | Reproducible build, passing local suite, retained hashes, no private inventory |
-| 2 | Clean install and removal | Owned registration and isolated package install/remove; production state preserved |
+| 2 | Clean install and removal | Passed on RC7; production static hashes unchanged and helper active |
 | 3 | Failsafe recovery | Candidate profile restored without ordinary init.d; normal mode verified afterward |
 | 4 | Input/lifecycle matrix | Cancel and in-app Back, held arrows, volume, pointer/wheel, quick standby and cold boot on final bundle |
 | 5 | Permanent-mode escape | Validated exit restores routing without zoom, reactivation or dependence on a reachable host |

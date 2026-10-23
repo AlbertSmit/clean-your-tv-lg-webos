@@ -132,3 +132,17 @@ These results apply to the installed candidate with audited corrections through
 RC5, not a pristine RC5 installation. They do not establish permanent startup,
 power-loss recovery or failsafe delivery for this exact deployment. Persistent
 activation remains locked. See [release acceptance](RELEASE-ACCEPTANCE.md).
+
+## Clean installation and removal — RC7, 2026-10-23
+
+The first uninstall revealed that webOS leaves an empty package metadata directory
+after a matching terminal removal event. The driver now removes only that fixed
+empty directory after checking the terminal package identity, with application
+and service directories absent. Nonempty directories, symlinks and unverified
+events still stop cleanup. No recursive removal is performed.
+
+RC7 then passed clean installation and normal uninstall on the test TV. Production
+Home and helper static-file hashes matched before/after installation, and the
+helper remained active. The installer did not change the three system Home values.
+Recovery integrity passed after installation. Retained state was archived rather
+than discarded. These tests do not activate permanent routing.

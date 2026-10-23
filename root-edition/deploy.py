@@ -165,6 +165,29 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
     return {'returnValue': True, 'installed': APP, 'home_changed': False}
 
 
+def verify_removed(evidence):
+    """webOS may retain an empty package directory after terminal removal."""
+    paths = installed_paths()
+    package = paths[1]
+    if package.exists() or package.is_symlink():
+        event = evidence.get('event', {})
+        details = event.get('details', {})
+        valid = (evidence.get('completed') is True and event.get('id') == APP
+                 and event.get('statusValue') == 31 and event.get('returnValue') is not False
+                 and 'errorCode' not in event and isinstance(details, dict)
+                 and details.get('packageId') == APP and details.get('state') == 'removed'
+                 and 'errorCode' not in details)
+        if (not valid or any(p.is_symlink() for p in (package, *package.parents))
+                or not package.is_dir() or any(p.exists() or p.is_symlink() for p in (paths[0], paths[2]))):
+            raise OutcomeUnknown('Unverified removal remainder; state retained')
+        try:
+            package.rmdir()  # Empty only: never recursively remove leftover contents.
+        except OSError as exc:
+            raise OutcomeUnknown('Nonempty or changed package remainder; state retained') from exc
+    if any(p.exists() or p.is_symlink() for p in paths):
+        raise OutcomeUnknown('Removal terminal received but candidate files remain; state retained')
+
+
 def uninstall(run=command):
     if (STATE / 'deploy.json').exists():
         previous = json.loads(checked_file(STATE, 'deploy.json')).get('stage')
@@ -180,8 +203,7 @@ def uninstall(run=command):
     write_stage('remove-submitting')
     evidence = remove(APP, timeout=120)
     write_stage('remove-observed', evidence=evidence)
-    if any(p.exists() or p.is_symlink() for p in installed_paths()):
-        raise OutcomeUnknown('Removal terminal received but candidate files remain; state retained')
+    verify_removed(evidence)
     write_stage('uninstalled-state-retained')
     return {'returnValue': True, 'removed': APP, 'state_retained': str(STATE)}
 

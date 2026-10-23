@@ -184,6 +184,32 @@ class DeployTests(unittest.TestCase):
             self.assertTrue(state.exists())
             self.assertEqual(json.loads((state / 'deploy.json').read_text())['stage'], 'remove-observed')
 
+    def test_empty_package_remnant_requires_matching_terminal(self):
+        deploy = load('deploy')
+        with tempfile.TemporaryDirectory() as tmp:
+            installed = Path(tmp).resolve()
+            package = installed / ('usr/palm/packages/' + deploy.APP)
+            package.mkdir(parents=True)
+            evidence = {'completed':True,'event':{'id':deploy.APP,'statusValue':31,
+                'details':{'packageId':deploy.APP,'state':'removed'}}}
+            with patch.object(deploy, 'INSTALLED', installed):
+                with self.assertRaises(deploy.OutcomeUnknown):
+                    deploy.verify_removed({'completed':True})
+                self.assertTrue(package.exists())
+                (package / 'unexpected').write_text('retain')
+                with self.assertRaises(deploy.OutcomeUnknown):
+                    deploy.verify_removed(evidence)
+                self.assertTrue((package / 'unexpected').exists())
+                (package / 'unexpected').unlink()
+                deploy.verify_removed(evidence)
+                self.assertFalse(package.exists())
+                other = installed / 'other'; other.mkdir()
+                package.symlink_to(other, target_is_directory=True)
+                with self.assertRaises(deploy.OutcomeUnknown):
+                    deploy.verify_removed(evidence)
+                self.assertTrue(package.is_symlink())
+                self.assertTrue(other.exists())
+
     def test_uncertain_removal_is_not_resubmitted(self):
         deploy = load('deploy')
         with tempfile.TemporaryDirectory() as tmp:

@@ -25,11 +25,11 @@ handling moved from an external watcher to an on-TV native helper.
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Separate preview; native Home/Back routing, permanent mode and recovery tested on one C3 | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root Stable 0.1.0, scoped to OLED55C3RLA / 43.21.71; see limitations | [Overview and evidence](root-edition/README.md) |
 
-Both use the same Home interface. Root Preview provides native system routing
+Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
-It installs separately; final-artifact cold-boot and failsafe acceptance remains open. [Compare requirements, controls and limits](docs/EDITIONS.md).
+It installs separately. Cold-power testing is deferred; one intermittent emergency-gesture observation remains open. [Compare requirements, controls and limits](docs/EDITIONS.md).
 The features and remote-control guide below describe **No-root Edition**.
 
 ![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)

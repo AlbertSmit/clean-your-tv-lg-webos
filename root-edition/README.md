@@ -5,10 +5,11 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-**Root Preview:** permanent mode and software-reboot startup have been tested on
-**LG OLED55C3RLA / firmware 43.21.71**. This is not a cross-model compatibility
-claim or a stable release certification. Keep the working No-root installation.
-Final-artifact cold-power, quick-standby and failsafe acceptance remains open.
+**Root Stable 0.1.0** is scoped to **LG OLED55C3RLA / firmware 43.21.71**.
+Other models and firmware are unvalidated. Cold-power testing of this exact bundle
+is deferred; one initial second-attempt emergency-gesture report remains unexplained,
+although instrumented repeats passed. Read the [release scope](ROOT-STABLE-0.1.0.md).
+Keep the working No-root installation and recovery backups.
 
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
 [Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)

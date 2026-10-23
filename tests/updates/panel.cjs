@@ -8,4 +8,5 @@ ids.updateCheck.click();reply(JSON.stringify({returnValue:true,result:{home:'1.2
 let prevented=0;listeners[0]({keyCode:39,preventDefault(){prevented++;},stopImmediatePropagation(){}});assert.equal(focus,ids.updateRecovery);assert.equal(prevented,1);
 listeners[0]({keyCode:37,preventDefault(){},stopImmediatePropagation(){}});assert.equal(focus,ids.updateCheck,'left must skip disabled install backwards');
 listeners[0]({keyCode:461,preventDefault(){},stopImmediatePropagation(){}});listeners[0]({keyCode:39,preventDefault(){throw Error('closed panel ate key');},stopImmediatePropagation(){}});
+let returned=false;ctx.window.HomeUpdates.open({onClose(){returned=true;}});ids.updateBack.click();assert(returned,'Back returns to the settings panel that opened updates');
 console.log('PASS update panel no-root/current state and remote navigation');

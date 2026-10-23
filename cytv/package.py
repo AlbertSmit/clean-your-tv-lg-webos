@@ -44,14 +44,14 @@ def read_ar(data):
     return result
 
 
-def tgz(files, executable=(), helper_state=False):
+def tgz(files, executable=(), helper_state=False, directories=True):
     raw = io.BytesIO()
     dirs = set()
     for name in files:
         safe_name(name)
         dirs.update(str(p) for p in PurePosixPath(name).parents if str(p) != '.')
     with tarfile.open(fileobj=raw, mode='w', format=tarfile.USTAR_FORMAT) as archive:
-        for name in sorted(dirs):
+        for name in sorted(dirs) if directories else ():
             entry = tarfile.TarInfo(name)
             entry.type, entry.mode = tarfile.DIRTYPE, 0o755
             if helper_state and name in ('usr/palm/applications/com.local.nativehome/state', 'usr/palm/services/com.local.nativehome.service/state'):
@@ -84,6 +84,19 @@ def data_files(data):
         return result
 
 
+def verify_root_rollback_format(data):
+    """Check the updater's file-only archive contract before changing the TV."""
+    parts = read_ar(data)
+    for name in ('control.tar.gz', 'data.tar.gz'):
+        seen = set()
+        with tarfile.open(fileobj=io.BytesIO(parts[name]), mode='r:gz') as archive:
+            for member in archive:
+                safe_name(member.name)
+                if not member.isfile() or member.name in seen:
+                    raise ValueError('Root rollback package has unsupported archive entries. Use a corrected installer build.')
+                seen.add(member.name)
+
+
 def inventory_script(inventory):
     if not isinstance(inventory, dict) or not isinstance(inventory.get('apps'), list) or not inventory['apps']:
         raise ValueError('No usable apps were read from the TV. Installation stopped.')
@@ -99,7 +112,7 @@ def personalize(data, app, inventory):
     parts = read_ar(data)
     files = data_files(data)
     files['usr/palm/applications/' + app + '/apps.js'] = inventory_script(inventory)
-    parts['data.tar.gz'] = tgz(files)
+    parts['data.tar.gz'] = tgz(files, directories=app != ROOT_APP)
     return ar(parts), files
 
 

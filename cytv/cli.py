@@ -293,7 +293,13 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write.raw('  ' + str(diagnostics.create_report(store, args.command, profile, 'doctor-complete', tv_info=tv_info)))
             else:
                 phase = args.command
-                write.raw(json.dumps(getattr(installer, args.command)(), indent=2))
+                result = getattr(installer, args.command)()
+                if (result.get('reconciled') or '').startswith('updater-not-started'):
+                    write.heading('Ready to reinstall Root')
+                    write('The previous attempt stopped before Root Updater setup. Recovery and installed files are verified; the previous operation report was saved.')
+                    write('Return to the start screen, choose Set up my TV and confirm reinstallation. In the console, run cytv install.')
+                else:
+                    write.raw(json.dumps(result, indent=2))
         return 0
     except (EOFError, KeyboardInterrupt, StopIteration):
         write('Cancelled. Installation has not started.' if args.command == 'install' and phase in ('pair-tv', 'read-inventory', 'prepare-payload', 'select-tv', 'select-edition', 'inspect-tv', 'ssh-connect', 'inspect-installation')

@@ -4,7 +4,7 @@ The desktop wizard opens in its own window. It includes Python and the TV packag
 you do not need developer tools or terminal commands.
 
 Download the desktop package for your computer from the
-[v0.10.0 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.0).
+[v0.10.1 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1).
 The older v0.9.0 macOS/Linux files are console programs, not the desktop app.
 
 ## macOS
@@ -15,11 +15,35 @@ The older v0.9.0 macOS/Linux files are console programs, not the desktop app.
 3. Drag `cytv.app` into **Applications**, then double-click it.
 4. Allow **Local Network** access if macOS asks. Click **Set up my TV**.
 
-The app currently has an ad-hoc signature, not an Apple Developer ID signature or
-notarization. If macOS blocks it, open **System Settings → Privacy & Security**,
-find the message about cytv and choose **Open Anyway**, then confirm. Only approve
-a download you obtained from this project's release or build. Do not disable
-Gatekeeper or run terminal commands to remove quarantine.
+### If macOS says “cytv was not opened”
+
+Our current Mac builds are not Apple-notarized. macOS may say that Apple cannot
+verify whether cytv contains malware. If you downloaded the app from this
+project's GitHub release and want to open it:
+
+1. Click **Done** to dismiss the warning; keep the app in **Applications**.
+2. Open **Apple menu → System Settings → Privacy & Security**.
+3. Scroll to **Security**, find the blocked cytv message and click **Open Anyway**.
+4. Confirm with your Mac password or Touch ID if requested, then click **Open**.
+
+After this approval, launch cytv normally by double-clicking it. If the button is
+missing, try opening cytv once more, then return to these settings. A managed
+work Mac may require your administrator's help.
+
+These steps apply to the unverified-developer/notarization warning. If macOS
+reports actual malware or a damaged app, stop and report the exact message.
+Do not disable Gatekeeper or remove quarantine with terminal commands.
+See [Apple's first-launch guidance](https://support.apple.com/en-mo/102445).
+
+### If the app opens but cannot connect to the TV
+
+1. Turn on the TV and connect it and your Mac to the same home network.
+2. Open **System Settings → Privacy & Security → Local Network** and enable **cytv**
+   if it is listed. Allow access when the app asks.
+3. After changing permission, fully quit cytv and reopen it. Use **Check TV status**
+   before retrying an interrupted installation.
+4. If the connection still fails, save the diagnostic report and open an issue
+   with the error, macOS version and TV model. Do not delete recovery files.
 
 Desktop dependencies require macOS 13 or newer; native CI builds run on macOS 15.
 Older-system acceptance has not been established.

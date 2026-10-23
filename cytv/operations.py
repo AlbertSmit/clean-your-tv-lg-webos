@@ -19,6 +19,15 @@ UPDATER_STATE = '/var/lib/clean-your-tv-root-updater'
 UPDATER_APP = 'com.cleanyourtv.root.updater'
 
 
+def root_updater_paths():
+    return [UPDATER_STATE, '/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
+             *[BASE + '/' + kind + '/' + UPDATER_APP + suffix
+               for kind, suffix in (('applications', ''), ('packages', ''), ('services', '.service'))],
+             *['/var/luna-service2-dev/' + kind + '/' + UPDATER_APP + '.service' + suffix
+               for kind, suffix in (('services.d', '.service'), ('roles.d', '.service.json'),
+                                ('client-permissions.d', '.service.json'), ('api-permissions.d', '.api.json'))]]
+
+
 class Installer:
     def __init__(self, remote, store, profile, payload, manifest, progress=print):
         self.remote, self.store, self.profile = remote, store, profile
@@ -144,12 +153,7 @@ class Installer:
             raise UserError('Root Updater bundle is missing or invalid. Use a complete installer build.') from error
         # A retained updater is pinned to the existing recovery runtime. Never
         # remove that runtime as part of a generic reinstall.
-        paths = [UPDATER_STATE, '/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
-                 *[BASE + '/' + kind + '/' + UPDATER_APP + suffix
-                   for kind, suffix in (('applications', ''), ('packages', ''), ('services', '.service'))],
-                 *['/var/luna-service2-dev/' + kind + '/' + UPDATER_APP + '.service' + suffix
-                   for kind, suffix in (('services.d', '.service'), ('roles.d', '.service.json'),
-                                        ('client-permissions.d', '.service.json'), ('api-permissions.d', '.api.json'))]]
+        paths = root_updater_paths()
         condition = ' || '.join('[ -e ' + p + ' ] || [ -L ' + p + ' ]' for p in paths)
         if self.remote.run('if ' + condition + '; then printf CYTV_EXISTING_UPDATER; fi').strip():
             raise UserError('Root Updater already exists or setup state remains. Use Software updates on the TV; if unavailable, inspect recovery before reinstalling.')
@@ -162,6 +166,7 @@ class Installer:
             for name, digest in manifest['files'].items():
                 if hashlib.sha256((bundle / package.safe_name(name)).read_bytes()).hexdigest() != digest:
                     raise ValueError('Prepared Root bundle integrity mismatch')
+            package.verify_root_rollback_format((bundle / package.safe_name(manifest['package'])).read_bytes())
             release_sha = hashlib.sha256((bundle / 'release.json').read_bytes()).hexdigest()
             bundle_sha = hashlib.sha256((bundle / 'bundle.json').read_bytes()).hexdigest()
             if reinstall:
@@ -312,6 +317,9 @@ print('CYTV_UPDATER_VERIFIED')
                     self.store.finish(self.profile)
                     reconciled = ('root-activation-verified' if pending.get('launch_requested') is True
                                   else 'root-activation-verified; screen launch unconfirmed, press Home to open it')
+                if self.recover_unstarted_root_updater(pending, result.get('result', {})):
+                    pending = None
+                    reconciled = 'updater-not-started; recovery verified; reinstallation available'
                 if (pending and pending['action'] == 'install' and not pending.get('requires_updater')
                         and result.get('result', {}).get('recovery', {}).get('integrity_verified') is True
                         and self.root_files_match(pending)):
@@ -349,6 +357,58 @@ print('CYTV_UPDATER_VERIFIED')
                 reconciled = 'removal-verified'
         return {'device': result, 'pending': self.store.pending(self.profile), 'reconciled': reconciled,
                 **({'deployment_stage': stage} if self.profile['edition'] == 'root' else {})}
+
+    def recover_unstarted_root_updater(self, pending, device):
+        """Resolve only a proven pre-bootstrap failure; never change TV state."""
+        if (self.profile['edition'] != 'root' or not pending
+                or pending.get('action') != 'setup-root-updater' or pending.get('stage') != 'setup'
+                or pending.get('requires_updater') is not True):
+            return False
+        try:
+            effective = device.get('effective', {})
+            profiles = effective.get('profiles', {})
+            never_activated = (device.get('journal_exists') is False
+                               and 'guardian_active' not in device
+                               and 'intent' in device and device['intent'] is None)
+            disabled = (device.get('guardian_active') is False
+                        and isinstance(device.get('intent'), dict)
+                        and device['intent'].get('enabled') is False)
+            if (device.get('recovery', {}).get('integrity_verified') is not True
+                    or not (never_activated or disabled)
+                    or effective.get('sam_home') != 'com.webos.app.home'
+                    or profiles.get('defaultApps', {}).get('categories', {}).get('home') != 'com.webos.app.home'
+                    or profiles.get('idleApp', {}).get('appId') != 'com.webos.app.home'):
+                return False
+            # A disconnected SSH session may leave bootstrap validating its bundle.
+            # Check this before paths: bootstrap creates state before any mutation.
+            script = """from pathlib import Path
+import os
+for proc in Path('/proc').iterdir():
+    if not proc.name.isdigit() or int(proc.name) == os.getpid(): continue
+    try: args = (proc/'cmdline').read_bytes().split(b'\\0')
+    except FileNotFoundError: continue
+    if any(arg.rsplit(b'/',1)[-1] == b'setup-updater.py' for arg in args):
+        raise RuntimeError('Updater bootstrap is still running')
+print('CYTV_BOOTSTRAP_IDLE')
+"""
+            if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script])).strip() != 'CYTV_BOOTSTRAP_IDLE':
+                return False
+            condition = ' || '.join('[ -e ' + shlex.quote(p) + ' ] || [ -L ' + shlex.quote(p) + ' ]' for p in root_updater_paths())
+            if self.remote.run('if ' + condition + '; then printf CYTV_EXISTING_UPDATER; else printf CYTV_UPDATER_ABSENT; fi').strip() != 'CYTV_UPDATER_ABSENT':
+                return False
+            idle = self.remote.luna('com.webos.appInstallService/status', {'subscribe': True})
+            if idle.get('returnValue') is not True or idle.get('status', {}).get('apps') != []:
+                return False
+            if not self.root_files_match(pending):
+                return False
+        except (RuntimeError, ValueError, TypeError, KeyError, AttributeError):
+            return False
+        # Archive the incomplete operation before unlocking an explicit reinstall.
+        from .state import private_write
+        receipt = self.store.recovery(self.profile, 'updater-not-started')
+        private_write(receipt, json.dumps({'action': 'updater-not-started', 'stage': 'verified', 'previous': pending}).encode())
+        self.store.finish(self.profile)
+        return True
 
     def prepare_root_reinstall(self, already_removed=False):
         if self.profile['edition'] != 'root' or self.store.pending(self.profile):

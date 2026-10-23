@@ -75,6 +75,24 @@ class SourceIsolationTests(unittest.TestCase):
             self.assertNotIn('state.json', result)
             self.assertFalse(any(b'PRIVATE_SENTINEL' in value for value in result.values()))
 
+    def test_bootstrap_tag_is_optional_and_never_in_root_output(self):
+        import shutil
+        from unittest.mock import patch
+        sys.path.insert(0, str(SCRIPT.parent))
+        import preview
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / 'launcher'
+            shutil.copytree(ROOT / 'launcher', source)
+            page = source / 'index.html'
+            tag = '<script src="native-bootstrap.js"></script>'
+            clean = page.read_text().replace(tag, '')
+            for html in (clean, clean.replace('</body>', tag + '</body>')):
+                page.write_text(html)
+                with patch.object(preview, 'SOURCE', source):
+                    result = preview.prepare()
+                self.assertNotIn(b'native-bootstrap.js', result['index.html'])
+                self.assertNotIn('native-bootstrap.js', result)
+
     def test_indirect_source_rejected_before_output_created(self):
         import shutil
         from unittest.mock import patch

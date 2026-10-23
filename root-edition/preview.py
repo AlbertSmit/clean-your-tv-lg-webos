@@ -35,8 +35,10 @@ def prepare(version='0.0.1'):
         if info.get(field) not in files:
             raise ValueError('Unpackaged manifest resource: ' + field)
     html = files['index.html'].decode()
+    # Older launcher sources may still include the now-inert compatibility entry.
+    html = html.replace('<script src="native-bootstrap.js"></script>', '')
     tags = ['<script src="' + name + '"></script>' for name in (
-        'native-bootstrap.js', 'helper-control.js', 'renewal-panel.js',
+        'helper-control.js', 'renewal-panel.js',
         'user-data.js', 'update-panel.js')]
     tags.append('<link rel="stylesheet" href="renewal-panel.css">')
     for tag in tags:

@@ -1,1 +1,3 @@
-!function(){"use strict";var a,c;function e(){if(clearTimeout(c),a){try{a.cancel()}catch(a){}a=null}}try{(a=new PalmServiceBridge).onservicecallback=e,c=setTimeout(e,8e3),a.call("luna://com.webos.applicationManager/launch",JSON.stringify({id:"com.local.nativehome",params:{nativeHomeAuto:!0}}))}catch(a){e()}}();
+/* Compatibility stub for older launcher HTML. Never launch Home Helper on page load:
+ * SAM may close the foreground Home even when the native process immediately exits.
+ * Boot activity and an explicit Home Helper launch own startup and recovery. */

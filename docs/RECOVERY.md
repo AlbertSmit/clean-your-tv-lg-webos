@@ -35,3 +35,14 @@ the issue. Keep the launcher assigned to a Quick Access key as another entry poi
 If a quick power cycle leaves tiles visible but unresponsive, try triple Home and
 check arrows on LG Home. Report the helper version and whether it reproduces with
 the helper stopped. Version 0.6.12 avoids a duplicate launch after system restoration.
+
+Opening Home does not start or restart Home Helper. This avoids a native launch
+that can cause webOS to close the visible Home on some TVs. The existing boot
+activity still starts the helper automatically when permitted. After a helper
+exit (including exit code 25 without a stop flag), open **Home Helper** manually
+to restore control; merely reopening Home will not restart it.
+
+After standby, Home recovery watches for LG Home for up to 30 seconds. It makes
+at most two additional launch attempts, only after LG Home has stayed visible
+for 1.5 seconds and the previous launch has settled for at least 5 seconds.
+Opening another app or turning the TV off cancels this recovery.

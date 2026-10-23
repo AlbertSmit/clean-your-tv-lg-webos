@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import sys
 
-from . import __version__, package, state
+from . import __version__, package, state, i18n
 from .errors import UserError, TVNotReady, ExistingRoot
 from .operations import Installer
 from .terminal import Console
@@ -18,21 +18,42 @@ def payload_dir():
     return Path(__file__).resolve().parents[1] / 'build/cytv/payload'
 
 
+class LanguageParser(argparse.ArgumentParser):
+    def format_usage(self):
+        return super().format_usage().replace('usage:', i18n.translate('usage:'))
+
+    def format_help(self):
+        return super().format_help().replace('usage:', i18n.translate('usage:'))
+
+    def error(self, message):
+        self.print_usage(sys.stderr)
+        if message.startswith('argument ') and ': ' in message:
+            argument, detail = message[9:].split(': ', 1)
+            message = argument + ': ' + i18n.translate(detail)
+        else:
+            message = i18n.translate(message)
+        self.exit(2, self.prog + ': ' + i18n.translate('error:') + ' ' + message + '\n')
+
+
 def parser():
-    result = argparse.ArgumentParser(prog='cytv', description='Clean Your TV — one installer for No-root and Root.')
+    result = LanguageParser(prog='cytv', add_help=False, description=i18n.translate('Clean Your TV — one installer for No-root and Root.'))
+    result._positionals.title = i18n.translate('positional arguments')
+    result._optionals.title = i18n.translate('options')
+    result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
     result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'restore', 'uninstall'))
-    result.add_argument('--version', action='store_true', help='Print installer version')
-    result.add_argument('--host', help='TV IPv4 address or hostname')
-    result.add_argument('--no-discovery', action='store_true', help='Skip local network discovery and enter a TV address manually')
+    result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
+    result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
+    result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
+    result.add_argument('--no-discovery', action='store_true', help=i18n.translate('Skip local network discovery and enter a TV address manually'))
     result.add_argument('--edition', choices=('no-root', 'root'))
-    result.add_argument('--port', type=int, help='SSH port (No-root: 9922; Root: 22)')
-    result.add_argument('--identity', type=Path, help='Existing Root SSH private key')
-    result.add_argument('--data-dir', type=Path, help='Private local profile directory')
-    result.add_argument('--non-interactive', action='store_true', help='Never prompt; needs a saved, trusted connection')
-    result.add_argument('--yes', action='store_true', help='Accept install/remove summary; does not accept SSH trust')
-    result.add_argument('--migrate-home', action='store_true', help='Root install: explicitly import existing Home packaged/profile data')
-    result.add_argument('--check-payload', action='store_true', help='Verify embedded release assets without contacting a TV')
-    result.add_argument('--report', action='store_true', help='doctor: save an issue-ready diagnostic report without private connection data')
+    result.add_argument('--port', type=int, help=i18n.translate('SSH port (No-root: 9922; Root: 22)'))
+    result.add_argument('--identity', type=Path, help=i18n.translate('Existing Root SSH private key'))
+    result.add_argument('--data-dir', type=Path, help=i18n.translate('Private local profile directory'))
+    result.add_argument('--non-interactive', action='store_true', help=i18n.translate('Never prompt; needs a saved, trusted connection'))
+    result.add_argument('--yes', action='store_true', help=i18n.translate('Accept install/remove summary; does not accept SSH trust'))
+    result.add_argument('--migrate-home', action='store_true', help=i18n.translate('Root install: explicitly import existing Home packaged/profile data'))
+    result.add_argument('--check-payload', action='store_true', help=i18n.translate('Verify embedded release assets without contacting a TV'))
+    result.add_argument('--report', action='store_true', help=i18n.translate('doctor: save an issue-ready diagnostic report without private connection data'))
     return result
 
 
@@ -100,11 +121,28 @@ def choose_profile(args, store, ask, write, search, inspect):
 
 
 def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None):
+    raw_args = list(sys.argv[1:] if argv is None else argv)
+    requested = next((arg.split('=', 1)[1] for arg in raw_args if arg.startswith('--language=')), None)
+    if '--language' in raw_args and raw_args.index('--language') + 1 < len(raw_args):
+        requested = raw_args[raw_args.index('--language') + 1]
+    if requested in i18n.LANGUAGES:
+        i18n.set_language(requested)
+    language_parser = LanguageParser(prog='cytv', add_help=False)
+    language_parser.add_argument('--language', choices=tuple(i18n.LANGUAGES))
+    language_parser.add_argument('--data-dir', type=Path)
+    language_args, _ = language_parser.parse_known_args(argv)
+    try:
+        i18n.configure(language_args.language, language_args.data_dir)
+    except OSError:
+        i18n.set_language(language_args.language or 'auto')
+        write(i18n.translate('Could not save language preference'))
+        write(i18n.translate('Check write access to the application data folder and try again.'))
+        return 2
     args = parser().parse_args(argv)
     if args.version:
         write('cytv ' + __version__)
         return 0
-    write = Console(write, interactive=False if args.non_interactive else None)
+    write = write if isinstance(write, Console) else Console(write, interactive=False if args.non_interactive else None)
     ask = write.reader(ask)
     remote = None
     store, profile, phase, tv_info = state.Store(args.data_dir), None, 'select-tv', {}
@@ -254,6 +292,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     phase = {'Installing Home Helper…': 'install-helper', 'Installing Home…': 'install-home',
                              'Configuring Home Helper…': 'configure-helper',
                              'Uploading Root and recovery runtime…': 'install-root',
+                             'Installing Root Updater and preparing rollback…': 'install-root-updater',
+                             'Checking Root Updater…': 'verify-root-updater',
                              'Checking Root recovery…': 'verify-root-recovery',
                              'Stopping the old Home Helper…': 'stop-old-helper',
                              'Turning on Root Home control…': 'activate-root',
@@ -273,6 +313,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 if profile['edition'] == 'root':
                     write.heading('Root is ready')
                     write('Home control is on and Clean Your TV Home was opened.')
+                    if result.get('updates_ready'):
+                        write('Root Updater is ready. Install future compatible updates in Settings → Software updates on the TV.')
                     write('Home control stays on until you turn it off. The computer can now be switched off.')
                     write('To restore LG Home, use Return to LG Home in settings or run cytv restore.')
                     write('Root emergency exit: three short Home presses within two seconds.')
@@ -325,7 +367,7 @@ def entry():
     code = main()
     if launched_without_args:
         try:
-            input('\nPress Enter to close…')
+            input(i18n.translate('\nPress Enter to close…'))
         except (EOFError, KeyboardInterrupt):
             pass
     return code

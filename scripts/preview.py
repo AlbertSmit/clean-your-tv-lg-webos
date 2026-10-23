@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_FILES = {
     'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'app-library.js', 'config.js',
     'user-data.js', 'update-panel.js', 'renewal-panel.js', 'profile-bootstrap.js',
-    'native-bootstrap.js', 'helper-control.js', 'fonts/outfit.ttf', 'fonts/OFL.txt',
+    'native-bootstrap.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 }
 DEMO_APPS = [
     ('youtube', 'YouTube', '#ffffff'),
@@ -31,8 +31,8 @@ DEMO_APPS = [
 ]
 ROOT_LAUNCHER_FILES = {
     'index.html', 'app.js', 'app-library.js', 'style.css', 'config.js', 'apps.js',
-    'fonts/outfit.ttf', 'fonts/OFL.txt',
-    'root-exit.js', 'root-settings.js', 'root-settings.css',
+    'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
+    'i18n.js', 'catalogs.js', 'i18n.css', 'root-locales.js', 'root-exit.js', 'root-settings.js', 'root-settings.css',
     'root-profile-data.js', 'root-profile.js', 'root-updates.js',
 }
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}
@@ -51,7 +51,7 @@ def inventory():
 def revision():
     files = [ROOT / 'launcher' / name for name in sorted(LAUNCHER_FILES)]
     files += [ROOT / 'root-edition/preview.py']
-    files += [ROOT / 'root-edition/ui' / name for name in ('root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')]
+    files += [ROOT / 'root-edition/ui' / name for name in ('root-locales.js', 'root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')]
     files += [ROOT / 'preview/index.html', ROOT / 'preview/bridge.js', ROOT / 'preview/live-reload.js']
     files += [ROOT / 'preview/icons' / name for name in sorted(ICON_FILES)]
     stamps = []
@@ -123,7 +123,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == '/':
             file = ROOT / 'preview/index.html'
-        elif path in ('/preview/bridge.js', '/preview/live-reload.js'):
+        elif path in ('/preview/bridge.js', '/preview/live-reload.js', '/preview/settings.html'):
             file = ROOT / path.lstrip('/')
         elif path.startswith('/preview/icons/') and path[len('/preview/icons/'):] in ICON_FILES:
             file = ROOT / path.lstrip('/')

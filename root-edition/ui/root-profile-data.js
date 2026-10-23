@@ -40,7 +40,8 @@
     if (!Number.isInteger(value.config.columns) || value.config.columns < 1 || value.config.columns > 8) throw Error('Invalid columns');
     ids(value.config.dockApps); ids(value.config.hiddenApps);
     if (value.config.liveTvApp !== undefined) text(value.config.liveTvApp, 256, true);
-    fields(value.settings, [], ['tvhome.order']);
+    fields(value.settings, [], ['tvhome.order', 'tvhome.language']);
+    if (value.settings['tvhome.language'] !== undefined && ['auto','en','de','es','pt-BR','fr','it','ko','hi','pl','ru'].indexOf(value.settings['tvhome.language']) < 0) throw Error('Invalid language preference');
     if (value.settings['tvhome.order'] !== undefined) {
       text(value.settings['tvhome.order'], LIMIT, true);
       var order = JSON.parse(value.settings['tvhome.order']);

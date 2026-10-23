@@ -11,7 +11,7 @@ import struct
 import sys
 import time
 from pathlib import Path
-from emergency_gesture import TripleHome
+from emergency_gesture import TripleHome, LongBack
 EVENT = struct.Struct('<IIHHi')
 NAME = b'LGE M-RCU - Builtin [0]'
 
@@ -57,7 +57,7 @@ def observe(fd, health, keys_released):
         if not data: send(b'LOST'); return
     else: send(b'LOST'); return
     if not keys_released(): send(b'LOST'); return
-    policy = TripleHome(); send(b'READY')
+    policy = TripleHome(); back = LongBack(); send(b'READY')
     while True:
         select.select([fd], [], [], .1)
         for _ in range(64):
@@ -69,8 +69,10 @@ def observe(fd, health, keys_released):
                 if usec >= 1000000: send(b'LOST'); return
                 try: fired = policy.event(kind, code, value, sec * 1000 + usec / 1000)
                 except ValueError: send(b'LOST'); return
+                back.event(kind, code, value, time.monotonic() * 1000)
                 if fired: send(b'ESCAPE'); return
         else: send(b'LOST'); return
+        if back.tick(time.monotonic() * 1000): send(b'LGHOME')
         send(b'PING')
 
 

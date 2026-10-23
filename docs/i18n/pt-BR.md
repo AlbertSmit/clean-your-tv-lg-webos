@@ -1,0 +1,50 @@
+# Clean Your TV — guia de uso
+
+## Requisitos
+
+Este guia cobre instalação, uso e recuperação. A escolha de idioma e o aplicativo para macOS/Linux se aplicam à próxima compilação ou ao código com esta alteração. Os downloads existentes da v0.9.0 não incluem o novo aplicativo gráfico. Use as [versões do projeto](https://github.com/Razdva122/clean-your-tv-lg-webos/releases) quando publicadas, ou os artefatos de uma execução bem-sucedida de **cytv standalone builds** com esta alteração.
+
+Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois, o computador pode ficar desligado. A compatibilidade depende do modelo, firmware e controle remoto; Root ainda é uma prévia com testes em hardware pendentes.
+
+- **No-root:** ative LG Developer Mode e Key Server. Digite a frase de acesso exibida na TV e aceite nela o pedido separado de pareamento. Developer Mode deve continuar ativo: a expiração pode remover aplicativos instalados por esse método. Confira o cronômetro oficial mesmo com a renovação Beta ativada. O monitoramento do Helper depende da rede local.
+- **Root:** é necessário acesso SSH root já existente. O instalador não faz root. Não ative Developer Mode em uma TV que já tenha root. Mantenha o acesso root e os serviços de recuperação disponíveis.
+
+## Instalação e idioma
+
+- **Windows x64:** extraia o pacote de console e abra `cytv.exe`. No PowerShell, troque `./cytv` por `.\cytv.exe` nos comandos abaixo. Não há aplicativo gráfico para Windows neste pacote.
+- **macOS 13+:** extraia `cytv-macos-arm64.zip` para Apple Silicon ou `cytv-macos-x64.zip` para Intel; mova `cytv.app` para Aplicativos e abra. Permita acesso à rede local. Se uma cópia confiável for bloqueada, use Privacidade e Segurança → Abrir Mesmo Assim; não desative o Gatekeeper. A compatibilidade com sistemas antigos não foi confirmada.
+- **Linux x64:** no Ubuntu 22.04+, Debian 12+ ou Mint 21+, instale `cytv-linux-x64.deb` com o gerenciador gráfico de pacotes e abra Clean Your TV pelo menu. Pode ser necessário acesso à Internet para bibliotecas. Não há pacote Linux ARM.
+
+O assistente usa inicialmente o idioma do sistema e salva sua escolha explícita. Na TV, abra **Configurações → Idioma** e escolha um idioma ou a opção automática do sistema. As preferências da TV e do instalador são independentes. Veja os códigos no [índice de idiomas](../LANGUAGES.md).
+
+Para a CLI baixada separadamente no macOS/Linux, na pasta extraída:
+
+```sh
+chmod +x cytv
+./cytv --language pt-BR install
+```
+
+Escolha a TV ou informe o IP, selecione a edição e confira o resumo. Confirme uma nova identidade SSH apenas para sua TV em uma rede confiável; uma chave salva que mudou bloqueia o acesso. Root prepara a recuperação e ativa Home imediatamente, sem período de teste nem etapa de confirmação para manter. Teste setas, OK, Home, Voltar/Cancelar, volume, espera e inicialização a frio.
+
+## Uso e recuperação
+
+Setas selecionam; OK abre; segure OK para reorganizar. Um toque em Voltar mantém a navegação e a confirmação de saída do aplicativo. Home abre o lançador com o controle ativo. Nas novas compilações, segure Voltar por 1,2 segundos para abrir LG Home uma vez. O interruptor de controle do Home e suas configurações não mudam.
+
+**Novas compilações: pressione Home três vezes em dois segundos**, soltando entre os toques. Isso restaura LG Home e interrompe o controle sem apagar preferências. No No-root Helper até a versão 0.6.13, segure Home por cerca de dois segundos. Segurar Home não é o gesto de emergência do Root.
+
+No-root: abra **Home Helper** na lista de aplicativos LG para retomar; abrir apenas Home não remove a parada. Root: ative **Alterar Home** nas configurações do Home para retomar. **Abrir LG Home** abre LG Home uma vez sem mudar o destino de Home. Para restaurar LG Home como destino permanente, desative **Alterar Home** ou execute `cytv restore`. Nunca execute os dois controladores juntos. Se a falha voltar, mantenha LG Home ativo.
+
+```sh
+./cytv --language pt-BR status
+./cytv --language pt-BR doctor --report
+./cytv --language pt-BR restore
+./cytv --language pt-BR uninstall
+```
+
+Após uma interrupção, execute primeiro `status` e preserve os registros. `restore` restaura LG Home sem remover aplicativos; `uninstall` restaura antes de remover. Os dados de recuperação Root são mantidos de propósito: não os apague para forçar a reinstalação. Revise relatórios antes de compartilhar; não publique chaves nem pastas de perfis.
+
+## Atualização e remoção
+
+Guarde pacotes funcionais e cópias privadas das configurações. Pare No-root Helper antes de substituir pacotes; atualize pelo computador sem desinstalar antes, pois isso pode apagar preferências. A instalação combinada Root pelo cytv inclui atualização de versões compatíveis em Configurações → Atualizações de software; a instalação manual tem outras limitações. Não substitua uma instalação Root ativa por uma IPK avulsa. Use o processo explícito de reinstalação do cytv. Remover o aplicativo do computador não remove os aplicativos da TV.
+
+Documentação técnica em inglês: [aplicativo de computador](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [No-root](../INSTALL.md), [instalação manual](../MANUAL_INSTALL.md), [recuperação](../RECOVERY.md), [edições](../EDITIONS.md).

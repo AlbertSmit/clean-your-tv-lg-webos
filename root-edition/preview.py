@@ -10,12 +10,12 @@ APP_ID = 'com.cleanyourtv.root.preview'
 SOURCE = Path(__file__).resolve().parents[1] / 'launcher'
 # Explicit public-source inventory: never recursively copy a developer workspace.
 FILES = (
-    'appinfo.json', 'index.html', 'app.js', 'app-library.js', 'style.css',
+    'appinfo.json', 'index.html', 'app.js', 'app-library.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'style.css',
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
-    'fonts/outfit.ttf', 'fonts/OFL.txt',
+    'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 )
 UI = Path(__file__).resolve().parent / 'ui'
-UI_FILES = ('root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')
+UI_FILES = ('root-locales.js', 'root-exit.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')
 
 
 def prepare(version='0.0.1'):
@@ -38,7 +38,7 @@ def prepare(version='0.0.1'):
     # Older launcher sources may still include the now-inert compatibility entry.
     html = html.replace('<script src="native-bootstrap.js"></script>', '')
     tags = ['<script src="' + name + '"></script>' for name in (
-        'helper-control.js', 'renewal-panel.js',
+        'renewal-panel.js',
         'user-data.js', 'update-panel.js')]
     tags.append('<link rel="stylesheet" href="renewal-panel.css">')
     for tag in tags:
@@ -49,7 +49,7 @@ def prepare(version='0.0.1'):
     entry = '<script src="profile-bootstrap.js"></script>'
     if html.count(entry) != 1:
         raise ValueError('Unexpected launcher entry')
-    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script>window.ROOT_VERSION = ' + json.dumps(version) + ';</script>\n  <script src="root-exit.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="root-updates.js"></script>\n  <script src="root-profile-data.js"></script>\n  <script src="root-profile.js"></script>').encode()
+    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script>window.ROOT_VERSION = ' + json.dumps(version) + ';</script>\n  <script src="root-locales.js"></script>\n  <script src="root-exit.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="root-updates.js"></script>\n  <script src="root-profile-data.js"></script>\n  <script src="root-profile.js"></script>').encode()
     files['appinfo.json'] = (json.dumps(info, indent=2) + '\n').encode()
     for name in UI_FILES:
         path = UI / name

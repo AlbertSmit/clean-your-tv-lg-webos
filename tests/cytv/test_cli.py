@@ -9,6 +9,19 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def setUp(self):
+        from cytv import i18n
+        i18n.set_language('en')
+        self.addCleanup(i18n.set_language, 'en')
+        language = patch('cytv.i18n.system_languages', return_value=['en'])
+        language.start()
+        self.addCleanup(language.stop)
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        preferences = patch('cytv.state.default_dir', return_value=Path(directory.name))
+        preferences.start()
+        self.addCleanup(preferences.stop)
+
     def test_existing_root_can_be_left_unchanged_without_pairing_or_issue_report(self):
         class Remote:
             def __init__(self): self.calls = []

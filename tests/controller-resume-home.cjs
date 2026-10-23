@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),E=require('events');
 const HOME='com.gathin.tvhome',LG='com.webos.app.home',COVER='com.webos.app.cpcover';
 function controller({automatic=true,blocked=false}={}){
- let now=1000,seq=0,worker,watch;
+ let now=1000,seq=0,worker,watch,requestId=0;
  const timers=new Map(),files=new Map(),calls=[],logs=[];
  const dir='/media/developer/apps/usr/palm/applications/com.local.nativehome/state/';
  if(blocked)files.set(dir+'blocked','stopped');
@@ -23,8 +23,8 @@ function controller({automatic=true,blocked=false}={}){
  try{vm.runInNewContext(fs.readFileSync('native/app/native.js','utf8'),context);}catch(e){if(e.exit===0)return{calls,files,dir,blockedExit:true};throw e;}
  advance(automatic?0:1000);calls[0].reply();worker.stdout.emit('data',Buffer.from('READY\n'));
  function resume(){watch.power({state:'Suspend'});watch.fg(COVER);watch.power({state:'Active'});advance(400);}
-
- return{calls,logs,files,dir,advance,resume,fg:id=>watch.fg(id),power:p=>watch.power(p),reset:()=>watch.reset(),worker:()=>worker,homeCalls:()=>calls.filter(c=>c.id===HOME)};
+ function rpc(method,enabled){files.set(dir+'home-request.json',JSON.stringify({id:(++requestId).toString(16).padStart(32,'0'),method,enabled,expires:now+5000}));advance(400);}
+ return{calls,logs,files,dir,advance,resume,rpc,fg:id=>watch.fg(id),power:p=>watch.power(p),reset:()=>watch.reset(),worker:()=>worker,homeCalls:()=>calls.filter(c=>c.id===HOME)};
 }
 test('LG Home arriving while resume launch is in flight is retried without another foreground event',()=>{
  const c=controller();c.resume();c.advance(400);c.fg(LG);c.advance(800);
@@ -54,8 +54,12 @@ test('a real app before the first resume tick cancels the pending launch',()=>{
 test('power off cancels recovery',()=>{
  for(const p of [{onOff:'off',state:'Active'},{state:'Suspend'},{state:'Active Standby'}]){const c=controller();c.resume();c.calls[1].reply();c.fg(LG);c.power(p);c.advance(20000);assert.equal(c.homeCalls().length,2);}
 });
-
-
+test('disabling Home control cancels recovery even after re-enabling it',()=>{
+ const c=controller();c.resume();c.calls[1].reply();c.fg(LG);c.rpc('setHomeControl',false);c.rpc('setHomeControl',true);c.advance(20000);assert.equal(c.homeCalls().length,2);
+});
+test('explicit LG visit cancels resume recovery for both controls',()=>{
+ for(const source of ['remote','settings']){const c=controller();c.resume();c.calls[1].reply();if(source==='remote')c.worker().stdout.emit('data',Buffer.from('LGHOME\n'));else c.rpc('openLGHome');assert.equal(c.calls.at(-1).id,LG);c.calls.at(-1).reply();c.fg(LG);c.advance(20000);assert.equal(c.homeCalls().length,2);}
+});
 test('guard expires after 30 seconds; duplicate Active does not extend it',()=>{
  const c=controller();c.resume();c.calls[1].reply();c.advance(28000);c.power({state:'Active'});c.advance(2000);c.fg(LG);c.advance(8000);assert.equal(c.homeCalls().length,2);
 });
@@ -79,4 +83,7 @@ test('restored Home skips the initial launch but still recovers a late LG takeov
 test('failed launch replies retain bounded recovery',()=>{
  const c=controller();c.resume();c.calls[1].reply(false);c.fg(LG);c.advance(5200);assert.equal(c.homeCalls().length,3);
  c.calls[2].reply(false);c.advance(5200);assert.equal(c.homeCalls().length,4);c.calls[3].reply(false);c.advance(10000);assert.equal(c.homeCalls().length,4);
+});
+test('disabled Home routing never arms recovery on resume',()=>{
+ const c=controller();c.rpc('setHomeControl',false);c.resume();c.fg(LG);c.advance(20000);assert.equal(c.homeCalls().length,1);
 });

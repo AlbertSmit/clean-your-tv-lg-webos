@@ -1,3 +1,4 @@
+(window.HomeI18n?HomeI18n.ready:function(callback){callback();})(function(){
 (function(){
  'use strict';
  var booted=false,profileError=false;
@@ -9,7 +10,7 @@
   // A populated rendered grid is a startup signal, not proof of every TV feature.
   if(document.querySelector('#tiles .item'))rpc('healthy',{version:'1.2.2'},function(){});
  };document.body.appendChild(s);}
- function use(s,restore){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore)HomeData.apply(localStorage,s);window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
+ function use(s,restore){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();HomeData.apply(localStorage,s);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
  function icon(url,cb){if(/^data:image\/(png|jpeg|webp);base64,/.test(url)){cb(null,url);return;}
   // Only packaged relative icon paths; never turn arbitrary remote content into a profile.
   if(typeof url!=='string'||url.indexOf('..')>=0||/^([a-z]+:|\/)/i.test(url)){cb(Error('icon-path'));return;}
@@ -22,7 +23,7 @@
   if(profileError){cb(Error('stored-profile-unreadable'));return;}
   var inventory=JSON.parse(JSON.stringify(window.TV_APPS||{apps:[],inputs:[]}));
   var s={schema:1,inventory:inventory,config:JSON.parse(JSON.stringify(CONFIG)),settings:{}};
-  try{['tvhome.order','tvhome.layout'].forEach(function(key){var value=localStorage.getItem(key);if(value!==null)s.settings[key]=value;});}catch(e){cb(e);return;}
+  try{['tvhome.order','tvhome.layout','tvhome.language'].forEach(function(key){var value=localStorage.getItem(key);if(value!==null)s.settings[key]=value;});}catch(e){cb(e);return;}
   var index=0;function next(error,value){if(error){cb(error);return;}if(index>0)inventory.apps[index-1].icon=value;
    if(index<inventory.apps.length){icon(inventory.apps[index++].icon,next);return;}
    rpc('status',{},function(state){if(!state||typeof state.enabled!=='boolean'){cb(Error('renewal-state-unavailable'));return;}
@@ -37,3 +38,5 @@
  if(window.TV_APPS&&TV_APPS.apps&&TV_APPS.apps.length){boot();return;}
  rpc('restore',{},function(saved,ok){if(!ok)profileError=true;if(saved)try{use(saved,true);}catch(_){profileError=true;}boot();});
 }());
+
+});

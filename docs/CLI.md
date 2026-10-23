@@ -30,6 +30,22 @@ notarized. Windows publisher signing is not configured. Downloaded executables
 may require the operating system's normal approval for an unidentified developer.
 Do not disable system-wide security settings.
 
+## Root updates included
+
+The Root installer includes Root Updater. In the same installation it installs
+Root Home, prepares its exact package as the rollback baseline, registers the
+independent updater and boot recovery worker, and verifies the service before
+enabling Root Home. No separate updater command is needed. Subsequent compatible
+application releases install from Settings → Software updates on the TV.
+
+If updater setup or verification fails, activation stops with LG Home selected
+and the operation receipt retained. Run `cytv status` and inspect the retained
+setup state before retrying; an interrupted setup is not automatically replayed.
+Existing updater installations are not overwritten by reinstall: their recovery
+runtime is pinned. Use TV updates, or reviewed recovery if the updater is broken.
+Infrastructure migrations can still require a computer. This combined flow needs
+real-TV acceptance; automated tests do not establish hardware compatibility.
+
 ## Installation wizard
 
 The wizard separates steps with headings, whitespace and numbered options.

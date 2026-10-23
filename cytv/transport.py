@@ -319,8 +319,9 @@ class SSH:
         if self.run(command, data=data, timeout=90).strip() != 'CYTV_UPLOAD_OK':
             raise UserError('TV upload could not be verified. Existing destination was not confirmed.')
 
-    def luna(self, uri, payload, terminal=None, timeout=30):
+    def luna(self, uri, payload, terminal=None, timeout=30, app_id=None):
         args = ['/usr/bin/luna-send' if self.root else '/usr/bin/luna-send-pub', '-i' if terminal else '-n', *([] if terminal else ['1']),
+                *(['-a', app_id] if app_id else []),
                 'luna://' + uri, json.dumps(payload, separators=(',', ':'))]
         channel, parser = self.channel(shlex.join(args)), JsonReplies()
         try:

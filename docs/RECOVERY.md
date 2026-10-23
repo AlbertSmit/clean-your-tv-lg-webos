@@ -18,7 +18,7 @@ actual device name. Manual installations below use the profile `lgtv`.
 
 Triple Home is an emergency stop, not a factory reset. It preserves preferences but
 leaves a persistent stop flag. Automatic startup respects that flag. To resume,
-select **Resume Home** in the launcher or open **Home Helper** manually from LG's app list, or run:
+open **Home Helper** manually from LG's app list, or run:
 
 ```sh
 ares-launch -d lgtv com.local.nativehome
@@ -45,4 +45,5 @@ to restore control; merely reopening Home will not restart it.
 After standby, Home recovery watches for LG Home for up to 30 seconds. It makes
 at most two additional launch attempts, only after LG Home has stayed visible
 for 1.5 seconds and the previous launch has settled for at least 5 seconds.
-Opening another app or turning the TV off cancels this recovery.
+Opening another app, explicitly visiting LG Home, disabling Home control, or
+turning the TV off cancels this recovery.

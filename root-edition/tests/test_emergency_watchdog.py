@@ -45,3 +45,9 @@ class Tests(unittest.TestCase):
   try:watch(r,lambda why:True,on_ping=lambda:seen.append('ping'))
   finally:os.close(r)
   self.assertEqual(seen,['ping','ping'])
+
+ def test_lg_home_is_nonterminal_and_does_not_restore(self):
+  r=self.stream(b'READY\nLGHOME\nPING\nESCAPE\n');visits=[];reasons=[];pings=[]
+  try:watch(r,lambda why:reasons.append(why) or True,on_lg_home=lambda:visits.append('lg'),on_ping=lambda:pings.append('ping'))
+  finally:os.close(r)
+  self.assertEqual(visits,['lg']);self.assertEqual(pings,['ping']);self.assertEqual(reasons,['escape'])

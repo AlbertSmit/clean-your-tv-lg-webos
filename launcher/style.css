@@ -320,13 +320,7 @@ body.editing #glass { opacity: 0 !important; }
 
 #toast.shown { opacity: 1; }
 
-/* Recovery shares the shelf styling and navigation order. Give the date
-   its own line only while the fourth action needs room beside the clock. */
 #topButtons { flex-shrink: 0; }
-#btnResumeHome.hidden { display: none; }
-body.helper-stopped #timeRow { width: 400px; }
-body.helper-stopped .divider { display: none; }
-body.helper-stopped #date { position: absolute; left: 8px; top: 150px; margin: 0; font-size: 24px; }
 
 /* Screen editing: the + tile is fixed at the end, outside the movable apps. */
 .add-app .card { display:flex; align-items:center; justify-content:center; background:#202126; border:2px dashed #62656d; }

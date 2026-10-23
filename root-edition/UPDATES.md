@@ -9,6 +9,10 @@ the tested commit, isolation and remaining release gates.
 
 ## One-time setup
 
+The `cytv` installer now performs this setup automatically before enabling Root
+Home, including rollback verification and a service check. The commands below
+are for manual installations that do not use `cytv`.
+
 Root Updater is independent of Root Home. A computer is needed once to install
 its service, seed the rollback package and register its boot recovery worker.
 After setup, compatible Root application releases update from Settings.

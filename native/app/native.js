@@ -21,6 +21,41 @@ function cancelResume(){resumePendingUntil=0;resumeGuardUntil=0;lgHomeSince=null
 log({event:'start',pid:process.pid,uid:process.getuid(),automatic:automatic});
 fs.writeFileSync(data+'/control.json','{}',{mode:432});fs.chmodSync(data+'/control.json',432);
 function launch(id,done){var settled=false;var deadline=setTimeout(function(){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();log({event:'launch-timeout',id:id});if(done)done(false);},3000);service.call('luna://com.webos.applicationManager/launch',{id:id},function(m){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();clearTimeout(deadline);log({event:'launch',id:id,result:m.payload});if(done)done(m.payload&&m.payload.returnValue===true);});}
+var visitingLG=false,suppressReturnUntil=0;
+function visitLG(done){
+ if(visitingLG){if(done)done(false);return;}
+ visitingLG=true;cancelResume();suppressReturnUntil=monotonic()+7000;
+ var deadline=monotonic()+3500;
+ function open(){
+  if(launching&&monotonic()<deadline){setTimeout(open,50);return;}
+  if(launching||stopping){visitingLG=false;if(done)done(false);return;}
+  if(screenPolicy)screenPolicy.reset();
+  launch('com.webos.app.home',function(ok){visitingLG=false;if(done)done(ok);});
+ }
+ open();
+}
+var homeControl=require('./home-control')(fs,data,function(enabled){
+ cancelResume();if(screenPolicy)screenPolicy.reset();
+ if(child)child.stdin.write(enabled?'E':'D');
+},visitLG);
+var lastHomeRequest='';
+function readHomeRequest(){
+ var request;
+ try{request=JSON.parse(fs.readFileSync(data+'/home-request.json','utf8'));}catch(e){return;}
+ if(!request||typeof request.id!=='string'||!/^[a-f0-9]{32}$/.test(request.id)||request.id===lastHomeRequest)return;
+ lastHomeRequest=request.id;
+ if(typeof request.expires!=='number'||request.expires<Date.now()||request.expires>Date.now()+6000)return;
+ function respond(result){
+  result.id=request.id;
+  try{fs.writeFileSync(data+'/home-response.tmp',JSON.stringify(result),{mode:432});fs.chmodSync(data+'/home-response.tmp',432);fs.renameSync(data+'/home-response.tmp',data+'/home-response.json');}catch(e){log({event:'home-response-error',error:String(e)});}
+ }
+ try{
+  if(request.method==='homeStatus')respond({returnValue:true,enabled:homeControl.enabled()});
+  else if(request.method==='setHomeControl'){homeControl.set(request.enabled);respond({returnValue:true,enabled:homeControl.enabled()});}
+  else if(request.method==='openLGHome')visitLG(function(ok){respond({returnValue:ok});});
+  else respond({returnValue:false,errorText:'Invalid Home request'});
+ }catch(e){respond({returnValue:false,errorText:String(e)});}
+}
 function finish(code,signal){if(stopping)return;stopping=true;if(screenWatch)screenWatch.close();clearInterval(timer);log({event:'worker-exit',code:code,signal:signal});if(policy.shouldBlock(code,signal))fs.writeFileSync(data+'/blocked','stopped',{mode:420});
  function end(){try{fs.unlinkSync(pidPath);}catch(e){}process.exit(code===22?0:(code||0));}
  // Let an already-issued custom-Home request settle before the final LG launch.
@@ -32,11 +67,11 @@ function finish(code,signal){if(stopping)return;stopping=true;if(screenWatch)scr
  if(ready){var c=cp.spawn(root+'/relay',['cleanup'],{stdio:'ignore'});c.on('exit',function(n){log({event:'cleanup',code:n});cleaned();});}else cleaned();
 }
 function start(){lastAck=monotonic();child=cp.spawn(root+'/relay',[],{stdio:['pipe','pipe','pipe']});log({event:'worker-start',pid:child.pid});child.stderr.on('data',function(b){log({stderr:String(b)});});child.on('error',function(e){log({error:String(e)});finish(1);});child.on('exit',finish);
- child.stdout.on('data',function(b){buffer+=b;var i;while((i=buffer.indexOf('\n'))>=0){var line=buffer.slice(0,i);buffer=buffer.slice(i+1);if(line==='P'){lastAck=monotonic();continue;}log({event:'worker',message:line});if(line==='READY'){ready=true;lastAck=monotonic();}if(line==='HOME'&&!stopping&&!launching){launching=true;launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)child.stdin.end();});}}});
+ child.stdout.on('data',function(b){buffer+=b;var i;while((i=buffer.indexOf('\n'))>=0){var line=buffer.slice(0,i);buffer=buffer.slice(i+1);if(line==='P'){lastAck=monotonic();continue;}log({event:'worker',message:line});if(line==='READY'){ready=true;lastAck=monotonic();child.stdin.write(homeControl.enabled()?'E':'D');}if(line==='LGHOME'&&!stopping)visitLG();if(line==='HOME'&&homeControl.enabled()&&!visitingLG&&!stopping&&!launching){suppressReturnUntil=0;launching=true;launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)child.stdin.end();});}}});
  child.stdin.on('error',function(){});
 }
-var timer=setInterval(function(){if(stopping)return;try{var raw=fs.readFileSync(data+'/control.json','utf8');if(raw!==lastCommand){lastCommand=raw;var command=JSON.parse(raw);if(command.cmd==='startup-status')service.call('luna://com.local.nativehome.service/status',{},function(r){log({event:'startup-status',result:r.payload});});if(command.cmd==='stop'&&child)child.stdin.write('Q');if(command.cmd==='stall-worker'&&child)child.stdin.write('S');if(command.cmd==='stall-controller'){cp.spawn(root+'/resume',[String(process.pid)],{stdio:'ignore'});log({event:'simulate-controller-stall'});process.kill(process.pid,'SIGSTOP');}}}catch(e){}
- if(resumePendingUntil&&ready&&!launching){
+var timer=setInterval(function(){if(stopping)return;readHomeRequest();try{var raw=fs.readFileSync(data+'/control.json','utf8');if(raw!==lastCommand){lastCommand=raw;var command=JSON.parse(raw);if(command.cmd==='startup-status')service.call('luna://com.local.nativehome.service/status',{},function(r){log({event:'startup-status',result:r.payload});});if(command.cmd==='stop'&&child)child.stdin.write('Q');if(command.cmd==='stall-worker'&&child)child.stdin.write('S');if(command.cmd==='stall-controller'){cp.spawn(root+'/resume',[String(process.pid)],{stdio:'ignore'});log({event:'simulate-controller-stall'});process.kill(process.pid,'SIGSTOP');}}}catch(e){}
+ if(resumePendingUntil&&ready&&!launching&&!visitingLG&&homeControl.enabled()){
   var resumeDue=resumePendingUntil;resumePendingUntil=0;
   if(!shouldResumeLaunch(lastForeground)){log({event:'resume-already-foreground'});}
   else if(monotonic()<=resumeDue){launching=true;log({event:'resume-launch'});launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)log({event:'resume-launch-failed'});});}
@@ -45,14 +80,14 @@ var timer=setInterval(function(){if(stopping)return;try{var raw=fs.readFileSync(
  // later, including while a launch is in flight, so check the current level.
  var now=monotonic();
  if(resumeGuardUntil&&now>=resumeGuardUntil)cancelResume();
- if(resumeGuardUntil&&resumeRetries<2&&ready&&!launching&&
+ if(resumeGuardUntil&&resumeRetries<2&&ready&&!launching&&!visitingLG&&homeControl.enabled()&&
     lastForeground==='com.webos.app.home'&&lgHomeSince!==null&&now-lgHomeSince>=1500&&now-lastLaunchSettledAt>=5000){
   resumeRetries++;launching=true;log({event:'resume-retry',attempt:resumeRetries});
   launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)log({event:'resume-retry-failed'});});
  }
  if(child){if(policy.expired(lastAck,monotonic())){log({event:'worker-watchdog'});child.kill('SIGKILL');return;}child.stdin.write('P');}
 },400);
-setTimeout(function(){launch('com.gathin.tvhome',function(ok){if(ok)start();else {block();process.exit(3);}});},automatic?0:1000);
+setTimeout(function(){if(!homeControl.enabled()){start();return;}launch('com.gathin.tvhome',function(ok){if(ok)start();else {block();process.exit(3);}});},automatic?0:1000);
 
 
 process.on('exit',function(code){log({event:'controller-exit',code:code});});
@@ -74,14 +109,14 @@ var screenWatch=require('./screen-watch')(data,log,function(id){
  else {lgHomeSince=null;if(id&&id!=='com.webos.app.cpcover'&&id!=='com.gathin.tvhome')cancelResume();}
  lastForeground=id;log({event:'foreground',id:id});
  var exited=screenPolicy.next(id,monotonic());
- if(exited&&ready&&!stopping&&!launching){
+ if(exited&&homeControl.enabled()&&!visitingLG&&monotonic()>suppressReturnUntil&&ready&&!stopping&&!launching){
   launching=true;log({event:'return-after-exit'});
   launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)log({event:'return-after-exit-failed'});});
  }
 },function(){lastForeground=null;lgHomeSince=null;screenPolicy.reset();},function(p){
  log({event:'power',state:p.state,processing:p.processing,onOff:p.onOff});
  if(p.onOff==='off'||p.state==='Active Standby'||p.state==='Suspend')cancelResume();
- if(powerPolicy.next(p)&&!stopping){
+ if(powerPolicy.next(p)&&homeControl.enabled()&&!visitingLG&&!stopping){
   var now=monotonic();resumePendingUntil=now+10000;resumeGuardUntil=now+30000;resumeRetries=0;
   lgHomeSince=lastForeground==='com.webos.app.home'?now:null;
  }

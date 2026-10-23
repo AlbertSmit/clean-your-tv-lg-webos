@@ -23,6 +23,10 @@ class Remote:
             return ''
         if 'CYTV_ROOT_READY' in command:
             return 'CYTV_ROOT_READY'
+        if 'setup-updater.py' in command:
+            if self.fail == 'updater': raise RuntimeError('updater setup interrupted')
+            return json.dumps({'installed': True})
+        if 'CYTV_UPDATER_VERIFIED' in command: return 'CYTV_UPDATER_VERIFIED'
         if 'deploy.py' in command:
             if self.fail == 'deploy':
                 raise RuntimeError('connection interrupted')
@@ -37,8 +41,11 @@ class Remote:
     def upload(self, path, data, mode=0o600):
         self.calls.append(('upload', path, mode))
 
-    def luna(self, uri, payload, terminal=None, timeout=30):
+    def luna(self, uri, payload, terminal=None, timeout=30, app_id=None):
         self.calls.append(('luna', uri, payload))
+        if uri == 'com.cleanyourtv.root.updater.service/status':
+            if self.fail == 'updater-service': raise RuntimeError('updater service unavailable')
+            return {'returnValue': True, 'result': None}
         if uri.endswith('/dev/listApps'):
             return {'returnValue': True, 'apps': list(self.installed)}
         if uri.endswith('/install'):
@@ -91,7 +98,7 @@ class OperationTests(unittest.TestCase):
         def run(command, **kwargs):
             commands.append(command)
             args = shlex.split(command)
-            if len(args)>3 and args[:2] == ['/usr/bin/python3','-c']:
+            if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
                 self.assertEqual(args[3], 'reconcile')
                 return '{"state":"archived"}'
             return '{"stage":"absent"}'
@@ -294,6 +301,9 @@ class OperationTests(unittest.TestCase):
 
     def root_bundle(self):
         import hashlib
+        import runpy
+        build = runpy.run_path(str(Path(__file__).resolve().parents[2] / "root-edition/build_updater.py"))
+        build["build"]((self.payload / "root-updater").resolve())
         root = self.payload / 'root'
         root.mkdir()
         name = package.ROOT_APP + '_0.0.1_all.ipk'
@@ -303,6 +313,76 @@ class OperationTests(unittest.TestCase):
         (root / 'SHA256SUMS').write_text('old')
         (root / 'bundle.json').write_text(json.dumps({'package': name, 'files': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in root.iterdir()}}))
         return root
+
+    def test_root_installs_updater_with_same_baseline_before_activation(self):
+        self.root_bundle()
+        remote = Remote()
+        result = self.installer(remote, 'root').install(self.inventory)
+        commands = [c[1] for c in remote.calls if c[0] == 'run']
+        install = next(c for c in commands if 'deploy.py install' in c)
+        setup = next(c for c in commands if 'setup-updater.py' in c)
+        baseline = shlex.split(install)[-1]
+        self.assertIn('--baseline ' + baseline, setup)
+        self.assertLess(commands.index(install), commands.index(setup))
+        self.assertLess(commands.index(setup), next(i for i,c in enumerate(commands) if c.endswith(' enable')))
+        self.assertTrue(result['updates_ready'])
+        self.assertTrue(any(c[0] == 'luna' and c[1] == 'com.cleanyourtv.root.updater.service/status' for c in remote.calls))
+
+    def test_updater_failure_keeps_receipt_and_never_activates(self):
+        for failure in ('updater', 'updater-service'):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as tmp:
+                if not (self.payload / 'root').exists(): self.root_bundle()
+                self.store = state.Store(Path(tmp) / 'state')
+                remote = Remote(fail=failure)
+                installer = self.installer(remote, 'root')
+                with self.assertRaisesRegex(RuntimeError, 'updater'):
+                    installer.install(self.inventory)
+                self.assertEqual(self.store.pending(installer.profile)['action'], 'setup-root-updater')
+                self.assertFalse(any(c[0] == 'run' and c[1].endswith(' enable') for c in remote.calls))
+
+    def test_corrupt_updater_stops_before_removing_existing_root(self):
+        self.root_bundle()
+        (self.payload / 'root-updater/root-updater.ipk').write_bytes(b'corrupt')
+        remote = Remote()
+        installer = self.installer(remote, 'root')
+        with self.assertRaisesRegex(RuntimeError, 'Updater'):
+            installer.install(self.inventory, reinstall='installed')
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertFalse(any(c[0] == 'upload' or ' uninstall' in c[1] for c in remote.calls))
+
+    def test_status_does_not_clear_incomplete_combined_install(self):
+        remote = Remote()
+        run = remote.run
+        remote.run = lambda command, **kwargs: '{"stage":"installed-recovery-only"}' if 'deploy.json' in command else run(command, **kwargs)
+        installer = self.installer(remote, 'root')
+        installer.root_files_match = lambda pending: True
+        for action in ('install', 'setup-root-updater'):
+            with self.subTest(action=action):
+                if self.store.pending(installer.profile): self.store.finish(installer.profile)
+                self.store.begin(installer.profile, action, requires_updater=True)
+                self.assertIsNone(installer.status()['reconciled'])
+                self.assertIsNotNone(self.store.pending(installer.profile))
+
+    def test_missing_updater_stops_before_installation(self):
+        self.root_bundle()
+        import shutil
+        shutil.rmtree(self.payload / 'root-updater')
+        remote = Remote()
+        installer = self.installer(remote, 'root')
+        with self.assertRaisesRegex((ValueError, RuntimeError), 'Updater'):
+            installer.install(self.inventory)
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
+
+    def test_existing_updater_blocks_reinstall_before_removing_root(self):
+        self.root_bundle()
+        remote = Remote()
+        run = remote.run
+        remote.run = lambda command, **kwargs: 'CYTV_EXISTING_UPDATER' if 'CYTV_EXISTING_UPDATER' in command else run(command, **kwargs)
+        installer = self.installer(remote, 'root')
+        with self.assertRaisesRegex(RuntimeError, 'Updater'):
+            installer.install(self.inventory, reinstall='installed')
+        self.assertFalse(any(c[0] == 'upload' or ' uninstall' in c[1] for c in remote.calls))
 
     def test_root_installs_then_enables_and_launches(self):
         self.root_bundle()
@@ -460,7 +540,7 @@ class OperationTests(unittest.TestCase):
         actions=[]
         def run(command, **kwargs):
             args = shlex.split(command)
-            if len(args)>3 and args[:2] == ['/usr/bin/python3','-c']:
+            if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
                 action=args[3]
                 actions.append(action)
                 if action=='inspect': return json.dumps({'identity':{'device':1,'inode':2,'journal':'a'*64},'busy':False})
@@ -474,7 +554,7 @@ class OperationTests(unittest.TestCase):
         installer=self.installer(remote, 'root')
         result=installer.install(self.inventory, reinstall='installed')
         self.assertEqual(result['installed'], package.ROOT_APP)
-        self.assertEqual(actions, ['uninstall','inspect','archive','install','status','enable','status'])
+        self.assertEqual(actions, ['uninstall','inspect','archive','install','status','status','enable','status'])
         self.assertIsNone(self.store.pending(installer.profile))
 
     def test_non_arm_helper_install_is_rejected_before_mutation(self):

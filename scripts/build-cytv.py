@@ -19,7 +19,12 @@ def tracked_files(prefix):
     files = {}
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
-    required = {'launcher': ['launcher/app-library.js'],
+    required = {'native/app': ['native/app/home-control.js'],
+                'renewal-service': ['renewal-service/home-control.js'],
+                'launcher': ['launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
+                             'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
+                             'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
+                             'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],
                 'native/service': ['native/service/app-inventory.js']}
     for name in sorted(set(result.stdout.splitlines()) | set(required.get(prefix, []))):
         path = ROOT / name
@@ -94,14 +99,25 @@ def build_payload():
     launcher['apps.js'] = b'window.TV_APPS = {apps:[],inputs:[]};\n'
     renewal = {n: b for n, b in tracked_files('renewal-service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
     (payload / 'launcher.ipk').write_bytes(pack_app(launcher, renewal))
+    (payload / 'fonts').mkdir()
+    for name, data in launcher.items():
+        if name.startswith('fonts/Noto'):
+            (payload / name).write_bytes(data)
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
+    subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
     (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
+    shutil.copytree(ROOT / 'cytv/licenses', payload / 'licenses/Qt', dirs_exist_ok=True)
     # Ship dependency license metadata as well as application notices in the executable.
     import importlib.metadata
-    for name in ('paramiko', 'websockets', 'cryptography', 'bcrypt', 'PyNaCl', 'cffi', 'psutil'):
-        distribution = importlib.metadata.distribution(name)
+    for name in ('paramiko', 'websockets', 'cryptography', 'bcrypt', 'PyNaCl', 'cffi', 'psutil', 'PySide6-Essentials', 'shiboken6'):
+        try:
+            distribution = importlib.metadata.distribution(name)
+        except importlib.metadata.PackageNotFoundError:
+            if name in ('PySide6-Essentials', 'shiboken6'):
+                continue
+            raise
         for item in distribution.files or ():
             if any('license' in part.lower() or part.lower() == 'copying' for part in item.parts):
                 path = Path(distribution.locate_file(item))
@@ -123,6 +139,7 @@ def build_payload():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--payload-only', action='store_true', help='Build and verify TV assets, without freezing')
+    parser.add_argument('--desktop', action='store_true', help='Also build the windowed macOS app or Debian package')
     args = parser.parse_args()
     payload = build_payload()
     print('Public TV payload verified:', payload)
@@ -137,6 +154,10 @@ def main():
     subprocess.run([str(executable), '--version'], check=True)
     subprocess.run([str(executable), '--check-payload'], check=True)
     print('Built:', executable)
+    if args.desktop:
+        from desktop_packaging import build_desktop
+        from cytv import __version__
+        build_desktop(ROOT, payload, environment, __version__)
 
 
 if __name__ == '__main__':

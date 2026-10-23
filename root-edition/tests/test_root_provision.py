@@ -22,9 +22,10 @@ class ProvisionTests(unittest.TestCase):
         self.assertNotIn('*',role['permissions'][0]['outbound'])
         api=json.loads(result['api'])
         self.assertEqual(api['activities.callbacks'],[p.NAME+'/boot'])
-        self.assertEqual(json.loads(result['client']),{p.NAME:['activity.operation'], 'com.cleanyourtv.root.preview':[p.NAME+'.control']})
+        self.assertEqual(json.loads(result['client']),{p.NAME:['activity.operation'], 'com.cleanyourtv.root.preview':[p.NAME+'.control'], 'com.cleanyourtv.root.preview-*':[p.NAME+'.control']})
         self.assertEqual(api[p.NAME+'.control'],[p.NAME+'/status',p.NAME+'/restore'])
         self.assertIn('com.cleanyourtv.root.preview', json.loads(result['role'])['permissions'][0]['inbound'])
+        self.assertIn('com.cleanyourtv.root.preview-*', json.loads(result['role'])['permissions'][0]['inbound'])
         self.assertNotIn(p.NAME+'/trial',str(api))
     def test_unexpected_launcher_and_app_refused(self):
         original=self.original();original['service']=original['service'].replace('/usr/bin/run-js-service','/bin/sh')

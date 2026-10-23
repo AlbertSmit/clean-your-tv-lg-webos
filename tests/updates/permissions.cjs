@@ -13,4 +13,7 @@ assert(!JSON.stringify(clients).includes('"all"'));assert(!JSON.stringify(client
 assert.equal(manifest.roleFiles.length,0);assert.equal(manifest.serviceFiles.length,0);
 for(const f of p.files){assert.equal(f.sha256,require('node:crypto').createHash('sha256').update(f.content).digest('hex'));assert(f.path.includes('com.cleanyourtv.updater.permissions'));}
 assert.throws(()=>plan('/tmp/unexpected'));assert.deepEqual(plan('/var/luna-service2-dev'),p);
+
+assert.deepEqual(api['com.cleanyourtv.updater.renewalActivity'],['com.webos.service.activitymanager/create','com.webos.service.activitymanager/cancel']);
+assert.deepEqual(clients['com.gathin.tvhome.renewal*'],['com.cleanyourtv.updater.renewalActivity']);
 console.log('PASS deterministic narrow LS2 plan, isolated paths and hashes');

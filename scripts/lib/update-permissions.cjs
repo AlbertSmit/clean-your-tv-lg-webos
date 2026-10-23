@@ -6,9 +6,10 @@ function plan(o){
  if(o.variant==='lab')p=JSON.parse(JSON.stringify(p).replace(/com\.gathin\.tvhome/g,'com.cleanyourtv.updatetest').replace(/com\.cleanyourtv\.updater/g,'com.cleanyourtv.updaterlab'));
  p.files.forEach(f=>{f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex')});return p;
 }
-function context(o,legacy){
+function context(o,legacy,withoutRenewal){
  const p=plan(o),prefix=o.prefix||'',root=o.root||'/var/luna-service2-dev';
  if(legacy){for(const f of p.files){f.content=f.content.replace('com.cleanyourtv.updater'+(o.variant==='lab'?'lab':'')+'.service*','com.cleanyourtv.updater'+(o.variant==='lab'?'lab':'')+'.service');f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex');}}
+ if(withoutRenewal){for(const f of p.files){if(f.path.includes('/api-permissions.d/')||f.path.includes('/client-permissions.d/')){const value=JSON.parse(f.content);delete value['com.cleanyourtv.updater'+(o.variant==='lab'?'lab':'')+'.renewalActivity'];delete value[(o.variant==='lab'?'com.cleanyourtv.updatetest':'com.gathin.tvhome')+'.renewal*'];f.content=JSON.stringify(value,null,2)+'\n';f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex');}}}
  const name=o.variant==='lab'?'com.cleanyourtv.updaterlab':'com.cleanyourtv.updater';
  const receipt=prefix+root+'/'+name+'.permissions.receipt.json',lock=receipt+'.lock';
  function safe(file){let dir=path.dirname(file);while(dir!==prefix&&dir!=='/'){const s=fs.lstatSync(dir);if(!s.isDirectory()||s.isSymbolicLink())throw Error('unsafe parent');dir=path.dirname(dir);}}
@@ -26,7 +27,8 @@ function run(o,remove){
   let owned;try{owned=c.exact(c.receipt,c.bytes);}catch(e){
    if(!remove)throw e;
    // Accept only the previous known generated plan, never arbitrary receipt paths.
-   const previous=context(o,true);if(!previous.exact(previous.receipt,previous.bytes))throw e;c=previous;owned=true;
+   let previous;for(const variant of [[true,false],[false,true],[true,true]]){const candidate=context(o,...variant);try{if(candidate.exact(candidate.receipt,candidate.bytes)){previous=candidate;break;}}catch(ignore){}}
+   if(!previous)throw e;c=previous;owned=true;
   }
   if(!owned){if(remove)return {status:'not-installed'};for(const f of c.p.files)if(c.exists(c.prefix+f.path))throw Error('permission filename collision');c.write(c.receipt,c.bytes);}
   // Preflight all files before any removal; never erase someone else's changes.

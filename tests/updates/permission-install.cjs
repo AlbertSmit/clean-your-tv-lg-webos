@@ -15,6 +15,10 @@ try{
  const legacy=JSON.parse(JSON.stringify(plan));for(const f of legacy.files){f.content=f.content.replace('com.cleanyourtv.updaterlab.service*','com.cleanyourtv.updaterlab.service');f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex');fs.writeFileSync(tmp+f.path,f.content);}
  fs.writeFileSync(tmp+'/var/luna-service2-dev/com.cleanyourtv.updaterlab.permissions.receipt.json',JSON.stringify({schema:1,files:legacy.files})+'\n');
  setup.remove(opts);for(const f of legacy.files)assert(!fs.existsSync(tmp+f.path));
+ for(const exactService of [false,true]){
+ const prior=JSON.parse(JSON.stringify(plan));for(const f of prior.files){let v=JSON.parse(f.content);delete v['com.cleanyourtv.updaterlab.renewalActivity'];delete v['com.cleanyourtv.updatetest.renewal*'];f.content=JSON.stringify(v,null,2)+'\n';if(exactService)f.content=f.content.replace('com.cleanyourtv.updaterlab.service*','com.cleanyourtv.updaterlab.service');f.sha256=require('crypto').createHash('sha256').update(f.content).digest('hex');fs.writeFileSync(tmp+f.path,f.content);}
+ fs.writeFileSync(tmp+'/var/luna-service2-dev/com.cleanyourtv.updaterlab.permissions.receipt.json',JSON.stringify({schema:1,files:prior.files})+'\n');setup.remove(opts);for(const f of prior.files)assert(!fs.existsSync(tmp+f.path));
+ }
  assert(!JSON.stringify(plan).includes('com.gathin.tvhome'));assert(!JSON.stringify(plan).includes('com.local.nativehome'));
  console.log('PASS scoped permission apply/remove, collisions, symlinks, changed files and refresh failure');
 }finally{fs.rmSync(tmp,{recursive:true,force:true})}

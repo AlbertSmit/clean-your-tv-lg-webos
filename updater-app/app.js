@@ -2,7 +2,9 @@
 function text(t){document.getElementById('status').textContent=t;}
 function call(method,payload,cb){var b=new PalmServiceBridge(),done=false,t=setTimeout(function(){finish(null);},190000);function finish(r){if(done)return;done=true;clearTimeout(t);try{b.cancel();}catch(_){}cb(r);}
 b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?r.result:null);}catch(_){finish(null);}};b.call('luna://com.cleanyourtv.updater.service/'+method,JSON.stringify(payload));}
-function refresh(){if(busy)return;buttons[1].disabled=true;call('reconcile',{},function(s){text(s?'Update state: '+s.status:'No transaction, or recovery service is unavailable.');buttons[1].disabled=!s||['awaiting-launch','complete'].indexOf(s.status)<0;});}
+function refresh(){if(busy)return;confirmed=false;buttons[1].textContent='Restore previous Home';buttons[1].disabled=true;call('reconcile',{},function(s){text(s?'Update state: '+s.status:'No transaction, or recovery service is unavailable.');buttons[1].disabled=!s||['awaiting-launch','complete'].indexOf(s.status)<0;});}
+document.addEventListener('webOSRelaunch',refresh);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)refresh();});
 buttons[0].onclick=refresh;
 buttons[1].onclick=function(){if(busy)return;if(!confirmed){confirmed=true;buttons[1].textContent='Confirm restore';text('Restore the signed previous Home package. Home Helper will remain unchanged.');return;}busy=true;buttons[1].disabled=true;text('Restoring… Keep the TV on.');call('rollback',{},function(s){busy=false;text(s?'Recovery state: '+s.status:'Outcome unknown. Do not retry installation; inspect the transaction first.');});};
 buttons[2].onclick=function(){var b=new PalmServiceBridge();b.onservicecallback=function(){b.cancel();};b.call('luna://com.webos.applicationManager/launch',JSON.stringify({id:'com.gathin.tvhome'}));};

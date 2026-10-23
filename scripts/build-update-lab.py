@@ -24,7 +24,7 @@ a=s.index(' schedule:function()');b=s.index('\n});',a)
 s=s[:a]+" schedule:function(){return Promise.resolve({returnValue:true});},\n cancel:function(){return Promise.resolve({returnValue:true});}"+s[b:];p.write_text(s)
 for version in ('1.2.0','1.2.1'):
     home=clone('launcher','home-'+version)
-    for p in home.glob('*.js'): p.write_text(p.read_text().replace('1.2.0',version))
+    for p in home.glob('*.js'): p.write_text(p.read_text().replace(json.loads((ROOT/'launcher/appinfo.json').read_text())['version'],version))
     p=home/'appinfo.json';info=json.loads(p.read_text());info.update(id=app,version=version,title='Update Test '+version,supportGIP=False);p.write_text(json.dumps(info))
     p=home/'index.html';p.write_text(p.read_text().replace('<script src="native-bootstrap.js"></script>','').replace('<script src="helper-control.js"></script>',''))
     for name in ('native-bootstrap.js','helper-control.js'): (home/name).unlink(missing_ok=True)

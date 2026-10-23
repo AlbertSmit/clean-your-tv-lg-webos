@@ -8,13 +8,15 @@
 - Document bounded diagnostic successes, the production Home category failure, and remaining hardware/recovery gates.
 - Include Root Edition Python checks in CI. No production launcher/helper behavior changes and no Root Edition installer in this update.
 
-## Unreleased — in-app updates
+## v0.8.1 — signed Home updates and recovery
 
 - Add a separate signed-update and recovery package, portable Home profiles, and Software updates in Settings.
 - Pause renewal Beta automatically and restore its prior preference after verified installation or rollback; Home Helper remains unchanged.
 - Recheck signed offers after service restarts, subscribe to terminal installer responses, and keep ambiguous bus failures in recovery without starting another install.
 - Add scoped permission setup/removal and fix remote navigation across disabled controls.
-- Validate isolated update and rollback on OLED55C3RLA / 43.21.71 with fake renewal responses. Production permission lifecycle and release packaging limitations are documented in docs/UPDATES.md.
+- Verify published signed Home update and rollback on OLED55C3RLA / 43.21.71, preserving apps, remote controls and disabled renewal.
+- Grant the renewal service only canonical Activity Manager create/cancel methods; recover safely from a denied pause before installation.
+- Refresh Recovery when reopened and reset restore confirmation.
 
 ## Unreleased — one-script installation
 

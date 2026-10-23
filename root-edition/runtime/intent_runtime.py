@@ -1,5 +1,7 @@
 """Intent-bound trial, explicit promotion and guarded boot recovery."""
 import os
+import fcntl
+import stat
 from pathlib import Path
 import uuid
 import device_adapter as d
@@ -54,6 +56,25 @@ def restore():
 
 
 def boot():
+    if not os.path.lexists(d.STATE/'persistent-intent.json'): return None
+    d.trusted_dir(d.STATE)
+    fd=os.open(d.STATE/'boot-dispatch.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
+    try:
+        info=os.fstat(fd)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != d.EXPECTED_UID
+                or info.st_nlink != 1 or info.st_mode & 0o022):
+            raise ValueError('Unsafe boot dispatch lock')
+        try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:return 'boot-in-progress'
+        try:return _boot()
+        except Exception as exc:
+            from boot_gate import audit
+            audit('boot-error',error=type(exc).__name__+': '+str(exc))
+            raise
+    finally:os.close(fd)
+
+
+def _boot():
     c = coordinator()
     if c is None or later_legacy_trial(c): return None
     intent = c.store.read(); identity = boot_identity(); failsafe = d.FAILSAFE.exists()

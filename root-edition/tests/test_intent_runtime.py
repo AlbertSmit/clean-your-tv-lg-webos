@@ -7,6 +7,9 @@ import intent_runtime as r
 class RuntimeTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
+  self.state=patch.object(r.d,'STATE',self.root);self.state.start();self.addCleanup(self.state.stop)
+  self.uid=patch.object(r.d,'EXPECTED_UID',__import__('os').getuid());self.uid.start();self.addCleanup(self.uid.stop)
+  (self.root/'persistent-intent.json').write_text('{}')
   self.audit=patch('boot_gate.audit');self.audit.start();self.addCleanup(self.audit.stop)
   self.observation=patch('boot_gate.observation',return_value=(False,False));self.observation.start();self.addCleanup(self.observation.stop)
  def tearDown(self):self.tmp.cleanup()
@@ -57,3 +60,18 @@ class RuntimeTests(unittest.TestCase):
   with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='same'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False):
    self.assertEqual(r.boot(),'shutdown-pending')
   c.shutdown.assert_called_once_with(intent);c.exit.assert_not_called();c.restart.assert_not_called()
+
+ def test_duplicate_boot_during_gate_wait_cannot_disable_starting_intent(self):
+  current=[{'boot':'old','phase':'active'}]
+  new={'boot':'new','phase':'starting'}
+  c=Mock(binding=self.root/'missing-binding');c.store.read.side_effect=lambda:current[0]
+  def recover(*args):
+   current[0]=new;return {'effect':'start_guarded','intent':new}
+  c.boot.side_effect=recover
+  def gate():
+   self.assertEqual(r.boot(),'boot-in-progress')
+   c.exit.assert_not_called()
+   return True
+  with patch.object(r,'coordinator',return_value=c),patch.object(r,'boot_identity',return_value='new'),patch.object(r.d.FAILSAFE.__class__,'exists',return_value=False),patch('boot_gate.wait',side_effect=gate),patch.object(r.d,'safe_json',return_value={}),patch.object(r.d,'active_guardian',return_value=False):
+   r.boot()
+  c.restart.assert_called_once_with(new);c.exit.assert_not_called()

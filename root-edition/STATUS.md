@@ -348,3 +348,12 @@ by floating-point rounding (for example issued=62.4). Both validators now compar
 longer timeout. Publisher/reader and guardian boundary regressions pass, including
 rejection at exact expiry. Full local suite: 361 tests. Hardware persistence
 beyond the original minute remains the next acceptance check.
+
+Boot orchestration also had a locally reproduced overlap: while one boot callback
+waited for the normal-startup gate, a duplicate callback could treat its `starting`
+intent as an interrupted attempt and disable it. A separate root-owned flock now
+covers the whole boot dispatch; duplicates return `boot-in-progress`, while user
+restore keeps its independent operation path. Boot exceptions are recorded for
+diagnosis. Full suite with this regression: 362 tests. This is a proven local race;
+the preceding device failure did not retain the exception needed to establish it
+as that specific failure's cause.

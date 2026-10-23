@@ -63,4 +63,8 @@ def validate(value):
     _fields(value['settings'], (), ('tvhome.order',))
     if 'tvhome.order' in value['settings']:
         _text(value['settings']['tvhome.order'], MAX_BYTES, empty=True)
+        try:order=json.loads(value['settings']['tvhome.order'])
+        except (ValueError,TypeError) as error:raise ValueError('unreadable tile order') from error
+        _fields(order,('dock','ids'))
+        _text(order['dock'], 65536, empty=True);_ids(order['ids'])
     return json.loads(raw)

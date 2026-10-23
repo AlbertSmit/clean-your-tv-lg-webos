@@ -74,6 +74,11 @@
     if (busy) return;
     if (index === 2) return close();
     if (index === 3) return changeMode();
+    if (index === 4) {
+      if (!window.RootUpdates) { message.textContent = 'Software updates require the one-time computer setup.'; return; }
+      panel.hidden = true;
+      window.RootUpdates.open({onClose:function () { panel.hidden = false; focus(4); refreshMode(); }}); return;
+    }
     if (index === 0) { launch('com.palm.app.settings').catch(function (e) { message.textContent = e.message; }); return; }
     if (!confirmExit) {
       confirmExit = true;
@@ -92,7 +97,7 @@
     var card = document.createElement('div'); card.className = 'root-settings-card'; panel.appendChild(card);
     var title = document.createElement('h1'); title.textContent = 'Root Edition'; card.appendChild(title);
     message = document.createElement('p'); message.setAttribute('aria-live','polite'); card.appendChild(message);
-    buttons = ['TV settings','Exit Root mode','Back','Checking Root mode…'].map(function (label, i) {
+    buttons = ['TV settings','Exit Root mode','Back','Checking Root mode…','Software updates'].map(function (label, i) {
       var b = document.createElement('button'); b.textContent = label; b.onclick = function () { activate(i); }; card.appendChild(b); return b;
     });
     document.body.appendChild(panel);

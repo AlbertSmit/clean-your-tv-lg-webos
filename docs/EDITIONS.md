@@ -17,7 +17,7 @@ upgrade or remove your ordinary launcher.
 | Normal exit | Hold Home stops helper | Settings → Exit Root mode → Confirm exit |
 | Startup evidence | Standby and cold boot on tested setup | Permanent software-reboot startup confirmed; final cold/standby/failsafe matrix pending |
 | Developer Mode | Session must remain active; auto-renewal is opt-in Beta | Not used by Root installer; do not install Developer Mode over root |
-| Updates | Signed Home update path in stable release | Separate Root package; no in-app production updater |
+| Updates | Signed Home update path in stable release | Settings updates with separate Root Updater, saved profile and rollback; local validation only, one-time host setup required ([guide](../root-edition/UPDATES.md)) |
 | Early black screen | Known limitation | Not solved |
 
 ## Get started

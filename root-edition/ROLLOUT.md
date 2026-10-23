@@ -21,8 +21,9 @@ recovery. Verify its IPK checksum with `sha256sum -c SHA256SUMS` (macOS:
 `shasum -a 256 -c SHA256SUMS`) from inside that directory. Installation also checks
 all bundle files against `bundle.json`. Checksums do not replace source trust.
 
-Public builds contain an empty inventory. They exclude production updater,
-renewal and helper-control scripts. This build does not contact the TV.
+Public builds contain an empty inventory. They exclude the ordinary Home updater,
+renewal and helper-control scripts. Root's separate update UI requires the
+[one-time Root Updater setup](UPDATES.md). This build does not contact the TV.
 
 ## 2. Check access and install without activating
 
@@ -114,8 +115,10 @@ python3 build/root-candidate/setup.py uninstall --ssh my-tv
 Uninstall restores first, removes owned recovery registration/startup hook, then
 removes the isolated package. It intentionally retains state and evidence. It
 does not touch the original launcher or start its helper. A retained state directory
-blocks reinstallation; there is no unattended Root updater yet. Archive and resolve
-that state only after verified removal and restoration, following maintainer review.
+blocks reinstallation. Compatible Root application updates can use the separate
+[Root Updater](UPDATES.md); infrastructure replacement remains host-assisted.
+Archive and resolve that state only after verified removal and restoration,
+following maintainer review.
 An unknown removal result is not permission to resubmit or delete directories.
 
 ## Release scope

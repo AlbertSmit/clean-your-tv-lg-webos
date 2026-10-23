@@ -46,8 +46,12 @@ Do not install Developer Mode over an existing root setup for this guide.
 
 The public bundle contains no personal app list. Installation can copy validated
 profile data from an existing Home installation without modifying it. It does not
-migrate arbitrary browser storage. The Root candidate excludes the production
-updater and Developer Mode renewal UI; use its separate installation procedure.
+migrate arbitrary browser storage. Root excludes the ordinary Home updater and
+Developer Mode renewal UI. Its own **Settings → Software updates** uses an
+independent Root Updater with saved profiles and one-attempt rollback. See
+[Root updates and one-time setup](UPDATES.md); this path needs isolated TV
+acceptance before release. Recovery/updater infrastructure upgrades remain
+computer-assisted.
 
 Early boot black screens, faster boot artwork, system-library patches and
 removing system advertisements are **not** delivered by this edition. Long Home

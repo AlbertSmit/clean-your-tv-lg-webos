@@ -14,7 +14,7 @@ from .store import encode
 
 PHASES = {'preparing', 'downloading', 'backed-up', 'restoring-route',
           'installing', 'awaiting-launch', 'verifying', 'complete',
-          'rolling-back', 'rolled-back', 'recovery-required', 'aborted'}
+          'rolling-back', 'verifying-rollback', 'rolled-back', 'recovery-required', 'aborted'}
 FINISHED = {'complete', 'rolled-back', 'aborted'}
 HEALTH_SECONDS = 120
 
@@ -35,6 +35,7 @@ class Manager:
     def __init__(self, store, io):
         self.store = store
         self.io = io
+        self._launched = set()
 
     def _now(self):
         value = self.io.now()
@@ -87,9 +88,10 @@ class Manager:
         if tx['phase'] in {'awaiting-launch', 'verifying', 'complete'}:
             if not self._success(tx['installEvidence']):
                 raise ValueError('launch without terminal success')
-        if tx['phase'] == 'rolled-back' and not self._success(tx['rollbackEvidence']):
+            if tx['rollbackAttempted']:raise ValueError('candidate phase after rollback submission')
+        if tx['phase'] in {'rolled-back','verifying-rollback'} and not self._success(tx['rollbackEvidence']):
             raise ValueError('rollback without terminal success')
-        if tx['phase'] == 'verifying':
+        if tx['phase'] in {'verifying','verifying-rollback'}:
             start, deadline = tx.get('launched'), tx.get('deadline')
             if (type(start) not in (int, float) or type(deadline) not in (int, float)
                     or not math.isfinite(start) or not math.isfinite(deadline)
@@ -195,12 +197,19 @@ class Manager:
             if not self.io.verify_installed(tx['prior']):
                 return self._save(tx, 'recovery-required', 'rollback identity verification failed')
             self._profile(tx)
-            self.store.write('current', tx['prior'])
-            self._save(tx, 'rolled-back')
-            self.io.launch()
+            tx['launched']=self._now();tx['deadline']=tx['launched']+HEALTH_SECONDS
+            self._save(tx, 'verifying-rollback')
+            self._launch(tx)
             return tx
         if self._success(evidence): return self._save(tx, 'awaiting-launch')
         return self._save(tx, 'rolling-back', 'application installation failed')
+
+    def _launch(self,tx):
+        key=(tx['id'],tx['phase'])
+        # Launch is idempotent and reconciled once per worker incarnation. The
+        # durable deadline is retained after restart; installation is not replayed.
+        if key not in self._launched:
+            self.io.launch();self._launched.add(key)
 
     def run(self):
         with self.store.lock():
@@ -247,17 +256,22 @@ class Manager:
                     tx['launched'] = self._now()
                     tx['deadline'] = tx['launched'] + HEALTH_SECONDS
                     self._save(tx, 'verifying')
-                    self.io.launch()
+                    self._launch(tx)
                     return tx
-                if phase == 'verifying':
+                if phase in ('verifying','verifying-rollback'):
                     now = self._now()
+                    rollback=phase=='verifying-rollback'
+                    ready=self._receipt(tx,'ready')
+                    confirmed=rollback or self._receipt(tx,'confirm')
+                    if ready and confirmed and now>=tx['launched']:
+                        selected=tx['prior' if rollback else 'candidate']
+                        if not self.io.verify_installed(selected):
+                            return self._save(tx,'recovery-required' if rollback else 'rolling-back','confirmed application identity mismatch')
+                        self.store.write('current',selected)
+                        return self._save(tx,'rolled-back' if rollback else 'complete')
                     if now < tx['launched'] or now >= tx['deadline']:
-                        return self._save(tx, 'rolling-back', 'application health confirmation timed out')
-                    if self._receipt(tx, 'ready') and self._receipt(tx, 'confirm'):
-                        if not self.io.verify_installed(tx['candidate']):
-                            return self._save(tx, 'rolling-back', 'confirmed application identity mismatch')
-                        self.store.write('current', tx['candidate'])
-                        return self._save(tx, 'complete')
+                        return self._save(tx,'recovery-required' if rollback else 'rolling-back','restored profile readiness unconfirmed' if rollback else 'application health confirmation timed out')
+                    self._launch(tx)
                     return tx
                 if phase == 'rolling-back':
                     if tx['installEvidence']['terminal'] is None:
@@ -279,19 +293,24 @@ class Manager:
                 return self._save(durable, 'recovery-required', error)
 
     def _receipt(self, tx, kind):
-        value = self.store.read(kind + '-' + tx['id'])
+        value = self.store.read(self._receipt_name(tx,kind))
         if value is None: return None
         if (not isinstance(value, dict) or value.get('transaction') != tx['id']
-                or value.get('version') != tx['candidate']['version']
+                or value.get('version') != tx['prior' if tx['phase']=='verifying-rollback' else 'candidate']['version']
                 or type(value.get('at')) not in (int, float)
                 or not tx['launched'] <= value['at'] < tx['deadline']):
             raise ValueError('invalid health receipt')
         return value
 
+    @staticmethod
+    def _receipt_name(tx,kind):
+        return kind+('-rollback-' if tx['phase']=='verifying-rollback' else '-')+tx['id']
+
     def _health(self, transaction, version, kind):
         tx = self._load()
-        if (tx is None or tx['id'] != transaction or tx['candidate']['version'] != version
-                or tx['phase'] != 'verifying'):
+        if (tx is None or tx['id'] != transaction or tx['phase'] not in ('verifying','verifying-rollback')
+                or tx['prior' if tx['phase']=='verifying-rollback' else 'candidate']['version'] != version
+                or (kind=='confirm' and tx['phase']!='verifying')):
             raise ValueError('stale health signal')
         self._profile(tx)
         now = self._now()
@@ -299,7 +318,7 @@ class Manager:
         if kind == 'confirm' and not self._receipt(tx, 'ready'):
             raise ValueError('application is not ready')
         value = {'transaction': transaction, 'version': version, 'at': now}
-        self.store.write(kind + '-' + transaction, value)
+        self.store.write(self._receipt_name(tx,kind), value)
         return value
 
     def ready(self, transaction, version): return self._health(transaction, version, 'ready')

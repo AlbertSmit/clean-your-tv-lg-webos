@@ -63,7 +63,10 @@
     var installed = offer && offer.installed;
     details.textContent = 'Installed: ' + (installed && installed.version || installed || window.ROOT_VERSION || 'unknown');
     if (offer && offer.candidate) details.textContent += '\nAvailable: ' + offer.candidate.version + '\n' + (offer.candidate.notes || '');
-    if (offer && !offer.canInstall && offer.reason) details.textContent += '\n' + offer.reason;
+    if (offer && !offer.canInstall && offer.reason) {
+      var reasons = {current:'This Root version is up to date.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
+      details.textContent += '\n' + (reasons[offer.reason] || 'This release cannot be installed with the current setup.');
+    }
     show(0, !recovery && !health, busy || active());
     show(1, !recovery && !health && !installing, busy || active() || !offer || !offer.canInstall);
     show(2, !recovery && installing, busy || active());

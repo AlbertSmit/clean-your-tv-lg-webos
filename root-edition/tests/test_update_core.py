@@ -81,6 +81,9 @@ class UpdateTests(unittest.TestCase):
     def advance(self, phase, limit=20):
         for _ in range(limit):
             state = self.m.run()
+            if phase == 'rolled-back' and state['phase'] == 'verifying-rollback':
+                self.assertIn('launch',self.io.calls)
+                self.m.ready(state['id'],state['prior']['version'])
             if state['phase'] == phase: return state
         self.fail('did not reach ' + phase + ': ' + repr(state))
     def start(self): return self.m.install('1.1.0', profile())
@@ -113,6 +116,43 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual('1.1.0', self.store.read('current')['version'])
         self.assertEqual(profile(), self.m.restore_profile()['profile'])
         self.assertEqual(['install:1.1.0'], self.installs())
+
+    def test_timely_confirmation_survives_late_poll_and_worker_restart(self):
+        tx=self.start();self.advance('verifying')
+        self.io.time+=119.9;self.receipt(tx)
+        self.io.time+=3;self.m=Manager(Store(self.root,uid=os.getuid()),self.io)
+        self.assertEqual('complete',self.m.run()['phase'])
+
+    def test_crash_at_durable_launch_boundary_reopens_without_reinstall(self):
+        self.start();self.advance('awaiting-launch')
+        write=self.store.write
+        def crash(name,value):
+            result=write(name,value)
+            if name=='transaction' and value.get('phase')=='verifying':raise KeyboardInterrupt()
+            return result
+        self.store.write=crash
+        with self.assertRaises(KeyboardInterrupt):self.m.run()
+        self.assertNotIn('launch',self.io.calls)
+        self.m=Manager(Store(self.root,uid=os.getuid()),self.io)
+        self.m.run()
+        self.assertEqual(1,self.io.calls.count('launch'))
+        self.assertEqual(['install:1.1.0'],self.installs())
+
+    def test_rollback_waits_for_actual_profile_readiness_and_never_retries(self):
+        self.io.outcomes=[False,True];self.start();state=self.advance('verifying-rollback')
+        self.assertEqual('1.0.0',self.m.restore_profile()['version'])
+        self.assertEqual('verifying-rollback',self.m.run()['phase'])
+        with self.assertRaises(ValueError):self.m.confirm(state['id'],'1.0.0')
+        self.io.time+=121
+        self.assertEqual('recovery-required',self.m.run()['phase'])
+        self.assertEqual(['install:1.1.0','install:1.0.0'],self.installs())
+
+    def test_candidate_readiness_does_not_confirm_or_break_rollback_readiness(self):
+        tx=self.start();self.advance('verifying');self.m.ready(tx['id'],'1.1.0')
+        self.io.time+=121;self.advance('verifying-rollback')
+        self.assertEqual('verifying-rollback',self.m.run()['phase'])
+        self.m.ready(tx['id'],'1.0.0')
+        self.assertEqual('rolled-back',self.m.run()['phase'])
 
     def test_timeout_rolls_back_exactly_once_and_restores_same_profile(self):
         self.start()
@@ -333,6 +373,7 @@ class UpdateTests(unittest.TestCase):
             ('rolling-back', True, 'attempted', 'recovery-required', 1),
             ('rolling-back', True, 'submitted', 'recovery-required', 2),
             ('rolling-back', True, 'terminal', 'rolled-back', 2),
+            ('verifying-rollback', True, None, 'rolled-back', 2),
             ('rolled-back', True, None, 'rolled-back', 2),
         ]
         for phase, rollback, boundary, expected, count in cases:
@@ -354,14 +395,22 @@ class UpdateTests(unittest.TestCase):
                     for _ in range(20):
                         state = manager.run()
                         if state['phase'] == 'verifying':
+                            self.assertIn('launch',io.calls)
                             manager.ready(state['id'], '1.1.0')
                             manager.confirm(state['id'], '1.1.0')
+                        elif state['phase']=='verifying-rollback':
+                            self.assertIn('launch',io.calls)
+                            manager.ready(state['id'],'1.0.0')
                 manager = Manager(Store(root, uid=os.getuid()), io)
                 for _ in range(20):
                     state = manager.run()
                     if state['phase'] == 'verifying':
+                        self.assertIn('launch',io.calls)
                         manager.ready(state['id'], '1.1.0')
                         manager.confirm(state['id'], '1.1.0')
+                    elif state['phase']=='verifying-rollback':
+                        self.assertIn('launch',io.calls)
+                        manager.ready(state['id'],'1.0.0')
                     if state['phase'] in {'complete', 'rolled-back', 'recovery-required'}: break
                 self.assertEqual(expected, state['phase'])
                 self.assertEqual(count, len([c for c in io.calls if c.startswith('install:')]))
@@ -379,6 +428,16 @@ class UpdateTests(unittest.TestCase):
         value = profile(); value['inventory']['apps'][0]['icon'] = 'data:image/png;base64,' + 'YQ==' * 90000
         with self.assertRaises(ValueError): validate(value)
         self.assertEqual(profile(), validate(profile()))
+
+    def test_unreadable_order_or_contradictory_journal_cannot_be_replaced(self):
+        for order in ('{broken','{"dock":"app","ids":"wrong"}','{"dock":"app","ids":["app","app"]}'):
+            value=profile();value['settings']['tvhome.order']=order
+            with self.assertRaises(ValueError):validate(value)
+        self.start();tx=self.advance('verifying');self.receipt(tx);self.advance('complete')
+        tx=self.m.status();tx['rollbackAttempted']=True
+        tx['rollbackEvidence']['submitted']={'job':3}
+        self.store.write('transaction',tx)
+        with self.assertRaises(ValueError):self.start()
 
 
 if __name__ == '__main__': unittest.main()

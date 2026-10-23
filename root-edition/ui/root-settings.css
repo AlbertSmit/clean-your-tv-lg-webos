@@ -6,3 +6,11 @@
 .root-settings button{display:block;width:100%;margin-top:16px;padding:20px 28px;border:2px solid transparent;border-radius:14px;background:#343844;color:#fff;text-align:left;font:inherit;font-size:27px;cursor:pointer}
 .root-settings button:focus{outline:none;border-color:#fff;background:#4c5365}
 .root-settings button:disabled{opacity:.55;cursor:wait}
+
+.root-settings button[hidden]{display:none}
+.root-settings-card{max-height:88vh;overflow:auto;box-sizing:border-box}
+.root-updates .root-settings-card{width:960px}
+.root-updates .root-update-details{white-space:pre-wrap;overflow-wrap:anywhere;font-size:23px;min-height:0;max-height:180px;overflow:auto}
+.root-updates p{min-height:0}
+.root-settings button:focus{scroll-margin:20px}
+@media(max-width:1000px){.root-settings-card,.root-updates .root-settings-card{width:90vw;padding:32px}.root-settings h1{font-size:36px}.root-settings p,.root-settings button{font-size:24px}}

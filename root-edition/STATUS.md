@@ -184,5 +184,6 @@ In RC10 the user confirmed Exit Root mode opened LG Home. Independent readback a
 uptime 1015.42 seconds showed all three stock Home destinations, journal restored,
 and LG Home foreground, before the guardian deadline of 1045.87 seconds. No manual
 restore was sent. The old helper remained stopped with its latch set. The production
-launcher was opened for explicit helper resumption. This validates the normal UI
+launcher was opened for explicit helper resumption. The user then confirmed
+short Home and arrows work in the production setup. This validates the normal UI
 exit, not escape from a frozen interface. Permanent activation remains locked.

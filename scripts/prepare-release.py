@@ -3,6 +3,7 @@
 import argparse
 import base64
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -15,7 +16,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from cytv.package import data_files
+from cytv.package import data_files, read_ar, safe_name
 
 REPO = 'Razdva122/clean-your-tv-lg-webos'
 URL = 'https://github.com/' + REPO + '/releases/download/'
@@ -53,7 +54,66 @@ def package_version(raw, kind, expected):
     version(expected)
 
 
-def prepare_manifests(tag, build, packages, prior_build, prior_packages, rollback=None, notes=None):
+def verify_helper_transition(current, prior, packages, prior_packages, compatibility):
+    """Only a reviewed, hash-pinned permission repair may reuse the old Home ABI."""
+    expected = {'from_helper':prior['helper'], 'to_helper':current['helper'],
+                'rollback_home':prior['home'], 'rollback_sha256':digest(prior_packages['home']),
+                'prior_helper_sha256':digest(prior_packages['helper'])}
+    if not isinstance(compatibility, dict) or any(compatibility.get(k) != v for k, v in expected.items()):
+        raise ValueError('Helper rollback compatibility approval mismatch')
+    if version(current['home']) <= version(prior['home']):
+        raise ValueError('Helper rollback compatibility requires a new Home candidate')
+    def layout(raw):
+        parts = read_ar(raw)
+        if set(parts) != {'debian-binary', 'control.tar.gz', 'data.tar.gz'} or parts['debian-binary'] != b'2.0\n':
+            raise ValueError('Helper rollback compatibility archive changed')
+        result = {}
+        for name in ('control.tar.gz', 'data.tar.gz'):
+            entries, contents = {}, {}
+            with tarfile.open(fileobj=io.BytesIO(parts[name]), mode='r:gz') as archive:
+                for member in archive:
+                    safe_name(member.name)
+                    if member.name in entries or not (member.isfile() or member.isdir()) or member.pax_headers or member.size > 16*1024*1024:
+                        raise ValueError('Helper rollback compatibility archive entry invalid')
+                    entries[member.name] = (member.type, member.mode, member.uid, member.gid,
+                                           member.uname, member.gname, member.linkname, member.mtime)
+                    if member.isfile(): contents[member.name] = archive.extractfile(member).read()
+            result[name] = entries, contents
+        return result
+    old_layout, new_layout = (layout(p['helper']) for p in (prior_packages, packages))
+    for name in old_layout:
+        if old_layout[name][0] != new_layout[name][0]:
+            raise ValueError('Helper rollback compatibility archive permissions or entries changed')
+    old_control, new_control = old_layout['control.tar.gz'][1], new_layout['control.tar.gz'][1]
+    old_version = ('\nVersion: '+prior['helper']+'\n').encode()
+    if (set(old_control) != {'control'} or set(new_control) != {'control'} or
+            old_control['control'].count(old_version) != 1 or
+            old_control['control'].replace(old_version, ('\nVersion: '+current['helper']+'\n').encode()) != new_control['control']):
+        raise ValueError('Helper rollback compatibility installation control changed')
+    before, after = (data_files(p['helper']) for p in (prior_packages, packages))
+    base = 'usr/palm/applications/' + APPS['helper'] + '/'
+    repair = base + 'state-permissions.js'
+    if repair not in after or digest(after[repair]) != compatibility.get('state_permissions_sha256'):
+        raise ValueError('Helper rollback compatibility repair hash mismatch')
+    metadata = {base+'appinfo.json', 'usr/palm/services/com.local.nativehome.service/package.json',
+                'usr/palm/packages/com.local.nativehome/packageinfo.json'}
+    names = {n for n in before if not n.endswith('.png')}
+    if names != {n for n in after if not n.endswith('.png')}:
+        raise ValueError('Helper rollback compatibility file set changed')
+    for name in names - {repair}:
+        if name in metadata:
+            old, new = json.loads(before[name]), json.loads(after[name])
+            if name == base+'appinfo.json':
+                for info in (old, new):
+                    if not re.fullmatch(r'#[a-fA-F0-9]{6}', info.pop('iconColor', '')):
+                        raise ValueError('Helper rollback compatibility icon metadata invalid')
+            if old.pop('version', None) != prior['helper'] or new.pop('version', None) != current['helper'] or old != new:
+                raise ValueError('Helper rollback compatibility metadata changed')
+        elif before[name] != after[name]:
+            raise ValueError('Helper rollback compatibility runtime changed: ' + name)
+
+
+def prepare_manifests(tag, build, packages, prior_build, prior_packages, rollback=None, notes=None, compatibility=None):
     if not re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', tag) or build['tag'] != tag:
         raise ValueError('Invalid release tag')
     current, prior = build['versions'], prior_build['versions']
@@ -66,7 +126,9 @@ def prepare_manifests(tag, build, packages, prior_build, prior_packages, rollbac
         if current[kind] == prior[kind] and packages[kind] != prior_packages[kind]:
             raise ValueError(kind + ' package changed without version bump')
     if current['helper'] != prior['helper']:
-        raise ValueError('Helper baseline changed; a compatible tested rollback baseline is required')
+        if compatibility is None:
+            raise ValueError('Helper baseline changed; a compatible tested rollback baseline is required')
+        verify_helper_transition(current, prior, packages, prior_packages, compatibility)
     if current['home'] == prior['home']:
         if rollback is None:
             raise ValueError('Existing signed rollback required for unchanged Home version')
@@ -175,7 +237,9 @@ def main():
             raw = download(rollback_meta, Path(prior['url']).name, rollback_dir)
             if digest(raw) != prior['sha256']: raise ValueError('Signed rollback digest mismatch')
             rollback = prior, raw
-        manifests, files = prepare_manifests(args.tag, build, packages, prior_build, prior_packages, rollback, meta.get('body'))
+        approval_path = ROOT / 'native/helper-rollback-compatibility.json'
+        compatibility = json.loads(approval_path.read_text()) if approval_path.exists() else None
+        manifests, files = prepare_manifests(args.tag, build, packages, prior_build, prior_packages, rollback, meta.get('body'), compatibility)
         manifest_file = tmp / 'manifests.json'; manifest_file.write_text(json.dumps(manifests))
         for name, raw in files.items(): (output / name).write_bytes(raw)
         subprocess.run(['node', str(ROOT / 'scripts/sign-release-feeds.cjs'), str(manifest_file), str(output)], check=True)

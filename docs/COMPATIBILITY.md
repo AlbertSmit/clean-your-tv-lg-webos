@@ -45,7 +45,7 @@ Triple-Home recovery in the updated No-root Helper still needs verification on a
 
 - Helper 0.6.15 could disable SSAP on C4 because the installer owns the state
   directory and Developer Mode owns the uploaded files: the helper cannot chmod
-  either. The working-tree fix keeps the existing shared paths, attempts 0770 on
+  either. Helper 0.6.17 keeps the existing shared paths, attempts 0770 on
   state directories and accepts a non-world-writable 0775 directory owned by the
   packaged prisoner:jailer identity when the runtime belongs to that group.
   A pairing key already at 0640 remains usable. If chmod of a foreign-owned key

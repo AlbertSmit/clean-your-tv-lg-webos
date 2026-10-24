@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.10.10 — C4 state recovery and maintenance screens
+
+- Include the Home/Root compact settings and desktop/Android maintenance improvements merged since v0.10.9.
+- Bump cytv to 0.2.13, Home to 1.3.6, Helper to 0.6.17, Root to 0.1.10 and Android to 0.1.4-preview (code 5); keep Updater 0.1.5.
+- Pin the exact Home 1.3.5 rollback and verify unchanged Helper protocols/executables before signing the new Helper baseline.
 
 - Keep No-root SSAP available with a protected key in a trusted installer-owned state directory even when directory chmod is denied.
 - Recover boot-expanded foreign-owned pairing keys through private staging and atomic replacement, preserving the shared group used by app inventory; keep SSAP blocked if protection fails.

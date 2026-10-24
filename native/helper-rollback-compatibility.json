@@ -1,0 +1,8 @@
+{
+  "from_helper": "0.6.16",
+  "to_helper": "0.6.17",
+  "rollback_home": "1.3.5",
+  "rollback_sha256": "4a033bec2a9ba15b4193680bb668ebc9d44d9910765736220afd7f1ee5916ff6",
+  "prior_helper_sha256": "ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1",
+  "state_permissions_sha256": "0fa94752efa683a31518eae231ab02e61c0401ffce25a34f21730954c56b5305"
+}

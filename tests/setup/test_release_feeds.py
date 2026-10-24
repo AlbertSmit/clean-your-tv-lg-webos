@@ -7,6 +7,7 @@ spec = importlib.util.spec_from_file_location('prepare_release', ROOT / 'scripts
 release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(release)
 from cytv.package import ipk
+from cytv.package import data_files, read_ar, ar, tgz
 import json
 
 
@@ -73,3 +74,49 @@ class ReleaseFeeds(unittest.TestCase):
         prior['helper'] = ipk('com.local.nativehome', '0.6.16', {'usr/palm/applications/com.local.nativehome/appinfo.json': json.dumps({'id': 'com.local.nativehome', 'version': '0.6.16'}).encode(), 'extra.txt': b'changed'})
         with self.assertRaisesRegex(ValueError, 'without version bump'):
             self.prepare(prior=prior)
+
+    def test_reviewed_permission_only_helper_transition_preserves_exact_home_rollback(self):
+        prior_helper = (ROOT/'native/published/com.local.nativehome_0.6.16_arm.ipk').read_bytes()
+        helper_files = data_files(prior_helper)
+        app = 'usr/palm/applications/com.local.nativehome/'
+        repair = (ROOT/'native/app/state-permissions.js').read_bytes()
+        helper_files[app+'state-permissions.js'] = repair
+        for name in (app+'appinfo.json', 'usr/palm/services/com.local.nativehome.service/package.json',
+                     'usr/palm/packages/com.local.nativehome/packageinfo.json'):
+            info = json.loads(helper_files[name]); info['version'] = '0.6.17'
+            if name == app+'appinfo.json':
+                info['iconColor'] = '#241d19'
+            helper_files[name] = json.dumps(info).encode()
+        prior = packages(); prior['helper'] = prior_helper
+        current = packages('1.3.6', '0.1.10', '0.6.17')
+        approval = {'from_helper':'0.6.16', 'to_helper':'0.6.17', 'rollback_home':'1.3.5',
+                    'rollback_sha256':release.digest(prior['home']),
+                    'prior_helper_sha256':release.digest(prior_helper),
+                    'state_permissions_sha256':release.digest(repair)}
+        executables = {app+n for n in ('detach','relay','resume')}
+        def prepare(files=helper_files, approval=approval, raw=None):
+            candidate = dict(current, helper=raw or ipk('com.local.nativehome','0.6.17',files,
+                executable=executables, helper_state=True, architecture='arm'))
+            return release.prepare_manifests('v0.10.10', {'tag':'v0.10.10','versions':{'home':'1.3.6','root':'0.1.10','helper':'0.6.17'}},
+                candidate, build(), prior, compatibility=approval)
+        manifests, files = prepare()
+        self.assertEqual(manifests['previous']['helper'], '0.6.17')
+        self.assertEqual(manifests['previous']['home'], '1.3.5')
+        self.assertEqual(files['com.gathin.tvhome_1.3.5_all.ipk'], prior['home'])
+        for name in (app+'native.js', app+'relay', 'usr/palm/services/com.local.nativehome.service/app-inventory.js'):
+            with self.subTest(changed=name), self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+                prepare(dict(helper_files, **{name:b'unreviewed runtime change'}))
+        for field in approval:
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+                prepare(approval=dict(approval, **{field:'wrong'}))
+        info = json.loads(helper_files[app+'appinfo.json']); info['requiredACG'] = ['unreviewed.permission']
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(dict(helper_files, **{app+'appinfo.json':json.dumps(info).encode()}))
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(raw=ipk('com.local.nativehome','0.6.17',helper_files,helper_state=True,architecture='arm'))
+        parts = read_ar(ipk('com.local.nativehome','0.6.17',helper_files,
+                           executable=executables,helper_state=True,architecture='arm'))
+        parts['control.tar.gz'] = tgz({'control':b'Package: com.local.nativehome\nVersion: 0.6.17\n',
+                                      'postinst':b'#!/bin/sh\nexit 99\n'}, executable={'postinst'})
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(raw=ar(parts))

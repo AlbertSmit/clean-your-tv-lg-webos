@@ -220,7 +220,7 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.9 distribution contains cytv **0.2.12**, Home **1.3.4**, Helper
+The v0.10.9 distribution contains cytv **0.2.12**, Home **1.3.5**, Helper
 **0.6.16**, Root **0.1.8** and No-root Updater **0.1.5**. Source versions are
 recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.9.md)
 explain packaging and remaining checks.

@@ -1,8 +1,13 @@
 # v0.10.9 — Android preview and Windows graphical installer
 
-Includes cytv **0.2.12** and Android **0.1.3-preview**, with unchanged TV
-components: Home **1.3.4**, Helper **0.6.16**, Root **0.1.8**, and No-root
-Updater **0.1.5**. Existing signed Home 1.3.3 rollback remains the baseline.
+Includes cytv **0.2.12** and Android **0.1.3-preview**, with Home **1.3.5**, Helper **0.6.16**, Root **0.1.8**, and No-root
+Updater **0.1.5**. The signed rollback uses the exact Home 1.3.4 package
+from v0.10.8. Helper, Root and Updater versions are unchanged.
+
+Home 1.3.5 includes the merged webOS 5 network-settings repair (PR #16):
+the Wi-Fi shortcut tries the first-use network overlay, then network settings,
+then the main settings app. This source change requires the Home version bump;
+new hardware acceptance has not been claimed.
 
 Windows x64 now includes `cytv-windows-x64-desktop.zip`. Extract the whole
 archive and open `cytv-desktop/cytv-desktop.exe`, keeping `_internal` beside it.

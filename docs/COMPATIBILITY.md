@@ -1,6 +1,6 @@
 # Compatibility and known limits
 
-The v0.10.9 distribution contains cytv 0.2.12, Home 1.3.4, Helper 0.6.16,
+The v0.10.9 distribution contains cytv 0.2.12, Home 1.3.5, Helper 0.6.16,
 Root 0.1.8 and No-root Updater 0.1.5; the Android installer is 0.1.3-preview.
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).

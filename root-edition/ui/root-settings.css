@@ -1,8 +1,8 @@
 /* Settings use the same TV-scale layout in both editions. */
 #renewalPanel,.root-settings,#updatePanel{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(7,10,14,.93);color:#f5f7fa;font-family:Outfit,"CYTV NotoSans","CYTV NotoSansDevanagari","CYTV NotoSansKR",sans-serif}
 #renewalPanel.hidden,#updatePanel.hidden,.root-settings[hidden]{display:none}
-.renewal-card,.root-settings-card{box-sizing:border-box;width:1120px;max-width:92vw;max-height:90vh;overflow:auto;padding:36px 44px;border:1px solid #414650;border-radius:24px;background:#202329;box-shadow:0 24px 100px #0008;scroll-padding:24px}
-.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.renewal-card,.root-settings-card{box-sizing:border-box;width:1120px;max-width:92vw;max-height:90vh;overflow:auto;padding:36px 44px;border:1px solid #414650;border-radius:24px;background:#202329;box-shadow:0 24px 100px #0008}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;}
 .renewal-card h2,.root-settings h1{font-size:40px;line-height:1.2;margin:0}
 .settings-edition{font-size:22px;color:#ccd1db;border:1px solid #626a76;border-radius:8px;padding:7px 12px;white-space:nowrap}
 .renewal-card p,.root-settings p{font-size:24px;line-height:1.4;color:#ccd1db;margin:10px 0 16px}
@@ -10,28 +10,28 @@
 .renewal-card h3,.root-settings h2{font-size:28px;line-height:1.25;margin:0 0 8px}
 .renewal-card .renewal-warning,.root-settings .settings-warning{color:#efd49a;font-size:22px}
 #renewalStatus,.root-settings .settings-status{white-space:pre-line;font-size:23px;line-height:1.4;color:#e2e8f1;margin:12px 0;min-height:64px}
-.renewal-actions{display:flex;gap:12px;flex-wrap:wrap}
-.renewal-actions button,.root-settings button{box-sizing:border-box;font:inherit;font-size:25px;line-height:1.25;color:#f5f7fa;background:#343941;border:3px solid transparent;border-radius:12px;padding:15px 22px;cursor:pointer;scroll-margin:24px}
+.renewal-actions{display:flex;flex-wrap:wrap}
+.renewal-actions button,.root-settings button{box-sizing:border-box;font:inherit;font-size:25px;line-height:1.25;color:#f5f7fa;background:#343941;border:3px solid transparent;border-radius:12px;padding:15px 22px;cursor:pointer}
 .renewal-actions button:focus,.root-settings button:focus{outline:3px solid #b8d3ff;outline-offset:3px;border-color:#f5f7fa;background:#46556c}
 .renewal-actions button:disabled,.root-settings button:disabled{opacity:.5;cursor:default}
-.settings-links button{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left}
+.settings-links button{flex:1;min-width:0;display:flex;align-items:center;text-align:left}
 .settings-chevron{flex-shrink:0;margin-left:auto;font-size:34px;line-height:1;color:#bfc8d4}
 .settings-chevron:before{content:"›"}
 .settings-update-dot{display:none;flex-shrink:0;width:16px;height:16px;border-radius:50%;background:#ffb347;box-shadow:0 0 0 4px #ffb34726,0 0 14px #ffb34770}
 .settings-links button[data-update-available="true"] .settings-update-dot{display:inline-block}
-.settings-footer{display:flex;justify-content:space-between;align-items:center;gap:24px;border-top:1px solid #414650;margin-top:24px;padding-top:18px}
+.settings-footer{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #414650;margin-top:24px;padding-top:18px}
 .settings-footer p{font-size:21px;margin:0}
 .settings-danger{color:#ffd1bd!important}
-#renewalDetails,.root-updates .root-update-details{font-size:21px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;color:#ccd1db}
+#renewalDetails,.root-updates .root-update-details{font-size:21px;line-height:1.4;white-space:pre-wrap;overflow-wrap:break-word;color:#ccd1db}
 #renewalDetails.hidden,.root-settings button[hidden]{display:none}
 #updateStatus,#updateNotes{white-space:pre-line}
 .root-updates button{display:block;width:100%;margin-top:12px;text-align:left}
 .root-updates h1{margin-bottom:18px}
 
-@media(max-width:1000px){.renewal-card,.root-settings-card{padding:24px;max-height:94vh}.renewal-card h2,.root-settings h1{font-size:32px}.renewal-card p,.root-settings p,.renewal-actions button,.root-settings button{font-size:22px}.settings-heading{gap:12px}.settings-edition{font-size:18px}.settings-footer p{font-size:18px}}
+@media(max-width:1000px){.renewal-card,.root-settings-card{padding:24px;max-height:94vh}.renewal-card h2,.root-settings h1{font-size:32px}.renewal-card p,.root-settings p,.renewal-actions button,.root-settings button{font-size:22px}.settings-heading{}.settings-edition{font-size:18px}.settings-footer p{font-size:18px}}
 
 /* Routing is the first remote-control action, with a stable, labelled switch. */
-.home-routing-actions{display:flex;align-items:flex-start;gap:18px}
+.home-routing-actions{display:flex;align-items:flex-start;}
 .home-visit-action{flex:1;min-width:0}
 .home-visit-action .home-visit-button{width:100%}
 .home-routing-actions .home-routing-switch{position:relative;flex:1;min-height:88px;padding-right:128px;text-align:left;background:#303740}
@@ -54,12 +54,12 @@
 .root-updates .root-update-details,#updatePanel .update-versions{flex-shrink:0;max-height:none;overflow:visible;white-space:pre-line;font-size:30px;line-height:1.35;color:#f4f6f8;margin:0 0 14px}
 .root-updates .root-update-status,#updatePanel .root-update-status{flex-shrink:0;height:auto;min-height:36px;overflow:visible;white-space:pre-line;font-size:25px;line-height:1.4;color:#bfc9d5;margin:0 0 18px}
 .root-updates .update-notes-heading,#updatePanel .update-notes-heading{flex-shrink:0;border-top:1px solid #414b58;padding-top:18px;font-size:30px;line-height:1.25;margin:0 0 14px}
-.update-notes{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overflow-wrap:anywhere;white-space:normal;scrollbar-color:#7d8da0 #20262d;padding:0 24px 0 0;color:#e0e6ed}
+.update-notes{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overflow-wrap:break-word;white-space:normal;padding:0 24px 0 0;color:#e0e6ed}
 .root-updates .release-notes-content h2,#updatePanel .release-notes-content h2{font-size:30px;line-height:1.3;margin:20px 0 12px}
 .root-updates .release-notes-content h3,#updatePanel .release-notes-content h3{font-size:27px;line-height:1.3;margin:18px 0 10px}
 .root-updates .release-notes-content p,#updatePanel .release-notes-content p,.update-notes ul,.update-notes ol{font-size:28px;line-height:1.5;margin:0 0 18px;max-width:72ch}
 .update-notes ul,.update-notes ol{padding-left:36px}.update-notes li{padding-left:6px;margin-bottom:14px}.update-notes code{font-size:.92em}.update-notes>:first-child{margin-top:0!important}
-.root-updates .update-actions,#updatePanel .update-actions{flex-shrink:0;flex-wrap:wrap;border-top:1px solid #414b58;margin-top:auto;padding-top:20px;gap:16px}
+.root-updates .update-actions,#updatePanel .update-actions{flex-shrink:0;flex-wrap:wrap;border-top:1px solid #414b58;margin-top:auto;padding-top:20px;}
 .root-updates .update-actions button,#updatePanel .update-actions button{display:block;width:auto;margin:0;min-height:64px;text-align:center;font-size:26px;padding:14px 24px}
 .root-updates .update-actions button[hidden],#updatePanel .update-actions button[hidden],#updatePanel .release-notes-content[hidden],#updatePanel .update-notes-heading[hidden],.root-updates .release-notes-content[hidden],.root-updates .update-notes-heading[hidden]{display:none}
 .root-updates .update-actions button:nth-child(2),#updateInstall{background:#dceaff;color:#142335}
@@ -70,17 +70,17 @@
 .settings-main .settings-home{margin-top:24px}
 .settings-main .settings-status{white-space:pre-line;font-size:23px;line-height:1.4;min-height:32px;margin:10px 0 18px;color:#e2e8f1}
 .settings-main .home-visit-hint{margin-top:14px}
-.settings-main .settings-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.settings-main .settings-links button{width:100%}
+.settings-main .settings-links{display:flex}
+.settings-main .settings-links button{width:auto;flex:1}
 .settings-developer{margin-top:20px}
-.settings-developer button{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:transparent;border-color:#626a76}
+.settings-developer button{display:flex;align-items:center;width:100%;text-align:left;background:transparent;border-color:#626a76}
 .settings-beta{font-size:19px;color:#efd49a}
 .renewal-summary{display:block;margin-top:8px;color:#ccd1db;font-size:21px;line-height:1.4}
 #renewalPanel .renewal-card.hidden{display:none}
 #renewalToggle{position:relative;min-height:88px;padding-right:128px;text-align:left}
 #developerSettings .renewal-warning{border-left:3px solid #efd49a;padding:12px 18px;background:#efd49a0d;margin:20px 0}
 @media(max-width:1000px){.settings-main .settings-links button{font-size:22px;padding:14px 16px}.settings-main .settings-status{font-size:22px}.renewal-summary{font-size:20px}}
-@media(max-width:700px){.settings-main .settings-links{grid-template-columns:1fr}.settings-heading{flex-wrap:wrap}.settings-footer{flex-wrap:wrap}}
+@media(max-width:700px){.settings-main .settings-links{flex-direction:column}.settings-heading{flex-wrap:wrap}.settings-footer{flex-wrap:wrap}}
 @media(max-height:800px) and (min-width:701px){
  .settings-main{padding:24px 32px}
  .renewal-card.settings-main h2,.root-settings .settings-main h1{font-size:34px}
@@ -101,3 +101,15 @@
 .root-updates.companion-app .update-actions button{background:#343941;color:#f5f7fa}
 .root-updates.companion-app .update-actions .companion-primary{order:-1;background:#dceaff;color:#142335}
 .root-updates.companion-app .update-actions button:focus{background:#46556c;color:#f5f7fa}
+
+/* Explicit spacing instead of flex gap, for webOS 3.x through 5.x. */
+.settings-heading>:not(:first-child){margin-left:24px}
+.renewal-actions>button{margin-right:12px;margin-bottom:12px}
+.renewal-actions>button:last-child{margin-right:0}
+.settings-footer>:not(:first-child){margin-left:24px}
+.settings-update-dot{margin-left:12px}
+.home-routing-actions>button{margin-bottom:0}
+.home-routing-actions>:not(:first-child){margin-left:18px}
+.root-updates .update-actions button,#updatePanel .update-actions button{margin:0 16px 12px 0}
+@media(max-width:1000px){.settings-heading>:not(:first-child){margin-left:12px}}
+@media(max-width:700px){.home-routing-actions>:not(:first-child){margin-left:0;margin-top:18px}.settings-main .settings-links button{flex:auto;margin-right:0}}

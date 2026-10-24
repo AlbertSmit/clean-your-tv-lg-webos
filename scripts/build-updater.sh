@@ -16,6 +16,9 @@ cp -R updater-app build/updater-app
 cp launcher/renewal-panel.css launcher/i18n.js launcher/catalogs.js launcher/i18n.css root-edition/ui/root-locales.js build/updater-app/
 mkdir -p build/updater-app/fonts
 cp launcher/fonts/NotoSans* build/updater-app/fonts/
+python3 scripts/tv_web_build.py --input build/updater-app --output build/updater-app-compat
+rm -rf build/updater-app
+mv build/updater-app-compat build/updater-app
 "$ARES_PACKAGE" build/updater-app build/updater-service -o dist
 
 mkdir -p dist/updater-setup/scripts/lib dist/updater-setup/updater-service

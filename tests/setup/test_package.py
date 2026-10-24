@@ -16,8 +16,9 @@ class PackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='helper build ') as tmp:
             root = Path(tmp)
             (root/'scripts').mkdir()
-            for name in ('build.sh', 'fix-package-data.py'):
+            for name in ('build.sh', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
+            shutil.copy(ROOT/'package.json', root/'package.json')
             for directory in ('native/app', 'native/service', 'launcher'):
                 path = root/directory
                 path.mkdir(parents=True)
@@ -49,7 +50,7 @@ arch = 'arm' if helper else 'all'
             (root/'dist').mkdir()
             stale = root/'dist/com.local.nativehome_0.6.14_arm.ipk'
             stale.write_bytes(b'old package must stay untouched')
-            env = dict(os.environ, PATH=str(root/'bin')+os.pathsep+os.environ['PATH'],
+            env = dict(os.environ, NODE_PATH=str(ROOT/'node_modules'), PATH=str(root/'bin')+os.pathsep+os.environ['PATH'],
                        ZIG=str(zig), ARES_PACKAGE=str(packager), PYTHONPATH=str(ROOT))
             result = subprocess.run(['bash', 'scripts/build.sh'], cwd=root, env=env, text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stdout+result.stderr)

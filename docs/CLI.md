@@ -290,7 +290,8 @@ redirects and falls back to an embedded icon on failure.
 ## Build from source
 
 Developers need Git, Python 3.11+ and the build requirements. Zig is used locally
-to compile the existing ARM32 helper. No npm installation is used.
+to compile the existing ARM32 helper. Node.js 20.19+ and npm build the compatible
+TV web assets; run `npm ci` before the commands below. See [TV web build](TV-WEB-BUILD.md).
 
 ```sh
 python -m venv .venv-cytv

@@ -8,6 +8,10 @@ on:
       - 'assets/brand/**'
       - 'assets/icons/**'
       - 'scripts/build-cytv.py'
+      - 'scripts/compile-tv-web.cjs'
+      - 'scripts/tv_web_build.py'
+      - 'package.json'
+      - 'package-lock.json'
       - 'scripts/desktop_packaging.py'
       - 'tests/cytv/**'
       - 'launcher/**'
@@ -26,6 +30,10 @@ on:
       - 'assets/brand/**'
       - 'assets/icons/**'
       - 'scripts/build-cytv.py'
+      - 'scripts/compile-tv-web.cjs'
+      - 'scripts/tv_web_build.py'
+      - 'package.json'
+      - 'package-lock.json'
       - 'scripts/desktop_packaging.py'
       - 'tests/cytv/**'
       - 'launcher/**'
@@ -46,6 +54,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -114,6 +126,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

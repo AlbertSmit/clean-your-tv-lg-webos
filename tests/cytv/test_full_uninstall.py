@@ -119,3 +119,44 @@ class FullUninstallTests(unittest.TestCase):
                         if name == 'exits after polling':
                             self.assertGreater(elapsed[0], 0)
                 self.assertFalse(any(c.args[0].endswith('/remove') for c in remote.luna.call_args_list))
+
+    def test_interrupted_root_removal_checks_device_before_continuing(self):
+        for outcome in ('completed', 'ready', 'unknown', 'busy', 'retry-fails'):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as tmp:
+                store = state.Store(tmp)
+                profile = state.target('tv.local', 'root')
+                remote = MagicMock()
+                remote.luna.return_value = {'returnValue': True, 'status': {'apps': []}}
+                remote.run.return_value = ''
+                inst = Installer(remote, store, profile, Path(tmp), {}, lambda *_: None)
+                inst.installed_apps = MagicMock(side_effect=[[{'id': package.ROOT_APP}], []])
+                inst.root_updater_cleanup = MagicMock(return_value={'disabled': True, 'removed': True})
+                inst.cleanup_legacy_permissions = MagicMock()
+                inst.cleanup_updater_app_permissions = MagicMock()
+                inst.verify_project_removed = MagicMock()
+                inst.verify_absent = MagicMock()
+                inst.root_action = MagicMock()
+                # Simulate the structured answer of the installed recovery driver.
+                import json
+                reply = {'returnValue': True, 'removed': package.ROOT_APP,
+                         'state_retained': '/var/lib/clean-your-tv-root'}
+                if outcome in ('unknown', 'busy'):
+                    reply = {'returnValue': False, 'reason': outcome}
+                remote.run.side_effect = [json.dumps({'returnValue': True, 'ready': True}) if outcome in ('completed', 'ready') else json.dumps(reply), json.dumps(reply), '']
+                if outcome == 'retry-fails':
+                    remote.run.side_effect = [json.dumps({'returnValue': True, 'ready': True}), RuntimeError('connection lost')]
+                store.begin(profile, 'uninstall', full_project=True, root_submitted=True,
+                            removals={}, updater_archive='/var/lib/clean-your-tv-root-updater.archive-'+'a'*32)
+                if outcome in ('completed', 'ready'):
+                    self.assertTrue(inst.uninstall(full_project=True)['removed'])
+                    self.assertIsNone(store.pending(profile))
+                else:
+                    with self.assertRaises(RuntimeError):
+                        inst.uninstall(full_project=True)
+                    self.assertTrue(store.pending(profile)['root_submitted'])
+                    if outcome == 'retry-fails':
+                        self.assertEqual([c.args[0] for c in inst.root_updater_cleanup.call_args_list], ['disable'])
+                    else:
+                        inst.root_updater_cleanup.assert_not_called()
+                inst.root_action.assert_not_called()
+                self.assertTrue(remote.run.called)

@@ -12,6 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cytv import package
+from scripts.tv_web_build import compile_web
 
 
 def tracked_files(prefix):
@@ -36,6 +37,8 @@ def tracked_files(prefix):
 
 def pack_app(appfiles, servicefiles, architecture='all', helper=False):
     info = json.loads(appfiles['appinfo.json'])
+    if info.get('type') == 'web':
+        appfiles = compile_web(appfiles)
     app, version = info['id'], info['version']
     service = json.loads(servicefiles['services.json'])['id']
     files = {'usr/palm/applications/' + app + '/' + n: b for n, b in appfiles.items()}

@@ -142,7 +142,7 @@ requirements, app inventory, build, pairing, activation, updater setup and recov
 Use a new output directory for Root bundles and retain all support files.
 
 For **No-root only**, `install.sh` automates source setup on macOS/Linux with
-Node.js 20+ and npm, Python 3.9+ with pip/venv, and Git:
+Node.js 20.19+ and npm, Python 3.9+ with pip/venv, and Git:
 
 ```sh
 git clone https://github.com/Razdva122/clean-your-tv-lg-webos.git

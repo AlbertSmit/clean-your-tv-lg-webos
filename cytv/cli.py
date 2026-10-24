@@ -202,6 +202,10 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('This removes Root, Root Updater, their services and startup hooks, plus any installed No-root Home, Helper and Updater.')
                 write('Recovery records are retained for diagnostics. Other TV apps stay installed.')
             verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home'}[args.command]
+            if args.command == 'uninstall' and profile['edition'] == 'root':
+                pending = store.pending(profile)
+                if pending and pending.get('action') == 'uninstall' and pending.get('full_project') is True:
+                    verb = 'Check TV and continue removal'
             if not prompts.confirm(verb + '?', ask, write, default=args.command == 'install'):
                 write('Cancelled. No TV changes were made.')
                 return 0
@@ -385,6 +389,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         write(str(exc))
         if phase in ('pair-tv', 'read-inventory'):
             write('Installation has not started. No TV packages were changed by this attempt.')
+        if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
+            write('Keep the TV on and choose Remove again. The app checks its state before continuing.')
         diagnostics.suggest_issue(write, store, args.command, profile, phase, exc, tv_info)
         return 2
     except Exception as exc:
@@ -397,6 +403,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         }
         write('Could not read the TV applications. Keep the TV on and accept its pairing request. Installation has not started.'
               if phase in ('pair-tv', 'read-inventory') and kind != 'ModuleNotFoundError' else hints.get(kind, 'Operation could not be confirmed. Check TV connectivity and run cytv status or cytv doctor. Retain local and TV recovery state; do not retry blindly.'))
+        if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
+            write('Keep the TV on and choose Remove again. The app checks its state before continuing.')
         diagnostics.suggest_issue(write, store, args.command, profile, phase, exc, tv_info)
         return 1
     finally:

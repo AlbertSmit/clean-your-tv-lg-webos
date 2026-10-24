@@ -44,7 +44,7 @@ class Installer:
             args += ['--bundle', bundle]
         if migrate:
             args.append('--migrate-packaged-home')
-        raw = self.remote.run(shlex.join(args), timeout=720 if action == 'restore' else 180)
+        raw = self.remote.run(shlex.join(args), timeout=1080 if action == 'uninstall' else 720 if action == 'restore' else 180)
         reply = json.loads(raw)
         if not isinstance(reply, dict) or reply.get('returnValue') is not True:
             raise UserError('Root operation was not confirmed. Run cytv status; retain recovery state.')
@@ -644,6 +644,15 @@ print('CYTV_PROJECT_REMOVED')
         except (KeyError, TypeError, ValueError):
             raise UserError('LG Home routing could not be verified. Keep recovery data.') from None
 
+    def recover_root_removal(self, action):
+        from .root_remove_recovery import SCRIPT
+        reply = json.loads(self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT, action]), timeout=1080))
+        if not isinstance(reply, dict) or reply.get('returnValue') is not True:
+            if isinstance(reply, dict) and reply.get('reason') == 'busy':
+                raise UserError('The previous removal is still running. Wait a minute, then choose Remove again. The app will check the TV before continuing.')
+            raise UserError('The TV has not confirmed the previous package removal. Recovery records were kept. Restart the TV, then choose Remove again to check its state. If this message returns, send the diagnostic report to support.')
+        return reply
+
     def uninstall_project(self):
         pending = self.store.pending(self.profile)
         if pending and (pending.get('action') != 'uninstall' or pending.get('full_project') is not True):
@@ -666,16 +675,18 @@ print('CYTV_PROJECT_REMOVED')
                              updater_archive=UPDATER_STATE + '.archive-' + uuid.uuid4().hex, removals={})
         pending = self.store.pending(self.profile)
         archive = pending['updater_archive']
+        recovering_root = pending.get('root_submitted') is True
+        if recovering_root:
+            self.progress('Checking the previous removal on the TV…')
+            self.recover_root_removal('inspect')
         self.progress('Stopping Root Updater and removing its startup registration…')
         if self.root_updater_cleanup('disable', archive).get('disabled') is not True:
             raise UserError('Root Updater was not confirmed stopped. Removal paused.')
         # Restore LG Home through the existing guarded Root removal driver.
-        if package.ROOT_APP in apps:
-            if pending.get('root_submitted'):
-                raise UserError('Previous Root removal outcome is unknown; it was not submitted again.')
+        if recovering_root or package.ROOT_APP in apps:
             self.store.checkpoint(self.profile, root_submitted=True)
             self.progress('Restoring LG Home and removing Root…')
-            result = self.root_action('uninstall')
+            result = self.recover_root_removal('resume') if recovering_root else self.root_action('uninstall')
             if result.get('removed') != package.ROOT_APP or result.get('state_retained') != ROOT_STATE:
                 raise UserError('Root removal was not confirmed. Recovery data was kept.')
         self.verify_absent(package.ROOT_APP)

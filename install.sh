@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
   echo 'Usage: ./install.sh [TV IPv4 address]'
-  echo 'Requires Node.js 20+, npm, Python 3.9+, and LG Developer Mode + Key Server.'
+  echo 'Requires Node.js 20.19+, npm, Python 3.9+, and LG Developer Mode + Key Server.'
   echo 'Downloads build tools locally; pairs, syncs, builds, installs and starts Home Helper.'
   exit 0
 fi
@@ -23,9 +23,10 @@ PY
 export DEVICE="${DEVICE:-clean-your-tv-${TV_HOST//./-}}"
 [[ "$DEVICE" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo 'DEVICE must contain only letters, digits, _ and -.' >&2; exit 1; }
 for tool in node npm; do
-  command -v "$tool" >/dev/null || { echo 'Install Node.js 20+ (with npm) first.' >&2; exit 1; }
+  command -v "$tool" >/dev/null || { echo 'Install Node.js 20.19+ (with npm) first.' >&2; exit 1; }
 done
-[[ $(node -p 'Number(process.versions.node.split(".")[0])') -ge 20 ]] || { echo 'Node.js 20+ is required.' >&2; exit 1; }
+node -e 'const [major,minor]=process.versions.node.split(".").map(Number);if(major<20||(major===20&&minor<19))process.exit(1)' || { echo 'Node.js 20.19+ is required.' >&2; exit 1; }
+npm ci --ignore-scripts --no-audit --no-fund
 stage='preparing tools'
 trap 'echo "Installation stopped while $stage. Fix the reported error and rerun ./install.sh. See docs/RECOVERY.md if packages were already installed." >&2' ERR
 umask 077

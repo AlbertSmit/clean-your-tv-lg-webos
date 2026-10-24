@@ -28,11 +28,11 @@ def build(output):
     code['service.js']=source(ROOT/'updater/service.js')
     code['run-updater.py']=b'from updater.cli import entry\nentry()\n'
     code['services.json']=(json.dumps({'id':APP+'.service','services':[{'name':APP+'.service'}]})+'\n').encode()
-    code['package.json']=(json.dumps({'name':APP+'.service','version':'0.1.0','main':'service.js'})+'\n').encode()
+    code['package.json']=(json.dumps({'name':APP+'.service','version':'0.1.1','main':'service.js'})+'\n').encode()
     code['setup-updater.py']=source(ROOT/'setup_updater.py')
     files={}
     prefix='usr/palm/applications/'+APP+'/'
-    app={'id':APP,'version':'0.1.0','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'root-updater-icon.png','largeIcon':'root-updater-largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
+    app={'id':APP,'version':'0.1.1','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'root-updater-icon.png','largeIcon':'root-updater-largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
     files[prefix+'appinfo.json']=(json.dumps(app)+'\n').encode()
     files[prefix+'root-updater-icon.png']=source(ROOT/'assets/updater.png')
     files[prefix+'root-updater-largeIcon.png']=source(ROOT/'assets/updater-large.png')
@@ -45,10 +45,12 @@ def build(output):
     files[prefix+'root-updates.js']=source(ROOT/'ui/root-updates.js')
     files[prefix+'index.html']=b'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>Root Updater</title><link rel="stylesheet" href="root-settings.css"><link rel="stylesheet" href="i18n.css"></head><body style="background:#10121a;color:white"><script src="i18n.js"></script><script src="catalogs.js"></script><script src="root-locales.js"></script><script src="release-notes.js"></script><script src="root-updates.js"></script><script>HomeI18n.ready(function(){document.title=HomeI18n.t("Root Updater");function openRecovery(failed){RootUpdates.open({recovery:true,standalone:true,error:failed?"Could not open Home.":"",onClose:function(){var bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){bridge.cancel();try{if(JSON.parse(raw).returnValue!==true)openRecovery(true);}catch(_){openRecovery(true);}};bridge.call("luna://com.webos.applicationManager/launch",JSON.stringify({id:"com.cleanyourtv.root.preview"}));}});}document.addEventListener("webOSRelaunch",function(){openRecovery();});document.addEventListener("visibilitychange",function(){if(!document.hidden&&!RootUpdates.isOpen())openRecovery();});openRecovery();});</script></body></html>\n'
     sp='usr/palm/services/'+APP+'.service/'
+    compiled=builder.compile_web({name[len(prefix):]:raw for name,raw in files.items() if name.startswith(prefix)})
+    files.update({prefix+name:raw for name,raw in compiled.items()})
     files[sp+'service.js']=b"'use strict';require('/var/lib/clean-your-tv-root-updater/code/service.js');\n"
     files[sp+'package.json']=code['package.json'];files[sp+'services.json']=code['services.json']
-    files['usr/palm/packages/'+APP+'/packageinfo.json']=(json.dumps({'id':APP,'version':'0.1.0','app':APP,'services':[APP+'.service']})+'\n').encode()
-    control=('Package: '+APP+'\nVersion: 0.1.0\nSection: misc\nPriority: optional\nArchitecture: all\nMaintainer: Clean Your TV\nDescription: Independent Root application updater and recovery\n').encode()
+    files['usr/palm/packages/'+APP+'/packageinfo.json']=(json.dumps({'id':APP,'version':'0.1.1','app':APP,'services':[APP+'.service']})+'\n').encode()
+    control=('Package: '+APP+'\nVersion: 0.1.1\nSection: misc\nPriority: optional\nArchitecture: all\nMaintainer: Clean Your TV\nDescription: Independent Root application updater and recovery\n').encode()
     code['root-updater.ipk']=builder.ar({'debian-binary':b'2.0\n','control.tar.gz':builder.tgz({'control':control}),'data.tar.gz':builder.tgz(files)})
     output.mkdir(exist_ok=False)
     for name,raw in code.items():

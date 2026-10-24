@@ -14,6 +14,8 @@ checkout path; the single-checkout rule describes this maintained workspace.
 Write technical and developer documentation in English. Maintain the ten localized
 user guides under `docs/i18n/` when changing user-facing setup or controls.
 
+Run `npm ci` first. TV web packages use Babel/core-js and PostCSS, with a strict
+compatibility check after conversion; see [TV web build](docs/TV-WEB-BUILD.md).
 Keep changes small and reproducible. Run `scripts/test.sh`; describe the test model,
 firmware, expected behavior and actual behavior. Separate standby tests from cold
 boots. Never claim compatibility from a successful package installation alone.

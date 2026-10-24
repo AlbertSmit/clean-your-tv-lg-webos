@@ -76,6 +76,21 @@ class CLITests(unittest.TestCase):
             install.assert_not_called()
             ssap.assert_not_called()
 
+    def test_interrupted_removal_explains_how_to_continue_in_the_app(self):
+        from unittest.mock import MagicMock
+        from cytv.errors import UserError
+        with tempfile.TemporaryDirectory() as tmp, patch('cytv.cli.Installer') as installer:
+            profile = state.target('192.0.2.10', 'root')
+            store = state.Store(tmp)
+            store.save(profile)
+            store.begin(profile, 'uninstall', full_project=True, root_submitted=True)
+            installer.return_value.uninstall.side_effect = UserError('connection lost')
+            code, output, _ = self.run_cli(['uninstall', '--data-dir', tmp], ['y'], remote=MagicMock())
+            self.assertEqual(code, 2, output)
+            self.assertIn('Check TV and continue removal?', output)
+            self.assertIn('choose Remove again', output)
+            self.assertTrue(store.pending(profile)['root_submitted'])
+
     def setUp(self):
         from cytv import i18n
         i18n.set_language('en')

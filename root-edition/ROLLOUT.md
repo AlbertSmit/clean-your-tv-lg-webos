@@ -15,11 +15,12 @@ replace the bundled runtime with an untested build while following this release.
 
 To build from source instead:
 
-On your computer, use Python 3.9+ and OpenSSH. The full tests also need Bash,
-Node.js, a C compiler and the project Python dependencies, including
+On your computer, use Python 3.9+, OpenSSH, Node.js 20.19+ and npm. The full tests also need Bash,
+a C compiler and the project Python dependencies, including
 `cytv/requirements.txt`. From the repository root:
 
 ```sh
+npm ci --ignore-scripts --no-audit --no-fund
 bash scripts/test.sh
 mkdir -p build
 python3 root-edition/build.py --version 0.1.6 --output build/root-candidate

@@ -180,9 +180,14 @@
       tile.el.classList.add('shown');
     });
     focusZone = 'none';
-    focusTile(Math.max(0, tiles.findIndex(function (tile) {
-      return tile.app.id === focusId;
-    })));
+    var nextFocus = 0;
+    for (var i = 0; i < tiles.length; i++) {
+      if (tiles[i].app.id === focusId) {
+        nextFocus = i;
+        break;
+      }
+    }
+    focusTile(nextFocus);
   }
   function activateTile(item) {
     if (item.add) {
@@ -738,9 +743,7 @@
     0 === index ? function () {
       if (inputsPanel.innerHTML = "", inputRows = [], (window.TV_APPS && TV_APPS.inputs || []).forEach(function (e) {
         addInputRow("M18,7V4c0,-1.1 -0.9,-2 -2,-2H8C6.9,2 6,2.9 6,4v3H5v6l3,6v3h8v-3l3,-6V7H18zM8,4h8v3h-2V5h-1v2h-2V5h-1v2H8V4z", e.label, e.appId);
-      }), CONFIG.liveTvApp && (inputRows.length && inputsPanel.appendChild(Object.assign(document.createElement("div"), {
-        className: "separator"
-      })), addInputRow("M21,6h-7.59l3.29,-3.29L16,2l-4,4l-4,-4l-0.71,0.71L10.59,6H3c-1.1,0 -2,0.89 -2,2v12c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.89 2,-2V8C23,6.89 22.1,6 21,6zM21,20H3V8h18V20zM9,10v8l7,-4L9,10z", tr("Live TV"), CONFIG.liveTvApp)), inputRows.length) {
+      }), CONFIG.liveTvApp && (inputRows.length && addInputSeparator(), addInputRow("M21,6h-7.59l3.29,-3.29L16,2l-4,4l-4,-4l-0.71,0.71L10.59,6H3c-1.1,0 -2,0.89 -2,2v12c0,1.1 0.9,2 2,2h18c1.1,0 2,-0.89 2,-2V8C23,6.89 22.1,6 21,6zM21,20H3V8h18V20zM9,10v8l7,-4L9,10z", tr("Live TV"), CONFIG.liveTvApp)), inputRows.length) {
         var e = topButtons[0].getBoundingClientRect();
         inputsPanel.style.left = e.left + "px";
         inputsPanel.style.top = e.bottom + 20 + "px";
@@ -753,6 +756,11 @@
         showToast(tr("No inputs found"));
       }
     }() : 1 === index ? openNetworkSettings() : window.RenewalPanel.open();
+  }
+  function addInputSeparator() {
+    var separator = document.createElement("div");
+    separator.className = "separator";
+    inputsPanel.appendChild(separator);
   }
   function addInputRow(iconPath, label, appId) {
     var element = document.createElement("div");

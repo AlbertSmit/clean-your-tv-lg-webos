@@ -19,7 +19,7 @@ failsafe checks remain open: [validation scope](../root-edition/RELEASE-ACCEPTAN
 | TV access | LG Developer Mode, Key Server, SSH `prisoner:9922` | Existing root, a trusted SSH host key, authentication without an interactive password |
 | On the TV | Active Developer Mode session; local control access for Helper | `/usr/bin/python3`, `/usr/bin/luna-send`, Homebrew services, `/media/developer/apps`, a compatible ARM32 Magic Remote input interface |
 | Ready-made artifacts | A personalized Home IPK and, optionally, a Helper IPK | The **entire** Root bundle: IPK, `setup.py`, support files, `runtime/`, manifests and checksums |
-| Build from source | Git, Python 3.9+ with pip/venv, Node.js 20+ with npm, webOS CLI 3.2.6; Zig 0.14.1 for Helper | Git and Python 3.9+; packaging uses the standard library and requires no npm/webOS CLI/Zig |
+| Build from source | Git, Python 3.9+ with pip/venv, Node.js 20.19+ with npm, webOS CLI 3.2.6; Zig 0.14.1 for Helper | Git, Python 3.9+, Node.js 20.19+ and npm for compatible web assets; no webOS CLI/Zig |
 | Additional tools for the full test suite | Bash, Node.js, Python 3, a C compiler named `cc` | The same tools; the build and SSH installer themselves do not require Bash |
 | After installation | The computer can be off; Developer Mode must remain active; Helper depends on local networking | The computer can be off; root access and recovery services must remain available |
 
@@ -87,6 +87,7 @@ From the repository root, in Bash on macOS/Linux/WSL:
 
 ```bash
 python3 -m venv .venv
+npm ci --ignore-scripts --no-audit --no-fund
 . .venv/bin/activate
 python3 -m pip install -r requirements.txt 'ziglang==0.14.1'
 export ZIG="$(python3 -c 'from pathlib import Path; import ziglang; print(Path(ziglang.__file__).parent / "zig")')"
@@ -97,7 +98,7 @@ python3 --version
 "$ZIG" version
 ```
 
-Node.js 20+ and Zig **0.14.1** are required. For Termux/Android, supply a working Zig 0.14.1 executable instead of installing
+Node.js 20.19+ and Zig **0.14.1** are required. For Termux/Android, supply a working Zig 0.14.1 executable instead of installing
 the `ziglang` Python distribution; see [Termux setup](INSTALL.md#termux--android).
 For Home alone, without Helper,
 you can omit `ziglang` and the `ZIG` variable. In a new terminal, reactivate
@@ -166,8 +167,8 @@ bash scripts/test.sh
 
 These dependencies support the shared installer's tests; `cytv` itself is not
 run. The tests also require `cc`. The build produces `dist/SHA256SUMS`,
-`dist/com.local.nativehome_0.6.17_arm.ipk` and the Home IPK. The v1.0.0
-distribution uses Home **1.3.6**, Helper **0.6.17** and Root **0.1.10**, as recorded
+`dist/com.local.nativehome_0.6.17_arm.ipk` and the Home IPK. The v1.0.1
+distribution uses Home **1.3.7**, Helper **0.6.17** and Root **0.1.11**, as recorded
 in [`release-versions.json`](../release-versions.json). For another source revision,
 check the Home manifest and use the matching generated package filenames:
 
@@ -185,7 +186,7 @@ Install Helper, then the **exact** new Home IPK, adjusting the version if needed
 
 ```bash
 ares-install -d lgtv dist/com.local.nativehome_0.6.17_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.6_all.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.7_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv bash scripts/configure-tv.sh
 ares-launch -d lgtv com.local.nativehome
 ```
@@ -208,8 +209,9 @@ After syncing your apps:
 
 ```bash
 mkdir -p dist
-ares-package launcher renewal-service -o dist
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.6_all.ipk
+python3 scripts/tv_web_build.py --input launcher --output build/home-app
+ares-package build/home-app renewal-service -o dist
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.7_all.ipk
 ares-launch -d lgtv com.gathin.tvhome
 ```
 
@@ -297,12 +299,13 @@ From the source root; this operation does not connect to the TV:
 
 ```bash
 mkdir -p build
-python3 root-edition/build.py --output build/root-candidate --version 0.1.10
+npm ci --ignore-scripts --no-audit --no-fund
+python3 root-edition/build.py --output build/root-candidate --version 0.1.11
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.1.10_all.ipk`, `setup.py`,
+The bundle contains `com.cleanyourtv.root.preview_0.1.11_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.

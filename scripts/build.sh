@@ -25,7 +25,8 @@ touch build/native-app/state/.keep build/native-service/state/.keep
 # Repair the package just built, even when older releases remain in dist/.
 helper=$(python3 -c 'import json; a=json.load(open("build/native-app/appinfo.json")); print("dist/"+a["id"]+"_"+a["version"]+"_arm.ipk")')
 python3 scripts/fix-package-data.py "$helper"
-"$ARES_PACKAGE" launcher renewal-service -o dist
+python3 scripts/tv_web_build.py --input launcher --output build/home-app
+"$ARES_PACKAGE" build/home-app renewal-service -o dist
 python3 - <<'PY'
 from pathlib import Path
 import hashlib

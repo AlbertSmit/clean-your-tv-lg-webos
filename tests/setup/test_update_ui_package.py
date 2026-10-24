@@ -17,6 +17,9 @@ class UpdateUiPackageTests(unittest.TestCase):
                 (root/folder).mkdir(parents=True)
             shutil.copytree(ROOT/'updater-app', root/'updater-app')
             shutil.copy(ROOT/'scripts/build-updater.sh', root/'scripts/build-updater.sh')
+            for name in ('tv_web_build.py', 'compile-tv-web.cjs'):
+                shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
+            shutil.copy(ROOT/'package.json', root/'package.json')
             for name in ('renewal-panel.css', 'i18n.js', 'i18n.css', 'catalogs.js', 'user-data.js'):
                 shutil.copy(ROOT/'launcher'/name, root/'launcher'/name)
             for name in ('service.js', 'permissions.js', 'services.json', 'release-public.pem'):
@@ -28,7 +31,10 @@ class UpdateUiPackageTests(unittest.TestCase):
             packager.write_text('#!/bin/sh\ntest -s "$1/renewal-panel.css"\n')
             packager.chmod(0o755)
             result = subprocess.run(['bash', 'scripts/build-updater.sh'], cwd=root,
-                                    env=dict(os.environ, ARES_PACKAGE=str(packager)), capture_output=True, text=True)
+                                    env=dict(os.environ, ARES_PACKAGE=str(packager), NODE_PATH=str(ROOT/'node_modules')), capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-            self.assertEqual((root/'build/updater-app/renewal-panel.css').read_bytes(),
-                             (ROOT/'launcher/renewal-panel.css').read_bytes())
+            stylesheet = (root/'build/updater-app/renewal-panel.css').read_text()
+            self.assertIn('#renewalPanel', stylesheet)
+            self.assertNotRegex(stylesheet, r'\binset\s*:')
+            self.assertTrue((root/'build/updater-app/compat-polyfills.js').is_file())
+            self.assertIn('compat-polyfills.js', (root/'build/updater-app/index.html').read_text())

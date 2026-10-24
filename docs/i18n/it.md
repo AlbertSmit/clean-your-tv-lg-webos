@@ -32,6 +32,8 @@ chmod +x cytv
 
 Scegli il televisore o inserisci l’IP, seleziona l’edizione e controlla il riepilogo. Accetta una nuova identità SSH solo per il tuo televisore su una rete affidabile; una chiave salvata cambiata blocca l’accesso. Root prepara il ripristino e attiva subito Home, senza prova temporanea né passaggio per confermare il mantenimento. Verifica frecce, OK, Home, Indietro/Annulla, volume, standby e avvio a freddo.
 
+Se la rimozione di Root si interrompe, scegli di nuovo Rimuovi nell’app. Verifica il registro della TV e i pacchetti prima di continuare, senza ripetere una rimozione completata. Se è ancora in corso, attendi un minuto. Se il risultato non è verificabile, riavvia la TV e verifica di nuovo; conserva il rapporto per il supporto.
+
 ## Uso e ripristino
 
 Le frecce selezionano, OK apre; tieni premuto OK per riordinare. Un breve Indietro conserva navigazione e conferma di uscita dell’app. Home apre il launcher quando il controllo è attivo. Nelle nuove compilazioni, tieni premuto Indietro per 1,2 secondi per aprire LG Home una volta. L’interruttore del controllo Home e le impostazioni restano invariati.

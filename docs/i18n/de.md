@@ -32,6 +32,8 @@ chmod +x cytv
 
 Fernseher oder IP-Adresse und Edition auswählen, dann die Zusammenfassung prüfen. Einer neuen SSH-Identität nur für den eigenen Fernseher im vertrauenswürdigen Netz zustimmen; ein geänderter gespeicherter Schlüssel blockiert den Zugang. Root aktiviert Home nach Einrichtung der Wiederherstellung sofort, ohne Testphase oder Behalten-Schritt. Pfeile, OK, Home, Zurück/Abbrechen, Lautstärke, Bereitschaft und Kaltstart am eigenen Fernseher testen.
 
+Bei unterbrochener Root-Entfernung erneut Entfernen in der App wählen. Sie prüft das TV-Journal und den Paketzustand vor dem Fortsetzen; abgeschlossene Entfernung wird nicht erneut gesendet. Läuft der Vorgang noch, eine Minute warten. Bei unklarem Ergebnis den TV neu starten und erneut prüfen; Diagnosebericht für den Support behalten.
+
 ## Bedienung und Wiederherstellung
 
 Pfeile wählen eine Kachel, OK öffnet sie; OK gedrückt halten zum Verschieben. Kurzes Zurück behält Navigation und Beendigungsdialog der App bei. Kurzes Home öffnet bei aktiver Home-Steuerung den Launcher. In neuen Builds öffnet 1,2 Sekunden langes Drücken von Zurück LG Home einmalig. Der Home-Schalter und Ihre Einstellungen bleiben unverändert.

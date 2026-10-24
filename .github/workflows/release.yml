@@ -89,6 +89,11 @@ jobs:
           ref: ${{ needs.plan.outputs.commit }}
           path: release-source
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: release-source
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

@@ -7,8 +7,11 @@ import io
 import json
 from pathlib import Path
 import tarfile
+import sys
 
 import preview
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.tv_web_build import compile_web
 
 
 SERVICE_ID = 'com.cleanyourtv.root.preview.service'
@@ -49,7 +52,7 @@ def build(output, version='0.0.1'):
     output = Path(output).absolute()
     if '..' in output.parts or any(path.is_symlink() for path in (output, *output.parents)):
         raise ValueError('Output must not traverse symlinks or parent segments')
-    files = preview.prepare(version=version)
+    files = compile_web(preview.prepare(version=version))
     info = json.loads(files['appinfo.json'])
     app_id = info['id']
     version = info['version']

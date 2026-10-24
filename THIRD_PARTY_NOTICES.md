@@ -6,6 +6,9 @@
 - ws: bundled Node WebSocket dependency; license in native/app/vendor/ws/LICENSE.
 - webos-service: supplied by the TV runtime, not redistributed here.
 - Zig, Python and LG's webOS CLI are external build/setup prerequisites.
+- Compiled TV web apps include core-js (MIT) for ECMAScript compatibility and may
+  include Babel helpers (MIT). Their license texts are retained in each web app's
+  `compat-LICENSE.txt`. Babel and PostCSS are build tools, pinned by package-lock.json.
 
 TV app icons are downloaded only for a user's local app inventory. They are not
 included in a clean public checkout or generic release package.

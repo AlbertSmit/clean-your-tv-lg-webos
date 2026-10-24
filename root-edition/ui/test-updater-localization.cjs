@@ -5,16 +5,16 @@ const html=fs.readFileSync(__dirname+'/../../updater-app/index.html','utf8');
 for(const locale of Object.keys(catalogs)){
  const elements={};for(const match of html.matchAll(/<(?:h1|p|button)[^>]*data-i18n="([^"]+)"[^>]*>/g)){const id=match[0].match(/id="([^"]+)"/);elements[id?id[1]:match[1]]={source:match[1],textContent:match[1],focus(){},click(){if(!this.disabled)this.onclick();}};}
  elements.status={textContent:'Reading status…'};
- const callbacks=[];let status='awaiting-launch';
+ let confirmation;const callbacks=[];let status='awaiting-launch';
  const tr=(source,params)=>String(catalogs[locale][source]||source).replace(/\{(\w+)\}/g,(_,key)=>params?.[key]??'{'+key+'}');
  const document={getElementById:id=>elements[id],body:{},addEventListener(){}};
- const context={window:{HomeI18n:{ready:cb=>callbacks.push(cb),t:tr,apply(){for(const element of Object.values(elements))if(element.source)element.textContent=tr(element.source);}}},document,setTimeout:()=>1,clearTimeout(){},PalmServiceBridge:class{cancel(){}call(uri){this.onservicecallback(JSON.stringify({returnValue:true,result:{status}}));}}};
+ const context={window:{HomeI18n:{ready:cb=>callbacks.push(cb),t:tr,confirm:(options,accept)=>{confirmation={options,accept};},apply(){for(const element of Object.values(elements))if(element.source)element.textContent=tr(element.source);}}},document,setTimeout:()=>1,clearTimeout(){},PalmServiceBridge:class{cancel(){}call(uri){this.onservicecallback(JSON.stringify({returnValue:true,result:{status}}));}}};
  vm.runInNewContext(fs.readFileSync(__dirname+'/../../updater-app/app.js','utf8'),context);
  assert.equal(elements.refresh.onclick,undefined,'waits for TV locale');callbacks.forEach(cb=>cb());
  assert.equal(document.title,tr('Home Updater'));assert.equal(elements.refresh.textContent,tr('Refresh status'));
  assert.equal(elements.status.textContent,tr('Update state: {status}',{status:tr('Awaiting launch')+' (awaiting-launch)'}));
- elements.restore.onclick();assert.equal(elements.restore.textContent,tr('Confirm restore'));
- assert.equal(elements.status.textContent,tr('Restore the signed previous Home package. Home Helper will remain unchanged.'));
- status='rolled-back';elements.restore.onclick();assert.equal(elements.status.textContent,tr('Recovery state: {status}',{status:tr('Rolled back')+' (rolled-back)'}));
+ elements.restore.onclick();assert.equal(elements.restore.textContent,tr('Restore previous Home'));assert.equal(confirmation.options.action,'Restore previous Home');
+ assert.equal(confirmation.options.message,'Restore the signed previous Home package. Home Helper will remain unchanged.');
+ status='rolled-back';confirmation.accept();assert.equal(elements.status.textContent,tr('Recovery state: {status}',{status:tr('Rolled back')+' (rolled-back)'}));
 }
 console.log('PASS independent updater startup, status, restore confirmation and diagnostic codes in ten languages');

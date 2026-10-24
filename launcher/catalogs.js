@@ -66,7 +66,7 @@ HomeI18n.add({
     "Not yet": "Not yet",
     "Offline": "Offline",
     "Open LG Home": "Open LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Open LG Home once without changing this switch or your settings.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "This button opens LG Home once. Your Home screen choice and settings stay saved.",
     "Recovery": "Recovery",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Recovery state: {status}. Use Home Updater to restore the previous version if offered.",
     "Renewal confirmed": "Renewal confirmed",
@@ -101,7 +101,14 @@ HomeI18n.add({
     "{app} added": "{app} added",
     "{hours} hours remaining (estimate)": "{hours} hours remaining (estimate)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide",
-    "No-root Edition": "No-root Edition"
+    "No-root Edition": "No-root Edition",
+    "Cancel": "Cancel",
+    "Install Home update?": "Install Home update?",
+    "Restore previous Home?": "Restore previous Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home will close during installation. Your apps and settings will be saved.",
+    "The previous Home version and saved settings will be restored.": "The previous Home version and saved settings will be restored.",
+    "Install update": "Install update",
+    "Restore previous Home": "Restore previous Home"
   },
   "de": {
     "A signed Home update is available.": "Ein signiertes Home-Update ist verfügbar.",
@@ -170,7 +177,7 @@ HomeI18n.add({
     "Not yet": "Noch nicht",
     "Offline": "Offline",
     "Open LG Home": "LG Home öffnen",
-    "Open LG Home once without changing this switch or your settings.": "LG Home einmal öffnen, ohne diesen Schalter oder Ihre Einstellungen zu ändern.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Diese Taste öffnet LG Home einmalig. Die Auswahl Ihres Startbildschirms und Ihre Einstellungen bleiben gespeichert.",
     "Recovery": "Wiederherstellung",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Wiederherstellungsstatus: {status}. Stellen Sie mit Home Updater die vorherige Version wieder her, sofern angeboten.",
     "Renewal confirmed": "Verlängerung bestätigt",
@@ -205,7 +212,14 @@ HomeI18n.add({
     "{app} added": "{app} hinzugefügt",
     "{hours} hours remaining (estimate)": "Noch {hours} Stunden (geschätzt)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Verschieben   ·   OK Platzieren   ·   Zurück Abbrechen   ·   ↓ Unter letzte Zeile zum Ausblenden",
-    "No-root Edition": "Version ohne Root"
+    "No-root Edition": "Version ohne Root",
+    "Cancel": "Abbrechen",
+    "Install Home update?": "Home-Update installieren?",
+    "Restore previous Home?": "Vorheriges Home wiederherstellen?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home wird während der Installation geschlossen. Ihre Apps und Einstellungen werden gespeichert.",
+    "The previous Home version and saved settings will be restored.": "Die vorherige Home-Version und die gespeicherten Einstellungen werden wiederhergestellt.",
+    "Install update": "Update installieren",
+    "Restore previous Home": "Vorheriges Home wiederherstellen"
   },
   "es": {
     "A signed Home update is available.": "Hay una actualización firmada de Home disponible.",
@@ -274,7 +288,7 @@ HomeI18n.add({
     "Not yet": "Todavía no",
     "Offline": "Sin conexión",
     "Open LG Home": "Abrir LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Abre LG Home una vez sin cambiar este interruptor ni tus ajustes.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Este botón abre LG Home una vez. La elección de pantalla de inicio y los ajustes se conservan.",
     "Recovery": "Recuperación",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Estado de recuperación: {status}. Usa Home Updater para restaurar la versión anterior si se ofrece.",
     "Renewal confirmed": "Renovación confirmada",
@@ -309,7 +323,14 @@ HomeI18n.add({
     "{app} added": "Se añadió {app}",
     "{hours} hours remaining (estimate)": "Quedan {hours} horas (estimación)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Mover   ·   OK Colocar   ·   Atrás Cancelar   ·   ↓ Bajo la última fila para ocultar",
-    "No-root Edition": "Edición sin root"
+    "No-root Edition": "Edición sin root",
+    "Cancel": "Cancelar",
+    "Install Home update?": "¿Instalar la actualización de Home?",
+    "Restore previous Home?": "¿Restaurar la versión anterior de Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home se cerrará durante la instalación. Tus aplicaciones y ajustes se guardarán.",
+    "The previous Home version and saved settings will be restored.": "Se restaurarán la versión anterior de Home y los ajustes guardados.",
+    "Install update": "Instalar actualización",
+    "Restore previous Home": "Restaurar Home anterior"
   },
   "pt-BR": {
     "A signed Home update is available.": "Uma atualização assinada do Home está disponível.",
@@ -378,7 +399,7 @@ HomeI18n.add({
     "Not yet": "Ainda não",
     "Offline": "Sem conexão",
     "Open LG Home": "Abrir LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Abra LG Home uma vez sem alterar este interruptor nem suas configurações.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Este botão abre o LG Home uma vez. A escolha da tela inicial e as configurações são mantidas.",
     "Recovery": "Recuperação",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Estado da recuperação: {status}. Use Home Updater para restaurar a versão anterior, se disponível.",
     "Renewal confirmed": "Renovação confirmada",
@@ -413,7 +434,14 @@ HomeI18n.add({
     "{app} added": "{app} adicionado",
     "{hours} hours remaining (estimate)": "Restam {hours} horas (estimativa)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Mover   ·   OK Posicionar   ·   Voltar Cancelar   ·   ↓ Abaixo da última linha para ocultar",
-    "No-root Edition": "Edição sem root"
+    "No-root Edition": "Edição sem root",
+    "Cancel": "Cancelar",
+    "Install Home update?": "Instalar atualização do Home?",
+    "Restore previous Home?": "Restaurar a versão anterior do Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "O Home será fechado durante a instalação. Seus aplicativos e configurações serão salvos.",
+    "The previous Home version and saved settings will be restored.": "A versão anterior do Home e as configurações salvas serão restauradas.",
+    "Install update": "Instalar atualização",
+    "Restore previous Home": "Restaurar Home anterior"
   },
   "fr": {
     "A signed Home update is available.": "Une mise à jour signée de Home est disponible.",
@@ -482,7 +510,7 @@ HomeI18n.add({
     "Not yet": "Pas encore",
     "Offline": "Hors ligne",
     "Open LG Home": "Ouvrir LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Ouvrez LG Home une fois sans modifier cet interrupteur ni vos paramètres.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Ce bouton ouvre LG Home une seule fois. Le choix de votre écran d’accueil et vos paramètres sont conservés.",
     "Recovery": "Récupération",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "État de récupération : {status}. Utilisez Home Updater pour restaurer la version précédente si proposé.",
     "Renewal confirmed": "Renouvellement confirmé",
@@ -517,7 +545,14 @@ HomeI18n.add({
     "{app} added": "{app} ajouté",
     "{hours} hours remaining (estimate)": "{hours} heures restantes (estimation)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Déplacer   ·   OK Placer   ·   Retour Annuler   ·   ↓ Sous la dernière ligne pour masquer",
-    "No-root Edition": "Édition sans root"
+    "No-root Edition": "Édition sans root",
+    "Cancel": "Annuler",
+    "Install Home update?": "Installer la mise à jour de Home ?",
+    "Restore previous Home?": "Restaurer la version précédente de Home ?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home se fermera pendant l’installation. Vos applications et paramètres seront enregistrés.",
+    "The previous Home version and saved settings will be restored.": "La version précédente de Home et les paramètres enregistrés seront restaurés.",
+    "Install update": "Installer la mise à jour",
+    "Restore previous Home": "Restaurer Home précédent"
   },
   "it": {
     "A signed Home update is available.": "È disponibile un aggiornamento firmato di Home.",
@@ -586,7 +621,7 @@ HomeI18n.add({
     "Not yet": "Non ancora",
     "Offline": "Non in linea",
     "Open LG Home": "Apri LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Apri LG Home una volta senza cambiare questo interruttore o le impostazioni.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Questo pulsante apre LG Home una volta. La scelta della schermata iniziale e le impostazioni restano salvate.",
     "Recovery": "Ripristino",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Stato del ripristino: {status}. Usa Home Updater per ripristinare la versione precedente, se disponibile.",
     "Renewal confirmed": "Rinnovo confermato",
@@ -621,7 +656,14 @@ HomeI18n.add({
     "{app} added": "{app} aggiunta",
     "{hours} hours remaining (estimate)": "{hours} ore rimanenti (stima)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Sposta   ·   OK Posiziona   ·   Indietro Annulla   ·   ↓ Sotto l’ultima riga per nascondere",
-    "No-root Edition": "Edizione senza root"
+    "No-root Edition": "Edizione senza root",
+    "Cancel": "Annulla",
+    "Install Home update?": "Installare l’aggiornamento di Home?",
+    "Restore previous Home?": "Ripristinare la versione precedente di Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home si chiuderà durante l’installazione. Le app e le impostazioni verranno salvate.",
+    "The previous Home version and saved settings will be restored.": "Verranno ripristinati la versione precedente di Home e le impostazioni salvate.",
+    "Install update": "Installa aggiornamento",
+    "Restore previous Home": "Ripristina Home precedente"
   },
   "ko": {
     "A signed Home update is available.": "서명된 Home 업데이트가 있습니다.",
@@ -690,7 +732,7 @@ HomeI18n.add({
     "Not yet": "아직 없음",
     "Offline": "오프라인",
     "Open LG Home": "LG Home 열기",
-    "Open LG Home once without changing this switch or your settings.": "이 스위치나 설정을 바꾸지 않고 LG Home을 한 번 엽니다.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "이 버튼은 LG Home을 한 번 엽니다. 선택한 홈 화면과 설정은 유지됩니다.",
     "Recovery": "복구",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "복구 상태: {status}. 이전 버전 복원이 제공되면 Home Updater를 사용하세요.",
     "Renewal confirmed": "갱신 확인됨",
@@ -725,7 +767,14 @@ HomeI18n.add({
     "{app} added": "{app} 추가됨",
     "{hours} hours remaining (estimate)": "약 {hours}시간 남음",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → 이동   ·   OK 배치   ·   뒤로 취소   ·   ↓ 마지막 행 아래로 내려 숨기기",
-    "No-root Edition": "루팅 없는 에디션"
+    "No-root Edition": "루팅 없는 에디션",
+    "Cancel": "취소",
+    "Install Home update?": "Home 업데이트를 설치할까요?",
+    "Restore previous Home?": "이전 Home을 복원할까요?",
+    "Home will close during installation. Your apps and settings will be saved.": "설치 중 Home이 닫힙니다. 앱과 설정은 저장됩니다.",
+    "The previous Home version and saved settings will be restored.": "이전 Home 버전과 저장된 설정이 복원됩니다.",
+    "Install update": "업데이트 설치",
+    "Restore previous Home": "이전 Home 복원"
   },
   "hi": {
     "A signed Home update is available.": "Home का हस्ताक्षरित अपडेट उपलब्ध है।",
@@ -794,7 +843,7 @@ HomeI18n.add({
     "Not yet": "अभी नहीं",
     "Offline": "ऑफ़लाइन",
     "Open LG Home": "LG Home खोलें",
-    "Open LG Home once without changing this switch or your settings.": "इस स्विच या अपनी सेटिंग्स को बदले बिना LG Home एक बार खोलें।",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "यह बटन LG Home को एक बार खोलता है। आपकी होम स्क्रीन की पसंद और सेटिंग्स सुरक्षित रहती हैं।",
     "Recovery": "पुनर्प्राप्ति",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "पुनर्प्राप्ति स्थिति: {status}। विकल्प उपलब्ध हो तो Home Updater से पिछला संस्करण बहाल करें।",
     "Renewal confirmed": "नवीनीकरण की पुष्टि हुई",
@@ -829,7 +878,14 @@ HomeI18n.add({
     "{app} added": "{app} जोड़ दिया गया",
     "{hours} hours remaining (estimate)": "{hours} घंटे बाकी (अनुमान)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → खिसकाएँ   ·   OK रखें   ·   वापस रद्द करें   ·   ↓ छिपाने के लिए अंतिम पंक्ति से नीचे जाएँ",
-    "No-root Edition": "बिना root वाला संस्करण"
+    "No-root Edition": "बिना root वाला संस्करण",
+    "Cancel": "रद्द करें",
+    "Install Home update?": "Home अपडेट इंस्टॉल करें?",
+    "Restore previous Home?": "पिछला Home बहाल करें?",
+    "Home will close during installation. Your apps and settings will be saved.": "इंस्टॉलेशन के दौरान Home बंद हो जाएगा। आपके ऐप्स और सेटिंग्स सहेजे जाएंगे।",
+    "The previous Home version and saved settings will be restored.": "Home का पिछला संस्करण और सहेजी गई सेटिंग्स बहाल की जाएंगी।",
+    "Install update": "अपडेट स्थापित करें",
+    "Restore previous Home": "पिछला Home बहाल करें"
   },
   "pl": {
     "A signed Home update is available.": "Dostępna jest podpisana aktualizacja Home.",
@@ -898,7 +954,7 @@ HomeI18n.add({
     "Not yet": "Jeszcze nie",
     "Offline": "Bez połączenia",
     "Open LG Home": "Otwórz LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Otwórz LG Home jednorazowo bez zmiany tego przełącznika ani ustawień.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Ten przycisk otwiera LG Home jednorazowo. Wybór ekranu głównego i ustawienia zostają zachowane.",
     "Recovery": "Odzyskiwanie",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Stan odzyskiwania: {status}. Użyj Home Updater, aby przywrócić poprzednią wersję, jeśli jest dostępna.",
     "Renewal confirmed": "Odnowienie potwierdzone",
@@ -933,7 +989,14 @@ HomeI18n.add({
     "{app} added": "Dodano {app}",
     "{hours} hours remaining (estimate)": "Pozostało {hours} godz. (szacunkowo)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Przesuń   ·   OK Umieść   ·   Wstecz Anuluj   ·   ↓ Poniżej ostatniego wiersza, aby ukryć",
-    "No-root Edition": "Edycja bez roota"
+    "No-root Edition": "Edycja bez roota",
+    "Cancel": "Anuluj",
+    "Install Home update?": "Zainstalować aktualizację Home?",
+    "Restore previous Home?": "Przywrócić poprzednią wersję Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home zamknie się na czas instalacji. Aplikacje i ustawienia zostaną zapisane.",
+    "The previous Home version and saved settings will be restored.": "Poprzednia wersja Home i zapisane ustawienia zostaną przywrócone.",
+    "Install update": "Zainstaluj aktualizację",
+    "Restore previous Home": "Przywróć poprzedni Home"
   },
   "ru": {
     "A signed Home update is available.": "Доступно подписанное обновление Home.",
@@ -1002,7 +1065,7 @@ HomeI18n.add({
     "Not yet": "Пока нет",
     "Offline": "Нет подключения",
     "Open LG Home": "Открыть LG Home",
-    "Open LG Home once without changing this switch or your settings.": "Однократно открыть LG Home без изменения этого переключателя и настроек.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Кнопка открывает LG Home один раз. Выбор главного экрана и настройки сохраняются.",
     "Recovery": "Восстановление",
     "Recovery state: {status}. Use Home Updater to restore the previous version if offered.": "Состояние восстановления: {status}. Если доступно, используйте Home Updater для возврата предыдущей версии.",
     "Renewal confirmed": "Продление подтверждено",
@@ -1037,6 +1100,13 @@ HomeI18n.add({
     "{app} added": "Добавлено: {app}",
     "{hours} hours remaining (estimate)": "Осталось часов: {hours} (примерно)",
     "← ↑ ↓ → Move   ·   OK Place   ·   Back Cancel   ·   ↓ Below last row to hide": "← ↑ ↓ → Переместить   ·   OK Разместить   ·   Назад Отменить   ·   ↓ Ниже последнего ряда, чтобы скрыть",
-    "No-root Edition": "Версия без root"
+    "No-root Edition": "Версия без root",
+    "Cancel": "Отмена",
+    "Install Home update?": "Установить обновление Home?",
+    "Restore previous Home?": "Восстановить предыдущую версию Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home закроется на время установки. Приложения и настройки сохранятся.",
+    "The previous Home version and saved settings will be restored.": "Будут восстановлены предыдущая версия Home и сохранённые настройки.",
+    "Install update": "Установить обновление",
+    "Restore previous Home": "Восстановить предыдущую версию"
   }
 });

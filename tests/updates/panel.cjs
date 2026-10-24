@@ -10,3 +10,11 @@ listeners[0]({keyCode:37,preventDefault(){},stopImmediatePropagation(){}});asser
 listeners[0]({keyCode:461,preventDefault(){},stopImmediatePropagation(){}});listeners[0]({keyCode:39,preventDefault(){throw Error('closed panel ate key');},stopImmediatePropagation(){}});
 let returned=false;ctx.window.HomeUpdates.open({onClose(){returned=true;}});ids.updateBack.click();assert.equal(calls,2,'reopening checks again');assert(returned,'Back returns to the settings panel that opened updates');
 console.log('PASS update panel no-root/current state and remote navigation');
+
+let confirmation,captures=0;ctx.HomeI18n=ctx.window.HomeI18n={t:s=>s,confirm:(options,accept)=>{confirmation={options,accept};}};
+ctx.window.HomeProfile={capture:callback=>{captures++;callback(null,{saved:true});}};
+ctx.window.HomeUpdates.open();reply(JSON.stringify({returnValue:true,result:{home:'1.2.0',candidate:{home:'1.3.0',notes:'Update'},state:'available',canInstall:true}}));
+ids.updateInstall.click();assert.equal(confirmation.options.action,'Install update');assert.equal(captures,0,'opening confirmation must not capture or install');
+assert.notEqual(ids.updateInstall.textContent,'Confirm update');
+confirmation.accept();assert.equal(captures,1);confirmation.accept();assert.equal(captures,1,'duplicate acceptance cannot install twice');
+console.log('PASS Home update requires separate confirmation and prevents duplicate install');

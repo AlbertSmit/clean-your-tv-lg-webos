@@ -44,7 +44,33 @@
    button.onclick=function(){if(!setLanguage(item.code))doc.getElementById('languageError').textContent=t('Could not save language. Please try again.');};list.appendChild(button);buttons.push(button);});
   var back=doc.createElement('button');back.textContent=t('Back');back.onclick=closePicker;list.appendChild(back);buttons.push(back);dialog._buttons=buttons;dialog._selected=selected;buttons[selected].focus();
  }
- root.HomeI18n={ready:function(cb){if(pending)callbacks.push(cb);else cb();},languages:languages,normalize:normalize,language:function(){return active;},preference:preference,refresh:refresh,add:add,t:t,html:html,apply:apply,setLanguage:setLanguage,formatDate:formatDate,formatDateTime:formatDateTime,formatTime:formatTime,openLanguagePicker:openLanguagePicker};
+ // Shared by Home updates and the independent recovery app; loaded before their key handlers.
+ var confirmation=null,confirmationButtons,confirmationCallback,confirmationPrevious,confirmationSelected=0,swallowOK=false;
+ function closeConfirmation(accept){
+  if(!confirmation||confirmation.hidden)return;
+  var callback=confirmationCallback;confirmationCallback=null;confirmation.hidden=true;
+  if(confirmationPrevious&&confirmationPrevious.focus)confirmationPrevious.focus();
+  if(accept&&callback)callback();
+ }
+ function confirmAction(options,callback){
+  if(confirmation&&!confirmation.hidden)return;
+  var doc=root.document;confirmationPrevious=doc.activeElement;
+  if(!confirmation){
+   confirmation=doc.createElement('section');confirmation.id='homeConfirmation';confirmation.setAttribute('role','alertdialog');confirmation.setAttribute('aria-modal','true');confirmation.setAttribute('aria-labelledby','homeConfirmationTitle');confirmation.setAttribute('aria-describedby','homeConfirmationMessage');
+   var card=doc.createElement('div');card.className='confirmation-card';confirmation.appendChild(card);
+   var title=doc.createElement('h2');title.id='homeConfirmationTitle';card.appendChild(title);
+   var message=doc.createElement('p');message.id='homeConfirmationMessage';card.appendChild(message);
+   var actions=doc.createElement('div');actions.className='confirmation-actions';card.appendChild(actions);
+   confirmationButtons=[doc.createElement('button'),doc.createElement('button')];
+   confirmationButtons.forEach(function(button,index){button.type='button';button.onclick=function(){closeConfirmation(index===1);};actions.appendChild(button);});
+   doc.body.appendChild(confirmation);
+  }
+  confirmation.children[0].children[0].textContent=t(options.title);
+  confirmation.children[0].children[1].textContent=t(options.message,options.params);
+  confirmationButtons[0].textContent=t('Cancel');confirmationButtons[1].textContent=t(options.action);
+  confirmationCallback=callback;confirmationSelected=0;confirmation.hidden=false;confirmationButtons[0].focus();
+ }
+ root.HomeI18n={ready:function(cb){if(pending)callbacks.push(cb);else cb();},languages:languages,normalize:normalize,language:function(){return active;},preference:preference,refresh:refresh,add:add,t:t,html:html,apply:apply,setLanguage:setLanguage,formatDate:formatDate,formatDateTime:formatDateTime,formatTime:formatTime,openLanguagePicker:openLanguagePicker,confirm:confirmAction};
  refresh();
  if(root.PalmServiceBridge&&preference()==='auto'){
   pending=true;var bridge,timer,finished=false;
@@ -53,6 +79,16 @@
   try{bridge=new root.PalmServiceBridge();bridge.onservicecallback=function(raw){var language=null;try{var r=JSON.parse(raw);if(r.returnValue===true)language=r.settings.localeInfo.locales.UI;}catch(_){}finish(language);};bridge.call('luna://com.webos.settingsservice/getSystemSettings',JSON.stringify({key:'localeInfo'}));}catch(_){finish(null);}
  }
  if(root.document){
+  root.document.addEventListener('focusin',function(e){if(!confirmation||confirmation.hidden)return;var index=confirmationButtons.indexOf(e.target);if(index>=0)confirmationSelected=index;else confirmationButtons[confirmationSelected].focus();},true);
+  ['keydown','keyup'].forEach(function(type){root.document.addEventListener(type,function(e){
+   if(e.keyCode===13&&swallowOK){e.preventDefault();e.stopImmediatePropagation();if(type==='keyup')swallowOK=false;return;}
+   if(!confirmation||confirmation.hidden)return;
+   e.preventDefault();e.stopImmediatePropagation();if(type==='keyup')return;
+   var k=e.keyCode,index=confirmationButtons.indexOf(root.document.activeElement);
+   if(k===27||k===461){closeConfirmation(false);return;}
+   if(k===13){if(!e.repeat){swallowOK=true;confirmationButtons[index<0?0:index].click();}return;}
+   if([9,37,38,39,40].indexOf(k)>=0)confirmationButtons[index===0?1:0].focus();
+  },true);});
   root.document.addEventListener('DOMContentLoaded',function(){apply(root.document);root.document.title=t(root.document.title);});
   root.document.addEventListener('focusin',function(e){if(!dialog||dialog.hidden||!dialog._buttons)return;var index=dialog._buttons.indexOf(e.target);if(index>=0){dialog._selected=index;return;}dialog._buttons[dialog._selected||0].focus();},true);
   // Registered before other modal handlers: a language choice cannot also activate Home.

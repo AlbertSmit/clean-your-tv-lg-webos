@@ -8,7 +8,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Choose where Home and return from apps take you.",
     "Updates and TV": "Updates and TV",
     "Update Home or open LG settings for picture, sound and network.": "Update Home or open LG settings for picture, sound and network.",
-    "Open LG Home once without changing this switch or your settings.": "Open LG Home once without changing this switch or your settings.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "This button opens LG Home once. Your Home screen choice and settings stay saved.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.",
     "TV settings": "TV settings",
     "Open LG Home": "Open LG Home",
@@ -117,7 +117,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Invalid embedded icon",
     "Invalid icon color": "Invalid icon color",
     "Invalid columns": "Invalid columns",
-    "Invalid language preference": "Invalid language preference"
+    "Invalid language preference": "Invalid language preference",
+    "Cancel": "Cancel",
+    "Install Home update?": "Install Home update?",
+    "Restore previous Home?": "Restore previous Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home will close during installation. Your apps and settings will be saved.",
+    "The previous Home version and saved settings will be restored.": "The previous Home version and saved settings will be restored."
   },
   "de": {
     "Home settings": "Home-Einstellungen",
@@ -127,7 +132,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Wähle das Ziel der Home-Taste und beim Verlassen von Apps.",
     "Updates and TV": "Updates und TV",
     "Update Home or open LG settings for picture, sound and network.": "Aktualisiere Home oder öffne die LG-Einstellungen für Bild, Ton und Netzwerk.",
-    "Open LG Home once without changing this switch or your settings.": "Öffne LG Home einmal, ohne diesen Schalter oder deine Einstellungen zu ändern.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Diese Taste öffnet LG Home einmalig. Die Auswahl Ihres Startbildschirms und Ihre Einstellungen bleiben gespeichert.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Halte Zurück 1,2 Sekunden gedrückt, um LG Home zu öffnen. Deine Einstellungen bleiben gespeichert.",
     "TV settings": "TV-Einstellungen",
     "Open LG Home": "LG Home öffnen",
@@ -236,7 +241,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Ungültiges eingebettetes Symbol",
     "Invalid icon color": "Ungültige Symbolfarbe",
     "Invalid columns": "Ungültige Spaltenzahl",
-    "Invalid language preference": "Ungültige Spracheinstellung"
+    "Invalid language preference": "Ungültige Spracheinstellung",
+    "Cancel": "Abbrechen",
+    "Install Home update?": "Home-Update installieren?",
+    "Restore previous Home?": "Vorheriges Home wiederherstellen?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home wird während der Installation geschlossen. Ihre Apps und Einstellungen werden gespeichert.",
+    "The previous Home version and saved settings will be restored.": "Die vorherige Home-Version und die gespeicherten Einstellungen werden wiederhergestellt."
   },
   "es": {
     "Home settings": "Ajustes de Home",
@@ -246,7 +256,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Elige dónde ir al pulsar Home y salir de las aplicaciones.",
     "Updates and TV": "Actualizaciones y TV",
     "Update Home or open LG settings for picture, sound and network.": "Actualiza Home o abre los ajustes de imagen, sonido y red de LG.",
-    "Open LG Home once without changing this switch or your settings.": "Abre LG Home una vez sin cambiar este interruptor ni tus ajustes.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Este botón abre LG Home una vez. La elección de pantalla de inicio y los ajustes se conservan.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Mantén Atrás 1,2 segundos para abrir LG Home. Tus ajustes se conservarán.",
     "TV settings": "Ajustes del televisor",
     "Open LG Home": "Abrir LG Home",
@@ -355,7 +365,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Icono incrustado no válido",
     "Invalid icon color": "Color de icono no válido",
     "Invalid columns": "Número de columnas no válido",
-    "Invalid language preference": "Preferencia de idioma no válida"
+    "Invalid language preference": "Preferencia de idioma no válida",
+    "Cancel": "Cancelar",
+    "Install Home update?": "¿Instalar la actualización de Home?",
+    "Restore previous Home?": "¿Restaurar la versión anterior de Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home se cerrará durante la instalación. Tus aplicaciones y ajustes se guardarán.",
+    "The previous Home version and saved settings will be restored.": "Se restaurarán la versión anterior de Home y los ajustes guardados."
   },
   "pt-BR": {
     "Home settings": "Configurações do Home",
@@ -365,7 +380,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Escolha para onde ir ao pressionar Home e sair dos aplicativos.",
     "Updates and TV": "Atualizações e TV",
     "Update Home or open LG settings for picture, sound and network.": "Atualize o Home ou abra as configurações LG de imagem, som e rede.",
-    "Open LG Home once without changing this switch or your settings.": "Abra o LG Home uma vez sem alterar esta opção ou suas configurações.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Este botão abre o LG Home uma vez. A escolha da tela inicial e as configurações são mantidas.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Segure Voltar por 1,2 segundo para abrir o LG Home. Suas configurações serão mantidas.",
     "TV settings": "Configurações da TV",
     "Open LG Home": "Abrir LG Home",
@@ -474,7 +489,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Ícone incorporado inválido",
     "Invalid icon color": "Cor do ícone inválida",
     "Invalid columns": "Número de colunas inválido",
-    "Invalid language preference": "Preferência de idioma inválida"
+    "Invalid language preference": "Preferência de idioma inválida",
+    "Cancel": "Cancelar",
+    "Install Home update?": "Instalar atualização do Home?",
+    "Restore previous Home?": "Restaurar a versão anterior do Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "O Home será fechado durante a instalação. Seus aplicativos e configurações serão salvos.",
+    "The previous Home version and saved settings will be restored.": "A versão anterior do Home e as configurações salvas serão restauradas."
   },
   "fr": {
     "Home settings": "Paramètres Home",
@@ -484,7 +504,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Choisissez l’écran affiché avec Home et en quittant les applications.",
     "Updates and TV": "Mises à jour et TV",
     "Update Home or open LG settings for picture, sound and network.": "Mettez Home à jour ou ouvrez les réglages LG de l’image, du son et du réseau.",
-    "Open LG Home once without changing this switch or your settings.": "Ouvrez LG Home une fois sans modifier cette option ni vos paramètres.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Ce bouton ouvre LG Home une seule fois. Le choix de votre écran d’accueil et vos paramètres sont conservés.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Maintenez Retour pendant 1,2 seconde pour ouvrir LG Home. Vos paramètres sont conservés.",
     "TV settings": "Paramètres TV",
     "Open LG Home": "Ouvrir LG Home",
@@ -593,7 +613,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Icône intégrée invalide",
     "Invalid icon color": "Couleur d’icône invalide",
     "Invalid columns": "Nombre de colonnes invalide",
-    "Invalid language preference": "Préférence de langue invalide"
+    "Invalid language preference": "Préférence de langue invalide",
+    "Cancel": "Annuler",
+    "Install Home update?": "Installer la mise à jour de Home ?",
+    "Restore previous Home?": "Restaurer la version précédente de Home ?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home se fermera pendant l’installation. Vos applications et paramètres seront enregistrés.",
+    "The previous Home version and saved settings will be restored.": "La version précédente de Home et les paramètres enregistrés seront restaurés."
   },
   "it": {
     "Home settings": "Impostazioni Home",
@@ -603,7 +628,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Scegli dove andare premendo Home e uscendo dalle app.",
     "Updates and TV": "Aggiornamenti e TV",
     "Update Home or open LG settings for picture, sound and network.": "Aggiorna Home o apri le impostazioni LG per immagine, audio e rete.",
-    "Open LG Home once without changing this switch or your settings.": "Apri LG Home una volta senza modificare questa opzione o le impostazioni.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Questo pulsante apre LG Home una volta. La scelta della schermata iniziale e le impostazioni restano salvate.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Tieni premuto Indietro per 1,2 secondi per aprire LG Home. Le impostazioni restano salvate.",
     "TV settings": "Impostazioni TV",
     "Open LG Home": "Apri LG Home",
@@ -712,7 +737,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Icona incorporata non valida",
     "Invalid icon color": "Colore dell’icona non valido",
     "Invalid columns": "Numero di colonne non valido",
-    "Invalid language preference": "Preferenza lingua non valida"
+    "Invalid language preference": "Preferenza lingua non valida",
+    "Cancel": "Annulla",
+    "Install Home update?": "Installare l’aggiornamento di Home?",
+    "Restore previous Home?": "Ripristinare la versione precedente di Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home si chiuderà durante l’installazione. Le app e le impostazioni verranno salvate.",
+    "The previous Home version and saved settings will be restored.": "Verranno ripristinati la versione precedente di Home e le impostazioni salvate."
   },
   "ko": {
     "Home settings": "Home 설정",
@@ -722,7 +752,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Home 버튼과 앱에서 돌아갈 화면을 선택하세요.",
     "Updates and TV": "업데이트 및 TV",
     "Update Home or open LG settings for picture, sound and network.": "Home을 업데이트하거나 LG의 영상, 음향, 네트워크 설정을 여세요.",
-    "Open LG Home once without changing this switch or your settings.": "이 스위치나 설정을 변경하지 않고 LG Home을 한 번 여세요.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "이 버튼은 LG Home을 한 번 엽니다. 선택한 홈 화면과 설정은 유지됩니다.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "뒤로 버튼을 1.2초 동안 눌러 LG Home을 여세요. 설정은 유지됩니다.",
     "TV settings": "TV 설정",
     "Open LG Home": "LG Home 열기",
@@ -831,7 +861,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "잘못된 내장 아이콘",
     "Invalid icon color": "잘못된 아이콘 색상",
     "Invalid columns": "잘못된 열 수",
-    "Invalid language preference": "잘못된 언어 설정"
+    "Invalid language preference": "잘못된 언어 설정",
+    "Cancel": "취소",
+    "Install Home update?": "Home 업데이트를 설치할까요?",
+    "Restore previous Home?": "이전 Home을 복원할까요?",
+    "Home will close during installation. Your apps and settings will be saved.": "설치 중 Home이 닫힙니다. 앱과 설정은 저장됩니다.",
+    "The previous Home version and saved settings will be restored.": "이전 Home 버전과 저장된 설정이 복원됩니다."
   },
   "hi": {
     "Home settings": "Home सेटिंग्स",
@@ -841,7 +876,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Home दबाने और ऐप से लौटने पर खुलने वाली स्क्रीन चुनें।",
     "Updates and TV": "अपडेट और टीवी",
     "Update Home or open LG settings for picture, sound and network.": "Home अपडेट करें या चित्र, ध्वनि और नेटवर्क के लिए LG सेटिंग्स खोलें।",
-    "Open LG Home once without changing this switch or your settings.": "इस स्विच या अपनी सेटिंग्स को बदले बिना LG Home एक बार खोलें।",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "यह बटन LG Home को एक बार खोलता है। आपकी होम स्क्रीन की पसंद और सेटिंग्स सुरक्षित रहती हैं।",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "LG Home खोलने के लिए वापस बटन 1.2 सेकंड दबाए रखें। आपकी सेटिंग्स सुरक्षित रहेंगी।",
     "TV settings": "टीवी सेटिंग्स",
     "Open LG Home": "LG Home खोलें",
@@ -950,7 +985,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "एम्बेड किया गया आइकन अमान्य है",
     "Invalid icon color": "आइकन का रंग अमान्य है",
     "Invalid columns": "कॉलम की संख्या अमान्य है",
-    "Invalid language preference": "भाषा प्राथमिकता अमान्य है"
+    "Invalid language preference": "भाषा प्राथमिकता अमान्य है",
+    "Cancel": "रद्द करें",
+    "Install Home update?": "Home अपडेट इंस्टॉल करें?",
+    "Restore previous Home?": "पिछला Home बहाल करें?",
+    "Home will close during installation. Your apps and settings will be saved.": "इंस्टॉलेशन के दौरान Home बंद हो जाएगा। आपके ऐप्स और सेटिंग्स सहेजे जाएंगे।",
+    "The previous Home version and saved settings will be restored.": "Home का पिछला संस्करण और सहेजी गई सेटिंग्स बहाल की जाएंगी।"
   },
   "pl": {
     "Home settings": "Ustawienia Home",
@@ -960,7 +1000,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Wybierz ekran otwierany przez Home i po wyjściu z aplikacji.",
     "Updates and TV": "Aktualizacje i TV",
     "Update Home or open LG settings for picture, sound and network.": "Zaktualizuj Home lub otwórz ustawienia obrazu, dźwięku i sieci LG.",
-    "Open LG Home once without changing this switch or your settings.": "Otwórz LG Home jednorazowo bez zmiany przełącznika ani ustawień.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Ten przycisk otwiera LG Home jednorazowo. Wybór ekranu głównego i ustawienia zostają zachowane.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Przytrzymaj Wstecz przez 1,2 sekundy, aby otworzyć LG Home. Ustawienia zostaną zachowane.",
     "TV settings": "Ustawienia TV",
     "Open LG Home": "Otwórz LG Home",
@@ -1069,7 +1109,12 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Nieprawidłowa osadzona ikona",
     "Invalid icon color": "Nieprawidłowy kolor ikony",
     "Invalid columns": "Nieprawidłowa liczba kolumn",
-    "Invalid language preference": "Nieprawidłowe ustawienie języka"
+    "Invalid language preference": "Nieprawidłowe ustawienie języka",
+    "Cancel": "Anuluj",
+    "Install Home update?": "Zainstalować aktualizację Home?",
+    "Restore previous Home?": "Przywrócić poprzednią wersję Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home zamknie się na czas instalacji. Aplikacje i ustawienia zostaną zapisane.",
+    "The previous Home version and saved settings will be restored.": "Poprzednia wersja Home i zapisane ustawienia zostaną przywrócone."
   },
   "ru": {
     "Home settings": "Настройки Home",
@@ -1079,7 +1124,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Choose where Home and return from apps take you.": "Выберите экран для кнопки Home и возврата из приложений.",
     "Updates and TV": "Обновления и ТВ",
     "Update Home or open LG settings for picture, sound and network.": "Обновите Home или откройте настройки изображения, звука и сети LG.",
-    "Open LG Home once without changing this switch or your settings.": "Откройте LG Home один раз, не меняя переключатель и настройки.",
+    "This button opens LG Home once. Your Home screen choice and settings stay saved.": "Кнопка открывает LG Home один раз. Выбор главного экрана и настройки сохраняются.",
     "Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.": "Удерживайте «Назад» 1,2 секунды, чтобы открыть LG Home. Настройки сохранятся.",
     "TV settings": "Настройки ТВ",
     "Open LG Home": "Открыть LG Home",
@@ -1157,7 +1202,7 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Independent update recovery. This app does not change Home Helper or system Home profiles.": "Независимое восстановление обновлений. Это приложение не меняет Home Helper и системные профили Home.",
     "Reading status…": "Чтение состояния…",
     "Refresh status": "Обновить состояние",
-    "Restore previous Home": "Восстановить предыдущий Home",
+    "Restore previous Home": "Восстановить предыдущую версию",
     "Open Home": "Открыть Home",
     "Update state: {status}": "Состояние обновления: {status}",
     "Recovery state: {status}": "Состояние восстановления: {status}",
@@ -1188,6 +1233,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Invalid embedded icon": "Некорректный встроенный значок",
     "Invalid icon color": "Некорректный цвет значка",
     "Invalid columns": "Некорректное число столбцов",
-    "Invalid language preference": "Некорректная настройка языка"
+    "Invalid language preference": "Некорректная настройка языка",
+    "Cancel": "Отмена",
+    "Install Home update?": "Установить обновление Home?",
+    "Restore previous Home?": "Восстановить предыдущую версию Home?",
+    "Home will close during installation. Your apps and settings will be saved.": "Home закроется на время установки. Приложения и настройки сохранятся.",
+    "The previous Home version and saved settings will be restored.": "Будут восстановлены предыдущая версия Home и сохранённые настройки."
   }
 });

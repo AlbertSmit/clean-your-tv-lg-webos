@@ -3,7 +3,7 @@
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var panel, message, details, buttons, previous, selected = 0, timer, onClose;
-  var busy = false, recovery = false, offer = null, transaction = null, health = null, installing = false, errorText = '';
+  var busy = false, recovery = false, offer = null, transaction = null, health = null, errorText = '';
   var terminal = ['complete', 'rolled-back', 'aborted'];
   function unprovisioned() {
     var error = Error('Updater unavailable. Run the one-time computer setup for Software updates.');
@@ -70,8 +70,8 @@
       details.textContent += '\n' + t(reasons[offer.reason] || 'This release cannot be installed with the current setup.');
     }
     show(0, !recovery && !health && !!errorText, busy || active());
-    show(1, !recovery && !health && !installing, busy || active() || !offer || !offer.canInstall);
-    show(2, !recovery && installing, busy || active());
+    show(1, !recovery && !health, busy || active() || !offer || !offer.canInstall);
+    show(2, false);
     show(3, true, busy);
     show(4, !!(transaction && transaction.phase === 'recovery-required' && transaction.installEvidence && transaction.installEvidence.terminal && !transaction.rollbackAttempted), busy);
     show(5, !!health, busy);
@@ -105,14 +105,13 @@
     if (index === 7) return close();
     if (busy) return;
     if (index === 0) return refresh(true);
-    if (index === 1) { installing = true; message.textContent = t('Install Root {version}? LG Home will be selected during installation. Keep the TV powered on; confirm the updated launcher within two minutes.', {version:offer.candidate.version}); show(1, false); show(2, true); focus(0); return; }
-    if (index === 2) {
-      if (recovery || active() || !offer || !offer.canInstall || !window.RootProfile) return;
+    if (index === 1) return window.HomeI18n.confirm({title:'Install Home update?',message:t('Install Root {version}? LG Home will be selected during installation. Keep the TV powered on; confirm the updated launcher within two minutes.', {version:offer.candidate.version}),action:'Install update'}, function () {
+      if (busy || panel.hidden || recovery || active() || !offer || !offer.canInstall || !window.RootProfile) return;
       busy = true; render();
       window.RootProfile.capture().then(function (profile) { return rpc('install', {version:offer.candidate.version, profile:profile}); }).then(function (state) { transaction = state; }).catch(function (error) { errorText = error.message; }).then(function () { busy = false; render(); schedule(); }); return;
-    }
+    });
     if (index === 3) return operation('reconcile', {});
-    if (index === 4) return operation('rollback', {});
+    if (index === 4) return window.HomeI18n.confirm({title:'Restore previous Home?',message:'The previous Home version and saved settings will be restored.',action:'Restore previous Home'}, function () { if (!buttons[4].hidden && !buttons[4].disabled) operation('rollback', {}); });
     if (index === 5 && health) return operation('confirm', health);
     if (index === 6) { close(); if (window.RenewalPanel) window.RenewalPanel.open(); }
   }
@@ -140,7 +139,7 @@
     options = options || {}; if (!panel) build();
     if (panel.hidden) previous = document.activeElement;
     onClose = options.onClose || null;
-    recovery = options.recovery === true; installing = false; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
+    recovery = options.recovery === true; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
     if (!options.error) refresh(!recovery);
   }
   window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }, confirmLaunch:function (identity) { health = identity; open(); }};

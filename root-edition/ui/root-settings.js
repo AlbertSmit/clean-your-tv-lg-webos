@@ -118,7 +118,6 @@
     text(more, 'h2', 'Updates and TV');
     text(more, 'p', 'Update Home or open LG settings for picture, sound and network.');
     var links = document.createElement('div'); links.className = 'renewal-actions settings-links'; more.appendChild(links);
-    text(home, 'p', 'Open LG Home once without changing this switch or your settings.', 'home-visit-hint');
     var footer = document.createElement('div'); footer.className = 'settings-footer'; card.appendChild(footer);
     text(footer, 'p', 'Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.');
     var back = document.createElement('div'); back.className = 'renewal-actions'; footer.appendChild(back);
@@ -127,10 +126,16 @@
       var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates','Language'];
       var b = document.createElement('button'); b.textContent = t(labels[i]);
       if (i === 3) { b.className = 'home-routing-switch'; b.setAttribute('role','switch'); b.setAttribute('aria-checked','false'); }
-      if (i === 1) b.className = 'home-visit-button';
+      var target = i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back;
+      if (i === 1) {
+        b.className = 'home-visit-button';
+        b.setAttribute('aria-describedby', 'rootHomeVisitHint');
+        target = document.createElement('div'); target.className = 'home-visit-action'; homeActions.appendChild(target);
+      }
       b.onclick = function () { selected = i; activate(i); };
       b.onfocus = function () { selected = i; };
-      (i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back).appendChild(b);
+      target.appendChild(b);
+      if (i === 1) text(target, 'p', 'This button opens LG Home once. Your Home screen choice and settings stay saved.', 'home-visit-hint').id = 'rootHomeVisitHint';
       buttons[i] = b;
     });
     document.body.appendChild(panel);

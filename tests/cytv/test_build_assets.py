@@ -38,6 +38,35 @@ class BuildAssetsTests(unittest.TestCase):
             (root/'root/bundle.json').write_text('{"package":"root.ipk"}')
             (root/'root/release.json').write_text('{"version":"0.1.2"}')
             build['verify_release_versions'](root,versions)
+            helper_path = root / 'helper.ipk'
+            original_helper = helper_path.read_bytes()
+            for name in ('usr/palm/applications/com.local.nativehome/appinfo.json',
+                         'usr/palm/services/com.local.nativehome.service/package.json'):
+                files = package.data_files(original_helper)
+                metadata = json.loads(files[name]); metadata['version'] = '0.0.1'
+                files[name] = json.dumps(metadata).encode()
+                helper_path.write_bytes(package.ipk('com.local.nativehome', versions['helper'], files))
+                with self.assertRaisesRegex(ValueError, 'application/service version'):
+                    build['verify_release_versions'](root, versions)
+            helper_path.write_bytes(original_helper)
             versions['root']='0.0.1'
             with self.assertRaisesRegex(ValueError,'version'):
                 build['verify_release_versions'](root,versions)
+
+    def test_published_helper_baseline_is_pinned_and_future_versions_build_from_source(self):
+        import tempfile
+        from unittest.mock import patch
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        self.assertIn('helper_baseline', build, 'Published Helper bytes are not preserved')
+        baseline = build['helper_baseline']
+        published = root / 'native/published/com.local.nativehome_0.6.16_arm.ipk'
+        self.assertEqual(baseline('0.6.16'), published.read_bytes())
+        self.assertIsNone(baseline('0.6.17'))
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / 'native/published' / published.name
+            fixture.parent.mkdir(parents=True)
+            fixture.write_bytes(published.read_bytes() + b'corruption')
+            with patch.dict(baseline.__globals__, ROOT=Path(directory)):
+                with self.assertRaisesRegex(ValueError, 'hash'):
+                    baseline('0.6.16')

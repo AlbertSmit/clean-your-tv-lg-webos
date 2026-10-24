@@ -63,7 +63,7 @@ without a trial or Keep confirmation.
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.8 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.9 with persistent activation and Settings updates; earlier C3 evidence keeps its original scope | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -77,7 +77,7 @@ Your apps and their order are configured during setup; they are not bundled.*
 
 ## What you need
 
-A computer is needed for initial installation and maintenance. cytv includes the
+Use a computer or a compatible Android phone for initial installation and maintenance. cytv includes the
 runtime and TV packages. **+ / Add app** can refresh the app inventory on the TV.
 No-root requires an active Developer Mode session and local networking for Helper
 monitoring. Root requires existing root SSH access and recovery services; do not
@@ -221,7 +221,7 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 ## Current components and hardware evidence
 
 The v0.10.9 distribution contains cytv **0.2.12**, Home **1.3.5**, Helper
-**0.6.16**, Root **0.1.8** and No-root Updater **0.1.5**. Source versions are
+**0.6.16**, Root **0.1.9** and No-root Updater **0.1.5**. Source versions are
 recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.9.md)
 explain packaging and remaining checks.
 

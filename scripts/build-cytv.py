@@ -76,30 +76,46 @@ def stage_brand_assets(payload):
         (payload / packaged).write_bytes((ROOT / 'assets/brand' / master).read_bytes())
 
 
+# Helper 0.6.16 is already published: preserve its bytes until the version changes.
+HELPER_0_6_16_SHA256 = 'ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1'
+
+
+def helper_baseline(version):
+    if version != '0.6.16':
+        return None
+    data = (ROOT / 'native/published/com.local.nativehome_0.6.16_arm.ipk').read_bytes()
+    if hashlib.sha256(data).hexdigest() != HELPER_0_6_16_SHA256:
+        raise ValueError('Published Helper baseline hash mismatch')
+    return data
+
+
 def build_payload():
-    import ziglang
     versions = json.loads((ROOT / "release-versions.json").read_text())
     work = (ROOT / 'build/cytv').resolve()
     payload = work / 'payload'
     if payload.exists():
         shutil.rmtree(payload)
     payload.mkdir(parents=True)
-    zig = Path(ziglang.__file__).parent / ('zig.exe' if os.name == 'nt' else 'zig')
-    environment = dict(os.environ, ZIG_GLOBAL_CACHE_DIR=str(work / 'zig-global-cache'), ZIG_LOCAL_CACHE_DIR=str(work / 'zig-cache'))
-    app = tracked_files('native/app')
-    # A developer's local state must never enter the public helper.
-    app = {n: b for n, b in app.items() if (n.endswith(('.js', '.json', '.png')) or n.startswith('vendor/')) and not n.startswith('state/')}
-    for name, sources in {
-        'detach': ['native/app/detach.c'],
-        'relay': ['native/prototype/relay.c', 'native/prototype/filter.c'],
-        'resume': ['native/app/resume.c'],
-    }.items():
-        output = work / name
-        subprocess.run([str(zig), 'cc', '-target', 'arm-linux-musleabi', '-Os', '-static', '-s',
-                        *sources, '-o', str(output)], cwd=ROOT, env=environment, check=True)
-        app[name] = output.read_bytes()
-    service = {n: b for n, b in tracked_files('native/service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
-    (payload / 'helper.ipk').write_bytes(pack_app(app, service, architecture='arm', helper=True))
+    helper = helper_baseline(versions['helper'])
+    if helper is None:
+        import ziglang
+        zig = Path(ziglang.__file__).parent / ('zig.exe' if os.name == 'nt' else 'zig')
+        environment = dict(os.environ, ZIG_GLOBAL_CACHE_DIR=str(work / 'zig-global-cache'), ZIG_LOCAL_CACHE_DIR=str(work / 'zig-cache'))
+        app = tracked_files('native/app')
+        # A developer's local state must never enter the public helper.
+        app = {n: b for n, b in app.items() if (n.endswith(('.js', '.json', '.png')) or n.startswith('vendor/')) and not n.startswith('state/')}
+        for name, sources in {
+            'detach': ['native/app/detach.c'],
+            'relay': ['native/prototype/relay.c', 'native/prototype/filter.c'],
+            'resume': ['native/app/resume.c'],
+        }.items():
+            output = work / name
+            subprocess.run([str(zig), 'cc', '-target', 'arm-linux-musleabi', '-Os', '-static', '-s',
+                            *sources, '-o', str(output)], cwd=ROOT, env=environment, check=True)
+            app[name] = output.read_bytes()
+        service = {n: b for n, b in tracked_files('native/service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
+        helper = pack_app(app, service, architecture='arm', helper=True)
+    (payload / 'helper.ipk').write_bytes(helper)
     launcher = {n: b for n, b in tracked_files('launcher').items() if n != 'apps.js' and not n.startswith('icons/')}
     launcher['config.js'] = b'window.CONFIG = {columns:5,dockApps:[],hiddenApps:["com.gathin.tvhome","com.local.nativehome"]};\n'
     launcher['apps.js'] = b'window.TV_APPS = {apps:[],inputs:[]};\n'
@@ -135,7 +151,7 @@ def build_payload():
                     target.write_bytes(path.read_bytes())
     manifest = {'schema': 1, 'launcher': 'launcher.ipk', 'helper': 'helper.ipk',
                 'home_version': json.loads(launcher['appinfo.json'])['version'],
-                'helper_version': json.loads(app['appinfo.json'])['version'],
+                'helper_version': versions['helper'],
                 'files': {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                           for p in sorted(payload.rglob('*')) if p.is_file()}}
     (payload / 'payload.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

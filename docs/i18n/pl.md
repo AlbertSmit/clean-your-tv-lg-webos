@@ -19,6 +19,8 @@ Włącz telewizor i połącz go z tą samą zaufaną siecią lokalną co kompute
 
 [Instalator Android](../../android/README.md) obsługuje wszystkie dziesięć języków interfejsu. W prawym górnym rogu widać bieżący język; dotknij go, aby wybrać inny. Wybór zostaje zapisany w telefonie.
 
+W Androidzie wybrane działanie serwisowe pozostaje widoczne podczas łączenia i pokazuje własny postęp. Interfejs używa czcionki systemowej telefonu oraz większych etykiet i tekstów pomocy.
+
 Kreator początkowo używa języka systemu i zapamiętuje wybrany język. Na telewizorze otwórz **Ustawienia → Język** i wybierz język lub automatyczny wybór według systemu. Preferencje instalatora i telewizora są niezależne. Kody zawiera [spis języków](../LANGUAGES.md).
 
 Dla osobno pobranej CLI na macOS/Linux, w rozpakowanym katalogu:

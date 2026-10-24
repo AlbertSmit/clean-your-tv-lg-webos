@@ -4,7 +4,7 @@ No-root and Root are equal options for different TV environments: Developer Mode
 
 The interface uses the approved B1 house mark in its original colours, with quiet warm charcoal surfaces and muted controls. Orange is confined to the identity rather than large button/background fills.
 
-A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with a bundled Noto Sans font, system-script fallbacks, offline UI and TV packages. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
+A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
 
 ## Install and connect
 
@@ -20,7 +20,7 @@ This is a **debug-signed preview**, not a public production release. End-to-end 
 
 ## Recovery and private data
 
-Use **Status and recovery** from the start screen. After an interrupted operation, check status before reinstalling. CYTV retains the existing durable operation receipts and never automatically repeats installation after process death. Activity recreation replays the current operation and pending question. Pending questions time out after ten minutes; the foreground wake lock is bounded to 25 minutes. OS process/service termination can still interrupt networking; retained receipts remain authoritative.
+Use **Status and recovery** from the start screen. The selected action stays visible while you choose the TV connection method; status and restore show their own progress without installation steps. The Android notification describes an ongoing TV operation. After an interrupted operation, check status before reinstalling. CYTV retains the existing durable operation receipts and never automatically repeats installation after process death. Activity recreation replays the current operation and pending question. Pending questions time out after ten minutes; the foreground wake lock is bounded to 25 minutes. OS process/service termination can still interrupt networking; retained receipts remain authoritative.
 
 Three short Home presses within two seconds request the existing TV emergency exit. Older No-root Helper versions through 0.6.13 instead use holding Home for two seconds. Root cold-power behavior and model compatibility retain the limitations documented by the TV project.
 
@@ -56,6 +56,7 @@ bash scripts/test.sh
 # Requires Playwright and a local Chrome; CYTV_CHROME can override its executable.
 node android/tests/ui.cjs
 node android/tests/localization.cjs
+node android/tests/maintenance.cjs
 node android/tests/screenshots.cjs
 ```
 

@@ -122,9 +122,11 @@ const words = {
     "seconds": "сек",
     "errorPrefix": "Ошибка",
     "replayError": "Не удалось восстановить экран операции. Проверьте состояние ТВ.",
-    "notificationText": "Идёт настройка телевизора",
-    "notificationChannel": "Установка CYTV",
-    "webviewUpdate": "Обновите Android System WebView или Chrome и откройте CYTV снова (нужен WebView 108+)."
+    "notificationText": "Выполняется действие с телевизором",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Обновите Android System WebView или Chrome и откройте CYTV снова (нужен WebView 108+).",
+    "connectionMethod": "Выберите способ подключения",
+    "maintenanceProgress": "Не выключайте телевизор. CYTV выполняет выбранное действие."
   },
   "en": {
     "detect": "Check connection",
@@ -235,9 +237,11 @@ const words = {
     "seconds": "sec",
     "errorPrefix": "Error",
     "replayError": "Could not restore operation view. Check your TV status.",
-    "notificationText": "TV setup in progress",
-    "notificationChannel": "CYTV installation",
-    "webviewUpdate": "Update Android System WebView or Chrome, then reopen CYTV (WebView 108+ required)."
+    "notificationText": "TV operation in progress",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Update Android System WebView or Chrome, then reopen CYTV (WebView 108+ required).",
+    "connectionMethod": "Choose your connection method",
+    "maintenanceProgress": "Keep the TV on. CYTV is carrying out the selected action."
   },
   "de": {
     "detect": "Verbindung prüfen",
@@ -348,9 +352,11 @@ const words = {
     "seconds": "Sek.",
     "errorPrefix": "Fehler",
     "replayError": "Die Vorgangsansicht konnte nicht wiederhergestellt werden. Prüfe den TV-Status.",
-    "notificationText": "Fernseher wird eingerichtet",
-    "notificationChannel": "CYTV-Installation",
-    "webviewUpdate": "Aktualisiere Android System WebView oder Chrome und öffne CYTV erneut (WebView 108+ erforderlich)."
+    "notificationText": "TV-Aktion wird ausgeführt",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Aktualisiere Android System WebView oder Chrome und öffne CYTV erneut (WebView 108+ erforderlich).",
+    "connectionMethod": "Verbindungsmethode wählen",
+    "maintenanceProgress": "Lassen Sie den Fernseher eingeschaltet. CYTV führt die gewählte Aktion aus."
   },
   "fr": {
     "detect": "Vérifier la connexion",
@@ -461,9 +467,11 @@ const words = {
     "seconds": "s",
     "errorPrefix": "Erreur",
     "replayError": "Impossible de restaurer l’écran de l’opération. Vérifiez l’état du téléviseur.",
-    "notificationText": "Configuration du téléviseur en cours",
-    "notificationChannel": "Installation CYTV",
-    "webviewUpdate": "Mettez à jour Android System WebView ou Chrome, puis rouvrez CYTV (WebView 108+ requis)."
+    "notificationText": "Action sur le téléviseur en cours",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Mettez à jour Android System WebView ou Chrome, puis rouvrez CYTV (WebView 108+ requis).",
+    "connectionMethod": "Choisissez le mode de connexion",
+    "maintenanceProgress": "Laissez le téléviseur allumé. CYTV exécute l’action sélectionnée."
   },
   "it": {
     "detect": "Verifica connessione",
@@ -574,9 +582,11 @@ const words = {
     "seconds": "s",
     "errorPrefix": "Errore",
     "replayError": "Impossibile ripristinare la schermata dell’operazione. Verifica lo stato della TV.",
-    "notificationText": "Configurazione TV in corso",
-    "notificationChannel": "Installazione CYTV",
-    "webviewUpdate": "Aggiorna Android System WebView o Chrome, poi riapri CYTV (richiesto WebView 108+)."
+    "notificationText": "Operazione sulla TV in corso",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Aggiorna Android System WebView o Chrome, poi riapri CYTV (richiesto WebView 108+).",
+    "connectionMethod": "Scegli come connetterti",
+    "maintenanceProgress": "Lascia la TV accesa. CYTV sta eseguendo l’azione selezionata."
   },
   "es": {
     "detect": "Comprobar conexión",
@@ -687,9 +697,11 @@ const words = {
     "seconds": "s",
     "errorPrefix": "Error",
     "replayError": "No se pudo restaurar la vista de la operación. Comprueba el estado del televisor.",
-    "notificationText": "Configuración del televisor en curso",
-    "notificationChannel": "Instalación de CYTV",
-    "webviewUpdate": "Actualiza Android System WebView o Chrome y vuelve a abrir CYTV (se requiere WebView 108 o posterior)."
+    "notificationText": "Acción del televisor en curso",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Actualiza Android System WebView o Chrome y vuelve a abrir CYTV (se requiere WebView 108 o posterior).",
+    "connectionMethod": "Elige cómo conectarte",
+    "maintenanceProgress": "Mantén el televisor encendido. CYTV está realizando la acción seleccionada."
   },
   "pt-BR": {
     "detect": "Verificar conexão",
@@ -800,9 +812,11 @@ const words = {
     "seconds": "s",
     "errorPrefix": "Erro",
     "replayError": "Não foi possível restaurar a tela da operação. Verifique o status da TV.",
-    "notificationText": "Configuração da TV em andamento",
-    "notificationChannel": "Instalação do CYTV",
-    "webviewUpdate": "Atualize o Android System WebView ou o Chrome e abra o CYTV novamente (requer WebView 108 ou superior)."
+    "notificationText": "Ação da TV em andamento",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Atualize o Android System WebView ou o Chrome e abra o CYTV novamente (requer WebView 108 ou superior).",
+    "connectionMethod": "Escolha como conectar",
+    "maintenanceProgress": "Mantenha a TV ligada. O CYTV está executando a ação selecionada."
   },
   "pl": {
     "detect": "Sprawdź połączenie",
@@ -913,9 +927,11 @@ const words = {
     "seconds": "s",
     "errorPrefix": "Błąd",
     "replayError": "Nie można przywrócić widoku operacji. Sprawdź stan telewizora.",
-    "notificationText": "Trwa konfiguracja telewizora",
-    "notificationChannel": "Instalacja CYTV",
-    "webviewUpdate": "Zaktualizuj Android System WebView lub Chrome i ponownie otwórz CYTV (wymagany WebView 108 lub nowszy)."
+    "notificationText": "Trwa działanie na telewizorze",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Zaktualizuj Android System WebView lub Chrome i ponownie otwórz CYTV (wymagany WebView 108 lub nowszy).",
+    "connectionMethod": "Wybierz sposób połączenia",
+    "maintenanceProgress": "Pozostaw telewizor włączony. CYTV wykonuje wybrane działanie."
   },
   "ko": {
     "detect": "연결 확인",
@@ -1026,9 +1042,11 @@ const words = {
     "seconds": "초",
     "errorPrefix": "오류",
     "replayError": "작업 화면을 복원할 수 없습니다. TV 상태를 확인하세요.",
-    "notificationText": "TV 설정 진행 중",
-    "notificationChannel": "CYTV 설치",
-    "webviewUpdate": "Android System WebView 또는 Chrome을 업데이트한 후 CYTV를 다시 여세요(WebView 108 이상 필요)."
+    "notificationText": "TV 작업 진행 중",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Android System WebView 또는 Chrome을 업데이트한 후 CYTV를 다시 여세요(WebView 108 이상 필요).",
+    "connectionMethod": "연결 방법 선택",
+    "maintenanceProgress": "TV를 켜 두세요. CYTV가 선택한 작업을 실행하고 있습니다."
   },
   "hi": {
     "detect": "कनेक्शन जाँचें",
@@ -1139,8 +1157,10 @@ const words = {
     "seconds": "सेकंड",
     "errorPrefix": "त्रुटि",
     "replayError": "कार्रवाई की स्क्रीन बहाल नहीं हो सकी। TV की स्थिति जाँचें।",
-    "notificationText": "TV सेटअप जारी है",
-    "notificationChannel": "CYTV इंस्टॉलेशन",
-    "webviewUpdate": "Android System WebView या Chrome अपडेट करें, फिर CYTV दोबारा खोलें (WebView 108+ ज़रूरी है)।"
+    "notificationText": "TV पर कार्रवाई जारी है",
+    "notificationChannel": "CYTV",
+    "webviewUpdate": "Android System WebView या Chrome अपडेट करें, फिर CYTV दोबारा खोलें (WebView 108+ ज़रूरी है)।",
+    "connectionMethod": "कनेक्शन का तरीका चुनें",
+    "maintenanceProgress": "TV चालू रखें। CYTV चुनी गई कार्रवाई कर रहा है।"
   }
 };

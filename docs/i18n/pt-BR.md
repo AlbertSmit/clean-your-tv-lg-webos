@@ -19,6 +19,8 @@ Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois
 
 [Instalador Android](../../android/README.md): inclui os dez idiomas da interface. O controle no canto superior direito mostra o idioma atual; toque para escolher outro. A seleção fica salva no telefone.
 
+No Android, a ação de manutenção escolhida continua visível durante a conexão e mostra seu próprio progresso. A interface usa a fonte do sistema do telefone, com rótulos e textos de ajuda maiores.
+
 O assistente usa inicialmente o idioma do sistema e salva sua escolha explícita. Na TV, abra **Configurações → Idioma** e escolha um idioma ou a opção automática do sistema. As preferências da TV e do instalador são independentes. Veja os códigos no [índice de idiomas](../LANGUAGES.md).
 
 Para a CLI baixada separadamente no macOS/Linux, na pasta extraída:

@@ -19,6 +19,8 @@ Allumez le téléviseur et reliez-le au même réseau local de confiance que l�
 
 [Installateur Android](../../android/README.md) : les dix langues sont disponibles. Le bouton en haut à droite affiche la langue actuelle ; touchez-le pour en choisir une autre. Le choix est enregistré sur le téléphone.
 
+Sur Android, l’action de maintenance choisie reste visible pendant la connexion et affiche sa propre progression. L’interface utilise la police système du téléphone avec des libellés et des aides plus grands.
+
 L’assistant utilise initialement la langue du système et mémorise votre choix explicite. Sur le téléviseur, ouvrez **Paramètres → Langue** et choisissez une langue ou l’option automatique du système. Les préférences du téléviseur et de l’installateur sont indépendantes. Les codes figurent dans l’[index des langues](../LANGUAGES.md).
 
 Pour la CLI téléchargée séparément sous macOS/Linux, depuis son dossier décompressé :

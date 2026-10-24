@@ -19,6 +19,8 @@ Keep the TV on and the computer on the same trusted local network. No always-on 
 
 [Android installer](../../android/README.md): all ten interface languages are available. The top-right control shows the current language; tap it to choose another. Your selection is saved on the phone.
 
+Android status and recovery keep the selected action visible during connection and show its own progress. Text uses the phone’s system font with larger labels and help text.
+
 The desktop wizard selects your system language automatically; its language selector saves an explicit choice. On the TV, open **Settings → Language** and select a language, or the system/automatic option to follow the TV language. Installer and TV preferences are separate. The supported codes are listed in the [language index](../LANGUAGES.md).
 
 For a separately downloaded CLI on macOS/Linux, open a terminal in its extracted directory:

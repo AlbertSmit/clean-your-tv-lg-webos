@@ -65,4 +65,6 @@ Dans Root et No-root, le démarrage est vérifié automatiquement après l’ins
 
 L’écran de mise à jour sépare les versions, l’état et les nouveautés lisibles. Haut/Bas fait défiler les notes ; Gauche/Droite choisit les actions fixes en bas. Après les vérifications automatiques du démarrage, Root rétablit le contrôle de Home s’il était activé ; No-root conserve l’état du Helper séparé. Un réglage désactivé ou une désactivation explicite ou d’urgence reste désactivé.
 
-L’ouverture des réglages de Home lance une recherche de mises à jour en arrière-plan. Un point bleu sur Mises à jour logicielles indique une version plus récente, même si elle nécessite une installation depuis l’ordinateur. Les réglages restent utilisables pendant la recherche.
+L’ouverture des réglages de Home lance une recherche de mises à jour en arrière-plan. Un point orange sur Mises à jour logicielles indique une version plus récente, même si elle nécessite une installation depuis l’ordinateur. Les réglages restent utilisables pendant la recherche.
+
+No-root : ouvrez Réglages de Home → Mode développeur pour le renouvellement automatique, la vérification de session et le diagnostic. L’écran principal conserve un bref état et les erreurs de renouvellement visibles. Retour ramène aux réglages de Home. Les deux éditions regroupent Langue, Mises à jour logicielles et Réglages TV sur la même ligne ; la flèche ouvre chaque option.

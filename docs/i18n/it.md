@@ -65,4 +65,6 @@ In Root e No-root, l’avvio viene confermato automaticamente dopo l’installaz
 
 La schermata di aggiornamento separa versioni, stato e novità leggibili. Su/Giù scorre le note; Sinistra/Destra sceglie le azioni fisse in basso. Dopo i controlli automatici di avvio, Root ripristina il controllo Home se era attivo; No-root conserva lo stato del Helper separato. Le preferenze disattivate e la disattivazione esplicita o di emergenza restano disattivate.
 
-Aprendo le impostazioni Home, gli aggiornamenti vengono cercati in background. Un punto blu su Aggiornamenti software indica una versione più recente, anche quando richiede l’installazione dal computer. Le impostazioni restano utilizzabili durante la verifica.
+Aprendo le impostazioni Home, gli aggiornamenti vengono cercati in background. Un punto arancione su Aggiornamenti software indica una versione più recente, anche quando richiede l’installazione dal computer. Le impostazioni restano utilizzabili durante la verifica.
+
+No-root: apri Impostazioni Home → Modalità sviluppatore per rinnovo automatico, verifica della sessione e diagnostica. La schermata principale mantiene visibili un breve stato e gli errori di rinnovo. Indietro torna alle impostazioni Home. Entrambe le edizioni raggruppano Lingua, Aggiornamenti software e Impostazioni TV nella stessa riga; la freccia apre ogni voce.

@@ -14,9 +14,11 @@
 .renewal-actions button,.root-settings button{box-sizing:border-box;font:inherit;font-size:25px;line-height:1.25;color:#f5f7fa;background:#343941;border:3px solid transparent;border-radius:12px;padding:15px 22px;cursor:pointer;scroll-margin:24px}
 .renewal-actions button:focus,.root-settings button:focus{outline:3px solid #b8d3ff;outline-offset:3px;border-color:#f5f7fa;background:#46556c}
 .renewal-actions button:disabled,.root-settings button:disabled{opacity:.5;cursor:default}
-.settings-links button{flex:1;text-align:left}
-.settings-links button[data-update-available="true"]{position:relative;padding-right:54px}
-.settings-links button[data-update-available="true"]:after{content:"";position:absolute;right:22px;top:50%;margin-top:-6px;width:12px;height:12px;border-radius:50%;background:#b8d3ff}
+.settings-links button{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left}
+.settings-chevron{flex-shrink:0;margin-left:auto;font-size:34px;line-height:1;color:#bfc8d4}
+.settings-chevron:before{content:"›"}
+.settings-update-dot{display:none;flex-shrink:0;width:16px;height:16px;border-radius:50%;background:#ffb347;box-shadow:0 0 0 4px #ffb34726,0 0 14px #ffb34770}
+.settings-links button[data-update-available="true"] .settings-update-dot{display:inline-block}
 .settings-footer{display:flex;justify-content:space-between;align-items:center;gap:24px;border-top:1px solid #414650;margin-top:24px;padding-top:18px}
 .settings-footer p{font-size:21px;margin:0}
 .settings-danger{color:#ffd1bd!important}
@@ -63,3 +65,34 @@
 .root-updates .update-actions button:nth-child(2),#updateInstall{background:#dceaff;color:#142335}
 .root-updates .update-hint,#updatePanel .update-hint{flex-shrink:0;font-size:21px;line-height:1.3;color:#b9c3cf;margin:18px 0 0}
 @media(max-height:800px),(max-width:1000px){.root-updates .root-settings-card,#updatePanel .update-card{padding:24px 32px;height:92vh}.root-updates h1,#updatePanel h2{font-size:34px}.root-updates .root-update-details,#updatePanel .update-versions{font-size:25px}.root-updates .root-update-status,#updatePanel .root-update-status{font-size:22px;margin-bottom:12px}.root-updates .release-notes-content p,#updatePanel .release-notes-content p,.update-notes ul,.update-notes ol{font-size:24px}.root-updates .update-actions button,#updatePanel .update-actions button{font-size:23px;min-height:56px;padding:12px 20px}.root-updates .update-hint,#updatePanel .update-hint{font-size:18px;margin-top:14px}.root-updates .update-actions,#updatePanel .update-actions{margin-top:auto;padding-top:14px}}
+
+/* Compact Home settings retain the same width, type and controls in both editions. */
+.settings-main .settings-home{margin-top:24px}
+.settings-main .settings-status{white-space:pre-line;font-size:23px;line-height:1.4;min-height:32px;margin:10px 0 18px;color:#e2e8f1}
+.settings-main .home-visit-hint{margin-top:14px}
+.settings-main .settings-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.settings-main .settings-links button{width:100%}
+.settings-developer{margin-top:20px}
+.settings-developer button{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:transparent;border-color:#626a76}
+.settings-beta{font-size:19px;color:#efd49a}
+.renewal-summary{display:block;margin-top:8px;color:#ccd1db;font-size:21px;line-height:1.4}
+#renewalPanel .renewal-card.hidden{display:none}
+#renewalToggle{position:relative;min-height:88px;padding-right:128px;text-align:left}
+#developerSettings .renewal-warning{border-left:3px solid #efd49a;padding:12px 18px;background:#efd49a0d;margin:20px 0}
+@media(max-width:1000px){.settings-main .settings-links button{font-size:22px;padding:14px 16px}.settings-main .settings-status{font-size:22px}.renewal-summary{font-size:20px}}
+@media(max-width:700px){.settings-main .settings-links{grid-template-columns:1fr}.settings-heading{flex-wrap:wrap}.settings-footer{flex-wrap:wrap}}
+@media(max-height:800px) and (min-width:701px){
+ .settings-main{padding:24px 32px}
+ .renewal-card.settings-main h2,.root-settings .settings-main h1{font-size:34px}
+ .settings-main .settings-home{margin-top:18px}
+ .renewal-card.settings-main h3,.root-settings .settings-main h2{font-size:26px}
+ .settings-main .settings-status{font-size:21px;margin:8px 0 12px;min-height:30px}
+ .settings-main .home-routing-actions button{min-height:72px;font-size:22px;padding-top:12px;padding-bottom:12px}
+ .settings-main .home-visit-hint{font-size:19px;margin-top:10px}
+ .settings-main .settings-section{margin-top:18px;padding-top:14px}
+ .settings-main .settings-links button,.settings-main .settings-developer button,.settings-main .settings-footer button{font-size:22px;padding:12px 18px}
+ .settings-main .settings-developer{margin-top:16px}
+ .settings-main .renewal-summary{font-size:19px;margin-top:6px}
+ .settings-main .settings-footer{margin-top:18px;padding-top:14px}
+ .settings-main .settings-footer p{font-size:19px}
+}

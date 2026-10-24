@@ -74,7 +74,7 @@
       refreshMode().then(function () { message.textContent = t(error); });
     });
   }
-  var order = [3, 1, 4, 0, 5, 2];
+  var order = [3, 1, 5, 4, 0, 2];
   function focus(index) {
     selected = index;
     if (!buttons[selected].disabled) buttons[selected].focus();
@@ -111,7 +111,7 @@
   function build() {
     panel = document.createElement('section'); panel.className = 'root-settings'; panel.hidden = true;
     panel.setAttribute('role','dialog'); panel.setAttribute('aria-modal','true'); panel.setAttribute('aria-label',t('Home settings'));
-    var card = document.createElement('div'); card.className = 'root-settings-card'; panel.appendChild(card);
+    var card = document.createElement('div'); card.className = 'root-settings-card settings-main'; panel.appendChild(card);
     function text(parent, tag, value, className) {
       var element = document.createElement(tag); element.textContent = t(value);
       if (className) element.className = className;
@@ -119,18 +119,14 @@
     }
     var heading = document.createElement('div'); heading.className = 'settings-heading'; card.appendChild(heading);
     text(heading, 'h1', 'Home settings'); text(heading, 'span', 'Root Edition', 'settings-edition');
-    text(card, 'p', 'Manage Home, software updates and your TV.');
-    var home = document.createElement('section'); home.className = 'settings-section'; card.appendChild(home);
+    var home = document.createElement('section'); home.className = 'settings-home'; card.appendChild(home);
     text(home, 'h2', 'Your Home screen');
-    text(home, 'p', 'Choose where Home and return from apps take you.');
     message = text(home, 'p', '', 'settings-status'); message.setAttribute('aria-live','polite');
     var homeActions = document.createElement('div'); homeActions.className = 'renewal-actions home-routing-actions'; home.appendChild(homeActions);
     var more = document.createElement('section'); more.className = 'settings-section'; card.appendChild(more);
-    text(more, 'h2', 'Updates and TV');
-    text(more, 'p', 'Update Home or open LG settings for picture, sound and network.');
     var links = document.createElement('div'); links.className = 'renewal-actions settings-links'; more.appendChild(links);
     var footer = document.createElement('div'); footer.className = 'settings-footer'; card.appendChild(footer);
-    text(footer, 'p', 'Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.');
+    text(footer, 'p', 'Hold Back for 1.2 seconds to open LG Home.');
     var back = document.createElement('div'); back.className = 'renewal-actions'; footer.appendChild(back);
     buttons = [];
     order.forEach(function (i) {
@@ -141,14 +137,15 @@
       if (i === 1) {
         b.className = 'home-visit-button';
         b.setAttribute('aria-describedby', 'rootHomeVisitHint');
-        target = document.createElement('div'); target.className = 'home-visit-action'; homeActions.appendChild(target);
       }
       b.onclick = function () { selected = i; activate(i); };
       b.onfocus = function () { selected = i; };
+      if (i === 4) { var dot = document.createElement('span'); dot.className = 'settings-update-dot'; dot.setAttribute('aria-hidden','true'); b.appendChild(dot); }
+      if (i === 4 || i === 0 || i === 5) { var arrow = document.createElement('span'); arrow.className = 'settings-chevron'; arrow.setAttribute('aria-hidden','true'); b.appendChild(arrow); }
       target.appendChild(b);
-      if (i === 1) text(target, 'p', 'This button opens LG Home once. Your Home screen choice and settings stay saved.', 'home-visit-hint').id = 'rootHomeVisitHint';
       buttons[i] = b;
     });
+    text(home, 'p', 'Open LG Home once, keeping your Home choice.', 'home-visit-hint').id = 'rootHomeVisitHint';
     document.body.appendChild(panel);
     document.addEventListener('keydown', function (e) {
       if (panel.hidden) return;

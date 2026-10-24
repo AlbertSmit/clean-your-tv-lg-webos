@@ -4,11 +4,23 @@
  function tr(s,p){return window.HomeI18n?HomeI18n.t(s,p):s.replace(/\{(\w+)\}/g,function(m,k){return p&&p[k]!==undefined?p[k]:m;});}function ht(s){return window.HomeI18n?HomeI18n.html(s):s;}
  var panel=document.createElement('section');panel.id='renewalPanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Home settings'));
  panel.setAttribute('aria-modal','true');
- panel.innerHTML=ht('<div class="renewal-card"><div class="settings-heading"><h2>Home settings</h2><span class="settings-edition">No-root Edition</span></div><p>Manage Home, software updates and your TV.</p><section class="settings-section"><h3>Your Home screen</h3><p>Choose where Home and return from apps take you.</p><p id="homeRoutingStatus" class="settings-status" aria-live="polite">Checking Home control…</p><div class="renewal-actions home-routing-actions"><button id="homeRoutingToggle" class="home-routing-switch" role="switch" aria-checked="false" disabled>Change Home</button><div class="home-visit-action"><button id="homeVisit" class="home-visit-button" aria-describedby="homeVisitHint">Open LG Home</button><p id="homeVisitHint" class="home-visit-hint">This button opens LG Home once. Your Home screen choice and settings stay saved.</p></div></div></section><section class="settings-section"><h3>Developer Mode auto-renewal (Beta)</h3><p>Developer Mode keeps Home installed. Auto-renewal tries to extend its session while your TV is on and online.</p><p class="renewal-warning">Beta: renewal is not yet verified on no-root TVs. Keep checking the timer in the Developer Mode app.</p><div id="renewalStatus" aria-live="polite">Checking auto-renewal…</div><div class="renewal-actions"><button id="renewalToggle">Turn on auto-renewal</button><button id="renewalCheck">Check session</button><button id="renewalDiagnostics" aria-expanded="false" aria-controls="renewalDetails">Show diagnostics</button></div><pre id="renewalDetails" class="hidden"></pre></section><section class="settings-section"><h3>Language</h3><div class="renewal-actions"><button id="homeLanguage">Language</button></div></section><section class="settings-section"><h3>Updates and TV</h3><p>Update Home or open LG settings for picture, sound and network.</p><div class="renewal-actions settings-links"><button id="renewalUpdates">Software updates</button><button id="renewalTV">TV settings</button></div></section><div class="settings-footer"><p>Hold Back for 1.2 seconds to open LG Home. Your settings stay saved.</p><div class="renewal-actions"><button id="renewalClose">Back to Home</button></div></div></div>');
+ panel.innerHTML=ht([
+  "<div id=\"settingsMain\" class=\"renewal-card settings-main\"><div class=\"settings-heading\"><h2>Home settings</h2><span class=\"settings-edition\">No-root Edition</span></div><section class=\"settings-home\"><h3>Your Home screen</h3><p id=\"homeRoutingStatus\" class=\"settings-status\" aria-live=\"polite\">Checking Home control…</p>",
+  "<div class=\"renewal-actions home-routing-actions\"><button id=\"homeRoutingToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\" disabled>Change Home</button><button id=\"homeVisit\" class=\"home-visit-button\" aria-describedby=\"homeVisitHint\">Open LG Home</button></div><p id=\"homeVisitHint\" class=\"home-visit-hint\">Open LG Home once, keeping your Home choice.</p>",
+  "</section>",
+  "<div class=\"renewal-actions settings-links settings-section\"><button id=\"homeLanguage\">Language<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalUpdates\">Software updates<span class=\"settings-update-dot\" aria-hidden=\"true\"></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalTV\">TV settings<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"renewal-actions settings-developer\"><button id=\"developerOpen\" aria-controls=\"developerSettings\" aria-describedby=\"renewalSummary\"><span><span>Developer Mode</span> <span class=\"settings-beta\">Beta</span><span id=\"renewalSummary\" class=\"renewal-summary\" aria-live=\"polite\">Checking auto-renewal…</span></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"settings-footer\"><p>Hold Back for 1.2 seconds to open LG Home.</p>",
+  "<div class=\"renewal-actions\"><button id=\"renewalClose\">Back to Home</button></div></div>",
+  "</div><div id=\"developerSettings\" class=\"renewal-card hidden\"><div class=\"settings-heading\"><h2>Developer Mode</h2><span class=\"settings-edition\">Beta</span></div><p>Developer Mode keeps Home installed. Auto-renewal tries to extend its session while your TV is on and online.</p>",
+  "<div class=\"renewal-actions\"><button id=\"renewalToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\">Turn on auto-renewal</button></div><p class=\"renewal-warning\">Beta: renewal is not yet verified on no-root TVs. Keep checking the timer in the Developer Mode app.</p>",
+  "<div id=\"renewalStatus\" aria-live=\"polite\">Checking auto-renewal…</div><div class=\"renewal-actions\"><button id=\"renewalCheck\">Check session</button><button id=\"renewalDiagnostics\" aria-expanded=\"false\" aria-controls=\"renewalDetails\">Show diagnostics</button></div><pre id=\"renewalDetails\" class=\"hidden\"></pre><div class=\"settings-footer\"><div class=\"renewal-actions\"><button id=\"developerBack\">Back</button></div></div>",
+  "</div>"
+ ].join(''));
  document.body.appendChild(panel);
  var status=document.getElementById('renewalStatus'),toggle=document.getElementById('renewalToggle'),check=document.getElementById('renewalCheck'),details=document.getElementById('renewalDetails');
- var previous;
+ var previous,developerOpen=false;
+ var main=document.getElementById('settingsMain'),developer=document.getElementById('developerSettings'),summary=document.getElementById('renewalSummary');
  var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,state=null,busy=false;
+ var developerButtons=['renewalToggle','renewalCheck','renewalDiagnostics','developerBack'].map(function(id){return document.getElementById(id);});
  var checkingUpdates=false;
  function checkUpdates(){
   if(checkingUpdates||!window.HomeUpdates||!window.HomeUpdates.rpc)return;
@@ -22,7 +34,7 @@
   });
  }
  function openNow(){return !panel.classList.contains('hidden');}
- function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled){index=j;buttons[index].focus();return;}}}
+ function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled&&(developerButtons.indexOf(buttons[j])>=0)===developerOpen){index=j;buttons[index].focus();return;}}}
  function rpc(method,callback){
   var bridge,done=false,timer=setTimeout(function(){finish(null);},45000);
   function finish(r){if(done)return;done=true;clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}callback(r);}
@@ -60,11 +72,17 @@
  function date(v){return typeof v==='number'?(window.HomeI18n?HomeI18n.formatDateTime(v):new Date(v).toLocaleString()):tr('Not yet');}
  var labels={healthy:tr('Session checked'),renewed:tr('Renewal confirmed'),retry:tr('Connection failed — retry scheduled'),unverified:tr('LG response could not confirm renewal'),expired:tr('Session expired — open Developer Mode'),unavailable:tr('No readable Developer Mode session'), 'session-changed':tr('Session changed — retry scheduled'),'storage-error':tr('Could not save state'),'internal-error':tr('Check failed')};
  function render(){
+  toggle.setAttribute('aria-checked',String(!!(state&&state.enabled)));
   toggle.textContent=state&&state.enabled?tr('Turn off auto-renewal'):tr('Turn on auto-renewal');
   check.disabled=busy||!state||!state.enabled;toggle.disabled=busy||!state;
   if(!state)return;
   var last=state.last||{};
   var text=state.enabled?tr('Auto-renewal enabled (Beta)'):tr('Auto-renewal off');
+  var brief=text;
+  if(last.status&&last.status!=='healthy'&&last.status!=='renewed')brief+=' · '+(labels[last.status]||tr('Check pending'));
+  if(typeof last.remainingSeconds==='number')brief+=' · '+tr('{hours} hours remaining (estimate)',{hours:Math.floor(Math.max(0,last.remainingSeconds-(Date.now()-last.checkedAt)/1000)/3600)});
+  if(state.error)brief+=' · '+tr('Setup error: {error}. Use Developer Mode manually.',{error:state.error});
+  summary.textContent=brief;summary.classList.toggle('settings-danger',!!state.error||last.status==='expired'||last.status==='unavailable');
   if(last.status)text+='\n'+(labels[last.status]||tr('Check pending'));
   if(typeof last.remainingSeconds==='number')text+=' · '+tr('{hours} hours remaining (estimate)',{hours:Math.floor(Math.max(0,last.remainingSeconds-(Date.now()-last.checkedAt)/1000)/3600)});
   text+='\n'+tr('Last checked: {date}',{date:date(last.checkedAt)})+'\n'+tr('Last confirmed renewal: {date}',{date:date(state.lastRenewedAt)});
@@ -72,8 +90,8 @@
   if(state.error)text+='\n'+tr('Setup error: {error}. Use Developer Mode manually.',{error:state.error});
   status.textContent=text;if(openNow())focus(index);
  }
- function action(method){if(busy)return;busy=true;status.textContent=tr('Working…');toggle.disabled=true;check.disabled=true;
-  rpc(method,function(r){busy=false;if(!r||r.returnValue!==true){state=null;status.textContent=tr('Service unavailable. Install the complete Home package and try again. Manage your Developer Mode timer manually.');toggle.disabled=true;check.disabled=true;if(openNow())focus(index);return;}state=r.state;render();});
+ function action(method){if(busy)return;busy=true;status.textContent=tr('Working…');summary.textContent=tr('Working…');toggle.disabled=true;check.disabled=true;
+  rpc(method,function(r){busy=false;if(!r||r.returnValue!==true){state=null;status.textContent=tr('Service unavailable. Install the complete Home package and try again. Manage your Developer Mode timer manually.');summary.textContent=status.textContent;summary.classList.add('settings-danger');toggle.disabled=true;check.disabled=true;if(openNow())focus(index);return;}state=r.state;render();});
  }
  toggle.onclick=function(){if(state)action(state.enabled?'disable':'enable');};
  check.onclick=function(){action('check');};
@@ -84,6 +102,14 @@
   this.textContent=details.classList.contains('hidden')?tr('Show diagnostics'):tr('Hide diagnostics');
   this.setAttribute('aria-expanded',String(!details.classList.contains('hidden')));
  };
+ function showDeveloper(show){
+  developerOpen=show;main.classList.toggle('hidden',show);developer.classList.toggle('hidden',!show);
+  panel.setAttribute('aria-label',tr(show?'Developer Mode':'Home settings'));
+  if(show){details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');}
+  focus(buttons.indexOf(document.getElementById(show?'renewalToggle':'developerOpen')));
+ }
+ document.getElementById('developerOpen').onclick=function(){showDeveloper(true);};
+ document.getElementById('developerBack').onclick=function(){showDeveloper(false);};
  function close(){panel.classList.add('hidden');if(previous&&previous.focus)previous.focus();}
  document.getElementById('renewalClose').onclick=close;
  document.getElementById('homeLanguage').onclick=function(){if(window.HomeI18n)HomeI18n.openLanguagePicker();};
@@ -93,9 +119,9 @@
  document.addEventListener('keydown',function(e){if(!openNow())return;var k=e.keyCode;
   if([9,37,38,39,40,13,461,27].indexOf(k)<0)return;
   e.preventDefault();e.stopImmediatePropagation();
-  if(k===461||k===27)close();else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
+  if(k===461||k===27){if(developerOpen)showDeveloper(false);else close();}else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
- window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
+ window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
  // No session request, token access or scheduler setup happens on launcher startup.
 }());
 

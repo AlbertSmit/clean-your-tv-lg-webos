@@ -119,7 +119,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Previous Root version and profile restored.",
     "Installed: {version}": "Installed: {version}",
     "Available: {version}": "Available: {version}",
-    "Software updates. Update available.": "Software updates. Update available."
+    "Software updates. Update available.": "Software updates. Update available.",
+    "Open LG Home once, keeping your Home choice.": "Open LG Home once, keeping your Home choice.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Hold Back for 1.2 seconds to open LG Home.",
+    "Developer Mode": "Developer Mode",
+    "Beta": "Beta"
   },
   "de": {
     "A signed Home update is available.": "Ein signiertes Home-Update ist verfügbar.",
@@ -241,7 +245,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Vorherige Root-Version und Profil wiederhergestellt.",
     "Installed: {version}": "Installiert: {version}",
     "Available: {version}": "Verfügbar: {version}",
-    "Software updates. Update available.": "Softwareupdates. Ein Update ist verfügbar."
+    "Software updates. Update available.": "Softwareupdates. Ein Update ist verfügbar.",
+    "Open LG Home once, keeping your Home choice.": "LG Home einmal öffnen; die Home-Auswahl bleibt gespeichert.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Zurück 1,2 Sekunden halten, um LG Home zu öffnen.",
+    "Developer Mode": "Entwicklermodus",
+    "Beta": "Beta"
   },
   "es": {
     "A signed Home update is available.": "Hay una actualización firmada de Home disponible.",
@@ -363,7 +371,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Se restauraron la versión anterior de Root y el perfil.",
     "Installed: {version}": "Instalada: {version}",
     "Available: {version}": "Disponible: {version}",
-    "Software updates. Update available.": "Actualizaciones de software. Hay una actualización disponible."
+    "Software updates. Update available.": "Actualizaciones de software. Hay una actualización disponible.",
+    "Open LG Home once, keeping your Home choice.": "Abre LG Home una vez sin cambiar tu pantalla de inicio.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Mantén Atrás 1,2 segundos para abrir LG Home.",
+    "Developer Mode": "Modo de desarrollador",
+    "Beta": "Beta"
   },
   "pt-BR": {
     "A signed Home update is available.": "Uma atualização assinada do Home está disponível.",
@@ -485,7 +497,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Versão anterior do Root e perfil restaurados.",
     "Installed: {version}": "Instalada: {version}",
     "Available: {version}": "Disponível: {version}",
-    "Software updates. Update available.": "Atualizações de software. Há uma atualização disponível."
+    "Software updates. Update available.": "Atualizações de software. Há uma atualização disponível.",
+    "Open LG Home once, keeping your Home choice.": "Abra o LG Home uma vez sem mudar sua tela inicial.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Segure Voltar por 1,2 segundos para abrir o LG Home.",
+    "Developer Mode": "Modo de Desenvolvedor",
+    "Beta": "Beta"
   },
   "fr": {
     "A signed Home update is available.": "Une mise à jour signée de Home est disponible.",
@@ -607,7 +623,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "La version précédente de Root et le profil ont été restaurés.",
     "Installed: {version}": "Version installée : {version}",
     "Available: {version}": "Version disponible : {version}",
-    "Software updates. Update available.": "Mises à jour logicielles. Une mise à jour est disponible."
+    "Software updates. Update available.": "Mises à jour logicielles. Une mise à jour est disponible.",
+    "Open LG Home once, keeping your Home choice.": "Ouvrez LG Home une fois en conservant votre accueil.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Maintenez Retour 1,2 seconde pour ouvrir LG Home.",
+    "Developer Mode": "Mode développeur",
+    "Beta": "Bêta"
   },
   "it": {
     "A signed Home update is available.": "È disponibile un aggiornamento firmato di Home.",
@@ -729,7 +749,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Versione precedente di Root e profilo ripristinati.",
     "Installed: {version}": "Installata: {version}",
     "Available: {version}": "Disponibile: {version}",
-    "Software updates. Update available.": "Aggiornamenti software. È disponibile un aggiornamento."
+    "Software updates. Update available.": "Aggiornamenti software. È disponibile un aggiornamento.",
+    "Open LG Home once, keeping your Home choice.": "Apri LG Home una volta mantenendo la schermata Home scelta.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Tieni premuto Indietro per 1,2 secondi per aprire LG Home.",
+    "Developer Mode": "Modalità sviluppatore",
+    "Beta": "Beta"
   },
   "ko": {
     "A signed Home update is available.": "서명된 Home 업데이트가 있습니다.",
@@ -851,7 +875,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "이전 Root 버전과 프로필이 복원되었습니다.",
     "Installed: {version}": "설치됨: {version}",
     "Available: {version}": "사용 가능: {version}",
-    "Software updates. Update available.": "소프트웨어 업데이트. 업데이트가 있습니다."
+    "Software updates. Update available.": "소프트웨어 업데이트. 업데이트가 있습니다.",
+    "Open LG Home once, keeping your Home choice.": "홈 화면 선택을 유지하고 LG Home을 한 번 엽니다.",
+    "Hold Back for 1.2 seconds to open LG Home.": "뒤로 버튼을 1.2초 동안 누르면 LG Home이 열립니다.",
+    "Developer Mode": "개발자 모드",
+    "Beta": "베타"
   },
   "hi": {
     "A signed Home update is available.": "Home का हस्ताक्षरित अपडेट उपलब्ध है।",
@@ -973,7 +1001,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Root का पिछला संस्करण और प्रोफ़ाइल बहाल हो गए हैं।",
     "Installed: {version}": "स्थापित: {version}",
     "Available: {version}": "उपलब्ध: {version}",
-    "Software updates. Update available.": "सॉफ़्टवेयर अपडेट। अपडेट उपलब्ध है।"
+    "Software updates. Update available.": "सॉफ़्टवेयर अपडेट। अपडेट उपलब्ध है।",
+    "Open LG Home once, keeping your Home choice.": "होम स्क्रीन की पसंद बनाए रखते हुए LG Home एक बार खोलें।",
+    "Hold Back for 1.2 seconds to open LG Home.": "LG Home खोलने के लिए वापस बटन 1.2 सेकंड दबाए रखें।",
+    "Developer Mode": "डेवलपर मोड",
+    "Beta": "बीटा"
   },
   "pl": {
     "A signed Home update is available.": "Dostępna jest podpisana aktualizacja Home.",
@@ -1095,7 +1127,11 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Przywrócono poprzednią wersję Root i profil.",
     "Installed: {version}": "Zainstalowano: {version}",
     "Available: {version}": "Dostępna: {version}",
-    "Software updates. Update available.": "Aktualizacje oprogramowania. Dostępna jest aktualizacja."
+    "Software updates. Update available.": "Aktualizacje oprogramowania. Dostępna jest aktualizacja.",
+    "Open LG Home once, keeping your Home choice.": "Otwórz LG Home jednorazowo, zachowując wybór ekranu Home.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Przytrzymaj Wstecz przez 1,2 sekundy, aby otworzyć LG Home.",
+    "Developer Mode": "Tryb dewelopera",
+    "Beta": "Beta"
   },
   "ru": {
     "A signed Home update is available.": "Доступно подписанное обновление Home.",
@@ -1217,6 +1253,10 @@ HomeI18n.add({
     "Previous Root version and profile restored.": "Предыдущая версия Root и профиль восстановлены.",
     "Installed: {version}": "Установлено: {version}",
     "Available: {version}": "Доступно: {version}",
-    "Software updates. Update available.": "Обновление ПО. Доступна новая версия."
+    "Software updates. Update available.": "Обновление ПО. Доступна новая версия.",
+    "Open LG Home once, keeping your Home choice.": "Открыть LG Home один раз, сохранив выбранный экран Home.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Удерживайте Назад 1,2 секунды для открытия LG Home.",
+    "Developer Mode": "Режим разработчика",
+    "Beta": "Бета"
   }
 });

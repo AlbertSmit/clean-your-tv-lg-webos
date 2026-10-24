@@ -65,4 +65,6 @@ In Root und No-root wird die Startbereitschaft nach der Installation automatisch
 
 Der Update-Bildschirm trennt Versionen, Status und lesbare Neuerungen. Oben/Unten blättert durch die Änderungen, Links/Rechts wählt die festen Aktionen darunter. Nach automatischen Startprüfungen stellt Root die zuvor aktivierte Home-Steuerung wieder her; No-root erhält den Zustand des separaten Helpers. Deaktivierte Einstellungen sowie ausdrückliches oder Notfall-Ausschalten bleiben erhalten.
 
-Beim Öffnen der Home-Einstellungen wird im Hintergrund nach Updates gesucht. Ein blauer Punkt bei Softwareupdates zeigt eine neuere Version an, auch wenn sie die Einrichtung am Computer erfordert. Die Einstellungen bleiben während der Prüfung bedienbar.
+Beim Öffnen der Home-Einstellungen wird im Hintergrund nach Updates gesucht. Ein orangefarbener Punkt bei Softwareupdates zeigt eine neuere Version an, auch wenn sie die Einrichtung am Computer erfordert. Die Einstellungen bleiben während der Prüfung bedienbar.
+
+No-root: Öffne Home-Einstellungen → Entwicklermodus für automatische Verlängerung, Sitzungsprüfung und Diagnose. Auf der Hauptseite bleiben der Kurzstatus und Verlängerungsfehler sichtbar. Zurück führt zu den Home-Einstellungen. Beide Editionen zeigen Sprache, Softwareupdates und TV-Einstellungen in derselben Zeile; der Pfeil öffnet den jeweiligen Eintrag.

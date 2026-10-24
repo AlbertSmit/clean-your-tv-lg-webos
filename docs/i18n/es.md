@@ -65,4 +65,6 @@ En Root y No-root, el inicio se verifica automáticamente después de la instala
 
 La pantalla de actualización separa versiones, estado y novedades legibles. Arriba/Abajo desplaza las notas; Izquierda/Derecha elige las acciones fijas de abajo. Tras las comprobaciones automáticas de inicio, Root restaura el control de Home si estaba activado; No-root conserva el estado del Helper independiente. Si estaba desactivado o se desactiva de forma explícita o de emergencia, sigue desactivado.
 
-Al abrir los ajustes de Home se buscan actualizaciones en segundo plano. Un punto azul en Actualizaciones de software indica una versión más reciente, incluso si requiere instalación desde el ordenador. Puedes seguir usando los ajustes durante la búsqueda.
+Al abrir los ajustes de Home se buscan actualizaciones en segundo plano. Un punto naranja en Actualizaciones de software indica una versión más reciente, incluso si requiere instalación desde el ordenador. Puedes seguir usando los ajustes durante la búsqueda.
+
+No-root: abre Ajustes de Home → Modo de desarrollador para la renovación automática, la comprobación de sesión y el diagnóstico. La pantalla principal mantiene visibles el estado resumido y los errores de renovación. Atrás vuelve a los ajustes de Home. Ambas ediciones agrupan Idioma, Actualizaciones de software y Ajustes del TV en la misma fila; la flecha abre cada opción.

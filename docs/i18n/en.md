@@ -65,4 +65,6 @@ In Root and No-root, startup health is confirmed automatically after installatio
 
 The update screen now separates versions, status and readable release notes. Up/Down reads the notes; Left/Right selects the fixed actions below. After automatic startup checks, Root restores previously enabled Home control; No-root preserves the separate Helper state. Disabled preferences and explicit or emergency off remain off.
 
-Opening Home settings checks for updates in the background. A blue dot on Software updates means a newer version is available, including releases that require computer setup. Settings stay usable during the check.
+Opening Home settings checks for updates in the background. An orange dot on Software updates means a newer version is available, including releases that require computer setup. Settings stay usable during the check.
+
+No-root: open Home settings → Developer Mode for auto-renewal, session checks and diagnostics. The main screen keeps a brief status and any renewal errors visible. Back returns to Home settings. Both editions place Language, Software updates and TV settings in the same row; an arrow opens each item.

@@ -65,4 +65,6 @@ No Root e no No-root, a inicialização é confirmada automaticamente após a in
 
 A tela de atualização separa versões, estado e novidades legíveis. Cima/Baixo percorre as notas; Esquerda/Direita seleciona as ações fixas abaixo. Após a verificação automática de inicialização, o Root restaura o controle do Home se estava ligado; o No-root preserva o estado do Helper separado. Preferências desligadas e desativação explícita ou de emergência permanecem desligadas.
 
-Ao abrir as configurações do Home, as atualizações são verificadas em segundo plano. Um ponto azul em Atualizações de software indica uma versão mais recente, inclusive quando exige instalação pelo computador. As configurações continuam disponíveis durante a verificação.
+Ao abrir as configurações do Home, as atualizações são verificadas em segundo plano. Um ponto laranja em Atualizações de software indica uma versão mais recente, inclusive quando exige instalação pelo computador. As configurações continuam disponíveis durante a verificação.
+
+No-root: abra Configurações do Home → Modo de Desenvolvedor para renovação automática, verificação de sessão e diagnóstico. A tela principal mantém um resumo do estado e os erros de renovação visíveis. Voltar retorna às configurações do Home. As duas edições colocam Idioma, Atualizações de software e Configurações da TV na mesma linha; a seta abre cada item.

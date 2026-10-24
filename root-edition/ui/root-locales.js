@@ -135,7 +135,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Home control remains off because it was disabled during the update.",
     "Rollback remains available until the next update.": "Rollback remains available until the next update.",
     "Previous Root version and profile restored.": "Previous Root version and profile restored.",
-    "Software updates. Update available.": "Software updates. Update available."
+    "Software updates. Update available.": "Software updates. Update available.",
+    "Open LG Home once, keeping your Home choice.": "Open LG Home once, keeping your Home choice.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Hold Back for 1.2 seconds to open LG Home.",
+    "Developer Mode": "Developer Mode",
+    "Beta": "Beta"
   },
   "de": {
     "Checking the updated launcher and restored settings…": "Der aktualisierte Home-Bildschirm und die wiederhergestellten Einstellungen werden geprüft…",
@@ -272,7 +276,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Die Home-Steuerung bleibt aus, weil sie während des Updates deaktiviert wurde.",
     "Rollback remains available until the next update.": "Die Rückkehr bleibt bis zum nächsten Update verfügbar.",
     "Previous Root version and profile restored.": "Vorherige Root-Version und Profil wiederhergestellt.",
-    "Software updates. Update available.": "Softwareupdates. Ein Update ist verfügbar."
+    "Software updates. Update available.": "Softwareupdates. Ein Update ist verfügbar.",
+    "Open LG Home once, keeping your Home choice.": "LG Home einmal öffnen; die Home-Auswahl bleibt gespeichert.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Zurück 1,2 Sekunden halten, um LG Home zu öffnen.",
+    "Developer Mode": "Entwicklermodus",
+    "Beta": "Beta"
   },
   "es": {
     "Checking the updated launcher and restored settings…": "Comprobando Home actualizado y los ajustes restaurados…",
@@ -409,7 +417,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "El control de Home sigue desactivado porque se desactivó durante la actualización.",
     "Rollback remains available until the next update.": "La restauración sigue disponible hasta la próxima actualización.",
     "Previous Root version and profile restored.": "Se restauraron la versión anterior de Root y el perfil.",
-    "Software updates. Update available.": "Actualizaciones de software. Hay una actualización disponible."
+    "Software updates. Update available.": "Actualizaciones de software. Hay una actualización disponible.",
+    "Open LG Home once, keeping your Home choice.": "Abre LG Home una vez sin cambiar tu pantalla de inicio.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Mantén Atrás 1,2 segundos para abrir LG Home.",
+    "Developer Mode": "Modo de desarrollador",
+    "Beta": "Beta"
   },
   "pt-BR": {
     "Checking the updated launcher and restored settings…": "Verificando o Home atualizado e as configurações restauradas…",
@@ -546,7 +558,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "O controle do Home continua desligado porque foi desativado durante a atualização.",
     "Rollback remains available until the next update.": "A reversão continua disponível até a próxima atualização.",
     "Previous Root version and profile restored.": "Versão anterior do Root e perfil restaurados.",
-    "Software updates. Update available.": "Atualizações de software. Há uma atualização disponível."
+    "Software updates. Update available.": "Atualizações de software. Há uma atualização disponível.",
+    "Open LG Home once, keeping your Home choice.": "Abra o LG Home uma vez sem mudar sua tela inicial.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Segure Voltar por 1,2 segundos para abrir o LG Home.",
+    "Developer Mode": "Modo de Desenvolvedor",
+    "Beta": "Beta"
   },
   "fr": {
     "Checking the updated launcher and restored settings…": "Vérification de Home mis à jour et des réglages restaurés…",
@@ -683,7 +699,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Le contrôle de Home reste désactivé car il a été désactivé pendant la mise à jour.",
     "Rollback remains available until the next update.": "Le retour en arrière reste disponible jusqu’à la prochaine mise à jour.",
     "Previous Root version and profile restored.": "La version précédente de Root et le profil ont été restaurés.",
-    "Software updates. Update available.": "Mises à jour logicielles. Une mise à jour est disponible."
+    "Software updates. Update available.": "Mises à jour logicielles. Une mise à jour est disponible.",
+    "Open LG Home once, keeping your Home choice.": "Ouvrez LG Home une fois en conservant votre accueil.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Maintenez Retour 1,2 seconde pour ouvrir LG Home.",
+    "Developer Mode": "Mode développeur",
+    "Beta": "Bêta"
   },
   "it": {
     "Checking the updated launcher and restored settings…": "Verifica di Home aggiornato e delle impostazioni ripristinate…",
@@ -820,7 +840,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Il controllo Home resta disattivato perché è stato disattivato durante l’aggiornamento.",
     "Rollback remains available until the next update.": "Il ripristino rimane disponibile fino al prossimo aggiornamento.",
     "Previous Root version and profile restored.": "Versione precedente di Root e profilo ripristinati.",
-    "Software updates. Update available.": "Aggiornamenti software. È disponibile un aggiornamento."
+    "Software updates. Update available.": "Aggiornamenti software. È disponibile un aggiornamento.",
+    "Open LG Home once, keeping your Home choice.": "Apri LG Home una volta mantenendo la schermata Home scelta.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Tieni premuto Indietro per 1,2 secondi per aprire LG Home.",
+    "Developer Mode": "Modalità sviluppatore",
+    "Beta": "Beta"
   },
   "ko": {
     "Checking the updated launcher and restored settings…": "업데이트된 Home과 복원된 설정을 확인하는 중…",
@@ -957,7 +981,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "업데이트 중 Home 제어를 껐으므로 꺼진 상태로 유지됩니다.",
     "Rollback remains available until the next update.": "다음 업데이트 전까지 이전 버전으로 복원할 수 있습니다.",
     "Previous Root version and profile restored.": "이전 Root 버전과 프로필이 복원되었습니다.",
-    "Software updates. Update available.": "소프트웨어 업데이트. 업데이트가 있습니다."
+    "Software updates. Update available.": "소프트웨어 업데이트. 업데이트가 있습니다.",
+    "Open LG Home once, keeping your Home choice.": "홈 화면 선택을 유지하고 LG Home을 한 번 엽니다.",
+    "Hold Back for 1.2 seconds to open LG Home.": "뒤로 버튼을 1.2초 동안 누르면 LG Home이 열립니다.",
+    "Developer Mode": "개발자 모드",
+    "Beta": "베타"
   },
   "hi": {
     "Checking the updated launcher and restored settings…": "अपडेट किए गए Home और बहाल सेटिंग की जाँच हो रही है…",
@@ -1094,7 +1122,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "अपडेट के दौरान बंद किए जाने के कारण Home नियंत्रण बंद रहता है।",
     "Rollback remains available until the next update.": "अगले अपडेट तक पिछले संस्करण पर वापस जा सकते हैं।",
     "Previous Root version and profile restored.": "Root का पिछला संस्करण और प्रोफ़ाइल बहाल हो गए हैं।",
-    "Software updates. Update available.": "सॉफ़्टवेयर अपडेट। अपडेट उपलब्ध है।"
+    "Software updates. Update available.": "सॉफ़्टवेयर अपडेट। अपडेट उपलब्ध है।",
+    "Open LG Home once, keeping your Home choice.": "होम स्क्रीन की पसंद बनाए रखते हुए LG Home एक बार खोलें।",
+    "Hold Back for 1.2 seconds to open LG Home.": "LG Home खोलने के लिए वापस बटन 1.2 सेकंड दबाए रखें।",
+    "Developer Mode": "डेवलपर मोड",
+    "Beta": "बीटा"
   },
   "pl": {
     "Checking the updated launcher and restored settings…": "Sprawdzanie zaktualizowanego Home i przywróconych ustawień…",
@@ -1231,7 +1263,11 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Sterowanie Home pozostaje wyłączone, ponieważ zostało wyłączone podczas aktualizacji.",
     "Rollback remains available until the next update.": "Przywracanie pozostaje dostępne do następnej aktualizacji.",
     "Previous Root version and profile restored.": "Przywrócono poprzednią wersję Root i profil.",
-    "Software updates. Update available.": "Aktualizacje oprogramowania. Dostępna jest aktualizacja."
+    "Software updates. Update available.": "Aktualizacje oprogramowania. Dostępna jest aktualizacja.",
+    "Open LG Home once, keeping your Home choice.": "Otwórz LG Home jednorazowo, zachowując wybór ekranu Home.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Przytrzymaj Wstecz przez 1,2 sekundy, aby otworzyć LG Home.",
+    "Developer Mode": "Tryb dewelopera",
+    "Beta": "Beta"
   },
   "ru": {
     "Checking the updated launcher and restored settings…": "Проверяем обновлённый Home и восстановленные настройки…",
@@ -1368,6 +1404,10 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Home control remains off because it was disabled during the update.": "Управление Home осталось выключенным: его отключили во время обновления.",
     "Rollback remains available until the next update.": "Откат доступен до следующего обновления.",
     "Previous Root version and profile restored.": "Предыдущая версия Root и профиль восстановлены.",
-    "Software updates. Update available.": "Обновление ПО. Доступна новая версия."
+    "Software updates. Update available.": "Обновление ПО. Доступна новая версия.",
+    "Open LG Home once, keeping your Home choice.": "Открыть LG Home один раз, сохранив выбранный экран Home.",
+    "Hold Back for 1.2 seconds to open LG Home.": "Удерживайте Назад 1,2 секунды для открытия LG Home.",
+    "Developer Mode": "Режим разработчика",
+    "Beta": "Бета"
   }
 });

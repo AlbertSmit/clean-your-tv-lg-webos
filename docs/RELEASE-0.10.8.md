@@ -3,6 +3,12 @@
 Includes cytv **0.2.11**, Home **1.3.4**, Helper **0.6.16**,
 Root **0.1.8**, and No-root Updater **0.1.5**.
 
+The installer also includes the ARM32 compatibility repair for issue #15: it
+checks the `/bin/sh` ELF userspace ABI instead of rejecting an ARM64 kernel
+from `uname` alone. Diagnostics report `tv.kernel_arch`, `userland_abi` and
+`arm32_supported`. This avoids misclassifying compatible No-root TVs while
+retaining explicit checks for the Helper’s required ARM32 execution support.
+
 No-root Home reads its installed `appinfo.json` version when reporting startup
 health. It no longer reports the obsolete hardcoded 1.2.2. Invalid, unreadable
 or foreign manifests do not produce a health acknowledgement.

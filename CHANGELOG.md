@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.0 — Stable distribution
+
+- Ship the existing No-root and Root features as a stable, model-scoped distribution; retain documented firmware and recovery limitations.
+- Include cytv 0.2.14 with bounded waiting for old Root processes before uninstall completes, preventing a false removal failure.
+- Keep Home 1.3.6, Helper 0.6.17, Root 0.1.10 and Updater 0.1.5 unchanged from v0.10.10.
+- Refresh Android to 0.1.5-preview (code 6) with the current installer; Android and Developer Mode renewal retain preview/Beta status.
+- Record the bounded release checks in docs/RELEASE-1.0.0.md.
+
 ## v0.10.10 — C4 state recovery and maintenance screens
 
 - Include the Home/Root compact settings and desktop/Android maintenance improvements merged since v0.10.9.

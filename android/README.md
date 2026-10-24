@@ -1,4 +1,4 @@
-# CYTV for Android — 0.1.3 preview
+# CYTV for Android — 0.1.5 preview
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 

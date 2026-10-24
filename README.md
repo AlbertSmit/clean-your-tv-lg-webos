@@ -31,7 +31,7 @@ handling moved from an external watcher to an on-TV native helper.
 
 Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
 
-The v0.10.9 release selects the system language automatically and saves
+The v1.0.0 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
 may predate these features.
@@ -49,21 +49,21 @@ URLs, so they follow the latest published release without a version in the link.
 
 Windows downloads the graphical ZIP: use **Extract All**, then open
 `cytv-desktop/cytv-desktop.exe` with its `_internal` folder beside it. Windows
-publisher signing is not configured. Android **0.1.3-preview** is an ARM64,
+publisher signing is not configured. Android **0.1.5-preview** is an ARM64,
 debug-signed APK; see [Android preview and requirements](android/README.md).
 These downloads do not establish physical-TV compatibility.
 
 One wizard installs either edition. Root activates and opens Home immediately,
 without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.9.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.0.0.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.9 with persistent activation and Settings updates; earlier C3 evidence keeps its original scope | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.10 with persistent activation and Settings updates; earlier C3 evidence keeps its original scope | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -220,9 +220,9 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.9 distribution contains cytv **0.2.12**, Home **1.3.5**, Helper
-**0.6.16**, Root **0.1.9** and No-root Updater **0.1.5**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.9.md)
+The v1.0.0 distribution contains cytv **0.2.14**, Home **1.3.6**, Helper
+**0.6.17**, Root **0.1.10** and No-root Updater **0.1.5**. Source versions are
+recorded in `release-versions.json`; [release notes](docs/RELEASE-1.0.0.md)
 explain packaging and remaining checks.
 
 Hardware records describe particular artifacts. Earlier C3/C4 reports do not

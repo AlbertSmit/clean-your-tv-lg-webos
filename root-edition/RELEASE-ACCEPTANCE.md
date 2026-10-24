@@ -2,6 +2,14 @@
 
 Distribution references reviewed 2026-10-24; hardware records below are dated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
 
+## 1.0.0 bounded verification
+
+The 2026-10-24 supervised Root 0.1.10 / cytv 0.2.14 session passed installation,
+remote controls, standby/wake and emergency exit on C3, with independent LG Home
+readback. Explicitly approved removal also passed. See the [1.0.0 validation
+record](../docs/RELEASE-1.0.0-VALIDATION.md) for exact hashes and scope. Historical
+records below retain their original artifact versions and limitations.
+
 ## 2026-10-24 startup correction
 
 The installed shutdown/observer runtime correction was tested with two webOS

@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 (async()=>{
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  try {
- const page=await browser.newPage({viewport:{width:1920,height:1080}}), errors=[];
+ const page=await browser.newPage({viewport:{width:1920,height:1080},locale:'en'}), errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(()=>{
   window.calls=[]; window.offline=false;

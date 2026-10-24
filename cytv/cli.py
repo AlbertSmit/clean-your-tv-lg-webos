@@ -120,7 +120,7 @@ def choose_profile(args, store, ask, write, search, inspect):
     return state.target(**profile)
 
 
-def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None):
+def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None, payload_root=None):
     raw_args = list(sys.argv[1:] if argv is None else argv)
     requested = next((arg.split('=', 1)[1] for arg in raw_args if arg.startswith('--language=')), None)
     if '--language' in raw_args and raw_args.index('--language') + 1 < len(raw_args):
@@ -148,7 +148,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
     store, profile, phase, tv_info = state.Store(args.data_dir), None, 'select-tv', {}
     try:
         if args.check_payload:
-            manifest = package.verify_payload(payload_dir())
+            manifest = package.verify_payload(Path(payload_root) if payload_root is not None else payload_dir())
             write(f"Embedded payload verified: {len(manifest['files'])} public files; no TV contacted.")
             return 0
         if args.migrate_home and (args.command != 'install' or args.edition == 'no-root'):
@@ -203,7 +203,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             if not prompts.confirm(verb + '?', ask, write, default=args.command == 'install'):
                 write('Cancelled. No TV changes were made.')
                 return 0
-        payload, manifest = payload_dir(), {}
+        payload, manifest = Path(payload_root) if payload_root is not None else payload_dir(), {}
         if args.command == 'install':
             try:
                 manifest = package.verify_payload(payload)

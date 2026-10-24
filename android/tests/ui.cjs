@@ -1,0 +1,52 @@
+const { chromium } = require('playwright');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const fs = require('node:fs');
+
+(async () => {
+  const browser = await chromium.launch({headless: true, executablePath: process.env.CYTV_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+  const page = await browser.newPage({viewport:{width:412,height:892},deviceScaleFactor:2});
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.addInitScript(() => {
+    window.requests = [];
+    window.CYTV = {snapshot:()=> '[]', hasKey:()=>false,
+      start:config=>window.requests.push(JSON.parse(config)),
+      answer:value=>window.requests.push(JSON.parse(value)), importKey:()=>{}};
+  });
+  await page.goto('file://' + path.resolve(__dirname,'../app/src/main/assets/ui/index.html'));
+  await page.getByRole('button',{name:'Подключить телевизор',exact:true}).click();
+  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
+  assert.equal(await page.locator('#host').getAttribute('aria-invalid'), 'true');
+  await page.locator('#host').fill('192.168.1.999');
+  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
+  assert.equal((await page.evaluate(()=>window.requests)).length,0);
+  await page.locator('#host').fill('192.168.1.50');
+  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
+  assert.equal((await page.evaluate(()=>window.requests))[0].edition,'no-root');
+  await page.evaluate(()=>receiveNative({kind:'started',config:{host:'192.168.1.50',edition:'no-root',action:'install'}}));
+  await page.evaluate(()=>receiveNative({kind:'trust',id:'test-trust',fingerprint:'SHA256:example',root:false}));
+  await page.getByRole('button',{name:'Доверять и продолжить',exact:true}).click();
+  assert.equal((await page.evaluate(()=>window.requests)).at(-1).value,'yes');
+  await page.evaluate(()=>receiveNative({kind:'secret',id:'test-secret',text:'Developer Mode passphrase:'}));
+  await page.locator('#prompt-value').fill('SECRET-TEST');
+  await page.getByRole('button',{name:'Продолжить',exact:true}).click();
+  assert.equal(await page.locator('body').innerText().then(t=>t.includes('SECRET-TEST')),false);
+  await page.evaluate(()=>receiveNative({kind:'finished',code:2}));
+  assert.equal(await page.getByRole('button',{name:'Проверить состояние',exact:true}).count(),1);
+  await page.getByRole('button',{name:'Вернуться к подключению',exact:true}).click();
+  await page.getByRole('button',{name:'Назад',exact:true}).click();
+  await page.getByRole('radio',{name:/Root Уже есть root/}).click();
+  await page.getByRole('button',{name:'Подключить телевизор',exact:true}).click();
+  assert.equal(await page.locator('#port').inputValue(),'22');
+  await page.getByRole('button',{name:'SSH-ключ',exact:true}).click();
+  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
+  assert.equal(await page.locator('#key-error').isVisible(),true);
+  for (const width of [320,375,412,768,1024]) {
+    await page.setViewportSize({width,height:892});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth),true,`overflow at ${width}`);
+  }
+  assert.deepEqual(errors,[]);
+  console.log('Android UI: validation, both editions, explicit trust, secret separation, recovery and responsive widths passed.');
+  await browser.close();
+})().catch(e=>{console.error(e);process.exitCode=1});

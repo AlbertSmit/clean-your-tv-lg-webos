@@ -1,6 +1,13 @@
 // Root settings and independent updater translations.
 if (window.HomeI18n) window.HomeI18n.add({
   "en": {
+    "Recovery": "Recovery",
+    "Rollback version: {version}": "Rollback version: {version}",
+    "No saved update is available to roll back.": "No saved update is available to roll back.",
+    "This update is already confirmed. Rollback is no longer available.": "This update is already confirmed. Rollback is no longer available.",
+    "The previous version has already been restored.": "The previous version has already been restored.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Rollback is blocked until the installer has definitely stopped. Refresh status to check.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Restore Home {version} and the saved settings? Keep the TV powered on.",
     "Home settings": "Home settings",
     "Root Edition": "Root Edition",
     "Manage Home, software updates and your TV.": "Manage Home, software updates and your TV.",
@@ -125,6 +132,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "The previous Home version and saved settings will be restored."
   },
   "de": {
+    "Recovery": "Wiederherstellung",
+    "Rollback version: {version}": "Version für die Rückkehr: {version}",
+    "No saved update is available to roll back.": "Kein gespeichertes Update für die Rückkehr verfügbar.",
+    "This update is already confirmed. Rollback is no longer available.": "Dieses Update wurde bereits bestätigt. Eine Rückkehr ist nicht mehr möglich.",
+    "The previous version has already been restored.": "Die vorherige Version wurde bereits wiederhergestellt.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Die Rückkehr ist gesperrt, bis das Installationsprogramm sicher beendet ist. Aktualisiere den Status zur Prüfung.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Home {version} und die gespeicherten Einstellungen wiederherstellen? Lass den Fernseher eingeschaltet.",
     "Home settings": "Home-Einstellungen",
     "Root Edition": "Root-Version",
     "Manage Home, software updates and your TV.": "Verwalte Home, Softwareupdates und deinen Fernseher.",
@@ -249,6 +263,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Die vorherige Home-Version und die gespeicherten Einstellungen werden wiederhergestellt."
   },
   "es": {
+    "Recovery": "Recuperación",
+    "Rollback version: {version}": "Versión para restaurar: {version}",
+    "No saved update is available to roll back.": "No hay una actualización guardada para restaurar.",
+    "This update is already confirmed. Rollback is no longer available.": "Esta actualización ya está confirmada. Ya no se puede volver atrás.",
+    "The previous version has already been restored.": "La versión anterior ya se ha restaurado.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "La restauración está bloqueada hasta confirmar que el instalador se ha detenido. Actualiza el estado para comprobarlo.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "¿Restaurar Home {version} y los ajustes guardados? Mantén el televisor encendido.",
     "Home settings": "Ajustes de Home",
     "Root Edition": "Edición Root",
     "Manage Home, software updates and your TV.": "Gestiona Home, las actualizaciones y tu televisor.",
@@ -373,6 +394,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Se restaurarán la versión anterior de Home y los ajustes guardados."
   },
   "pt-BR": {
+    "Recovery": "Recuperação",
+    "Rollback version: {version}": "Versão para restaurar: {version}",
+    "No saved update is available to roll back.": "Não há atualização salva para reverter.",
+    "This update is already confirmed. Rollback is no longer available.": "Esta atualização já foi confirmada. A reversão não está mais disponível.",
+    "The previous version has already been restored.": "A versão anterior já foi restaurada.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "A reversão fica bloqueada até confirmar que o instalador parou. Atualize o status para verificar.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Restaurar o Home {version} e as configurações salvas? Mantenha a TV ligada.",
     "Home settings": "Configurações do Home",
     "Root Edition": "Edição Root",
     "Manage Home, software updates and your TV.": "Gerencie o Home, as atualizações e sua TV.",
@@ -497,6 +525,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "A versão anterior do Home e as configurações salvas serão restauradas."
   },
   "fr": {
+    "Recovery": "Récupération",
+    "Rollback version: {version}": "Version à restaurer : {version}",
+    "No saved update is available to roll back.": "Aucune mise à jour enregistrée ne permet un retour en arrière.",
+    "This update is already confirmed. Rollback is no longer available.": "Cette mise à jour est déjà confirmée. Le retour en arrière est indisponible.",
+    "The previous version has already been restored.": "La version précédente a déjà été restaurée.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Le retour en arrière est bloqué tant que l’arrêt du programme d’installation n’est pas confirmé. Actualisez l’état pour vérifier.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Restaurer Home {version} et les réglages enregistrés ? Laissez le téléviseur allumé.",
     "Home settings": "Paramètres Home",
     "Root Edition": "Édition Root",
     "Manage Home, software updates and your TV.": "Gérez Home, les mises à jour et votre téléviseur.",
@@ -621,6 +656,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "La version précédente de Home et les paramètres enregistrés seront restaurés."
   },
   "it": {
+    "Recovery": "Ripristino",
+    "Rollback version: {version}": "Versione da ripristinare: {version}",
+    "No saved update is available to roll back.": "Nessun aggiornamento salvato disponibile per il ripristino.",
+    "This update is already confirmed. Rollback is no longer available.": "Questo aggiornamento è già confermato. Non è più possibile tornare indietro.",
+    "The previous version has already been restored.": "La versione precedente è già stata ripristinata.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Il ripristino è bloccato finché non si conferma che il programma di installazione si è fermato. Aggiorna lo stato per verificare.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Ripristinare Home {version} e le impostazioni salvate? Lascia la TV accesa.",
     "Home settings": "Impostazioni Home",
     "Root Edition": "Edizione Root",
     "Manage Home, software updates and your TV.": "Gestisci Home, gli aggiornamenti e la TV.",
@@ -745,6 +787,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Verranno ripristinati la versione precedente di Home e le impostazioni salvate."
   },
   "ko": {
+    "Recovery": "복구",
+    "Rollback version: {version}": "복원할 버전: {version}",
+    "No saved update is available to roll back.": "되돌릴 수 있는 저장된 업데이트가 없습니다.",
+    "This update is already confirmed. Rollback is no longer available.": "이 업데이트는 이미 확인되었습니다. 더 이상 이전 버전으로 되돌릴 수 없습니다.",
+    "The previous version has already been restored.": "이전 버전이 이미 복원되었습니다.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "설치 프로그램이 완전히 중지될 때까지 복원이 차단됩니다. 상태를 새로 고쳐 확인하세요.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Home {version} 및 저장된 설정을 복원할까요? TV를 켜 두세요.",
     "Home settings": "Home 설정",
     "Root Edition": "Root 에디션",
     "Manage Home, software updates and your TV.": "Home, 소프트웨어 업데이트 및 TV를 관리하세요.",
@@ -869,6 +918,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "이전 Home 버전과 저장된 설정이 복원됩니다."
   },
   "hi": {
+    "Recovery": "रिकवरी",
+    "Rollback version: {version}": "वापस जाने का संस्करण: {version}",
+    "No saved update is available to roll back.": "वापस जाने के लिए कोई सहेजा गया अपडेट उपलब्ध नहीं है।",
+    "This update is already confirmed. Rollback is no longer available.": "यह अपडेट पहले ही पुष्ट हो चुका है। अब पिछले संस्करण पर वापस नहीं जा सकते।",
+    "The previous version has already been restored.": "पिछला संस्करण पहले ही बहाल हो चुका है।",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "इंस्टॉलर के पूरी तरह रुकने की पुष्टि होने तक वापसी अवरुद्ध है। जाँचने के लिए स्थिति ताज़ा करें।",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Home {version} और सहेजी गई सेटिंग बहाल करें? टीवी चालू रखें।",
     "Home settings": "Home सेटिंग्स",
     "Root Edition": "Root संस्करण",
     "Manage Home, software updates and your TV.": "Home, सॉफ़्टवेयर अपडेट और अपने टीवी को प्रबंधित करें।",
@@ -993,6 +1049,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Home का पिछला संस्करण और सहेजी गई सेटिंग्स बहाल की जाएंगी।"
   },
   "pl": {
+    "Recovery": "Odzyskiwanie",
+    "Rollback version: {version}": "Wersja do przywrócenia: {version}",
+    "No saved update is available to roll back.": "Brak zapisanego uaktualnienia do cofnięcia.",
+    "This update is already confirmed. Rollback is no longer available.": "To uaktualnienie jest już potwierdzone. Cofnięcie nie jest już dostępne.",
+    "The previous version has already been restored.": "Poprzednia wersja została już przywrócona.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Cofnięcie jest zablokowane do potwierdzonego zatrzymania instalatora. Odśwież stan, aby sprawdzić.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Przywrócić Home {version} i zapisane ustawienia? Pozostaw telewizor włączony.",
     "Home settings": "Ustawienia Home",
     "Root Edition": "Edycja Root",
     "Manage Home, software updates and your TV.": "Zarządzaj Home, aktualizacjami i telewizorem.",
@@ -1117,6 +1180,13 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Poprzednia wersja Home i zapisane ustawienia zostaną przywrócone."
   },
   "ru": {
+    "Recovery": "Восстановление",
+    "Rollback version: {version}": "Версия для отката: {version}",
+    "No saved update is available to roll back.": "Нет сохранённого обновления для отката.",
+    "This update is already confirmed. Rollback is no longer available.": "Обновление уже подтверждено. Откат больше недоступен.",
+    "The previous version has already been restored.": "Предыдущая версия уже восстановлена.",
+    "Rollback is blocked until the installer has definitely stopped. Refresh status to check.": "Откат заблокирован до подтверждённой остановки установщика. Обновите состояние для проверки.",
+    "Restore Home {version} and the saved settings? Keep the TV powered on.": "Восстановить Home {version} и сохранённые настройки? Не выключайте телевизор.",
     "Home settings": "Настройки Home",
     "Root Edition": "Версия Root",
     "Manage Home, software updates and your TV.": "Управляйте Home, обновлениями и телевизором.",

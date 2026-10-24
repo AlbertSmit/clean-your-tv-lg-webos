@@ -9,6 +9,35 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_connected_version_review_can_cancel_before_install_or_pairing(self):
+        class Remote:
+            def luna(self, uri, payload):
+                return {'apps': [{'id': 'com.gathin.tvhome', 'version': '1.2.1'}]}
+            def close(self): pass
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch('cytv.cli.package.verify_payload', return_value={'home_version': '1.2.2', 'helper_version': '0.6.13'}), \
+             patch('cytv.operations.Installer.install') as install, patch('cytv.tv.SSAP') as ssap:
+            code, output, calls = self.run_cli(['--host', '192.0.2.10', '--edition', 'no-root', '--data-dir', tmp], ['y', 'n'], remote=Remote())
+            self.assertEqual(code, 0, output)
+            self.assertTrue(calls)
+            self.assertIn('Home: 1.2.1 → 1.2.2 (Update)', output)
+            self.assertLess(output.index('Connecting to the TV'), output.index('1.2.1 → 1.2.2'))
+            install.assert_not_called()
+            ssap.assert_not_called()
+
+    def test_unreadable_versions_stop_even_with_yes_before_install(self):
+        class Remote:
+            def luna(self, uri, payload): return {'returnValue': True}
+            def close(self): pass
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch('cytv.cli.package.verify_payload', return_value={'home_version': '1.2.2', 'helper_version': '0.6.13'}), \
+             patch('cytv.operations.Installer.install') as install, patch('cytv.tv.SSAP') as ssap:
+            code, output, _ = self.run_cli(['--host', '192.0.2.10', '--edition', 'no-root', '--data-dir', tmp, '--yes'], remote=Remote())
+            self.assertEqual(code, 2, output)
+            self.assertIn('Could not read installed applications', output)
+            install.assert_not_called()
+            ssap.assert_not_called()
+
     def setUp(self):
         from cytv import i18n
         i18n.set_language('en')
@@ -36,6 +65,7 @@ class CLITests(unittest.TestCase):
             def close(self): pass
         with tempfile.TemporaryDirectory() as tmp, \
              patch('cytv.cli.package.verify_payload', return_value={}), \
+             patch('cytv.cli.Installer.version_summary', return_value=['Root: 0.1.4 → 0.1.5 (Update)']), \
              patch('cytv.tv.SSAP') as ssap:
             remote = Remote()
             code, output, calls = self.run_cli(['--host', '192.0.2.10', '--edition', 'root', '--data-dir', tmp], ['', ''], remote=remote)
@@ -48,6 +78,7 @@ class CLITests(unittest.TestCase):
             self.assertFalse(any('uninstall' in command for command in remote.calls))
         for flags, answers, expected in [(['--yes'], [''], 0), (['--yes','--non-interactive'], [], 2)]:
             with self.subTest(flags=flags), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.cli.Installer.version_summary', return_value=['Root: 0.1.4 → 0.1.5 (Update)']), \
                  patch('cytv.cli.package.verify_payload', return_value={}), patch('cytv.tv.SSAP') as ssap:
                 remote=Remote()
                 code, output, _ = self.run_cli(['--host','192.0.2.10','--edition','root','--data-dir',tmp]+flags, answers, remote=remote)
@@ -232,7 +263,7 @@ class CLITests(unittest.TestCase):
              patch('cytv.cli.package.verify_payload', return_value={}), \
              patch('cytv.tv.SSAP') as ssap, patch('cytv.cli.Installer') as installer:
             ssap.return_value.__enter__.side_effect = TVNotReady()
-            code, output, calls = self.run_cli(['--host', '192.0.2.10', '--edition', 'root', '--data-dir', tmp], ['', 'q'], remote=remote)
+            code, output, calls = self.run_cli(['--host', '192.0.2.10', '--edition', 'root', '--data-dir', tmp], ['', '', 'q'], remote=remote)
             self.assertEqual(code, 130, output)
             self.assertIn('Turn on your TV', output)
             self.assertIn('Installation has not started', output)
@@ -275,7 +306,7 @@ class CLITests(unittest.TestCase):
             session.inventory.return_value = inventory
             session.__enter__.side_effect = [TVNotReady(), session]
             code, output, calls = self.run_cli(['--host', '192.0.2.10', '--edition', 'root', '--data-dir', tmp],
-                                               ['', ''], remote=Remote())
+                                               ['', '', ''], remote=Remote())
             self.assertEqual(code, 0, output)
             self.assertEqual(len(calls), 1)
             self.assertEqual(ssap.call_count, 2)

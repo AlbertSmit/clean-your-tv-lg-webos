@@ -1,13 +1,14 @@
 """Edition-specific operations; SSH is the only device mutation boundary."""
 import json
 import hashlib
+import re
 from pathlib import Path
 import shlex
 import shutil
 import tempfile
 import uuid
 
-from . import package
+from . import package, i18n
 from .errors import UserError, TVRejected, ExistingRoot
 
 HOME = 'com.gathin.tvhome'
@@ -287,6 +288,31 @@ print('CYTV_UPDATER_VERIFIED')
         if not isinstance(apps, list):
             raise UserError('Could not read installed applications.')
         return apps
+
+    def version_summary(self):
+        apps = {app['id']: app for app in self.installed_apps()}
+        if self.profile['edition'] == 'root':
+            root = json.loads((self.payload / 'root/release.json').read_text())['version']
+            files = package.data_files((self.payload / 'root-updater/root-updater.ipk').read_bytes())
+            updater = json.loads(files['usr/palm/applications/' + UPDATER_APP + '/appinfo.json'])['version']
+            targets = [(package.ROOT_APP, 'Root', root), (UPDATER_APP, 'Root Updater', updater)]
+        else:
+            targets = [(HOME, 'Home', self.manifest['home_version']),
+                       (HELPER, 'Home Helper', self.manifest['helper_version'])]
+        rows = []
+        for app, name, target in targets:
+            current = apps.get(app, {}).get('version')
+            action = 'Version change'
+            if app not in apps:
+                action = 'Install'
+            elif current == target:
+                action = 'Reinstall'
+            elif (isinstance(current, str) and re.fullmatch(r'\d+\.\d+\.\d+', current)
+                  and re.fullmatch(r'\d+\.\d+\.\d+', target)):
+                action = 'Update' if tuple(map(int, current.split('.'))) < tuple(map(int, target.split('.'))) else 'Downgrade'
+            current = current or i18n.translate('Unknown version' if app in apps else 'Not installed')
+            rows.append(f'{name}: {current} → {target} ({i18n.translate(action)})')
+        return rows
 
     def verify_installed(self):
         apps = {app['id']: app for app in self.installed_apps()}

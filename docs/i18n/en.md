@@ -48,3 +48,7 @@ After interruption, run `status` before retrying; retain journals and recovery f
 Keep known-working packages and private settings backups. Stop No-root Helper before replacing its packages; update from the computer without uninstalling first, since removal may erase settings. The combined cytv Root installation includes an updater for compatible releases under Settings → Software updates; the manual Root bundle has different limitations. Do not replace a live Root runtime with a standalone IPK. Reinstall only through the explicit cytv recovery/reinstallation flow. Removing the desktop app does not remove TV apps.
 
 Technical details in English: [desktop setup](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [Installation of both editions](../INSTALL.md), [manual installation](../MANUAL_INSTALL.md), [recovery](../RECOVERY.md), [edition comparison](../EDITIONS.md).
+
+After connecting, cytv reads the installed TV versions and shows current → bundled version for Home and Home Helper (No-root), or Root and Root Updater. Review and confirm before installation. First installs, reinstalls and downgrades are labeled separately; `--yes` skips confirmation but still prints the versions.
+
+Software updates shows release details only for the installed version or newer. Open Recovery to see the saved rollback version or why rollback is unavailable; Back returns to updates.

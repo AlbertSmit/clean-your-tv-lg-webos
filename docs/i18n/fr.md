@@ -48,3 +48,7 @@ Après interruption, lancez d’abord `status` et conservez les journaux. `resto
 Gardez les paquets fonctionnels et des sauvegardes privées des paramètres. Arrêtez No-root Helper avant de remplacer ses paquets ; mettez à jour depuis l’ordinateur sans désinstaller d’abord, car cela peut effacer les préférences. L’installation Root combinée de cytv comprend les mises à jour compatibles dans Paramètres → Mises à jour logicielles ; l’installation manuelle présente d’autres limites. N’installez pas une IPK isolée sur un environnement Root actif. Utilisez le parcours explicite de réinstallation cytv. Supprimer l’application de bureau ne supprime pas les applications TV.
 
 Documentation technique en anglais : [bureau](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [No-root](../INSTALL.md), [installation manuelle](../MANUAL_INSTALL.md), [récupération](../RECOVERY.md), [éditions](../EDITIONS.md).
+
+Après connexion, cytv lit les versions du téléviseur et affiche la version actuelle → incluse pour Home et Home Helper (No-root), ou Root et Root Updater. Vérifiez et confirmez avant installation. Les premières installations, réinstallations et retours à une version antérieure sont signalés ; `--yes` ignore la confirmation mais affiche les versions.
+
+Les mises à jour logicielles affichent uniquement les détails de la version installée ou plus récente. Ouvrez Récupération pour voir la version enregistrée à restaurer ou la raison de son indisponibilité ; Retour revient aux mises à jour.

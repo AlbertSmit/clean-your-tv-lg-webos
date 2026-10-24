@@ -199,7 +199,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             if args.command == 'uninstall' and profile['edition'] == 'root':
                 write('This removes Root, Root Updater, their services and startup hooks, plus any installed No-root Home, Helper and Updater.')
                 write('Recovery records are retained for diagnostics. Other TV apps stay installed.')
-            verb = {'install': 'Install this edition', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home'}[args.command]
+            verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home'}[args.command]
             if not prompts.confirm(verb + '?', ask, write, default=args.command == 'install'):
                 write('Cancelled. No TV changes were made.')
                 return 0
@@ -279,6 +279,9 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                             raise UserError('Previous Root installation needs recovery. Run cytv status or cytv restore. Reinstallation has not started; recovery data was left unchanged.')
                         if args.non_interactive:
                             raise UserError('Root is already installed or removal data remains. Run cytv interactively to review reinstallation. --yes does not approve replacing Root.')
+                        write.heading('Versions on the TV → versions in this installer')
+                        for row in installer.version_summary():
+                            write(row)
                         write.heading('Root is already installed' if reinstall == 'installed' else 'Previous Root was removed')
                         write('You can reinstall using the packages in this cytv build.')
                         write('LG Home will be restored first. Previous recovery data will be archived on the TV.')
@@ -286,6 +289,14 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                         if not prompts.confirm('Reinstall Root?', ask, write):
                             write('Existing Root and recovery data left unchanged.')
                             return 0
+                if not reinstall and not resume:
+                    phase = 'inspect-installation'
+                    write.heading('Versions on the TV → versions in this installer')
+                    for row in installer.version_summary():
+                        write(row)
+                    if not args.yes and not prompts.confirm('Install these versions?', ask, write, default=True):
+                        write('Cancelled. No TV changes were made.')
+                        return 0
                 phase = 'read-inventory'
                 inventory, key = None, None
                 if not args.migrate_home and not resume:

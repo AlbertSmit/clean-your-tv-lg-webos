@@ -59,6 +59,36 @@ class Remote:
 
 
 class OperationTests(unittest.TestCase):
+    def test_version_review_distinguishes_update_reinstall_downgrade_and_missing(self):
+        for current, expected in [('1.2.1', '1.2.1 → 1.2.2 (Update)'),
+                                  ('1.2.2', '1.2.2 → 1.2.2 (Reinstall)'),
+                                  ('1.10.0', '1.10.0 → 1.2.2 (Downgrade)'),
+                                  (None, 'Not installed → 1.2.2 (Install)'),
+                                  ('', 'Unknown version → 1.2.2 (Version change)')]:
+            with self.subTest(current=current):
+                remote = Remote()
+                if current is not None:
+                    remote.installed = [{'id': operations.HOME, 'version': current}]
+                rows = self.installer(remote).version_summary()
+                self.assertIn('Home: ' + expected, rows)
+                self.assertIn('Home Helper: Not installed → 0.6.13 (Install)', rows)
+                self.assertTrue(all(call[0] == 'luna' and call[1].endswith('/listApps') for call in remote.calls))
+
+    def test_root_version_review_reads_versions_from_bundled_packages(self):
+        installer = self.installer(Remote(), 'root')
+        root = self.payload / 'root'
+        root.mkdir(exist_ok=True)
+        (root / 'release.json').write_text('{"version":"0.1.5"}')
+        updater = self.payload / 'root-updater'
+        updater.mkdir(exist_ok=True)
+        app = operations.UPDATER_APP
+        (updater / 'root-updater.ipk').write_bytes(package.ipk(app, '0.1.6', {
+            'usr/palm/applications/' + app + '/appinfo.json': b'{"version":"0.1.6"}'}))
+        installer.remote.installed = [{'id': package.ROOT_APP, 'version': '0.1.4'},
+                                      {'id': app, 'version': '0.1.5'}]
+        self.assertEqual(installer.version_summary(), ['Root: 0.1.4 → 0.1.5 (Update)',
+                                                     'Root Updater: 0.1.5 → 0.1.6 (Update)'])
+
     def test_doctor_requirements_allow_a_running_helper(self):
         remote = Remote()
         run = remote.run

@@ -56,7 +56,8 @@ result; never rerun it blindly.
 
 ## Update on the TV
 
-1. Open Root Home → Settings → Software updates → Check for updates.
+1. Open Root Home → Settings → Software updates. The check runs automatically.
+   The available version and notes appear only for the installed version or newer.
 2. Review the version and notes, then select Update → Install update.
 3. The updater saves apps, embedded icons, inputs, configuration and tile order.
    It caches and verifies both new and previous packages before replacing Home.
@@ -95,7 +96,14 @@ that classifier only after capturing and validating terminal failure evidence
 on the isolated target; never guess status codes from an error envelope.
 
 Open the separate **Root Updater** application even if Root Home is broken.
-Recover status restarts reconciliation. Roll back is offered only when the
+In Root Home, **Software updates → Recovery** opens a separate recovery screen.
+It shows the saved transaction’s rollback version, or explains why rollback is
+unavailable. **Refresh status** restarts reconciliation; opening the screen alone
+only reads status. Back returns to Software updates and restores remote focus.
+The rollback confirmation names the exact saved version. Confirmed updates cannot
+be rolled back through this recovery flow.
+
+Roll back is offered only when the
 original install has durable terminal evidence and rollback has not started.
 An interrupted installer with unknown outcome remains blocked. Reading the
 installed version or seeing an idle installer is not proof of completion;

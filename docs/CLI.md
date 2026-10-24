@@ -51,6 +51,8 @@ real-TV acceptance; automated tests do not establish hardware compatibility.
 
 ## Installation wizard
 
+After connecting, cytv reads the installed TV versions and shows current → bundled version for Home and Home Helper (No-root), or Root and Root Updater. Review and confirm before installation. First installs, reinstalls and downgrades are labeled separately; `--yes` skips confirmation but still prints the versions.
+
 The wizard separates steps with headings, whitespace and numbered options.
 On an interactive terminal each major step starts a fresh screen; scrollback is
 retained. Questions begin with `>`. Bold uses the terminal's own foreground color,

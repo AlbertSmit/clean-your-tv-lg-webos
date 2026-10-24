@@ -6,7 +6,7 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| Status | Home 1.3.3 + Helper 0.6.16 | Root 0.1.5, based on scoped evidence on OLED55C3RLA / 43.21.71 |
+| Status | Home 1.3.3 + Helper 0.6.16 | Root 0.1.6, based on scoped evidence on OLED55C3RLA / 43.21.71 |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |

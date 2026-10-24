@@ -22,7 +22,7 @@ Node.js, a C compiler and the project Python dependencies, including
 ```sh
 bash scripts/test.sh
 mkdir -p build
-python3 root-edition/build.py --version 0.1.5 --output build/root-candidate
+python3 root-edition/build.py --version 0.1.6 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
 ```
 

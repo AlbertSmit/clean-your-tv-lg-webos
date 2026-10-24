@@ -5,7 +5,7 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-The v0.10.4 distribution includes **Root Edition 0.1.5**. Settings updates and
+The v0.10.5 distribution includes **Root Edition 0.1.6**. Settings updates and
 independent update recovery were introduced in 0.1.1; that earlier hardware
 record does not certify the current binary.
 Evidence is scoped to **LG OLED55C3RLA / firmware 43.21.71**. Other models and

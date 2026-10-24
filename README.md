@@ -26,24 +26,24 @@ handling moved from an external watcher to an on-TV native helper.
 
 Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
 
-The v0.10.4 release selects the system language automatically and saves
+The v0.10.5 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
 may predate these features.
 
 ## Install with cytv
 
-[Download v0.10.4](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.4)
+[Download v0.10.5](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.5)
 for Windows, macOS or Linux. One wizard installs either edition. Root activates
 and opens Home immediately, without a trial or Keep confirmation.
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.4.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.5.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.5 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.6 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -196,9 +196,9 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.4 distribution contains cytv **0.2.7**, Home **1.3.3**, Helper
-**0.6.16**, Root **0.1.5** and No-root Updater **0.1.5**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.4.md)
+The v0.10.5 distribution contains cytv **0.2.8**, Home **1.3.3**, Helper
+**0.6.16**, Root **0.1.6** and No-root Updater **0.1.5**. Source versions are
+recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.5.md)
 explain packaging and remaining checks.
 
 Hardware records describe particular artifacts. Earlier C3/C4 reports do not

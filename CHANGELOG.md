@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.5 — Clearer updates, recovery and installer versions
+
+- Hide older release versions and notes in Root Software updates.
+- Open a separate Recovery screen showing the saved rollback version or why rollback is unavailable; Back returns to updates with remote focus restored.
+- Name the exact rollback version in the confirmation dialog and translate the new messages in all ten languages.
+- Show installed → bundled component versions in cytv before installation, with explicit first-install, reinstall and downgrade labels.
+- Components: cytv 0.2.8, Home 1.3.3, Helper 0.6.16, Root 0.1.6 and No-root Updater 0.1.5.
+
 ## v0.10.4 — Root Home at startup and clearer settings
 
 - Preserve the confirmed Root Home profile during normal shutdown so webOS opens it as the first app on the next startup. Keep independent boot recovery and explicit emergency restoration.

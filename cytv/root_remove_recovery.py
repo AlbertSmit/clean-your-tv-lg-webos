@@ -1,7 +1,7 @@
 """Reconcile an interrupted removal using the driver already installed on the TV."""
 
 SCRIPT = r'''
-import fcntl, json, os, sys
+import json, os, sys
 from pathlib import Path
 
 READY = ('installed-recovery-only', 'uninstall-restored',
@@ -35,6 +35,7 @@ def reconcile(driver, action, busy=False):
     return {'returnValue': True, 'removed': driver.APP, 'state_retained': str(driver.STATE)}
 
 if __name__ == '__main__':
+    import fcntl
     root = Path('/var/lib/clean-your-tv-root')
     sys.path.insert(0, str(root))
     import deploy

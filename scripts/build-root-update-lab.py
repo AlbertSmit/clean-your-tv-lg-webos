@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -28,7 +29,10 @@ PATTERN = re.compile('|'.join(re.escape(value) for value in sorted(MAPPINGS, key
 
 
 def run(*args, cwd=ROOT):
-    return subprocess.run(args, cwd=cwd, check=True, stdout=subprocess.PIPE, text=True).stdout.strip()
+    # The archived source stays isolated; share only the installed build tools.
+    node_path = os.pathsep.join(filter(None, [str(ROOT / 'node_modules'), os.environ.get('NODE_PATH')]))
+    environment = dict(os.environ, NODE_PATH=node_path)
+    return subprocess.run(args, cwd=cwd, env=environment, check=True, stdout=subprocess.PIPE, text=True).stdout.strip()
 
 
 def clone_head(destination, commit):

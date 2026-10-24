@@ -13,7 +13,7 @@ def compile_web(files):
            if name.endswith(('.js', '.css', '.html'))}
     try:
         result = subprocess.run(['node', str(ROOT / 'scripts/compile-tv-web.cjs')],
-                                input=json.dumps(web), capture_output=True, text=True,
+                                input=json.dumps(web), capture_output=True, text=True, encoding='utf-8',
                                 cwd=ROOT, timeout=120, check=True)
     except FileNotFoundError as error:
         raise RuntimeError('TV web compilation requires Node.js 20.19+ and npm ci.') from error

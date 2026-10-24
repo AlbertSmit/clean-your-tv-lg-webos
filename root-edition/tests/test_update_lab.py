@@ -46,6 +46,8 @@ class LabTests(unittest.TestCase):
             self.assertEqual(json.loads(files[prefix + 'appinfo.json'])['id'], APP)
             self.assertEqual(json.loads(files[prefix + 'appinfo.json'])['version'], version)
             self.assertEqual(files[prefix + 'apps.js'], b'window.TV_APPS = {apps: [], inputs: []};\n')
+            self.assertIn(prefix + 'compat-polyfills.js', files)
+            self.assertIn(b'compat-polyfills.js', files[prefix + 'index.html'])
             self.assertEqual(json.loads(files['usr/palm/packages/' + APP + '/packageinfo.json'])['services'], [APP + '.service'])
             for name, data in files.items():
                 if name.endswith(('.js', '.json', '.html', '.css', '.sh')):
@@ -64,6 +66,7 @@ class LabTests(unittest.TestCase):
         self.assertEqual(evidence['paths']['root_state'], '/var/lib/clean-your-tv-root-updatetest')
         self.assertEqual(evidence['paths']['updater_state'], '/var/lib/clean-your-tv-root-updaterlab')
         self.assertFalse((source / '.git').exists())
+        self.assertFalse((source / 'node_modules').exists())
         self.assertFalse(list(source.rglob('*.key')))
         self.assertEqual((ROOT / 'updater-service/release-public.pem').read_bytes(), self.production_key)
         self.assertNotEqual((source / 'updater-service/release-public.pem').read_bytes(), self.production_key)

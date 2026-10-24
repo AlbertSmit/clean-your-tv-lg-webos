@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.7 — Root update readiness repair
+
+- Exclude the Add app action tile from restored-application readiness checks.
+- Derive expected visible tiles from the same saved-layout model as Home, including hidden applications.
+- Keep genuine missing, incorrect or unrendered application tiles blocked.
+- Include the Root feed publication guard and post-publication CI verification.
+- Components: cytv 0.2.10, Home 1.3.3, Helper 0.6.16, Root 0.1.7 and No-root Updater 0.1.5.
+
 ## v0.10.6 — No-root SSH authentication compatibility
 
 - Fix No-root RSA public-key authentication for Developer Mode SSH servers that accept ssh-rsa but omit server-sig-algs.

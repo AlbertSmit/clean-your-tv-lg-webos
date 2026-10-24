@@ -44,8 +44,8 @@
       if (!restored || ['verifying', 'verifying-rollback'].indexOf(restored.phase) < 0) return;
       try {
         if (window.RootLauncherRendered !== true) throw Error('Launcher did not finish rendering');
-        var expected = window.TV_APPS.apps.filter(function (a) { return window.CONFIG.hiddenApps.indexOf(a.id) < 0; }).map(function (a) { return a.id; }).sort();
-        var actual = Array.prototype.map.call(document.querySelectorAll('#tiles .item'), function (el) { return el.getAttribute('data-app-id'); }).sort();
+        var expected = window.AppLibrary.create(localStorage, window.TV_APPS.apps, window.CONFIG).visible().map(function (a) { return a.id; }).sort();
+        var actual = Array.prototype.map.call(document.querySelectorAll('#tiles .item[data-app-id]'), function (el) { return el.getAttribute('data-app-id'); }).sort();
         if (JSON.stringify(expected) !== JSON.stringify(actual)) throw Error('Restored launcher tiles do not match the saved profile');
         var health = {transaction:restored.transaction, version:window.ROOT_VERSION};
         window.RootUpdates.rpc('ready', health).then(function () {

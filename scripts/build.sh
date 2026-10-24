@@ -13,6 +13,17 @@ p=Path('launcher/apps.js')
 if not p.exists(): p.write_text('window.TV_APPS = {apps: [], inputs: []};\n')
 PYBUILD
 mkdir -p build/native-app/state build/native-service/state dist
+baseline=$(python3 - <<'PYPIN'
+import json, runpy
+from pathlib import Path
+info = json.loads(Path('native/app/appinfo.json').read_text())
+raw = runpy.run_path('scripts/build-cytv.py')['helper_baseline'](info['version'])
+if raw is not None:
+    Path('dist', info['id'] + '_' + info['version'] + '_arm.ipk').write_bytes(raw)
+    print('published')
+PYPIN
+)
+if [[ "$baseline" != published ]]; then
 # Stage from a clean set of public sources; never package local runtime state.
 cp native/app/*.js native/app/*.json native/app/*.png build/native-app/
 cp -R native/app/vendor build/native-app/
@@ -25,6 +36,7 @@ touch build/native-app/state/.keep build/native-service/state/.keep
 # Repair the package just built, even when older releases remain in dist/.
 helper=$(python3 -c 'import json; a=json.load(open("build/native-app/appinfo.json")); print("dist/"+a["id"]+"_"+a["version"]+"_arm.ipk")')
 python3 scripts/fix-package-data.py "$helper"
+fi
 python3 scripts/tv_web_build.py --input launcher --output build/home-app
 "$ARES_PACKAGE" build/home-app renewal-service -o dist
 python3 - <<'PY'

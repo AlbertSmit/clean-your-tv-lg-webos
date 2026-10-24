@@ -27,8 +27,10 @@ runtime, firmware service or remote. webOS 1.x/2.x are outside this engine targe
 cytv also reconciles interrupted Root removal using the installed recovery
 journal, checks for an operation still running, and gives clearer next steps.
 Ambiguous package outcomes remain blocked; recovery records are retained.
-The companion entry screens from main now explain their purpose and require
-confirmation before starting a stopped Helper or restoring an application.
+Updater entry screens explain their purpose and require confirmation before
+restoring an application. The exact published Helper 0.6.17 binary is retained
+to preserve the existing signed rollback contract; later native entrypoint
+changes in main are deferred to a separately versioned native release.
 
 ## Update No-root
 
@@ -40,7 +42,7 @@ confirmation before starting a stopped Helper or restoring an application.
    Home 1.3.7 / Helper 0.6.17 before confirming. A pending operation must be
    checked with status before continuing.
 4. Open Home and check the app tiles, arrows/OK and app launching. If Helper was
-   left stopped, open Home Helper and confirm starting it.
+   left stopped, open Home Helper to resume it.
 
 No uninstall or factory reset is needed. An unrooted TV cannot install this
 update through the rooted Home Updater service. Existing settings/order should

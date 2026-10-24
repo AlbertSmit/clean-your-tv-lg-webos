@@ -81,13 +81,15 @@ def stage_brand_assets(payload):
 
 # Helper 0.6.16 is already published: preserve its bytes until the version changes.
 HELPER_0_6_16_SHA256 = 'ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1'
+HELPER_0_6_17_SHA256 = '165d933c17f1ed24f0ab65986293c7488b0b5d875db5f7b1215e46f24d422f92'
 
 
 def helper_baseline(version):
-    if version != '0.6.16':
+    expected = {'0.6.16': HELPER_0_6_16_SHA256, '0.6.17': HELPER_0_6_17_SHA256}.get(version)
+    if expected is None:
         return None
-    data = (ROOT / 'native/published/com.local.nativehome_0.6.16_arm.ipk').read_bytes()
-    if hashlib.sha256(data).hexdigest() != HELPER_0_6_16_SHA256:
+    data = (ROOT / ('native/published/com.local.nativehome_' + version + '_arm.ipk')).read_bytes()
+    if hashlib.sha256(data).hexdigest() != expected:
         raise ValueError('Published Helper baseline hash mismatch')
     return data
 

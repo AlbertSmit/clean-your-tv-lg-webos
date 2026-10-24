@@ -62,7 +62,8 @@ class BuildAssetsTests(unittest.TestCase):
         baseline = build['helper_baseline']
         published = root / 'native/published/com.local.nativehome_0.6.16_arm.ipk'
         self.assertEqual(baseline('0.6.16'), published.read_bytes())
-        self.assertIsNone(baseline('0.6.17'))
+        self.assertEqual(baseline('0.6.17'), (root / 'native/published/com.local.nativehome_0.6.17_arm.ipk').read_bytes())
+        self.assertIsNone(baseline('0.6.18'))
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / 'native/published' / published.name
             fixture.parent.mkdir(parents=True)

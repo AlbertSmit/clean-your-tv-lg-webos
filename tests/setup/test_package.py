@@ -12,11 +12,35 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 
 class PackageTests(unittest.TestCase):
+    def test_source_build_reuses_published_helper_without_compiling_it(self):
+        with tempfile.TemporaryDirectory(prefix='pinned helper ') as tmp:
+            root = Path(tmp)
+            for directory in ('scripts', 'native/app', 'native/published', 'launcher'):
+                (root/directory).mkdir(parents=True)
+            for name in ('build.sh', 'build-cytv.py', 'tv_web_build.py', 'compile-tv-web.cjs'):
+                shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
+            shutil.copy(ROOT/'package.json', root/'package.json')
+            helper = 'com.local.nativehome_0.6.17_arm.ipk'
+            shutil.copy(ROOT/'native/published'/helper, root/'native/published'/helper)
+            (root/'native/app/appinfo.json').write_text(json.dumps({'id':'com.local.nativehome','version':'0.6.17'}))
+            (root/'launcher/index.html').write_text('<html><head></head><body></body></html>')
+            zig = root/'zig'
+            zig.write_text('#!/bin/sh\nexit 99\n')
+            zig.chmod(0o755)
+            packager = root/'packager'
+            packager.write_text('#!/bin/sh\ntest "$1" = build/home-app\n')
+            packager.chmod(0o755)
+            env = dict(os.environ, ZIG=str(zig), ARES_PACKAGE=str(packager),
+                       PYTHONPATH=str(ROOT), NODE_PATH=str(ROOT/'node_modules'))
+            result = subprocess.run(['bash', 'scripts/build.sh'], cwd=root, env=env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+            self.assertEqual((root/'dist'/helper).read_bytes(), (ROOT/'native/published'/helper).read_bytes())
+
     def test_build_repairs_current_metadata_package_and_preserves_stale_package(self):
         with tempfile.TemporaryDirectory(prefix='helper build ') as tmp:
             root = Path(tmp)
             (root/'scripts').mkdir()
-            for name in ('build.sh', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs'):
+            for name in ('build.sh', 'build-cytv.py', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
             for directory in ('native/app', 'native/service', 'launcher'):

@@ -225,6 +225,9 @@ class SSH:
                        timeout=10, banner_timeout=10, auth_timeout=15,
                        allow_agent=False, look_for_keys=False)
         if profile['edition'] == 'no-root':
+            # Developer Mode SSH servers may accept only ssh-rsa and omit
+            # server-sig-algs; Paramiko otherwise attempts an RSA SHA-2 signature.
+            options['disabled_algorithms'] = {'pubkeys': ['rsa-sha2-512', 'rsa-sha2-256']}
             keyfile = directory / 'developer-key.pem'
             if keyfile.exists():
                 options['pkey'] = paramiko.RSAKey.from_private_key_file(str(keyfile))

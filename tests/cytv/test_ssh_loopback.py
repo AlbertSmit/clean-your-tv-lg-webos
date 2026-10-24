@@ -1,5 +1,6 @@
 """Real SSH handshake against loopback only; never uses TV credentials or discovery."""
 import importlib.util
+import io
 import logging
 from pathlib import Path
 import socket
@@ -14,6 +15,74 @@ from cytv.transport import SSH
 
 @unittest.skipUnless(importlib.util.find_spec('paramiko'), 'Requires SSH build dependencies')
 class SSHLoopbackTests(unittest.TestCase):
+    def test_no_root_authenticates_with_legacy_rsa_server_and_reuses_saved_key(self):
+        import paramiko
+        key = paramiko.RSAKey.generate(2048)
+        host_key = paramiko.RSAKey.generate(2048)
+        raw = io.StringIO()
+        key.write_private_key(raw)
+        raw = raw.getvalue().encode()
+
+        class Server(paramiko.ServerInterface):
+            def get_allowed_auths(self, username):
+                return 'publickey'
+
+            def check_auth_publickey(self, username, supplied):
+                if username == 'prisoner' and supplied == key:
+                    return paramiko.AUTH_SUCCESSFUL
+                return paramiko.AUTH_FAILED
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch('cytv.transport.Path.home', return_value=Path(tmp)/'home'), \
+                patch('cytv.transport.developer_key', return_value=(key, raw)) as fetch:
+            listener = socket.socket()
+            self.addCleanup(listener.close)
+            listener.bind(('127.0.0.1', 0))
+            listener.listen(1)
+            listener.settimeout(5)
+            profile = state.target('127.0.0.1', 'no-root', listener.getsockname()[1])
+            trusted = []
+            for cached in (False, True):
+                with self.subTest(cached=cached):
+                    done = threading.Event()
+                    errors = []
+
+                    def serve():
+                        transport = None
+                        try:
+                            connection, _ = listener.accept()
+                            # Model a TV accepting ssh-rsa without advertising
+                            # server-sig-algs, so SHA-2 auth cannot succeed.
+                            transport = paramiko.Transport(connection, server_sig_algs=False,
+                                disabled_algorithms={'pubkeys': ['rsa-sha2-512', 'rsa-sha2-256']})
+                            transport.add_server_key(host_key)
+                            transport.start_server(server=Server())
+                            done.wait(5)
+                        except Exception as exc:
+                            errors.append(exc)
+                        finally:
+                            if transport is not None:
+                                transport.close()
+
+                    thread = threading.Thread(target=serve, daemon=True)
+                    thread.start()
+                    try:
+                        remote = SSH.connect(profile, tmp, lambda _: 'test-passphrase',
+                                             lambda *args: trusted.append(args) or True)
+                        try:
+                            self.assertTrue(remote.client.get_transport().is_authenticated())
+                        finally:
+                            remote.close()
+                    finally:
+                        done.set()
+                        thread.join(timeout=6)
+                    self.assertFalse(thread.is_alive())
+                    self.assertEqual(errors, [])
+                    self.assertEqual((Path(tmp)/'developer-key.pem').read_bytes(), raw)
+            fetch.assert_called_once_with('127.0.0.1', 'test-passphrase')
+            self.assertEqual(len(trusted), 1)
+            self.assertFalse(trusted[0][1])
+
     def test_persisted_pin_reconnects_and_changed_key_is_rejected_before_auth(self):
         import paramiko
         logger = logging.getLogger('paramiko.transport')
@@ -61,7 +130,8 @@ class SSHLoopbackTests(unittest.TestCase):
                     continue
                 except OSError:
                     break
-                transport = paramiko.Transport(connection)
+                # Root connections must retain RSA SHA-2 authentication.
+                transport = paramiko.Transport(connection, disabled_algorithms={'pubkeys': ['ssh-rsa']})
                 try:
                     transport.add_server_key(current[0])
                     server = Server()

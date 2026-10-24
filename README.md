@@ -26,17 +26,17 @@ handling moved from an external watcher to an on-TV native helper.
 
 Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
 
-The v0.10.5 release selects the system language automatically and saves
+The v0.10.6 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
 may predate these features.
 
 ## Install with cytv
 
-[Download v0.10.5](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.5)
+[Download v0.10.6](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.6)
 for Windows, macOS or Linux. One wizard installs either edition. Root activates
 and opens Home immediately, without a trial or Keep confirmation.
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.5.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.6.md)
 
 ## Choose your edition
 
@@ -196,9 +196,9 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.5 distribution contains cytv **0.2.8**, Home **1.3.3**, Helper
+The v0.10.6 distribution contains cytv **0.2.9**, Home **1.3.3**, Helper
 **0.6.16**, Root **0.1.6** and No-root Updater **0.1.5**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.5.md)
+recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.6.md)
 explain packaging and remaining checks.
 
 Hardware records describe particular artifacts. Earlier C3/C4 reports do not

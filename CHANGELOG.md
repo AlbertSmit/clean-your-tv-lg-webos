@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.6 — No-root SSH authentication compatibility
+
+- Fix No-root RSA public-key authentication for Developer Mode SSH servers that accept ssh-rsa but omit server-sig-algs.
+- Add real loopback SSH regression coverage for first connection and cached keys; verify Root still supports RSA SHA-2 authentication.
+- Components: cytv 0.2.9; Home 1.3.3, Helper 0.6.16, Root 0.1.6 and No-root Updater 0.1.5 are unchanged.
+- Addresses the likely authentication cause in issue #15; confirmation on the reporter’s TV is pending.
+
 ## v0.10.5 — Clearer updates, recovery and installer versions
 
 - Hide older release versions and notes in Root Software updates.

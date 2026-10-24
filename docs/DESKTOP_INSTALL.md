@@ -7,7 +7,7 @@ It includes Python and the TV packages;
 you do not need developer tools or terminal commands.
 
 Download the desktop package for your computer from the
-[v0.10.5 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.5).
+[v0.10.6 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.6).
 The older v0.9.0 macOS/Linux files are console programs, not the desktop app.
 
 ## macOS

@@ -43,7 +43,7 @@ check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-a
 ## 3. Download and start cytv
 
 Download the matching package from the
-[v0.10.5 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.5):
+[v0.10.6 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.6):
 
 | Computer | Package and launch |
 | --- | --- |

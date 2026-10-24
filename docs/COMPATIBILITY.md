@@ -1,6 +1,6 @@
 # Compatibility and known limits
 
-The v0.10.5 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.6.
+The v0.10.6 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.6.
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
 

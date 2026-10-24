@@ -10,6 +10,11 @@
     return window.HomeI18n ? HomeI18n.html(markup) : markup;
   }
   // Shared layout, focus and remote-control state.
+  var DOCK_TOP = 680,
+    DOCK_HEIGHT = 258,
+    CARD_HEIGHT = 202,
+    TILE_BASE = DOCK_TOP + Math.round((DOCK_HEIGHT - CARD_HEIGHT) / 2),
+    HERO_OFFSET = 176;
   var toastTimer,
     columnCount = Math.max(1, CONFIG.columns || 4),
     columnWidth = 1696 / columnCount,
@@ -192,6 +197,12 @@
   function activateTile(item) {
     if (item.add) {
       openPicker();
+    } else if (item.app.id === 'airplay') {
+      callLuna('luna://airplay.service/showAirplayPage', {}, function (result) {
+        if (!result || !result.returnValue) {
+          launchApp(item.app.id, item.app.title);
+        }
+      });
     } else {
       launchApp(item.app.id, item.app.title);
     }
@@ -509,6 +520,12 @@
       }
     }, true);
     rebuild();
+    AppLibrary.installed(function (apps) {
+      if (apps !== null) {
+        library.refresh(apps);
+        rebuild(tiles[focusedTile] && tiles[focusedTile].app.id);
+      }
+    });
   }
   // Tile rendering, icon colors and grid geometry.
   function createTile(app) {
@@ -598,7 +615,7 @@
   }
   function tileTop(index) {
     var row = rowFor(index);
-    return 708 + 292 * row + (row > 0 ? 36 : 0);
+    return TILE_BASE + 292 * row + (row > 0 ? 36 : 0);
   }
   function layoutTiles() {
     tiles.forEach(function (e, t) {
@@ -611,9 +628,9 @@
       dockCount = Math.min(columnCount, tiles.length);
     dockBand.style.display = dockCount ? "block" : "none";
     dockBand.style.left = tileLeft(0) - 28 + "px";
-    dockBand.style.top = "680px";
+    dockBand.style.top = DOCK_TOP + "px";
     dockBand.style.width = (dockCount - 1) * columnWidth + 360 + 56 + "px";
-    dockBand.style.height = "258px";
+    dockBand.style.height = DOCK_HEIGHT + "px";
   }
   function animateTiles() {
     tiles.forEach(function (e, t) {
@@ -673,7 +690,7 @@
       stage.style.transform = "translateY(" + -scrollOffset + "px)";
       var header = document.querySelector("header"),
         headerBottom = header.offsetTop + header.offsetHeight;
-      document.body.classList.toggle("scrolled", 680 - scrollOffset < headerBottom + 24);
+      document.body.classList.toggle("scrolled", DOCK_TOP - scrollOffset < headerBottom + 24);
       var glassWidth = 1.1 * 360 + 24,
         glassHeight = 1.1 * 202 + 24,
         glassLeft = tileLeft(index) + 180 - glassWidth / 2,
@@ -684,7 +701,7 @@
       focusGlassVisible || (focusGlass.style.transition = "none", focusGlass.offsetWidth, focusGlass.style.transition = "", focusGlass.style.opacity = "1", focusGlassVisible = true);
       0 === row ? function (e) {
         var t = e.app.title;
-        heroTitle.style.top = "532px";
+        heroTitle.style.top = (TILE_BASE - HERO_OFFSET) + "px";
         heroVisible ? heroTitle.textContent !== t && (heroTitle.style.opacity = "0", heroTitle.style.transform = "translateX(-24px)", clearTimeout(heroTitle.swap), heroTitle.swap = setTimeout(function () {
           heroTitle.textContent = t;
           heroTitle.style.transition = "none";

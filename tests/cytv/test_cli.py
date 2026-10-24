@@ -207,13 +207,16 @@ class CLITests(unittest.TestCase):
             self.assertIn('TV: 192.0.2.50', output)
             self.assertFalse(calls)
 
-    def test_root_connection_is_detected_and_recommended_before_edition_question(self):
+    def test_root_connection_sets_current_choice_without_ranking_editions(self):
         with tempfile.TemporaryDirectory() as tmp:
             code, output, calls = self.run_cli(['--host', '192.0.2.10', '--data-dir', tmp], ['', 'n'],
                 inspect=lambda host, port: {'root_ssh': True, 'developer_ssh': False, 'root_port': 22})
             self.assertEqual(code, 0, output)
             self.assertIn('Root SSH detected', output)
-            self.assertIn('Root (recommended)', output)
+            self.assertIn('Enter = current choice', output)
+            self.assertIn('No-root and Root are equal options for different TV setups.', output)
+            self.assertNotIn('recommended', output)
+            self.assertNotIn('Unsure?', output)
             self.assertIn('Edition: Root', output)
             self.assertNotIn('Root Preview', output)
             self.assertFalse(calls)
@@ -341,7 +344,9 @@ class CLITests(unittest.TestCase):
                 inspect=lambda host, port: {'root_ssh': False, 'developer_ssh': True, 'root_port': 22})
             self.assertEqual(code, 0, output)
             self.assertIn('Root access not confirmed', output)
-            self.assertIn('No-root (recommended)', output)
+            self.assertIn('Enter = current choice', output)
+            self.assertNotIn('recommended', output)
+            self.assertIn('Edition: No-root', output)
             self.assertNotIn('TV is not rooted', output)
             self.assertIn('SSH port: 9922', output)
             self.assertFalse(calls)

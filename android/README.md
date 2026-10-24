@@ -1,12 +1,16 @@
-# CYTV for Android — 0.1.0 preview
+# CYTV for Android — 0.1.3 preview
 
-A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The initial interface is Russian/English, with a bundled Noto Sans font, offline UI and TV packages. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
+No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
+
+The interface uses the approved B1 house mark in its original colours, with quiet warm charcoal surfaces and muted controls. Orange is confined to the identity rather than large button/background fills.
+
+A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with a bundled Noto Sans font, system-script fallbacks, offline UI and TV packages. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
 
 ## Install and connect
 
 1. Copy the preview APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
 2. Keep the phone and LG webOS TV on the same local network. Turn the TV on; disconnect VPNs or guest-network isolation if the connection fails.
-3. Choose **No-root** for Developer Mode, or **Root** for a TV with existing root SSH access. Enter the TV IPv4 address. Default SSH ports are 9922 and 22 respectively; Root ports are editable.
+3. Enter the TV IPv4 address and check the connection first. Then choose **No-root** for Developer Mode, or **Root** for a TV with existing root SSH access. Exactly one responding access mode is highlighted; with both or neither, choose manually. Default SSH ports are 9922 and 22 respectively; Root ports are editable.
 4. No-root: enable **Dev Mode Status** and **Key Server** in the TV's Developer Mode app. Enter its passphrase when CYTV asks. Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.
 5. Review the SSH fingerprint before trusting the TV. Review the actual installed/package versions before confirming installation. Accept the remote-control pairing prompt on the TV if shown.
 6. Keep the TV on. The foreground service continues while the Activity is in the background; keep Android's CYTV notification available. Do not force-stop the app or change networks during installation.
@@ -51,11 +55,16 @@ python3 -m unittest discover -s android/tests
 bash scripts/test.sh
 # Requires Playwright and a local Chrome; CYTV_CHROME can override its executable.
 node android/tests/ui.cjs
+node android/tests/localization.cjs
 node android/tests/screenshots.cjs
 ```
 
+The localization suite checks all ten complete catalogs, system-language resolution, the current-language picker, saved selection, preserving connection fields, localized native requests and progress, and returning from recovery to a fresh installation. Operation logs and the foreground notification use the language selected when the operation starts; changing the interface language does not rewrite earlier logs.
+
 The browser suite covers both editions, IP/port/key validation, explicit trust, secret isolation, error recovery and widths 320/375/412/768/1024. Files `screenshots/01-*` through `05-*` show the same offline UI in browser demonstration mode, clearly labeled; progress and completion there are simulated.
+
+The `screenshots/android-language-*` files and `android-languages-overview.png` show the actual APK language picker and Russian, German, Korean and Hindi screens. Run `node android/tests/languages-emulator.cjs` against the same forwarded debug WebView to check all ten languages and recreate them.
 
 Files `screenshots/android-*` are screenshots of the actual debug APK on an Android 15 ARM64 emulator. Native smoke checks reached the real Python No-root code/passphrase request, then tested the recovery result for an unavailable synthetic Key Server. The Root negative SSH fixture checked the real fingerprint confirmation and hidden password callback, then rejected an intentionally invalid synthetic password. It never executes TV commands. These checks do not establish successful hardware installation.
 
-For native smoke tests, forward the APK's debug WebView socket (`adb shell cat /proc/net/unix` identifies `webview_devtools_remote_PID`) with `adb forward tcp:9228 localabstract:webview_devtools_remote_PID`. Run `node android/tests/emulator.cjs` with `CYTV_ADB` set to adb's path. For the Root negative fixture, run `python android/tests/root-handshake.py` first, then set `CYTV_TEST_ROOT=1` for the Node command. Start the app on its Russian welcome screen with no operation running. WebView debugging is enabled only in debug builds; it is disabled in release builds.
+For native smoke tests, forward the APK's debug WebView socket (`adb shell cat /proc/net/unix` identifies `webview_devtools_remote_PID`) with `adb forward tcp:9228 localabstract:webview_devtools_remote_PID`. Run `node android/tests/emulator.cjs` with `CYTV_ADB` set to adb's path. For the Root negative fixture, run `python android/tests/root-handshake.py` first, then set `CYTV_TEST_ROOT=1` for the Node command. To avoid an older fixture’s remembered host key, set a fresh `CYTV_TEST_SSH_PORT` in both commands. Start the app on its Russian welcome screen with no operation running. WebView debugging is enabled only in debug builds; it is disabled in release builds.

@@ -84,7 +84,7 @@ def choose_profile(args, store, ask, write, search, inspect):
                 write('')
                 write('Checking TV connections…')
                 info = inspect(host, args.port)
-            recommended = 2 if info.get('root_ssh') else 1
+            default_choice = 2 if info.get('root_ssh') else 1
             write.step(2, 'Choose your edition')
             write('TV: ' + host)
             write.heading('Connection check')
@@ -95,14 +95,15 @@ def choose_profile(args, store, ask, write, search, inspect):
                 write('Root access not confirmed. SSH may be disabled or use another port.')
             if info.get('developer_ssh'):
                 write('Developer Mode SSH detected.')
-            write.option(1, 'No-root' + (' (recommended)' if recommended == 1 else ''),
+            write.option(1, 'No-root',
                          'For a TV without root. Uses LG Developer Mode.')
-            write.option(2, 'Root' + (' (recommended)' if recommended == 2 else ''),
+            write.option(2, 'Root',
                          'For an already rooted TV with existing SSH access.')
             write('')
-            write('This installer does not obtain root. Unsure? Choose No-root.')
-            write('Enter = recommended edition   |   q = quit')
-            choice = prompts.number(ask, write, f'Edition [{recommended}]: ', 1, 2, default=recommended)
+            write('No-root and Root are equal options for different TV setups.')
+            write('This installer does not obtain root.')
+            write('Enter = current choice   |   q = quit')
+            choice = prompts.number(ask, write, f'Edition [{default_choice}]: ', 1, 2, default=default_choice)
             edition = 'no-root' if choice == 1 else 'root'
         try:
             profile = state.target(host, edition, args.port, args.identity)

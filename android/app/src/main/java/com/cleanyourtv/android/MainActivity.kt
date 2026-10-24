@@ -17,12 +17,13 @@ import java.util.UUID
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private val ui = Handler(Looper.getMainLooper())
+    @Volatile private var inspecting = false
     private val entry = "file:///android_asset/ui/index.html"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val frame = FrameLayout(this)
-        frame.setBackgroundColor(Color.rgb(16, 21, 29))
+        frame.setBackgroundColor(Color.rgb(29, 28, 26))
         web = WebView(this)
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
         frame.addView(web)
@@ -40,7 +41,7 @@ class MainActivity : Activity() {
             }
             insets
         }
-        web.setBackgroundColor(Color.rgb(16, 21, 29))
+        web.setBackgroundColor(Color.rgb(29, 28, 26))
         web.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -59,7 +60,7 @@ class MainActivity : Activity() {
                     if (supported != "true" && !isDestroyed) {
                         android.app.AlertDialog.Builder(this@MainActivity)
                             .setTitle("CYTV / WebView")
-                            .setMessage("Обновите Android System WebView или Chrome и откройте CYTV снова.\n\nUpdate Android System WebView or Chrome, then reopen CYTV (WebView 108+ required).")
+                            .setMessage(getString(R.string.webview_update))
                             .setPositiveButton("OK") { _, _ -> finish() }
                             .setCancelable(false).show()
                     }
@@ -84,6 +85,28 @@ class MainActivity : Activity() {
     }
 
     inner class Bridge {
+        @JavascriptInterface fun inspect(config: String) {
+            synchronized(this@MainActivity) {
+                if (inspecting || Operation.active) return
+                inspecting = true
+            }
+            Thread({
+                try {
+                    require(config.length <= 4096)
+                    if (!com.chaquo.python.Python.isStarted()) {
+                        com.chaquo.python.Python.start(com.chaquo.python.android.AndroidPlatform(this@MainActivity))
+                    }
+                    val event = com.chaquo.python.Python.getInstance().getModule("android_bridge")
+                        .callAttr("inspect_connection", config).toString()
+                    ui.post { if (!isDestroyed) emit(event) }
+                } catch (_: Exception) {
+                    val host = try { JSONObject(config).optString("host") } catch (_: Exception) { "" }
+                    val event = JSONObject().put("kind", "inspection").put("host", host)
+                        .put("root_ssh", false).put("developer_ssh", false).put("root_port", 22).toString()
+                    ui.post { if (!isDestroyed) emit(event) }
+                } finally { inspecting = false }
+            }, "cytv-inspect").start()
+        }
         @JavascriptInterface fun snapshot(): String = Operation.snapshot()
         @JavascriptInterface fun hasKey(): Boolean = File(getSharedPreferences("private", MODE_PRIVATE).getString("identity", "") ?: "").isFile
         @JavascriptInterface fun start(config: String) {

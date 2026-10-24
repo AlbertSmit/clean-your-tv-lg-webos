@@ -1,19 +1,23 @@
 # Clean Your TV — 사용자 안내
 
+No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니다. LG Developer Mode를 사용하면 No-root를, 기존 root SSH 접근 권한이 있으면 Root를 선택하세요. 호환성과 테스트 범위는 각 버전마다 다릅니다.
+
 ## 설치 전 준비
 
 이 안내서는 설치, 일상적인 사용 및 복구를 다룹니다. 언어 선택과 macOS/Linux 데스크톱 앱은 [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3)에 포함되어 있습니다. 이전 v0.9.0 다운로드에는 데스크톱 앱이 없습니다. 두 에디션의 [설치 안내](../INSTALL.md)를 확인하세요.
 
-TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연결하세요. 설치 후에는 컴퓨터를 꺼도 됩니다. 호환성은 모델, 펌웨어, 리모컨에 따라 다릅니다. Root는 아직 미리 보기 단계이며 실제 기기 검증이 남아 있습니다.
+TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연결하세요. 설치 후에는 컴퓨터를 꺼도 됩니다. 호환성은 모델, 펌웨어, 리모컨에 따라 다릅니다. Root는 실제 기기 검증이 남아 있습니다.
 
 - **No-root:** LG Developer Mode와 Key Server를 켜세요. TV에 표시된 암호 문구를 입력하고 별도로 표시되는 페어링 요청을 TV에서 승인하세요. Developer Mode를 계속 활성화해야 합니다. 세션이 만료되면 설치한 앱이 삭제될 수 있습니다. 베타 자동 갱신을 켰더라도 공식 타이머를 확인하세요. Helper의 상태 감시에는 로컬 네트워크가 필요합니다.
 - **Root:** 기존 root SSH 접근 권한이 필요합니다. 설치 프로그램은 TV를 루팅하지 않습니다. 이미 루팅한 TV에는 Developer Mode를 켜지 마세요. root 접근 및 복구 서비스를 유지하세요.
 
 ## 설치와 언어 선택
 
-- **Windows x64:** 콘솔 패키지를 풀고 `cytv.exe`를 여세요. PowerShell에서는 아래 명령의 `./cytv`를 `.\cytv.exe`로 바꾸세요. Windows용 그래픽 앱은 포함되지 않습니다.
+- **Windows x64:** `cytv-windows-x64-desktop.zip`을 다운로드하고 파일 탐색기에서 **모두 추출**을 선택한 다음 `cytv-desktop/cytv-desktop.exe`를 여세요. `_internal` 폴더를 옆에 그대로 두세요. Windows 게시자 서명은 구성되어 있지 않습니다. 별도 콘솔은 `cytv-windows-x64.exe`입니다. 아래 PowerShell 명령은 이름을 `cytv.exe`로 바꾸고 `.\cytv.exe`로 실행하세요.
 - **macOS 13 이상:** Apple Silicon은 `cytv-macos-arm64.zip`, Intel은 `cytv-macos-x64.zip`을 푸세요. `cytv.app`을 응용 프로그램 폴더로 옮겨 열고 로컬 네트워크 접근을 허용하세요. 신뢰할 수 있는 다운로드가 차단되면 개인정보 보호 및 보안 → 확인 없이 열기를 사용하세요. Gatekeeper를 끄지 마세요. 구형 시스템 검증은 완료되지 않았습니다.
-- **Linux x64:** Ubuntu 22.04 이상, Debian 12 이상 또는 Mint 21 이상에서 `cytv-linux-x64.deb`를 그래픽 패키지 관리자로 설치하고 앱 메뉴에서 Clean Your TV를 여세요. 라이브러리 설치에 인터넷이 필요할 수 있습니다. Linux ARM 패키지는 없습니다.
+- **Linux x64:** Ubuntu 22.04 이상, Debian 12 이상 또는 Mint 21 이상에서 `cytv-linux-x64.deb`를 그래픽 패키지 관리자로 설치하고 앱 메뉴에서 Clean Your TV를 여세요. 라이브러리 설치에 인터넷이 필요할 수 있습니다. Linux ARM 패키지는 없습니다. 독립 실행 파일 `cytv-linux-x64`는 CLI입니다. 그래픽 앱은 `.deb`를 사용하세요.
+
+[Android 설치 프로그램](../../android/README.md)은 10개 인터페이스 언어를 모두 지원합니다. 오른쪽 위에 현재 언어가 표시되며, 누르면 다른 언어를 선택할 수 있습니다. 선택한 언어는 휴대전화에 저장됩니다.
 
 데스크톱 설치 마법사는 처음에 시스템 언어를 사용하고 직접 선택한 언어를 저장합니다. TV에서는 **설정 → 언어**에서 언어를 고르거나 시스템 언어를 따르는 자동 옵션을 선택하세요. 설치 프로그램과 TV의 언어 설정은 별개입니다. 지원 코드는 [언어 목록](../LANGUAGES.md)을 참조하세요.
 

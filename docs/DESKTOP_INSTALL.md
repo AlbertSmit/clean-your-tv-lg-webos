@@ -1,13 +1,15 @@
 # Install cytv without a terminal
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 The desktop wizard opens in its own window. The sidebar follows the four setup
 steps; Root and No-root are shown with descriptions before you choose. Expand
 **Maintenance action** on the start screen for status, diagnostics, restore and removal.
 It includes Python and the TV packages;
 you do not need developer tools or terminal commands.
 
-Download the desktop package for your computer from the
-[v0.10.8 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.8).
+Download the macOS, Windows or Linux desktop package from the
+[latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest).
 The older v0.9.0 macOS/Linux files are console programs, not the desktop app.
 
 ## macOS
@@ -51,6 +53,19 @@ See [Apple's first-launch guidance](https://support.apple.com/en-mo/102445).
 Desktop dependencies require macOS 13 or newer; native CI builds run on macOS 15.
 Older-system acceptance has not been established.
 
+## Windows x64
+
+Download [cytv-windows-x64-desktop.zip](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-windows-x64-desktop.zip):
+
+1. Download the ZIP, right-click it in File Explorer and choose **Extract All**.
+2. Open the extracted `cytv-desktop` folder and double-click `cytv-desktop.exe`.
+3. Click **Set up my TV**. No terminal or separate Python installation is needed.
+
+Keep the whole folder together, including `_internal`; do not run the executable
+inside the ZIP or copy the executable out by itself. The app opens its own window
+without a console. `cytv-windows-x64.exe` is the separate console wizard.
+Windows publisher signing is not configured.
+
 ## Ubuntu, Debian and Linux Mint
 
 Use an **x64** computer with Ubuntu 22.04 or newer, Debian 12 or newer, or Linux
@@ -61,6 +76,9 @@ Mint 21 or newer. ARM Linux packages are not included.
    and enter your computer's administrator password if requested.
 3. Open **Clean Your TV** from the applications menu.
 4. Click **Set up my TV**.
+
+The `.deb` contains the graphical app. The standalone `cytv-linux-x64` executable
+is the separate CLI and opens a terminal wizard.
 
 The package installer may download desktop libraries, so keep the computer online.
 If double-clicking opens an archive viewer, use **Open With** and select your
@@ -85,7 +103,7 @@ See the [ten localized installation, use and recovery guides](LANGUAGES.md).
 - Turn on the TV and connect it to the same home network as your computer.
 - Select a discovered TV, or use the address field and **Help finding my TV**.
 - Choose **No-root** for LG Developer Mode, or **Root** for an already rooted TV.
-  Connection detection recommends an edition; root privileges are verified after sign-in.
+  Connection detection sets the current choice to match the detected connection; you can select either edition. Root privileges are verified after sign-in.
 - Review the TV and edition, then click **Continue**. Approve pairing on the TV.
 - Root activates Home control and opens Clean Your TV Home immediately. There is
   no trial countdown or Keep confirmation.
@@ -135,7 +153,11 @@ python scripts/build-cytv.py --desktop
 
 Build natively on each target. macOS creates `dist/desktop/cytv.app` and an
 architecture-specific ZIP. Linux x64 creates `dist/cytv-linux-x64.deb` with a
-`Terminal=false` application-menu entry. Windows retains its existing console build.
+`Terminal=false` application-menu entry. Windows creates
+`dist/cytv-windows-x64-desktop.zip`, containing `cytv-desktop/cytv-desktop.exe`
+and its `_internal` runtime. It uses a native PyInstaller windowed directory build;
+the console build remains separate. Windows CI extracts the ZIP and runs its
+offline smoke check; release assembly includes the desktop ZIP.
 
 Every desktop build verifies its embedded payload and launches the frozen window
 with an offline `--smoke-test`; this does not contact a TV. Widget tests cover

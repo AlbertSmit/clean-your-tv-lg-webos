@@ -1,5 +1,7 @@
 # cytv standalone installer
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 For double-click setup without a terminal, use the [desktop application](DESKTOP_INSTALL.md).
 
 `cytv` is one terminal wizard for **No-root Edition** and **Root**. Native
@@ -12,12 +14,18 @@ Hardware evidence remains scoped to the documented models. Source/automated chec
 ## Run
 
 Download the console executable matching your computer from the
-[v0.10.8 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.8).
+[latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest).
 Development artifacts are also available from the **cytv standalone builds** workflow. Supported build targets are Windows x64, Linux x64, macOS ARM64 and macOS
 x64. Linux builds use Ubuntu 22.04; macOS builds use macOS 15. Older desktop OS
 compatibility is not established.
 
-Windows: download `cytv-windows-x64.exe` and open it, or run it from PowerShell.
+For a graphical window, Linux uses `cytv-linux-x64.deb`; the standalone
+`cytv-linux-x64` is this CLI. Windows provides
+`cytv-windows-x64-desktop.zip`, extracted with **Extract All** and launched via
+`cytv-desktop/cytv-desktop.exe` with its `_internal` folder intact.
+See [desktop setup](DESKTOP_INSTALL.md).
+
+Windows CLI: download `cytv-windows-x64.exe` and open it, or run it from PowerShell.
 If you rename it to `cytv.exe`, use that name in the command examples. The console stays open after
 the wizard when launched without arguments. macOS/Linux: open a terminal in the
 download directory, restore executable permission if your ZIP extractor removed

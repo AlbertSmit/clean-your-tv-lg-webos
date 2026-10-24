@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout,
 from cytv import __version__, cli, diagnostics, i18n
 from cytv.i18n import translate as tr
 from cytv.desktop import Channel
-from cytv.gui_style import STYLE, TVPreview, Select, EditionOption
+from cytv.gui_style import STYLE, TVPreview, Select, EditionOption, BrandSignature
 
 
 class Events(QObject):
@@ -47,15 +47,11 @@ class Wizard(QMainWindow):
         sidebar.setObjectName('sidebar')
         sidebar.setFixedWidth(248)
         rail = QVBoxLayout(sidebar)
-        rail.setContentsMargins(20, 36, 20, 26)
+        rail.setContentsMargins(20, 24, 20, 26)
         rail.setSpacing(8)
-        brand = QLabel('Clean Your TV')
-        brand.setObjectName('brand')
-        rail.addWidget(brand)
-        platform = QLabel('LG webOS')
-        platform.setObjectName('platform')
-        rail.addWidget(platform)
-        rail.addSpacing(58)
+        self.brand = BrandSignature(cli.payload_dir() / 'brand-stacked.svg')
+        rail.addWidget(self.brand)
+        rail.addSpacing(12)
         self.rail_title = QLabel()
         self.rail_title.setObjectName('railTitle')
         self.rail_title.setWordWrap(True)
@@ -132,7 +128,7 @@ class Wizard(QMainWindow):
         self.content.setFrameShape(QFrame.Shape.NoFrame)
         self.content.document().setDefaultStyleSheet(
             'p { margin-top: 6px; margin-bottom: 12px; line-height: 140%; } '
-            'h3 { color: #182c46; font-size: 15px; margin-top: 12px; margin-bottom: 10px; }')
+            'h3 { color: #f3ede3; font-size: 15px; margin-top: 12px; margin-bottom: 10px; }')
         layout.addWidget(self.content, 1)
         self.progress = QProgressBar()
         self.progress.setRange(0, 0)

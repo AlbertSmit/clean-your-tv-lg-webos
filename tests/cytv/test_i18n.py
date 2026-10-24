@@ -124,6 +124,19 @@ class LanguageTests(unittest.TestCase):
                         with self.subTest(file=path.name, line=node.lineno, language=code, text=sentence):
                             self.assertNotEqual(lang.translate(sentence), sentence)
 
+    def test_neutral_edition_guidance_is_translated_in_every_language(self):
+        lang = self.language()
+        messages = (
+            'No-root and Root are equal options for different TV setups.',
+            'This installer does not obtain root.',
+            'Enter = current choice   /   q = quit',
+        )
+        for code in set(lang.LANGUAGES) - {'en', 'auto'}:
+            lang.set_language(code)
+            for message in messages:
+                with self.subTest(language=code, message=message):
+                    self.assertNotEqual(lang.translate(message), message)
+
     def test_package_removal_progress_preserves_app_id_in_every_language(self):
         lang = self.language()
         message = 'Removing com.cleanyourtv.root.updater…'

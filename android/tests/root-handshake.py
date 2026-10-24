@@ -1,5 +1,6 @@
 """Loopback-only negative SSH fixture. Never emulates a successful TV install."""
 import socket
+import os
 import paramiko
 import time
 
@@ -10,11 +11,12 @@ class RejectPassword(paramiko.ServerInterface):
 
 with socket.socket() as listener:
     listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listener.bind(('127.0.0.1', 32222))
+    port = int(os.environ.get('CYTV_TEST_SSH_PORT', '32222'))
+    listener.bind(('127.0.0.1', port))
     listener.listen(2)
     listener.settimeout(120)
     key = paramiko.RSAKey.generate(2048)
-    print('Loopback negative SSH fixture ready on 32222', flush=True)
+    print(f'Loopback negative SSH fixture ready on {port}', flush=True)
     connection, _ = listener.accept()
     with paramiko.Transport(connection) as transport:
         transport.add_server_key(key)

@@ -55,9 +55,11 @@ class Console:
             # Scroll the previous page into history before clearing the viewport.
             self.raw('\n' * max(1, shutil.get_terminal_size((80, 24)).lines))
             self.raw('\x1b[2J\x1b[H')
+        self.raw('  ' + self.bold('Clean Your TV / LG webOS'))
         self.heading(f'CYTV  /  STEP {number} / 4')
         self.raw('  ' + self.bold(tr(title)))
-        self.raw('  ' + '-' * (self.width - 4))
+        rule = '-' * (self.width - 4)
+        self.raw('  ' + ('\x1b[38;2;255;76;32m' + rule + '\x1b[0m' if self.color else rule))
         self.raw('')
 
     def option(self, key, label, detail=''):

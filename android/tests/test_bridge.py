@@ -35,6 +35,51 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(args[0], 'restore')
         self.assertEqual(args[args.index('--identity') + 1], '/private/key')
 
+    def test_all_desktop_languages_reach_cli_and_unknown_values_are_rejected(self):
+        from cytv.i18n import LANGUAGES
+        module = self.module()
+        for language in LANGUAGES.keys() - {'auto'}:
+            args = module.arguments({'host': '192.168.1.2', 'edition': 'root', 'language': language}, '/private/profiles')
+            self.assertEqual(args[args.index('--language') + 1], language)
+        for language in ('auto', 'unknown', ''):
+            with self.assertRaises(ValueError):
+                module.arguments({'host': '192.168.1.2', 'edition': 'root', 'language': language}, '/private/profiles')
+
+    def test_translated_secret_requests_retain_semantic_type(self):
+        from cytv import i18n
+        from cytv.terminal import Console
+        module = self.module()
+        class Callbacks:
+            def __init__(self): self.events = []
+            def request(self, value): self.events.append(json.loads(value)); return 'secret'
+        native = Callbacks()
+        try:
+            for language in i18n.LANGUAGES.keys() - {'auto'}:
+                i18n.set_language(language)
+                for prompt, kind in [('SSH key passphrase: ', 'key'), ('Root SSH password (hidden): ', 'root'), ('Developer Mode passphrase: ', 'developer')]:
+                    module.Callbacks(native).secret(Console(interactive=False).prompt(prompt))
+                    self.assertEqual(native.events[-1]['secretType'], kind)
+        finally:
+            i18n.set_language('en')
+
+    def test_progress_events_use_source_messages_before_translation(self):
+        from cytv import i18n
+        module = self.module()
+        class Native:
+            def __init__(self): self.events = []
+            def emit(self, value): self.events.append(json.loads(value))
+        native = Native()
+        try:
+            for language in i18n.LANGUAGES.keys() - {'auto'}:
+                i18n.set_language(language)
+                native.events.clear()
+                console = module.AndroidConsole(module.Callbacks(native))
+                for message in ('Read 18 applications.', 'Installing Home Helper…', 'Configuring Home Helper…'):
+                    console(message)
+                self.assertEqual([e['stage'] for e in native.events if e['kind'] == 'stage'], [1, 2, 3])
+        finally:
+            i18n.set_language('en')
+
     def test_secrets_are_requested_without_echo_and_trust_is_explicit(self):
         module = self.module()
         class Callbacks:

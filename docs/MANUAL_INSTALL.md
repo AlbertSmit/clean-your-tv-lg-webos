@@ -1,11 +1,13 @@
 # Manual installation of No-root and Root without cytv
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 This guide uses commands from the source repository: the webOS CLI for No-root
 and Python/OpenSSH for Root. You do not need to run `cytv` or `install.sh`.
 Run every command **on your computer** unless stated otherwise.
 The addresses and names below are examples; replace them with your own.
 
-Root remains a separate edition at **preview maturity**. The main hardware
+Root has separate hardware validation. The main hardware
 checks used an LG OLED55C3RLA with firmware 43.21.71; they do not establish
 compatibility with other models. Final-artifact cold-power, quick-standby and
 failsafe checks remain open: [validation scope](../root-edition/RELEASE-ACCEPTANCE.md).

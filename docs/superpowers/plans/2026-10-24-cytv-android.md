@@ -29,3 +29,7 @@
 ## Review follow-up
 
 Independent read-only review identified preview payload caching by versionCode, outdated WebView handling and form preservation during key import. Fixed all three: manifest-SHA256 cache directories, a native WebView 108+ feature check/update message, and saving form values before key import. The key-import regression was observed failing before the fix and passing afterward. Final assembleDebug/lintDebug and UI checks passed; the final APK was reinstalled with the same versionCode and the native No-root callback/recovery test passed. The new manifest-hash cache directory was confirmed inside the emulator.
+
+## B1 identity and equal editions follow-up
+
+User requested the existing B1 identity across Android, desktop and console installers, then explicitly rejected bright UI fills. Original house/icon colours are retained; working surfaces and buttons use quiet warm charcoal and muted neutrals. Android initially selects neither edition. Recommendation labels and preferential advice were removed from shared CLI, translations, README and all ten user guides. Model/firmware evidence remains scoped. Packaged B1 SVGs are hash-verified, and native Android/Qt screenshots were refreshed. Android preview is 0.1.1 (versionCode 2).

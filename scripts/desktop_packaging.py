@@ -1,5 +1,6 @@
 """Native desktop distributions. Packages never contain local TV profiles."""
 import os
+import json
 from pathlib import Path
 import platform
 import plistlib
@@ -45,8 +46,10 @@ Description: Clean Your TV graphical setup wizard
 
 
 def build_desktop(root, payload, environment, version):
-    if sys.platform not in ('darwin', 'linux'):
+    if sys.platform not in ('darwin', 'linux', 'win32'):
         return
+    if sys.platform == 'win32' and platform.machine().lower() not in ('amd64', 'x86_64'):
+        raise RuntimeError('The Windows desktop package currently targets x64 only.')
     name = 'cytv' if sys.platform == 'darwin' else 'cytv-desktop'
     output = root / 'dist/desktop'
     command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed',
@@ -65,6 +68,8 @@ def build_desktop(root, payload, environment, version):
         icon = iconset.with_suffix('.icns')
         subprocess.run(['iconutil', '-c', 'icns', str(iconset), '-o', str(icon)], check=True)
         command += ['--osx-bundle-identifier', 'org.cleanyourtv.cytv', '--icon', str(icon)]
+    elif sys.platform == 'win32':
+        command += ['--icon', str(root / 'assets/icons/installer.ico')]
     command += [str(root / 'cytv/desktop_entry.py')]
     subprocess.run(command, cwd=root, env=environment, check=True)
     if sys.platform == 'darwin':
@@ -84,6 +89,15 @@ def build_desktop(root, payload, environment, version):
         subprocess.run([str(executable), '--smoke-test'], env=dict(os.environ, QT_QPA_PLATFORM='offscreen'), check=True)
         archive = root / 'dist' / ('cytv-macos-' + ('arm64' if platform.machine() == 'arm64' else 'x64') + '.zip')
         subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', str(bundle), str(archive)], check=True)
+    elif sys.platform == 'win32':
+        frozen = output / name
+        executable = frozen / (name + '.exe')
+        subprocess.run([str(executable), '--check-payload'], check=True)
+        subprocess.run([str(executable), '--smoke-test'], env=dict(os.environ, QT_QPA_PLATFORM='offscreen'), check=True)
+        (frozen / 'version.json').write_text(json.dumps({
+            'cytv': version, 'platform': 'windows-x64', 'entrypoint': 'cytv-desktop.exe'}), encoding='utf-8')
+        archive = root / 'dist/cytv-windows-x64-desktop.zip'
+        shutil.make_archive(str(archive.with_suffix('')), 'zip', root_dir=output, base_dir=name)
     else:
         if platform.machine() not in ('x86_64', 'AMD64'):
             raise RuntimeError('The desktop .deb currently targets x64 only.')

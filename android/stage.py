@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,12 @@ def main():
     source = generated / 'python'
     assets = generated / 'assets'
     source.mkdir(parents=True, exist_ok=True)
+    assets.mkdir(parents=True, exist_ok=True)
+    (assets / 'cytv-build.json').write_text(json.dumps({
+        'schema': 1,
+        'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'versions': json.loads((ROOT / 'release-versions.json').read_text()),
+    }, indent=2) + '\n')
     for target in (source / 'cytv', assets / 'payload'):
         if target.exists(): shutil.rmtree(target)
         target.mkdir(parents=True)

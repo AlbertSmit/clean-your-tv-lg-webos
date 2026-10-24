@@ -8,6 +8,8 @@ Language selection and the macOS/Linux desktop application described here are in
 in v0.10.3 and later downloads. Existing v0.9.0 downloads
 do not contain the new desktop app. Follow the availability notes in your guide.
 
+The Android preview also supports all ten languages below. It follows the phone language on first launch (English fallback); tap the current language code at the top right to choose and save another language.
+
 | Language | Code | User guide |
 | --- | --- | --- |
 | English | `en` | [English](i18n/en.md) |

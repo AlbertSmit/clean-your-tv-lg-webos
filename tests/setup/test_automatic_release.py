@@ -3,6 +3,9 @@ import importlib.util
 import json
 from pathlib import Path
 import unittest
+import tempfile
+import struct
+import zipfile
 from cytv.package import ipk
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -14,6 +17,55 @@ SHA = 'a' * 40
 
 
 class AutomaticRelease(unittest.TestCase):
+    def test_android_release_binds_apk_to_trusted_source_metadata_and_payload(self):
+        self.assertTrue(hasattr(release, 'verify_android_package'), 'Android release verification is missing')
+        versions = {**VERSIONS, 'android': '0.1.3-preview', 'android_version_code': 4}
+        files = {}
+        for name, app, key in [('launcher.ipk', 'com.gathin.tvhome', 'home'), ('helper.ipk', 'com.local.nativehome', 'helper'), ('root/root.ipk', 'com.cleanyourtv.root.preview', 'root')]:
+            files[name] = ipk(app, versions[key], {'usr/palm/applications/' + app + '/appinfo.json': json.dumps({'id': app, 'version': versions[key]}).encode()})
+        files['root/bundle.json'] = b'{"package":"root.ipk"}'
+        files['root/release.json'] = json.dumps({'version': versions['root']}).encode()
+        files['payload.json'] = json.dumps({'home_version': versions['home'], 'helper_version': versions['helper'], 'files': {n:hashlib.sha256(v).hexdigest() for n,v in files.items()}}).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            apk = Path(directory) / 'android.apk'
+            report = Path(directory) / 'android.build.json'
+            with zipfile.ZipFile(apk, 'w') as archive:
+                archive.writestr('assets/cytv-build.json', json.dumps({'schema': 1, 'source_commit': SHA, 'versions': versions}))
+                for name, raw in files.items(): archive.writestr('assets/payload/' + name, raw)
+            metadata = {'schema': 1, 'source_commit': SHA, 'versions': versions,
+                        'android_version_name': versions['android'], 'android_version_code': 4,
+                        'package': 'com.cleanyourtv.android', 'abi': 'arm64-v8a', 'min_sdk': 24, 'target_sdk': 35,
+                        'signer_sha256': (ROOT / 'android/preview-certificate.sha256').read_text().strip(),
+                        'sha256': hashlib.sha256(apk.read_bytes()).hexdigest()}
+            report.write_text(json.dumps(metadata))
+            self.assertGreater(release.verify_android_package(apk, report, versions, SHA), 0)
+            for key, value in [('source_commit', 'b'*40), ('sha256', '0'*64), ('signer_sha256', '0'*64), ('android_version_code', 3), ('abi', 'x86_64')]:
+                report.write_text(json.dumps({**metadata, key: value}))
+                with self.subTest(key=key), self.assertRaises(ValueError):
+                    release.verify_android_package(apk, report, versions, SHA)
+
+    def test_windows_desktop_rejects_console_binary_and_stale_package(self):
+        self.assertTrue(hasattr(release, 'verify_windows_desktop'), 'Windows GUI release verification is missing')
+        files = {}
+        for name, app, key in [('launcher.ipk', 'com.gathin.tvhome', 'home'), ('helper.ipk', 'com.local.nativehome', 'helper'), ('root/root.ipk', 'com.cleanyourtv.root.preview', 'root')]:
+            files[name] = ipk(app, VERSIONS[key], {'usr/palm/applications/' + app + '/appinfo.json': json.dumps({'id': app, 'version': VERSIONS[key]}).encode()})
+        files['root/bundle.json'] = b'{"package":"root.ipk"}'
+        files['root/release.json'] = json.dumps({'version': VERSIONS['root']}).encode()
+        files['payload.json'] = json.dumps({'home_version': VERSIONS['home'], 'helper_version': VERSIONS['helper'], 'files': {n:hashlib.sha256(v).hexdigest() for n,v in files.items()}}).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'desktop.zip'
+            for subsystem, version, valid in [(2, VERSIONS['cytv'], True), (3, VERSIONS['cytv'], False), (2, '0.0.1', False)]:
+                pe = bytearray(512); pe[:2] = b'MZ'; struct.pack_into('<I', pe, 60, 128)
+                pe[128:132] = b'PE\0\0'; struct.pack_into('<H', pe, 132, 0x8664)
+                struct.pack_into('<H', pe, 152, 0x20b); struct.pack_into('<H', pe, 220, subsystem)
+                with zipfile.ZipFile(target, 'w') as archive:
+                    archive.writestr('cytv-desktop/cytv-desktop.exe', pe)
+                    archive.writestr('cytv-desktop/version.json', json.dumps({'cytv': version, 'platform': 'windows-x64', 'entrypoint': 'cytv-desktop.exe'}))
+                    for name, data in files.items(): archive.writestr('cytv-desktop/_internal/payload/' + name, data)
+                if valid: self.assertEqual(release.verify_windows_desktop(target, VERSIONS), len(files)-1)
+                else:
+                    with self.assertRaises(ValueError): release.verify_windows_desktop(target, VERSIONS)
+
     def test_new_version_starts_release(self):
         self.assertTrue(release.plan_release(VERSIONS, SHA, [], False))
 

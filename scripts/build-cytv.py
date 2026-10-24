@@ -70,6 +70,12 @@ def verify_release_versions(payload, versions):
             raise ValueError('Embedded application/service version does not match release metadata: ' + app)
 
 
+def stage_brand_assets(payload):
+    for packaged, master in (('brand-symbol.svg', 'symbol-reversed.svg'),
+                             ('brand-stacked.svg', 'logo-stacked-dark.svg')):
+        (payload / packaged).write_bytes((ROOT / 'assets/brand' / master).read_bytes())
+
+
 def build_payload():
     import ziglang
     versions = json.loads((ROOT / "release-versions.json").read_text())
@@ -105,6 +111,7 @@ def build_payload():
             (payload / name).write_bytes(data)
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
     (payload / 'installer.png').write_bytes((ROOT / 'assets/icons/installer.png').read_bytes())
+    stage_brand_assets(payload)
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
@@ -140,7 +147,7 @@ def build_payload():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--payload-only', action='store_true', help='Build and verify TV assets, without freezing')
-    parser.add_argument('--desktop', action='store_true', help='Also build the windowed macOS app or Debian package')
+    parser.add_argument('--desktop', action='store_true', help='Also build the Windows GUI ZIP, macOS app or Debian package')
     args = parser.parse_args()
     payload = build_payload()
     print('Public TV payload verified:', payload)

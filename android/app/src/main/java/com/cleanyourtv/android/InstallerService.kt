@@ -75,14 +75,19 @@ class InstallerService : Service() {
         val config = intent?.getStringExtra("config") ?: return START_NOT_STICKY
         if (!Operation.begin(config)) return START_NOT_STICKY
         try {
+            val selected = JSONObject(config).optString("language", "en")
+            val configuration = android.content.res.Configuration(resources.configuration).apply {
+                setLocale(java.util.Locale.forLanguageTag(selected))
+            }
+            val localized = createConfigurationContext(configuration)
             val notifications = getSystemService(NotificationManager::class.java)
             if (Build.VERSION.SDK_INT >= 26) {
-                notifications.createNotificationChannel(NotificationChannel("installation", "CYTV installation", NotificationManager.IMPORTANCE_LOW))
+                notifications.createNotificationChannel(NotificationChannel("installation", localized.getString(R.string.installation_channel), NotificationManager.IMPORTANCE_LOW))
             }
             val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "installation") else Notification.Builder(this)
-            startForeground(1, builder.setSmallIcon(com.cleanyourtv.android.R.drawable.ic_cytv)
-                .setContentTitle("CYTV").setContentText("Настройка телевизора / TV setup")
+            startForeground(1, builder.setSmallIcon(com.cleanyourtv.android.R.drawable.ic_cytv_notification)
+                .setContentTitle("CYTV").setContentText(localized.getString(R.string.installation_progress))
                 .setContentIntent(open).setOngoing(true).build())
             wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
                 .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "CYTV:installation")

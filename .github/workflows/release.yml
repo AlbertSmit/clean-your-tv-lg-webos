@@ -100,7 +100,7 @@ jobs:
           github-token: ${{ github.token }}
           pattern: cytv-*
           path: ${{ runner.temp }}/release-builds
-      - name: Verify seven installers and assemble final public bundles
+      - name: Verify desktop and Android installers and assemble final public bundles
         env:
           SOURCE_BUILD_RUN: ${{ needs.plan.outputs.build_run }}
         run: python release-tools/scripts/assemble-release.py --artifacts "$RUNNER_TEMP/release-builds" --output "$RUNNER_TEMP/release-assets"

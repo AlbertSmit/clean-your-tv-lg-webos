@@ -9,6 +9,8 @@ Keep your favorite apps in a personal dock and app grid, without sponsored rows
 in this launcher. Both editions run on the TV; your computer can be switched off
 after setup. One cytv wizard installs either edition.
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 - **No-root:** uses LG Developer Mode and an on-TV Home Helper. Keep the session
   active and local networking available for Helper monitoring.
 - **Root:** uses existing root access, system Home routing and independent recovery.
@@ -29,23 +31,38 @@ handling moved from an external watcher to an on-TV native helper.
 
 Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
 
-The v0.10.8 release selects the system language automatically and saves
+The v0.10.9 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
 may predate these features.
 
 ## Install with cytv
 
-[Download v0.10.8](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.8)
-for Windows, macOS or Linux. One wizard installs either edition. Root activates
-and opens Home immediately, without a trial or Keep confirmation.
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.8.md)
+Choose your platform. Download buttons use GitHub’s `releases/latest/download`
+URLs, so they follow the latest published release without a version in the link.
+
+[![Download Windows x64 graphical installer — GUI ZIP](assets/brand/downloads/windows.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-windows-x64-desktop.zip)
+[![Download macOS Apple Silicon graphical installer — ZIP](assets/brand/downloads/macos-arm64.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-macos-arm64.zip)
+[![Download macOS Intel graphical installer — ZIP](assets/brand/downloads/macos-x64.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-macos-x64.zip)
+[![Download Linux x64 graphical installer — DEB](assets/brand/downloads/linux.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-linux-x64.deb)
+[![Download Android ARM64 preview installer — APK](assets/brand/downloads/android.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-android-arm64.apk)
+
+Windows downloads the graphical ZIP: use **Extract All**, then open
+`cytv-desktop/cytv-desktop.exe` with its `_internal` folder beside it. Windows
+publisher signing is not configured. Android **0.1.3-preview** is an ARM64,
+debug-signed APK; see [Android preview and requirements](android/README.md).
+These downloads do not establish physical-TV compatibility.
+
+One wizard installs either edition. Root activates and opens Home immediately,
+without a trial or Keep confirmation.
+[All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-0.10.9.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
-| **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
+| **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
 | **Root Edition** | Root 0.1.8 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
@@ -133,7 +150,11 @@ app-specific exit behavior can vary. See [Recovery](docs/RECOVERY.md) for troubl
 
 Start with the [shared installation guide](docs/INSTALL.md) for No-root or Root.
 cytv includes TV discovery, saved profiles, diagnostics, recovery and the required
-packages. macOS/Linux have a desktop wizard; Windows uses a console wizard.
+packages. macOS uses `cytv.app`; Linux uses the graphical `cytv-linux-x64.deb`
+package. Windows uses `cytv-windows-x64-desktop.zip`: extract
+all files and open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it.
+The separate `cytv-windows-x64.exe` download is the console wizard. See [desktop setup](docs/DESKTOP_INSTALL.md).
+The [Android preview](android/README.md) includes all ten desktop languages. Its top-right control shows the current language and opens a saved language picker.
 Real-TV acceptance remains model- and build-specific.
 
 ### No-root source installation
@@ -199,9 +220,9 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.8 distribution contains cytv **0.2.11**, Home **1.3.4**, Helper
+The v0.10.9 distribution contains cytv **0.2.12**, Home **1.3.4**, Helper
 **0.6.16**, Root **0.1.8** and No-root Updater **0.1.5**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.8.md)
+recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.9.md)
 explain packaging and remaining checks.
 
 Hardware records describe particular artifacts. Earlier C3/C4 reports do not

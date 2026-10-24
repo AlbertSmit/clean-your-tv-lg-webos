@@ -5,6 +5,18 @@ import unittest
 
 
 class BuildAssetsTests(unittest.TestCase):
+    def test_installer_bundle_contains_approved_brand_masters(self):
+        import tempfile
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        with tempfile.TemporaryDirectory() as directory:
+            self.assertIn('stage_brand_assets', build, 'Installer branding is not staged')
+            build['stage_brand_assets'](Path(directory))
+            for packaged, master in [('brand-symbol.svg', 'symbol-reversed.svg'),
+                                     ('brand-stacked.svg', 'logo-stacked-dark.svg')]:
+                self.assertEqual((Path(directory) / packaged).read_bytes(),
+                                 (root / 'assets/brand' / master).read_bytes())
+
     def test_new_public_runtime_modules_are_packaged(self):
         build = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/build-cytv.py'))
         self.assertIn('state-permissions.js', list(build['tracked_files']('native/app')))

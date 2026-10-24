@@ -32,6 +32,17 @@ def digest(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def validate_versions(versions):
+    for key in ('release', 'cytv', 'home', 'helper', 'root', 'updater'):
+        version(versions[key])
+    if 'android' in versions or 'android_version_code' in versions:
+        if (not isinstance(versions.get('android'), str)
+                or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}-preview', versions['android'])
+                or type(versions.get('android_version_code')) is not int
+                or versions['android_version_code'] < 1):
+            raise ValueError('Invalid Android preview version metadata')
+
+
 def package_version(raw, kind, expected):
     app = APPS[kind]
     info = json.loads(data_files(raw)['usr/palm/applications/' + app + '/appinfo.json'])
@@ -113,7 +124,7 @@ def bundles(meta, folder):
     if json.loads(base64.b64decode(content['content'])) != build['versions']:
         raise ValueError('Release versions differ from committed source')
     versions = build['versions']
-    for v in versions.values(): version(v)
+    validate_versions(versions)
     home_name = 'clean-your-tv-no-root-' + versions['home'] + '.zip'
     download(meta, home_name, folder)
     with zipfile.ZipFile(folder / home_name) as archive:

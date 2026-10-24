@@ -13,6 +13,16 @@ const jobs = {
 };
 
 async function main() {
+  // Android uses exactly the same B1 master, including its original transform.
+  const brand = await fs.readFile(path.join(root, 'assets/brand/symbol-reversed.svg'), 'utf8');
+  await fs.copyFile(path.join(root, 'assets/brand/symbol-reversed.svg'),
+    path.join(root, 'android/app/src/main/assets/ui/brand-symbol.svg'));
+  const paths = [...brand.matchAll(/<path fill="([^"]+)" d="([^"]+)"/g)];
+  if (paths.length !== 2) throw new Error('Unexpected B1 symbol format');
+  const vector = (notification) => `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="48dp" android:height="48dp" android:viewportWidth="256" android:viewportHeight="256">\n${notification ? '' : '  <path android:fillColor="#241D19" android:pathData="M55,0H201Q256,0 256,55V201Q256,256 201,256H55Q0,256 0,201V55Q0,0 55,0Z"/>\n  <group android:translateX="20" android:translateY="6" android:scaleX=".84" android:scaleY=".84">\n'}${paths.map(([,fill,d])=>`  <path android:fillColor="${notification ? '#FFF8EB' : fill}" android:pathData="${d}"/>`).join('\n')}\n${notification ? '' : '  </group>\n'}</vector>\n`;
+  const drawable = path.join(root, 'android/app/src/main/res/drawable');
+  await fs.writeFile(path.join(drawable, 'ic_cytv.xml'), vector(false));
+  await fs.writeFile(path.join(drawable, 'ic_cytv_notification.xml'), vector(true));
   for (const [name, targets] of Object.entries(jobs)) {
     for (const [destination, size] of targets) {
       const output = path.join(root, destination);

@@ -6,23 +6,27 @@ const fs = require('node:fs');
 let browser;
 (async () => {
   browser = await chromium.launch({headless: true, executablePath: process.env.CYTV_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
-  const page = await browser.newPage({viewport:{width:412,height:892},deviceScaleFactor:2});
+  const page = await browser.newPage({locale:'ru-RU',viewport:{width:412,height:892},deviceScaleFactor:2});
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.addInitScript(() => {
     window.requests = [];
-    window.CYTV = {snapshot:()=> '[]', hasKey:()=>false,
+    window.CYTV = {snapshot:()=> '[]', hasKey:()=>false, inspect:config=>receiveNative({kind:'inspection',host:JSON.parse(config).host,root_ssh:false,developer_ssh:true,root_port:22}),
       start:config=>window.requests.push(JSON.parse(config)),
       answer:value=>window.requests.push(JSON.parse(value)), importKey:()=>{}};
   });
   await page.goto('file://' + path.resolve(__dirname,'../app/src/main/assets/ui/index.html'));
-  await page.getByRole('button',{name:'Подключить телевизор',exact:true}).click();
-  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
-  assert.equal(await page.locator('#host').getAttribute('aria-invalid'), 'true');
+  assert.equal(await page.getByRole('img',{name:'Clean Your TV'}).count(),1);
+  assert.equal(await page.getByText('Рекомендуем',{exact:true}).count(),0);
+  assert.equal(await page.getByRole('radio').count(),0);
+  await page.getByRole('button',{name:'Проверить подключение',exact:true}).click();
+  assert.equal(await page.locator('#host').getAttribute('aria-invalid'),'true');
   await page.locator('#host').fill('192.168.1.999');
-  await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
+  await page.getByRole('button',{name:'Проверить подключение',exact:true}).click();
   assert.equal((await page.evaluate(()=>window.requests)).length,0);
   await page.locator('#host').fill('192.168.1.50');
+  await page.getByRole('button',{name:'Проверить подключение',exact:true}).click();
+  await page.getByRole('button',{name:'Продолжить',exact:true}).click();
   await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
   assert.equal((await page.evaluate(()=>window.requests))[0].edition,'no-root');
   await page.evaluate(()=>receiveNative({kind:'started',config:{host:'192.168.1.50',edition:'no-root',action:'install'}}));
@@ -38,7 +42,7 @@ let browser;
   await page.getByRole('button',{name:'Вернуться к подключению',exact:true}).click();
   await page.getByRole('button',{name:'Назад',exact:true}).click();
   await page.getByRole('radio',{name:/Root Уже есть root/}).click();
-  await page.getByRole('button',{name:'Подключить телевизор',exact:true}).click();
+  await page.getByRole('button',{name:'Продолжить',exact:true}).click();
   assert.equal(await page.locator('#port').inputValue(),'22');
   await page.getByRole('button',{name:'SSH-ключ',exact:true}).click();
   await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();

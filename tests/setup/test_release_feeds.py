@@ -22,6 +22,15 @@ def build(home='1.3.5', root='0.1.9', helper='0.6.16'):
 
 
 class ReleaseFeeds(unittest.TestCase):
+    def test_android_preview_metadata_is_validated_separately_from_tv_versions(self):
+        values = {'release':'0.10.9','cytv':'0.2.12','home':'1.3.4','helper':'0.6.16',
+                  'root':'0.1.8','updater':'0.1.5','android':'0.1.3-preview','android_version_code':4}
+        release.validate_versions(values)
+        release.validate_versions({k:v for k,v in values.items() if not k.startswith('android')})
+        for key, value in [('android','bad'),('android_version_code',0),('android_version_code',True),('home','invalid')]:
+            with self.subTest(key=key,value=value), self.assertRaises(ValueError):
+                release.validate_versions({**values,key:value})
+
     def prepare(self, current=None, prior=None, prior_build=None, rollback=None):
         return release.prepare_manifests('v0.10.9', current or build(), packages(), prior_build or build('1.3.4', '0.1.8'), prior or packages('1.3.4', '0.1.8'), rollback)
 

@@ -2,7 +2,37 @@ import os
 import runpy
 import tempfile
 import unittest
+import zipfile
+import json
 from pathlib import Path
+from unittest.mock import patch
+
+
+class WindowsDesktopPackageTests(unittest.TestCase):
+    def test_windows_build_is_windowed_and_archive_keeps_runtime(self):
+        root = Path(__file__).resolve().parents[2]
+        packaging = runpy.run_path(str(root / 'scripts/desktop_packaging.py'))
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            def run(command, **kwargs):
+                if 'PyInstaller' in command:
+                    self.assertIn('--windowed', command)
+                    self.assertIn('--onedir', command)
+                    self.assertIn('--icon', command)
+                    frozen = project / 'dist/desktop/cytv-desktop'
+                    (frozen / '_internal/payload').mkdir(parents=True)
+                    (frozen / 'cytv-desktop.exe').write_bytes(b'MZ-test-GUI')
+                    (frozen / '_internal/Qt6Widgets.dll').write_bytes(b'qt-runtime')
+                    (frozen / '_internal/payload/payload.json').write_text('{}')
+            with patch('sys.platform', 'win32'), patch('platform.machine', return_value='AMD64'), patch('subprocess.run', side_effect=run) as invoke:
+                packaging['build_desktop'](project, project / 'payload', {}, '0.2.11')
+            archive = project / 'dist/cytv-windows-x64-desktop.zip'
+            self.assertTrue(archive.is_file(), 'Windows GUI packaging was skipped')
+            with zipfile.ZipFile(archive) as bundle:
+                self.assertEqual(bundle.read('cytv-desktop/_internal/Qt6Widgets.dll'), b'qt-runtime')
+                self.assertIn('cytv-desktop/cytv-desktop.exe', bundle.namelist())
+                self.assertEqual(json.loads(bundle.read('cytv-desktop/version.json'))['cytv'], '0.2.11')
+            self.assertTrue(any('--smoke-test' in c.args[0] for c in invoke.call_args_list))
 
 
 @unittest.skipIf(os.name == 'nt', 'Debian package tree requires POSIX symlinks and permissions')

@@ -61,9 +61,9 @@ def main():
         window.receive('text', 'TV: 192.168.1.50')
         window.receive('heading', 'Connection check')
         window.receive('text', 'Developer Mode SSH detected.')
-        window.receive('text', 'This installer does not obtain root. Unsure? Choose No-root.')
+        window.receive('text', 'No-root and Root are equal options for different TV setups.')
         window.show_prompt(Prompt('Edition [1]: ', [
-            ('1', 'No-root (recommended)', 'For a TV without root. Uses LG Developer Mode.'),
+            ('1', 'No-root', 'For a TV without root. Uses LG Developer Mode.'),
             ('2', 'Root', 'For an already rooted TV with existing SSH access.')]))
         capture('04-edition')
         window.receive('step', (4, 'Review and install', True))

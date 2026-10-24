@@ -1,5 +1,7 @@
 # Install Clean Your TV — No-root and Root
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 Use **cytv** to install either edition. It includes the runtime and TV packages;
 you do not need to build from source. Both editions run on the TV after setup,
 so your computer can be switched off during everyday use.
@@ -43,20 +45,28 @@ check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-a
 ## 3. Download and start cytv
 
 Download the matching package from the
-[v0.10.8 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.8):
+[latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest):
 
 | Computer | Package and launch |
 | --- | --- |
 | macOS Apple Silicon / Intel | `cytv-macos-arm64.zip` / `cytv-macos-x64.zip`; extract, move `cytv.app` to Applications and open it |
 | Ubuntu 22.04+, Debian 12+, Mint 21+ x64 | Install `cytv-linux-x64.deb`, then open Clean Your TV from the applications menu |
-| Windows x64 | Run `cytv-windows-x64.exe`; this is a console wizard |
+| Windows x64 | Extract `cytv-windows-x64-desktop.zip`, then open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it |
+| Android ARM64 | Install `cytv-android-arm64.apk`; this is a debug-signed preview |
+
+For Windows, use File Explorer **Extract All** and keep the complete folder.
+Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
+Android 0.1.3-preview requirements, APK installation and limitations are covered
+in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
+The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
+for the Linux graphical app.
 
 macOS desktop dependencies require macOS 13+; acceptance on older systems is not
 established. Mac builds are not Apple-notarized; follow the documented
 [Open Anyway procedure](DESKTOP_INSTALL.md#if-macos-says-cytv-was-not-opened)
 if macOS blocks a trusted project download. Linux ARM desktop packages are not included.
 
-See [desktop setup and troubleshooting](DESKTOP_INSTALL.md) for macOS/Linux,
+See [desktop setup and troubleshooting](DESKTOP_INSTALL.md) for desktop packages,
 or the [console guide](CLI.md) for all supported CLI targets.
 The installer selects the computer's language automatically. TV language is a
 separate preference under **Settings → Language**. [Localized guides](LANGUAGES.md).

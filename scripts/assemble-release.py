@@ -12,6 +12,7 @@ import re
 import runpy
 import shutil
 import subprocess
+import struct
 import sys
 import tarfile
 import tempfile
@@ -80,12 +81,49 @@ def open_deb_tar(parts, prefix):
     return tarfile.open(fileobj=io.BytesIO(raw))
 
 
+def verify_windows_desktop(path, versions):
+    """Reject CLI executables, wrong versions and mismatched embedded TV files."""
+    with zipfile.ZipFile(path) as archive:
+        metadata = json.loads(archive.read('cytv-desktop/version.json'))
+        if metadata != {'cytv': versions['cytv'], 'platform': 'windows-x64', 'entrypoint': 'cytv-desktop.exe'}:
+            raise ValueError('Windows desktop version or entrypoint mismatch')
+        executable = archive.read('cytv-desktop/cytv-desktop.exe')
+        if len(executable) < 64 or executable[:2] != b'MZ':
+            raise ValueError('Invalid Windows desktop executable')
+        pe = struct.unpack_from('<I', executable, 60)[0]
+        if (pe + 94 > len(executable) or executable[pe:pe+4] != b'PE\0\0'
+                or struct.unpack_from('<H', executable, pe + 4)[0] != 0x8664
+                or struct.unpack_from('<H', executable, pe + 24)[0] != 0x20b
+                or struct.unpack_from('<H', executable, pe + 92)[0] != 2):
+            raise ValueError('Windows desktop executable must be an x64 GUI application')
+        return verify_embedded(lambda name: archive.read('cytv-desktop/_internal/payload/' + name), versions)
+
+
+def verify_android_package(path, report, versions, commit):
+    """Require the APK checked by the trusted build job, including its signer."""
+    metadata = json.loads(Path(report).read_text())
+    expected = {'schema': 1, 'source_commit': commit, 'versions': versions,
+                'android_version_name': versions['android'], 'android_version_code': versions['android_version_code'],
+                'package': 'com.cleanyourtv.android', 'abi': 'arm64-v8a', 'min_sdk': 24, 'target_sdk': 35,
+                'signer_sha256': (ROOT / 'android/preview-certificate.sha256').read_text().strip(),
+                'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest()}
+    if metadata != expected:
+        raise ValueError('Android APK provenance, version, signer or hash mismatch')
+    with zipfile.ZipFile(path) as archive:
+        if json.loads(archive.read('assets/cytv-build.json')) != {'schema': 1, 'source_commit': commit, 'versions': versions}:
+            raise ValueError('Android embedded source provenance mismatch')
+        return verify_embedded(lambda name: archive.read('assets/payload/' + name), versions)
+
+
 def assemble(artifacts, output, versions, commit):
     from PyInstaller.archive.readers import CArchiveReader
     builder = runpy.run_path(str(ROOT / 'scripts/build-cytv.py'))
     output.mkdir(parents=True, exist_ok=False)
     paths = {
         'cytv-windows-x64.exe': 'cytv-windows-x64/cytv.exe',
+        'cytv-windows-x64-desktop.zip': 'cytv-windows-x64-desktop/cytv-windows-x64-desktop.zip',
+        'cytv-android-arm64.apk': 'cytv-android-arm64/cytv-android-arm64.apk',
+        'cytv-android-arm64.build.json': 'cytv-android-arm64/cytv-android-arm64.build.json',
         'cytv-linux-x64': 'cytv-linux-x64/cytv',
         'cytv-linux-x64.deb': 'cytv-linux-x64-desktop/cytv-linux-x64.deb',
         'cytv-macos-arm64': 'cytv-macos-arm64/cytv',
@@ -111,6 +149,14 @@ def assemble(artifacts, output, versions, commit):
             if plistlib.loads(archive.read('cytv.app/Contents/Info.plist'))['CFBundleShortVersionString'] != versions['cytv']:
                 raise ValueError('Desktop installer version mismatch')
             checked(lambda n: archive.read('cytv.app/Contents/Resources/payload/' + n), name)
+    windows_gui = 'cytv-windows-x64-desktop.zip'
+    count = verify_windows_desktop(output / windows_gui, versions)
+    checks.append({'asset': windows_gui, 'payload_files_verified': count})
+    print('Verified', windows_gui, ':', count, 'payload hashes and component versions; x64 GUI subsystem')
+    android = 'cytv-android-arm64.apk'
+    count = verify_android_package(output / android, output / 'cytv-android-arm64.build.json', versions, commit)
+    checks.append({'asset': android, 'payload_files_verified': count})
+    print('Verified', android, ':', count, 'payload hashes and component versions; signed ARM64 preview')
     parts = package.read_ar((output / 'cytv-linux-x64.deb').read_bytes())
     with open_deb_tar(parts, 'control') as archive:
         control = archive.extractfile(next(m for m in archive if m.name in ('control', './control'))).read().decode()

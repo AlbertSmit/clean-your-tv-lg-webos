@@ -1,9 +1,11 @@
 """Android callbacks around the existing CYTV CLI. No device logic is duplicated."""
 import json
+import re
 from pathlib import Path
 
-from cytv import cli, state
+from cytv import cli, state, i18n
 from cytv.transport import SSH
+from cytv.terminal import Console
 
 
 def arguments(config, directory, identity=''):
@@ -12,7 +14,7 @@ def arguments(config, directory, identity=''):
         raise ValueError('Unsupported Android operation')
     profile = state.target(config.get('host', ''), config.get('edition', ''), config.get('port'))
     language = config.get('language', 'ru')
-    if language not in ('ru', 'en'):
+    if language not in i18n.LANGUAGES or language == 'auto':
         raise ValueError('Unsupported Android language')
     result = [action, '--host', profile['host'], '--edition', profile['edition'],
               '--port', str(profile['port']), '--no-discovery', '--language', language,
@@ -47,7 +49,14 @@ class Callbacks:
         return self.request(kind='question', text=prompt, context='\n'.join(self.context))
 
     def secret(self, prompt):
-        return self.request(kind='secret', text=prompt)
+        # CLI prompts have already been translated. Send a stable semantic tag
+        # so the WebView never guesses the credential type from translated prose.
+        labels = {'key': 'SSH key passphrase: ', 'root': 'Root SSH password (hidden): ',
+                  'developer': 'Developer Mode passphrase: '}
+        label_text = prompt.strip().removeprefix('> ').strip()
+        kind = next((key for key, label in labels.items()
+                     if label_text == i18n.translate(label).strip()), 'developer')
+        return self.request(kind='secret', text=prompt, secretType=kind)
 
     def trust(self, value, root):
         return self.request(kind='trust', fingerprint=value, root=root) == 'yes'
@@ -62,13 +71,31 @@ class Callbacks:
         return SSH.connect(profile, directory, secret, approve)
 
 
+class AndroidConsole(Console):
+    """Emit progress from canonical CLI messages before Console translates them."""
+    def __init__(self, callbacks):
+        super().__init__(callbacks.write, interactive=False)
+        self.callbacks = callbacks
+
+    def text(self, message, bold=False):
+        stages = {'Installing Home Helper…': 2, 'Installing Home…': 2,
+                  'Uploading Root and recovery runtime…': 2,
+                  'Installing Root Updater and preparing rollback…': 2,
+                  'Configuring Home Helper…': 3, 'Turning on Root Home control…': 3,
+                  'Opening Clean Your TV Home…': 3}
+        stage = 1 if re.fullmatch(r'Read \d+ applications\.', str(message)) else stages.get(message)
+        if stage is not None:
+            self.callbacks.emit(kind='stage', stage=stage)
+        super().text(message, bold)
+
+
 def run(config_json, directory, payload, identity, native):
     callbacks = Callbacks(native, identity)
     try:
         config = json.loads(config_json)
         args = arguments(config, directory, identity)
         # All text and confirmations use the same desktop localization and policies.
-        code = cli.main(args, ask=callbacks.ask, write=callbacks.write,
+        code = cli.main(args, ask=callbacks.ask, write=AndroidConsole(callbacks),
                         secret=callbacks.secret, connect=callbacks.connect, payload_root=payload)
     except Exception as error:
         # Do not emit exception messages, which may contain credentials/paths.
@@ -76,3 +103,10 @@ def run(config_json, directory, payload, identity, native):
         code = 2
     callbacks.emit(kind='finished', code=code)
     return code
+
+
+def inspect_connection(config_json):
+    from cytv.inspect_tv import inspect
+    config = json.loads(config_json)
+    profile = state.target(config.get('host', ''), 'root', config.get('port', 22))
+    return json.dumps({'kind': 'inspection', 'host': profile['host'], **inspect(profile['host'], profile['port'])})

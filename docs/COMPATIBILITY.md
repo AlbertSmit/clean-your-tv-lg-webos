@@ -1,6 +1,7 @@
 # Compatibility and known limits
 
-The v0.10.8 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.7.
+The v0.10.9 distribution contains cytv 0.2.12, Home 1.3.4, Helper 0.6.16,
+Root 0.1.8 and No-root Updater 0.1.5; the Android installer is 0.1.3-preview.
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
 
@@ -11,8 +12,9 @@ list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELE
 | LG OLED55C46LA (C4), firmware 33.31.68, webOS 24 (SDK 10.3.1) | Community report with Helper 0.6.13: launcher and short Home work. Long Back briefly shows LG Home then redirects to our launcher; holding OK on Resume Home can block interception. After remote power-off/on with Quick Start+ off, one run showed LG Home at boot +31.6 s and our launcher at +33.1 s. EIM registration is unconfirmed because Developer Mode shell calls return no reply. Fixes below await C4 hardware verification |
 | Other LG models / firmware / remotes | Unverified |
 | macOS build / CLI | Used locally |
-| Linux | Scripts intended to support it; not hardware-tested here |
-| Windows | Native cytv console build available; real-TV/OS acceptance remains separate. Source Bash scripts require a compatible environment |
+| Linux x64 | Graphical `cytv-linux-x64.deb` for Ubuntu 22.04+, Debian 12+, Mint 21+; standalone `cytv-linux-x64` is the CLI. Real-TV/OS acceptance remains separate; Linux ARM desktop packages are not included |
+| Windows x64 | Native graphical `cytv-windows-x64-desktop.zip` and separate console wizard. The graphical ZIP requires its `_internal` folder; no Windows publisher signature. Real-TV/OS acceptance remains separate. Source Bash scripts require a compatible environment |
+| Android ARM64 preview | Debug-signed `cytv-android-arm64.apk`; emulator/offline checks do not establish physical-TV acceptance. See [Android requirements](../android/README.md) |
 | C5 / webOS 26 | Helper startup remains under investigation; no compatibility claim |
 
 The relay requires compatible `LGE M-RCU - Builtin [0]` and `[1]` devices and checks

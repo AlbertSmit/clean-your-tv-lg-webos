@@ -1,5 +1,7 @@
 # Choose your edition
 
+No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
+
 Both editions share the Home interface and run on the TV after setup. Root
 Stable is separate from the stable No-root release; installing it does not
 upgrade or remove your ordinary launcher.

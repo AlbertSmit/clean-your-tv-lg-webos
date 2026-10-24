@@ -26,7 +26,7 @@ def inspect(host, port=None):
     root_port = port or 22
     if root_port == 9922:
         # This explicitly selected endpoint is the normal Developer Mode port.
-        # Do not recommend Root based on a different port we won't connect to.
+        # Base the current choice on the port we will actually connect to.
         return {'root_ssh': False, 'developer_ssh': ssh_available(host, 9922), 'root_port': root_port}
     with ThreadPoolExecutor(max_workers=2) as pool:
         root = pool.submit(ssh_available, host, root_port)

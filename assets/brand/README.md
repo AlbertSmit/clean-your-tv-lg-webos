@@ -11,9 +11,10 @@ The project lockup reads **clean your tv / FOR LG webOS**.
 - `symbol-black.svg`, `symbol-white.svg`: true single-colour house marks.
 - `wordmark.svg`: custom lettering only, converted from the approved study into smoothed vector contours.
 - `readme-logo.png`, `readme-logo-dark.png`: transparent README headers for light/dark themes.
+- `downloads/*.svg`: linked README download cards with locally drawn Windows window, Apple, Linux penguin (Tux) and Android robot platform identifiers. Cream/muted brown vectors retain the quiet charcoal card styling; labels identify the Windows GUI ZIP and Android ARM64 preview APK. These platform identifiers are separate from the project’s B1 house identity.
 - `brand-overview.svg`, `brand-overview.png`: identity and application-family preview.
 
-SVG masters contain vector paths, no raster images, filters, external fonts or live text.
+Identity SVG masters contain vector paths, no raster images, filters, external fonts or live text. Download cards use live system-font labels for legibility and local vector platform symbols; they make no external asset requests.
 The subtitle and Root R were outlined from Outfit (SIL OFL; see `../../launcher/fonts/OFL.txt`).
 The principal lettering preserves the custom forms from the approved generated study.
 
@@ -51,3 +52,9 @@ Inspected the complete application family and smaller menu previews.
 SVG audits identify expected complexity in custom lettering and tiny subtitle
 components: the full signature is for headers, while the standalone symbol is the
 small-size artwork. This is a visual reference check, not trademark clearance.
+
+## Installer interfaces
+
+Android, desktop and console CYTV share this approved identity. Keep the house mark and app icons in their original B1 colours. Installer working surfaces are quiet warm charcoal with cream text, muted brown-grey controls and restrained borders; do not use bright orange button fills or large cream panels. Orange remains a small identifying accent. Terminal output keeps the user’s default background and respects `NO_COLOR` and redirected plain-text output.
+
+No-root and Root have equal standing. Labels describe Developer Mode or existing root SSH requirements, without recommendation badges or promotional ranking. A connection-derived current choice is a convenience, not a compatibility guarantee.

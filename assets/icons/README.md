@@ -19,7 +19,7 @@ See [brand masters and guidelines](../brand/README.md).
 PNG dimensions are square, in pixels. Render SVGs at high resolution and
 resample to each target size. With Sharp available to Node, run
 `node scripts/render-app-icons.cjs` from the repository root to regenerate all PNGs.
-Keep the PNGs checked in; TV packaging does not require an SVG renderer.
+The renderer also copies the unmodified mobile house master and generates Android launcher/monochrome notification vector resources from the same paths. Keep the PNGs checked in; TV packaging does not require an SVG renderer.
 The renderer also regenerates both transparent themed README PNGs and the Windows ICO.
 Root staging copies its Home icons into the existing brand-v2 filenames.
 The Root application ID retains its historical `preview` suffix for upgrades;

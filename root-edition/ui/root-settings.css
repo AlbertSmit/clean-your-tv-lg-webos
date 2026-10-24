@@ -40,3 +40,5 @@
 #homeRoutingStatus{min-height:32px;color:#e2e8f1}
 .home-routing-actions button:focus{outline:4px solid #b8d3ff;outline-offset:4px;border-color:#f5f7fa;background:#46556c}
 @media(max-width:700px){.home-routing-actions{flex-direction:column}.home-visit-action{width:100%;flex:auto}.home-routing-actions button{width:100%;flex:auto}.settings-footer{flex-wrap:wrap}}
+
+.root-updates .root-update-status{height:104px;overflow:auto}

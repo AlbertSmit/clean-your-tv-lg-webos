@@ -98,3 +98,22 @@ The scoped setup also grants only Activity Manager `create` and `cancel` to the 
 ### Published-package C3 validation (2026-10-23)
 
 Home 1.2.0 → 1.2.1 using public GitHub assets completed, followed by signed rollback to 1.2.0. Journals confirmed complete/rolled-back and renewalRestored; renewal remained disabled. The user confirmed app order, arrows/OK, short Home and normal helper behavior. This release adds the scoped canonical Activity Manager grants needed to avoid the initial cancel-unconfirmed failure, plus Recovery refresh on relaunch. These final UI changes have regression tests; the exact v0.8.1 binaries have not yet had another on-TV cycle.
+
+## Current feed and publication guard
+
+The v0.10.8 feed offers Home 1.3.4 with Helper 0.6.16. Its signed rollback is the
+exact Home 1.3.3 package from v0.10.7, republished as a standalone asset. The
+current in-app upgrade baseline is therefore Home 1.3.3 / Helper 0.6.16 with root,
+Homebrew Channel and scoped permissions. Other baselines use the computer
+installer. No-root TVs still cannot install packages through this service.
+
+Startup health reads the version from the installed `appinfo.json`; it never
+substitutes a source literal if the manifest cannot be read or validated.
+
+Publish drafts with `node scripts/publish-release.cjs vX.Y.Z`. The command checks
+Root and No-root feeds against `BUILD-INFO.json`, verifies signatures and Helper
+compatibility, and downloads the Root, Home and rollback packages to check their
+hashes. `previous-update.json` must match the signed `previous` envelope inside
+`update.json`. `--check-only` performs these checks without publishing. The
+Release update feed workflow repeats them after publication. Never carry an
+older Home feed forward when the release’s Home version has changed.

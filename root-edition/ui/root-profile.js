@@ -49,8 +49,7 @@
         if (JSON.stringify(expected) !== JSON.stringify(actual)) throw Error('Restored launcher tiles do not match the saved profile');
         var health = {transaction:restored.transaction, version:window.ROOT_VERSION};
         window.RootUpdates.rpc('ready', health).then(function () {
-          if (restored.phase === 'verifying') window.RootUpdates.confirmLaunch(health);
-          else window.RootUpdates.open();
+          if (restored.phase === 'verifying') return window.RootUpdates.rpc('confirm', health);
         }).catch(recovery);
       } catch (error) { recovery(error); }
     };

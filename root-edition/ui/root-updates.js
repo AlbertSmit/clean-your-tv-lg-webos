@@ -3,7 +3,7 @@
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var panel, title, message, details, buttons, previous, selected = 0, timer, onClose;
-  var busy = false, recovery = false, offer = null, transaction = null, health = null, errorText = '';
+  var busy = false, polling = false, recovery = false, offer = null, transaction = null, errorText = '';
   var recoveryParent = false;
   var terminal = ['complete', 'rolled-back', 'aborted'];
   function unprovisioned() {
@@ -66,7 +66,7 @@
     return true;
   }
   function show(index, visible, disabled) { buttons[index].hidden = !visible; buttons[index].disabled = !!disabled; }
-  function render() {
+  function render(preserveFocus) {
     var phase = transaction && transaction.phase;
     title.textContent = t(recovery ? 'Recovery' : 'Software updates');
     panel.setAttribute('aria-label', title.textContent);
@@ -77,8 +77,8 @@
       'restoring-route':'Restoring LG Home before installation…',
       installing:'Installing Root update. Keep the TV powered on.',
       'awaiting-launch':'Opening the updated Root launcher…',
-      verifying:'Test your launcher and remote, then confirm within two minutes. Without confirmation the previous version will be restored.',
-      complete:'Update complete. Your launcher profile is preserved. Root mode can be enabled again through its protected trial.',
+      verifying:'Checking the updated launcher and restored settings…',
+      complete:'Update complete. Your apps and settings are preserved.',
       'rolling-back':'Restoring the previous Root package and saved profile…',
       'verifying-rollback':'Checking the restored Root launcher and saved profile…',
       'rolled-back':'Previous Root version and profile restored. LG Home remains selected.',
@@ -104,34 +104,36 @@
       else details.textContent += '\n' + t('The previous Home version and saved settings will be restored.');
     }
     buttons[3].textContent = t(recovery ? 'Refresh status' : 'Recovery');
-    show(0, !recovery && !health && !!errorText, busy || active());
-    show(1, !recovery && !health, busy || active() || !offer || !offer.canInstall);
+    show(0, !recovery && !!errorText, busy || active());
+    show(1, !recovery, busy || active() || !offer || !offer.canInstall);
     show(2, false);
     show(3, true, busy);
     show(4, recovery && rollbackAllowed(), busy);
-    show(5, !!health, busy);
+    show(5, false);
     show(6, !recovery && !!(transaction && (phase === 'complete' || phase === 'rolled-back') && transaction.oldRoute && transaction.oldRoute.active), busy);
     show(7, true, false);
-    if (!panel.hidden) focus(selected);
+    if (!panel.hidden) {
+      var current = enabled().indexOf(document.activeElement);
+      if (preserveFocus && current >= 0) selected = current;
+      else focus(selected);
+    }
   }
   function schedule() {
     clearTimeout(timer);
-    if (!panel.hidden && (active() || health)) timer = setTimeout(function () { refresh(false); }, 1500);
+    if (!panel.hidden && active()) timer = setTimeout(function () { refresh(false, true); }, 1500);
   }
-  function refresh(check) {
-    if (busy) return Promise.resolve();
-    busy = true; render();
+  function refresh(check, background) {
+    if (busy || polling) return Promise.resolve();
+    if (background) polling = true; else { busy = true; render(); }
     return rpc('status', {}).then(function (state) {
       transaction = state;
-      if (transaction && terminal.indexOf(transaction.phase) >= 0) health = null;
       if (check && !recovery) return rpc('check', {}).then(function (value) { offer = value; });
-    }).then(function () { if (check || transaction && terminal.indexOf(transaction.phase) >= 0) errorText = ''; }).catch(function (error) { errorText = error.message; }).then(function () { busy = false; render(); schedule(); });
+    }).then(function () { if (check || transaction && terminal.indexOf(transaction.phase) >= 0) errorText = ''; }).catch(function (error) { errorText = error.message; }).then(function () { if (background) polling = false; else busy = false; render(background); schedule(); });
   }
   function operation(method, payload) {
     if (busy) return;
     busy = true; errorText = ''; render();
     rpc(method, payload).then(function (state) {
-      if (method === 'confirm') health = null;
       if (state && state.phase) transaction = state;
     }).catch(function (error) { errorText = error.message; }).then(function () { busy = false; render(); return refresh(false); });
   }
@@ -140,7 +142,7 @@
     if (index === 7) return back();
     if (busy) return;
     if (index === 0) return refresh(true);
-    if (index === 1) return window.HomeI18n.confirm({title:'Install Home update?',message:t('Install Root {version}? LG Home will be selected during installation. Keep the TV powered on; confirm the updated launcher within two minutes.', {version:offer.candidate.version}),action:'Install update'}, function () {
+    if (index === 1) return window.HomeI18n.confirm({title:'Install Home update?',message:t('Available: {version}', {version:offer.candidate.version}) + '\n' + t('Home will close during installation. Your apps and settings will be saved.'),action:'Install update'}, function () {
       if (busy || panel.hidden || recovery || active() || !offer || !offer.canInstall || !window.RootProfile) return;
       busy = true; render();
       window.RootProfile.capture().then(function (profile) { return rpc('install', {version:offer.candidate.version, profile:profile}); }).then(function (state) { transaction = state; }).catch(function (error) { errorText = error.message; }).then(function () { busy = false; render(); schedule(); }); return;
@@ -150,7 +152,6 @@
       return operation('reconcile', {});
     }
     if (index === 4) return window.HomeI18n.confirm({title:'Restore previous Home?',message:t('Restore Home {version} and the saved settings? Keep the TV powered on.', {version:transaction.prior && transaction.prior.version || t('unknown')}),action:'Restore previous Home'}, function () { if (!buttons[4].hidden && !buttons[4].disabled) operation('rollback', {}); });
-    if (index === 5 && health) return operation('confirm', health);
     if (index === 6) { close(); if (window.RenewalPanel) window.RenewalPanel.open(); }
   }
   function build() {
@@ -158,10 +159,10 @@
     panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', t('Root Software updates'));
     var card = document.createElement('div'); card.className = 'root-settings-card'; panel.appendChild(card);
     title = document.createElement('h1'); title.textContent = t('Software updates'); card.appendChild(title);
-    message = document.createElement('p'); message.setAttribute('aria-live', 'polite'); card.appendChild(message);
+    message = document.createElement('p'); message.className = 'root-update-status'; message.setAttribute('aria-live', 'polite'); card.appendChild(message);
     details = document.createElement('p'); details.className = 'root-update-details'; card.appendChild(details);
     buttons = ['Try again', 'Update', 'Install update', 'Recovery', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
-      var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; card.appendChild(button); return button;
+      var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; button.onfocus = function () { selected = enabled().indexOf(button); }; card.appendChild(button); return button;
     });
     document.body.appendChild(panel);
     document.addEventListener('keydown', function (event) {
@@ -180,7 +181,7 @@
     recovery = options.recovery === true; recoveryParent = false; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
     if (!options.error) refresh(!recovery);
   }
-  window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }, confirmLaunch:function (identity) { health = identity; open(); }};
+  window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }};
 }());
 
 });

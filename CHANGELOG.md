@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.10.8 — Current No-root updates and stable update controls
+
+- Read the installed Home manifest version for No-root startup health instead of reporting 1.2.2.
+- Publish signed Home 1.3.4 / Helper 0.6.16 metadata with the exact Home 1.3.3 rollback package.
+- Require both edition feeds, Helper compatibility and rollback package hashes to match release metadata before publication.
+- Confirm Root startup automatically after profile/render readiness; keep the pre-install confirmation and recovery safeguards.
+- Keep Root polling in the background without disabling controls or moving remote focus, and reserve status space to avoid shifting buttons.
+- Components: cytv 0.2.11, Home 1.3.4, Helper 0.6.16, Root 0.1.8 and No-root Updater 0.1.5.
+
 ## v0.10.8 — No-root ARM32 runtime detection
 
 - Verify the TV shell ELF ABI instead of rejecting aarch64 kernels that run ARM32 userspace.

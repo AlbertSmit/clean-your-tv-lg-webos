@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
+  <img src="assets/brand/logo-light.svg" alt="Clean Your TV — for LG webOS" width="720">
+</picture>
+
 # Clean Your TV — LG webOS
 
 **A clean home screen for LG webOS, with No-root and Root editions.**
@@ -43,7 +48,7 @@ and opens Home immediately, without a trial or Keep confirmation.
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Released, recommended for daily use; launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.7 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.1.8 with persistent activation and Settings updates; scoped C3 evidence and limitations | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -196,8 +201,8 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v0.10.8 distribution contains cytv **0.2.11**, Home **1.3.3**, Helper
-**0.6.16**, Root **0.1.7** and No-root Updater **0.1.5**. Source versions are
+The v0.10.8 distribution contains cytv **0.2.11**, Home **1.3.4**, Helper
+**0.6.16**, Root **0.1.8** and No-root Updater **0.1.5**. Source versions are
 recorded in `release-versions.json`; [release notes](docs/RELEASE-0.10.8.md)
 explain packaging and remaining checks.
 

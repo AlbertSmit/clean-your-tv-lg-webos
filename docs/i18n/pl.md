@@ -54,3 +54,5 @@ Po połączeniu cytv odczytuje wersje na telewizorze i pokazuje obecną → doł
 Aktualizacje oprogramowania pokazują szczegóły tylko zainstalowanej lub nowszej wersji. Otwórz Odzyskiwanie, aby zobaczyć zapisaną wersję do przywrócenia lub powód niedostępności; Wstecz wraca do aktualizacji.
 
 No-root sprawdza ABI powłoki TV i akceptuje jądro 64-bitowe ze zweryfikowanym środowiskiem ARM32. Jeśli weryfikacja się nie powiedzie, dołącz wygenerowany raport JSON; nie udostępniaj kluczy ani haseł.
+
+Aktualizacje Home wymagają potwierdzenia przed instalacją; później uruchomienie jest sprawdzane automatycznie. Odświeżanie stanu zachowuje przycisk wybrany pilotem.

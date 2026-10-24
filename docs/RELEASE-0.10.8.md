@@ -1,35 +1,34 @@
-# v0.10.8 — No-root ARM32 runtime detection
+# v0.10.8 — Current No-root updates and stable update controls
 
-Includes cytv **0.2.11**, Home **1.3.3**, Home Helper **0.6.16**,
-Root Edition **0.1.7**, and No-root Updater **0.1.5**.
+Includes cytv **0.2.11**, Home **1.3.4**, Helper **0.6.16**,
+Root **0.1.8**, and No-root Updater **0.1.5**.
 
-The No-root installer no longer equates an aarch64 kernel with a lack of ARM32
-support. It reads the first 20 bytes of the TV shell ELF header and verifies
-little-endian ARM32 userspace on supported ARM kernels before package installation.
-The check only reads system information; it does not execute Home Helper or
-intercept remote-control input. Unknown or incompatible runtimes remain blocked.
-A verified 32-bit shell establishes ARM32 execution support, not full Helper,
-remote-control or firmware compatibility.
+No-root Home reads its installed `appinfo.json` version when reporting startup
+health. It no longer reports the obsolete hardcoded 1.2.2. Invalid, unreadable
+or foreign manifests do not produce a health acknowledgement.
 
-Generated diagnostic JSON now includes allowlisted `kernel_arch`, `userland_abi`
-and `arm32_supported` fields under `tv`. Raw ELF data, command output, addresses,
-keys and passphrases are excluded. Regression tests cover aarch64 with ARM32
-userspace, incompatible/malformed ELF headers, and report propagation/privacy.
-The clearer failure message is translated into all ten supported languages.
+The signed No-root feed offers Home 1.3.4 with Helper 0.6.16. The signed rollback
+package is the exact Home 1.3.3 package from v0.10.7. In-app installation requires
+root, Homebrew Channel, scoped updater permissions, Helper 0.6.16 and the matching
+1.3.3 baseline. Other baselines and TVs without root use computer-assisted setup.
+The version bump lets existing Home 1.3.3 users receive the repair as an update.
 
-This addresses the second installation blocker reported in issue #15 after
-v0.10.6 resolved SSH authentication. The reporter's LG OLED48C3LA on webOS26 /
-11.2.0-3701 still requires a retest; no additional hardware support is claimed.
+Root now acknowledges successful startup automatically after restoring the
+profile and checking the rendered application tiles. The pre-install confirmation
+remains; the post-install Confirm working update button is removed. Readiness
+failures still trigger the independent updater’s rollback safeguards. Background
+status polling no longer disables controls or changes the selected button.
+Status text has reserved space so its updates do not move the actions.
 
-## Downloads and retry
+Publication checks now validate both edition feeds, Home/Root versions, Helper
+requirements, signatures, candidate packages and the signed No-root rollback
+package. CI repeats the checks after publication.
 
-Close the old installer, download `cytv-windows-x64.exe` from this release and
-confirm **cytv 0.2.11**. Choose **No-root** and follow the existing Developer Mode
-and pairing steps. If it still fails, attach the new diagnostic JSON and the
-visible error, with private information redacted. Do not share keys or passphrases.
+Automated regressions cover manifest versions across releases, false health
+signals, automatic Root acknowledgement, real tile mismatches and stable focus
+during delayed polling. These exact packages have not completed a new on-TV
+installation/rollback cycle; earlier C3 records retain their original scope.
 
-macOS ARM64/Intel ZIPs, Linux x64 Debian and console executables are included.
-The manual TV bundles and signed update feeds are retained from v0.10.7;
-TV component versions and recovery infrastructure are unchanged.
-`BUILD-INFO.json` records provenance and `SHA256SUMS` covers release assets.
-macOS builds are ad-hoc signed, not Apple-notarized.
+Downloads include installers for Windows, Linux, macOS Apple Silicon and Intel,
+complete manual bundles, signed feeds and standalone update/rollback IPKs.
+See `BUILD-INFO.json` and `SHA256SUMS` for provenance and package hashes.

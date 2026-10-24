@@ -62,11 +62,12 @@ result; never rerun it blindly.
 3. The updater saves apps, embedded icons, inputs, configuration and tile order.
    It caches and verifies both new and previous packages before replacing Home.
 4. LG Home is selected while the independent worker installs. Keep the TV on.
-5. The new Root Home restores the profile before rendering. Test the remote and
-   select Confirm working update within two minutes.
+5. The new Root Home restores the profile before rendering and checks the visible
+   application tiles. It acknowledges successful startup automatically; no
+   post-install confirmation button is required. Failed readiness still rolls back.
 6. To enable Root routing again, use **Home settings → Change Home** (turn it on).
    This enables persistent Home control after the recovery checks; no trial or
-   Keep confirmation is required. Update confirmation itself does not enable routing.
+   Keep confirmation is required. Successful update verification itself does not enable routing.
 
 Bounds: 200 apps, 100 inputs, 4 MiB UTF-8 profile JSON, 256 KiB embedded icon URI
 per app, 32 MiB IPK and 64 MiB expanded payload. An unreadable saved profile,
@@ -148,7 +149,7 @@ Before a public release, test on a separate controlled Root installation:
 - First setup and effective root service identity; reject an unrelated caller.
 - Upgrade between two signed versioned packages with a populated app/input
   inventory, custom config and reordered tiles; verify after restart.
-- Withhold first-launch confirmation and verify exactly one rollback, restored
+- Withhold first-launch readiness and verify exactly one rollback, restored
   data readiness, LG routing and no old helper activation.
 - Kill the web UI and worker separately around submission, terminal receipt,
   verification and rollback. Confirm no overlapping installation.
@@ -179,8 +180,9 @@ node scripts/publish-release.cjs vX.Y.Z --check-only
 node scripts/publish-release.cjs vX.Y.Z
 ```
 
-This downloads the draft’s signed feed and build metadata, checks their Root
-versions, downloads the referenced IPK and checks its size and SHA-256. It
+This downloads both edition feeds and build metadata, checks Root/Home versions
+and the Helper requirement, verifies signatures, and downloads the referenced
+Root, Home and No-root rollback IPKs to check their hashes. It
 refuses to publish on a stale feed, invalid signature or missing/wrong package.
 The `Release update feed` GitHub workflow repeats this check after publication
 or a release edit; it can also be dispatched manually. Publishing directly with

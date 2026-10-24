@@ -1,6 +1,6 @@
 {
   "id": "com.gathin.tvhome",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "vendor": "tv-vibehack",
   "type": "web",
   "main": "index.html",
@@ -8,7 +8,7 @@
   "icon": "brand-v2-icon.png",
   "largeIcon": "brand-v2-largeIcon.png",
   "bgColor": "#000000",
-  "iconColor": "#25282d",
+  "iconColor": "#241d19",
   "resolution": "1920x1080",
   "disableBackHistoryAPI": true,
   "requiredACG": [

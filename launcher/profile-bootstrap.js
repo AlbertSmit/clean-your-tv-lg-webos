@@ -8,7 +8,13 @@
  }
  function boot(){if(booted)return;booted=true;var s=document.createElement('script');s.src='app.js';s.onload=function(){
   // A populated rendered grid is a startup signal, not proof of every TV feature.
-  if(document.querySelector('#tiles .item'))rpc('healthy',{version:'1.2.2'},function(){});
+  if(!document.querySelector('#tiles .item[data-app-id]'))return;
+  var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
+  manifest.onload=function(){try{
+   if(manifest.status!==0&&manifest.status!==200)return;
+   var info=JSON.parse(manifest.responseText);
+   if(info.id==='com.gathin.tvhome'&&typeof info.version==='string'&&/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(info.version))rpc('healthy',{version:info.version},function(){});
+  }catch(_){} };manifest.onerror=manifest.ontimeout=function(){};manifest.send();
  };document.body.appendChild(s);}
  function use(s,restore){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();HomeData.apply(localStorage,s);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
  function icon(url,cb){if(/^data:image\/(png|jpeg|webp);base64,/.test(url)){cb(null,url);return;}

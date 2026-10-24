@@ -54,3 +54,5 @@ Après connexion, cytv lit les versions du téléviseur et affiche la version ac
 Les mises à jour logicielles affichent uniquement les détails de la version installée ou plus récente. Ouvrez Récupération pour voir la version enregistrée à restaurer ou la raison de son indisponibilité ; Retour revient aux mises à jour.
 
 No-root vérifie l’ABI du shell du téléviseur et accepte un noyau 64 bits avec un environnement ARM32 confirmé. En cas d’échec, joignez le JSON de diagnostic généré ; ne partagez ni clés ni phrases secrètes.
+
+Les mises à jour de Home demandent une confirmation avant l’installation ; le démarrage est ensuite vérifié automatiquement. L’actualisation de l’état conserve le bouton sélectionné avec la télécommande.

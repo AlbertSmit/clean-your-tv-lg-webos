@@ -2,7 +2,7 @@
 (function(){
  'use strict';
  function tr(s,p){return window.HomeI18n?HomeI18n.t(s,p):s.replace(/\{(\w+)\}/g,function(m,k){return p&&p[k]!==undefined?p[k]:m;});}function ht(s){return window.HomeI18n?HomeI18n.html(s):s;}
- var URI='luna://com.cleanyourtv.updater.service/',VERSION='1.2.2';
+ var URI='luna://com.cleanyourtv.updater.service/';
  var panel=document.createElement('section');panel.id='updatePanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Software updates'));
  panel.innerHTML=ht('<div class="renewal-card"><h2>Software updates</h2><p id="updateStatus" aria-live="polite">Checking for updates…</p><p id="updateNotes"></p><div class="renewal-actions"><button id="updateCheck" hidden>Try again</button><button id="updateInstall" disabled>Update Home</button><button id="updateRecovery">Recovery</button><button id="updateBack">Back</button></div></div>');
  document.body.appendChild(panel);
@@ -38,7 +38,7 @@
  document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([9,37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
   e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===461||e.keyCode===27)close();else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38||(e.keyCode===9&&e.shiftKey)?-1:1;focus(index+direction,direction);}
  },true);
- window.HomeUpdates={open:function(options){previous=document.activeElement;onClose=options&&options.onClose||null;panel.classList.remove('hidden');checkNow();focus(0);},rpc:rpc,version:VERSION};
+ window.HomeUpdates={open:function(options){previous=document.activeElement;onClose=options&&options.onClose||null;panel.classList.remove('hidden');checkNow();focus(0);},rpc:rpc};
 }());
 
 });

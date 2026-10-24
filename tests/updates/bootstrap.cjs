@@ -27,3 +27,15 @@ restoring.window=restoring;
 vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),restoring);
 assert.equal(pref,'auto');assert.equal(reloads,1,'restore must reinitialize TV auto-detection');
 console.log('PASS restored language preference reinitializes automatic TV locale');
+
+// The installed app manifest, not a source literal, supplies the health version.
+for(const {version,id='com.gathin.tvhome',status=200,invalid=false,healthy} of [{version:'1.3.3',healthy:true},{version:'1.4.0',healthy:true},{version:'1.3.4',id:'foreign.app',healthy:false},{version:'1.3.4',status:404,healthy:false},{version:'1.3.4',invalid:true,healthy:false}]){
+ const calls=[];let script;
+ const run={...context,HomeI18n:null,TV_APPS:{apps:[{id:'app'}],inputs:[]},CONFIG:{},localStorage:{getItem:()=>null,setItem(){}},
+  document:{...context.document,querySelector:()=>({}),body:{appendChild:s=>{script=s;}}},
+  XMLHttpRequest:class{open(method,url){assert.equal(method,'GET');assert.equal(url,'appinfo.json');}send(){this.status=status;this.responseText=invalid?'{broken':JSON.stringify({id,version});this.onload();}},
+  PalmServiceBridge:function(){this.cancel=()=>{};this.call=(uri,raw)=>{calls.push([uri,JSON.parse(raw)]);this.onservicecallback(JSON.stringify({returnValue:true,result:{}}));};}};
+ run.window=run;vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),run);script.onload();
+ assert.deepEqual(calls.filter(c=>c[0].endsWith('/healthy')).map(c=>c[1]),healthy?[{version}]:[]);
+}
+console.log('PASS No-root startup reports the installed app manifest version across releases');

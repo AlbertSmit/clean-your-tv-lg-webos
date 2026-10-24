@@ -54,3 +54,5 @@ After connecting, cytv reads the installed TV versions and shows current → bun
 Software updates shows release details only for the installed version or newer. Open Recovery to see the saved rollback version or why rollback is unavailable; Back returns to updates.
 
 No-root checks the TV shell ABI, so a 64-bit kernel with verified ARM32 userspace is accepted. If verification fails, attach the generated diagnostic JSON; do not share keys or passphrases.
+
+Home updates require confirmation before installation; startup verification is automatic afterward. Background status refresh keeps the selected remote-control button in place.

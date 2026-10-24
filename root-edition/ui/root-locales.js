@@ -1,6 +1,8 @@
 // Root settings and independent updater translations.
 if (window.HomeI18n) window.HomeI18n.add({
   "en": {
+    "Checking the updated launcher and restored settings…": "Checking the updated launcher and restored settings…",
+    "Update complete. Your apps and settings are preserved.": "Update complete. Your apps and settings are preserved.",
     "Recovery": "Recovery",
     "Rollback version: {version}": "Rollback version: {version}",
     "No saved update is available to roll back.": "No saved update is available to roll back.",
@@ -132,6 +134,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "The previous Home version and saved settings will be restored."
   },
   "de": {
+    "Checking the updated launcher and restored settings…": "Der aktualisierte Home-Bildschirm und die wiederhergestellten Einstellungen werden geprüft…",
+    "Update complete. Your apps and settings are preserved.": "Update abgeschlossen. Deine Apps und Einstellungen bleiben erhalten.",
     "Recovery": "Wiederherstellung",
     "Rollback version: {version}": "Version für die Rückkehr: {version}",
     "No saved update is available to roll back.": "Kein gespeichertes Update für die Rückkehr verfügbar.",
@@ -263,6 +267,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Die vorherige Home-Version und die gespeicherten Einstellungen werden wiederhergestellt."
   },
   "es": {
+    "Checking the updated launcher and restored settings…": "Comprobando Home actualizado y los ajustes restaurados…",
+    "Update complete. Your apps and settings are preserved.": "Actualización completada. Tus aplicaciones y ajustes se han conservado.",
     "Recovery": "Recuperación",
     "Rollback version: {version}": "Versión para restaurar: {version}",
     "No saved update is available to roll back.": "No hay una actualización guardada para restaurar.",
@@ -394,6 +400,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Se restaurarán la versión anterior de Home y los ajustes guardados."
   },
   "pt-BR": {
+    "Checking the updated launcher and restored settings…": "Verificando o Home atualizado e as configurações restauradas…",
+    "Update complete. Your apps and settings are preserved.": "Atualização concluída. Seus aplicativos e configurações foram preservados.",
     "Recovery": "Recuperação",
     "Rollback version: {version}": "Versão para restaurar: {version}",
     "No saved update is available to roll back.": "Não há atualização salva para reverter.",
@@ -525,6 +533,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "A versão anterior do Home e as configurações salvas serão restauradas."
   },
   "fr": {
+    "Checking the updated launcher and restored settings…": "Vérification de Home mis à jour et des réglages restaurés…",
+    "Update complete. Your apps and settings are preserved.": "Mise à jour terminée. Vos applications et réglages sont conservés.",
     "Recovery": "Récupération",
     "Rollback version: {version}": "Version à restaurer : {version}",
     "No saved update is available to roll back.": "Aucune mise à jour enregistrée ne permet un retour en arrière.",
@@ -656,6 +666,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "La version précédente de Home et les paramètres enregistrés seront restaurés."
   },
   "it": {
+    "Checking the updated launcher and restored settings…": "Verifica di Home aggiornato e delle impostazioni ripristinate…",
+    "Update complete. Your apps and settings are preserved.": "Aggiornamento completato. App e impostazioni sono state conservate.",
     "Recovery": "Ripristino",
     "Rollback version: {version}": "Versione da ripristinare: {version}",
     "No saved update is available to roll back.": "Nessun aggiornamento salvato disponibile per il ripristino.",
@@ -787,6 +799,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Verranno ripristinati la versione precedente di Home e le impostazioni salvate."
   },
   "ko": {
+    "Checking the updated launcher and restored settings…": "업데이트된 Home과 복원된 설정을 확인하는 중…",
+    "Update complete. Your apps and settings are preserved.": "업데이트가 완료되었습니다. 앱과 설정이 보존되었습니다.",
     "Recovery": "복구",
     "Rollback version: {version}": "복원할 버전: {version}",
     "No saved update is available to roll back.": "되돌릴 수 있는 저장된 업데이트가 없습니다.",
@@ -918,6 +932,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "이전 Home 버전과 저장된 설정이 복원됩니다."
   },
   "hi": {
+    "Checking the updated launcher and restored settings…": "अपडेट किए गए Home और बहाल सेटिंग की जाँच हो रही है…",
+    "Update complete. Your apps and settings are preserved.": "अपडेट पूरा हुआ। आपके ऐप और सेटिंग सुरक्षित हैं।",
     "Recovery": "रिकवरी",
     "Rollback version: {version}": "वापस जाने का संस्करण: {version}",
     "No saved update is available to roll back.": "वापस जाने के लिए कोई सहेजा गया अपडेट उपलब्ध नहीं है।",
@@ -1049,6 +1065,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Home का पिछला संस्करण और सहेजी गई सेटिंग्स बहाल की जाएंगी।"
   },
   "pl": {
+    "Checking the updated launcher and restored settings…": "Sprawdzanie zaktualizowanego Home i przywróconych ustawień…",
+    "Update complete. Your apps and settings are preserved.": "Aktualizacja zakończona. Aplikacje i ustawienia zostały zachowane.",
     "Recovery": "Odzyskiwanie",
     "Rollback version: {version}": "Wersja do przywrócenia: {version}",
     "No saved update is available to roll back.": "Brak zapisanego uaktualnienia do cofnięcia.",
@@ -1180,6 +1198,8 @@ if (window.HomeI18n) window.HomeI18n.add({
     "The previous Home version and saved settings will be restored.": "Poprzednia wersja Home i zapisane ustawienia zostaną przywrócone."
   },
   "ru": {
+    "Checking the updated launcher and restored settings…": "Проверяем обновлённый Home и восстановленные настройки…",
+    "Update complete. Your apps and settings are preserved.": "Обновление завершено. Приложения и настройки сохранены.",
     "Recovery": "Восстановление",
     "Rollback version: {version}": "Версия для отката: {version}",
     "No saved update is available to roll back.": "Нет сохранённого обновления для отката.",

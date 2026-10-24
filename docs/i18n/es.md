@@ -54,3 +54,5 @@ Tras conectar, cytv lee las versiones del televisor y muestra la versión actual
 Actualizaciones de software muestra detalles solo de la versión instalada o una más reciente. Abre Recuperación para ver la versión guardada para restaurar o por qué no está disponible; Atrás vuelve a las actualizaciones.
 
 No-root comprueba la ABI de la consola del TV y acepta un núcleo de 64 bits con entorno ARM32 verificado. Si falla la comprobación, adjunta el JSON de diagnóstico generado; no compartas claves ni frases de contraseña.
+
+Las actualizaciones de Home piden confirmación antes de instalar; después el inicio se verifica automáticamente. La actualización del estado conserva el botón seleccionado con el mando.

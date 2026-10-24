@@ -27,6 +27,8 @@ class ReleaseFeeds(unittest.TestCase):
                   'root':'0.1.8','updater':'0.1.5','android':'0.1.3-preview','android_version_code':4}
         release.validate_versions(values)
         release.validate_versions({k:v for k,v in values.items() if not k.startswith('android')})
+        # v0.10.8 provenance predates both the release and Android fields.
+        release.validate_versions({k:v for k,v in values.items() if k != 'release' and not k.startswith('android')})
         for key, value in [('android','bad'),('android_version_code',0),('android_version_code',True),('home','invalid')]:
             with self.subTest(key=key,value=value), self.assertRaises(ValueError):
                 release.validate_versions({**values,key:value})

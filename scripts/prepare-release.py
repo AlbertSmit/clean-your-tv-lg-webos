@@ -33,8 +33,10 @@ def digest(raw):
 
 
 def validate_versions(versions):
-    for key in ('release', 'cytv', 'home', 'helper', 'root', 'updater'):
+    for key in ('cytv', 'home', 'helper', 'root', 'updater'):
         version(versions[key])
+    if 'release' in versions:
+        version(versions['release'])
     if 'android' in versions or 'android_version_code' in versions:
         if (not isinstance(versions.get('android'), str)
                 or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}-preview', versions['android'])

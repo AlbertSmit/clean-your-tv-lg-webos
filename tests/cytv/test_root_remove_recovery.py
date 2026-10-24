@@ -1,6 +1,7 @@
 """Exercise reconciliation against the real retained Root driver on local files."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -12,6 +13,7 @@ from cytv.root_remove_recovery import SCRIPT
 ROOT = Path(__file__).resolve().parents[2] / 'root-edition'
 
 
+@unittest.skipIf(os.name == 'nt', 'TV-side driver requires POSIX directory fsync')
 class RootRemovalRecoveryTests(unittest.TestCase):
     def setUp(self):
         spec = importlib.util.spec_from_file_location('recovery_deploy', ROOT / 'deploy.py')

@@ -1,7 +1,7 @@
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from cytv.operations import Installer, UPDATER_APP
 from cytv import state, package
 
@@ -70,3 +70,52 @@ class FullUninstallTests(unittest.TestCase):
             store.begin(profile,'uninstall',full_project=True)
             self.assertIsNotNone(inst.status()['pending'])
             self.assertIsNotNone(store.pending(profile))
+
+    def test_final_verification_waits_for_root_exit_before_finishing(self):
+        scenarios = (
+            ('already stopped', [{'busy': False}], False),
+            ('exits after polling', [{'busy': True}, {'busy': True}, {'busy': False}], False),
+            ('still running at deadline', [{'busy': True}], True),
+            ('inspection fails', [RuntimeError('connection lost')], True),
+        )
+        for name, replies, fails in scenarios:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                store = state.Store(tmp)
+                profile = state.target('tv.local', 'root')
+                remote = MagicMock()
+                remote.luna.return_value = {'returnValue': True, 'status': {'apps': []}}
+                remote.run.return_value = 'CYTV_ROOT_RETAINED'
+                inst = Installer(remote, store, profile, Path(tmp), {}, lambda *_: None)
+                inst.installed_apps = MagicMock(return_value=[])
+                inst.root_updater_cleanup = MagicMock(return_value={'disabled': True, 'removed': True})
+                inst.cleanup_legacy_permissions = MagicMock()
+                inst.cleanup_updater_app_permissions = MagicMock()
+                inst.verify_project_removed = MagicMock()
+                inst.verify_absent = MagicMock()
+                elapsed = [0]
+                def sleep(seconds):
+                    self.assertIsNotNone(store.pending(profile))
+                    elapsed[0] += seconds
+                def inspect(action):
+                    self.assertEqual(action, 'inspect')
+                    reply = replies.pop(0) if len(replies) > 1 else replies[0]
+                    if isinstance(reply, Exception):
+                        raise reply
+                    return reply
+                inst.root_archive = inspect
+                with patch('cytv.operations.time', create=True) as clock:
+                    clock.monotonic.side_effect = lambda: elapsed[0]
+                    clock.sleep.side_effect = sleep
+                    if fails:
+                        with self.assertRaises(RuntimeError):
+                            inst.uninstall(full_project=True)
+                        self.assertIsNotNone(store.pending(profile))
+                        if name == 'still running at deadline':
+                            self.assertGreater(elapsed[0], 0)
+                            self.assertLessEqual(elapsed[0], 60)
+                    else:
+                        self.assertTrue(inst.uninstall(full_project=True)['removed'])
+                        self.assertIsNone(store.pending(profile))
+                        if name == 'exits after polling':
+                            self.assertGreater(elapsed[0], 0)
+                self.assertFalse(any(c.args[0].endswith('/remove') for c in remote.luna.call_args_list))

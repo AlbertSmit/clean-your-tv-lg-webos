@@ -6,6 +6,7 @@ from pathlib import Path
 import shlex
 import shutil
 import tempfile
+import time
 import uuid
 
 from . import package, i18n, diagnostics
@@ -711,8 +712,13 @@ print('CYTV_PROJECT_REMOVED')
         self.verify_project_removed()
         retained = self.remote.run('if [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf CYTV_ROOT_RETAINED; fi').strip()
         if retained:
-            if self.root_archive('inspect').get('busy') is not False:
-                raise UserError('Apps were removed, but an old Root process is still running. Restart the TV, then run removal again to verify completion.')
+            self.progress('Waiting for old Root processes to exit…')
+            deadline = time.monotonic() + 60
+            while self.root_archive('inspect').get('busy') is not False:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise UserError('Apps were removed, but an old Root process is still running. Restart the TV, then run removal again to verify completion.')
+                time.sleep(min(1, remaining))
         self.store.finish(self.profile)
         return {'removed': True, 'applications_services_startup_removed': True,
                 'recovery_retained': ROOT_STATE, 'updater_archive': final.get('archive')}

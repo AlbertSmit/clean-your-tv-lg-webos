@@ -14,7 +14,7 @@ function complete(message,result){
  if(message.payload.$activity&&message.activity)service.activityManager.complete(message.activity,{restart:true},function(a){fs.writeFileSync('/tmp/nativehome-boot-complete.json',JSON.stringify({time:Date.now(),activity:a}));message.respond({returnValue:true,result:result});});
  else message.respond({returnValue:true,result:result});
 }
-service.register('status',function(m){try{m.respond({returnValue:true,state:read(),boot:boot(),blocked:blocked(),callback:readDebug('/tmp/nativehome-boot-callback.json'),complete:readDebug('/tmp/nativehome-boot-complete.json')});}catch(e){m.respond({returnValue:false,errorText:String(e)});}});
+service.register('status',function(m){try{m.respond({returnValue:true,state:read(),boot:boot(),blocked:blocked(),running:running(),callback:readDebug('/tmp/nativehome-boot-callback.json'),complete:readDebug('/tmp/nativehome-boot-complete.json')});}catch(e){m.respond({returnValue:false,errorText:String(e)});}});
 service.register('disable',function(m){try{save({enabled:false});call('luna://com.palm.activitymanager/cancel',{activityName:name},function(r){m.respond({returnValue:true,cancel:r});});}catch(e){m.respond({returnValue:false,errorText:String(e)});}});
 service.register('enable',function(m){try{save({enabled:true,boot:boot(),schema:3});m.respond({returnValue:true});}catch(e){m.respond({returnValue:false,errorText:String(e)});}});
 service.register('tick',function(m){try{
@@ -35,3 +35,6 @@ service.register('listApps',function(message){
  var request=inventoryPending;
  request.then(function(apps){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:true,apps:apps});},function(){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:false,errorText:'App inventory unavailable'});});
 });
+
+// Check the controller identity as well as its PID; stale state is not running.
+function running(){try{var pid=fs.readFileSync('/media/developer/apps/usr/palm/applications/com.local.nativehome/state/controller.pid','utf8').trim();if(!/^[1-9][0-9]*$/.test(pid))return false;var args=fs.readFileSync('/proc/'+pid+'/cmdline','utf8').split('\0');return args[0]==='com.local.nativehome'||args.indexOf('/media/developer/apps/usr/palm/applications/com.local.nativehome/native.js')>=0;}catch(_){return false;}}

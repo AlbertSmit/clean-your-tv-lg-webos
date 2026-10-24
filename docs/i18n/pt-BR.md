@@ -70,3 +70,5 @@ A tela de atualização separa versões, estado e novidades legíveis. Cima/Baix
 Ao abrir as configurações do Home, as atualizações são verificadas em segundo plano. Um ponto laranja em Atualizações de software indica uma versão mais recente, inclusive quando exige instalação pelo computador. As configurações continuam disponíveis durante a verificação.
 
 No-root: abra Configurações do Home → Modo de Desenvolvedor para renovação automática, verificação de sessão e diagnóstico. A tela principal mantém um resumo do estado e os erros de renovação visíveis. Voltar retorna às configurações do Home. As duas edições colocam Idioma, Atualizações de software e Configurações da TV na mesma linha; a seta abre cada item.
+
+Ao abrir o Home Helper, sua função e seu estado são exibidos. Iniciar um Helper parado exige confirmação. Home Updater e Root Updater explicam a restauração; atualizações normais estão nas configurações do Home. A restauração só é oferecida quando há uma versão salva e exige confirmação antes de substituir o Home e suas configurações.

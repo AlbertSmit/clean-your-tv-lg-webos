@@ -70,3 +70,5 @@ Der Update-Bildschirm trennt Versionen, Status und lesbare Neuerungen. Oben/Unte
 Beim Öffnen der Home-Einstellungen wird im Hintergrund nach Updates gesucht. Ein orangefarbener Punkt bei Softwareupdates zeigt eine neuere Version an, auch wenn sie die Einrichtung am Computer erfordert. Die Einstellungen bleiben während der Prüfung bedienbar.
 
 No-root: Öffne Home-Einstellungen → Entwicklermodus für automatische Verlängerung, Sitzungsprüfung und Diagnose. Auf der Hauptseite bleiben der Kurzstatus und Verlängerungsfehler sichtbar. Zurück führt zu den Home-Einstellungen. Beide Editionen zeigen Sprache, Softwareupdates und TV-Einstellungen in derselben Zeile; der Pfeil öffnet den jeweiligen Eintrag.
+
+Home Helper zeigt beim Öffnen seinen Zweck und Status. Der Start eines gestoppten Helpers muss bestätigt werden. Home Updater und Root Updater erklären die Wiederherstellung; reguläre Updates befinden sich in den Home-Einstellungen. Die Wiederherstellung wird nur bei einer gespeicherten Version angeboten und erfordert eine Bestätigung vor dem Ersetzen von Home und seinen Einstellungen.

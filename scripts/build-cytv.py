@@ -19,9 +19,9 @@ def tracked_files(prefix):
     files = {}
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
-    required = {'native/app': ['native/app/state-permissions.js', 'native/app/home-control.js'],
+    required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js'],
                 'renewal-service': ['renewal-service/home-control.js'],
-                'launcher': ['launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
+                'launcher': ['launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
                              'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],

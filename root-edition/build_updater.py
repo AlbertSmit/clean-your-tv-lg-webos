@@ -32,10 +32,10 @@ def build(output):
     code['setup-updater.py']=source(ROOT/'setup_updater.py')
     files={}
     prefix='usr/palm/applications/'+APP+'/'
-    app={'id':APP,'version':'0.1.0','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'icon.png','largeIcon':'largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
+    app={'id':APP,'version':'0.1.0','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'root-updater-icon.png','largeIcon':'root-updater-largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
     files[prefix+'appinfo.json']=(json.dumps(app)+'\n').encode()
-    files[prefix+'icon.png']=source(ROOT/'assets/updater.png')
-    files[prefix+'largeIcon.png']=source(ROOT/'assets/updater-large.png')
+    files[prefix+'root-updater-icon.png']=source(ROOT/'assets/updater.png')
+    files[prefix+'root-updater-largeIcon.png']=source(ROOT/'assets/updater-large.png')
     files[prefix+'root-settings.css']=source(ROOT/'ui/root-settings.css')
     files[prefix+'i18n.js']=source(ROOT.parent/'launcher/i18n.js')
     for name in ('catalogs.js', 'i18n.css', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt'):
@@ -43,7 +43,7 @@ def build(output):
     files[prefix+'root-locales.js']=source(ROOT/'ui/root-locales.js')
     files[prefix+'release-notes.js']=source(ROOT.parent/'launcher/release-notes.js')
     files[prefix+'root-updates.js']=source(ROOT/'ui/root-updates.js')
-    files[prefix+'index.html']=b'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>Root Updater</title><link rel="stylesheet" href="root-settings.css"><link rel="stylesheet" href="i18n.css"></head><body style="background:#10121a;color:white"><script src="i18n.js"></script><script src="catalogs.js"></script><script src="root-locales.js"></script><script src="release-notes.js"></script><script src="root-updates.js"></script><script>HomeI18n.ready(function(){document.title=HomeI18n.t("Root Updater");function openRecovery(){RootUpdates.open({recovery:true,onClose:function(){var bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){bridge.cancel();try{if(JSON.parse(raw).returnValue!==true)openRecovery();}catch(_){openRecovery();}};bridge.call("luna://com.webos.applicationManager/launch",JSON.stringify({id:"com.cleanyourtv.root.preview"}));}});}openRecovery();});</script></body></html>\n'
+    files[prefix+'index.html']=b'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>Root Updater</title><link rel="stylesheet" href="root-settings.css"><link rel="stylesheet" href="i18n.css"></head><body style="background:#10121a;color:white"><script src="i18n.js"></script><script src="catalogs.js"></script><script src="root-locales.js"></script><script src="release-notes.js"></script><script src="root-updates.js"></script><script>HomeI18n.ready(function(){document.title=HomeI18n.t("Root Updater");function openRecovery(failed){RootUpdates.open({recovery:true,standalone:true,error:failed?"Could not open Home.":"",onClose:function(){var bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){bridge.cancel();try{if(JSON.parse(raw).returnValue!==true)openRecovery(true);}catch(_){openRecovery(true);}};bridge.call("luna://com.webos.applicationManager/launch",JSON.stringify({id:"com.cleanyourtv.root.preview"}));}});}document.addEventListener("webOSRelaunch",function(){openRecovery();});document.addEventListener("visibilitychange",function(){if(!document.hidden&&!RootUpdates.isOpen())openRecovery();});openRecovery();});</script></body></html>\n'
     sp='usr/palm/services/'+APP+'.service/'
     files[sp+'service.js']=b"'use strict';require('/var/lib/clean-your-tv-root-updater/code/service.js');\n"
     files[sp+'package.json']=code['package.json'];files[sp+'services.json']=code['services.json']

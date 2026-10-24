@@ -30,18 +30,18 @@ def prepare(version='0.0.1'):
     info = json.loads(files['appinfo.json'])
     if (info.get('id'), info.get('type'), info.get('main')) != ('com.gathin.tvhome', 'web', 'index.html'):
         raise ValueError('Unexpected launcher manifest')
-    info.update(id=APP_ID, title='Home Root', version=version, appCategory=['home'])
+    info.update(id=APP_ID, title='Home Root', version=version, appCategory=['home'], icon='home-root-icon.png', largeIcon='home-root-largeIcon.png')
     for name in ('brand-v2-icon.png', 'brand-v2-largeIcon.png'):
         path = UI.parent / 'assets' / ('home.png' if name == 'brand-v2-icon.png' else 'home-large.png')
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(UI.parent.resolve()):
             raise ValueError('Missing or indirect Root icon: ' + name)
-        files[name] = path.read_bytes()
+        files['home-root-icon.png' if name == 'brand-v2-icon.png' else 'home-root-largeIcon.png'] = path.read_bytes()
     for field in ('icon', 'largeIcon', 'splashBackground'):
         if info.get(field) not in files:
             raise ValueError('Unpackaged manifest resource: ' + field)
     html = files['index.html'].decode()
     # Older launcher sources may still include the now-inert compatibility entry.
-    html = html.replace('<script src="native-bootstrap.js"></script>', '')
+    html = html.replace('<script src="native-bootstrap.js"></script>', '').replace('<script src="helper-control.js"></script>', '')
     tags = ['<script src="' + name + '"></script>' for name in (
         'renewal-panel.js',
         'user-data.js', 'update-panel.js')]

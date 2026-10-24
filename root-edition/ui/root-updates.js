@@ -4,7 +4,7 @@
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var panel, title, message, details, reading, notes, notesHeading, buttons, previous, selected = 0, timer, onClose;
   var busy = false, polling = false, recovery = false, offer = null, transaction = null, errorText = '';
-  var recoveryParent = false, settleUntil = 0;
+  var recoveryParent = false, settleUntil = 0, standalone = false, introduction, diagnostic, diagnosticButton, hint;
   var terminal = ['complete', 'rolled-back', 'aborted'];
   function unprovisioned() {
     var error = Error('Updater unavailable. Run the one-time computer setup for Software updates.');
@@ -33,7 +33,7 @@
     });
   }
   function active() { return transaction && terminal.indexOf(transaction.phase) < 0; }
-  function enabled() { return buttons.filter(function (b) { return !b.hidden && !b.disabled; }); }
+  function enabled() { var list = buttons.filter(function (b) { return !b.hidden && !b.disabled; }); var primary = list.indexOf(buttons[7]); if (standalone && primary > 0) list.unshift(list.splice(primary, 1)[0]); return list; }
   function focus(index) {
     var list = enabled(); if (!list.length) return;
     selected = (index + list.length) % list.length; list[selected].focus();
@@ -52,7 +52,7 @@
     close();
   }
   function rollbackAllowed() {
-    return !!(transaction && ['complete', 'recovery-required'].indexOf(transaction.phase) >= 0 && transaction.installEvidence && transaction.installEvidence.terminal && !transaction.rollbackAttempted);
+    return !!(transaction && transaction.prior && transaction.prior.version && ['complete', 'recovery-required'].indexOf(transaction.phase) >= 0 && transaction.installEvidence && transaction.installEvidence.terminal && !transaction.rollbackAttempted);
   }
   function currentOrNewer(candidate, installed) {
     var a = String(candidate).split('.'), b = String(installed).split('.');
@@ -68,7 +68,14 @@
   function show(index, visible, disabled) { buttons[index].hidden = !visible; buttons[index].disabled = !!disabled; }
   function render(preserveFocus) {
     var phase = transaction && transaction.phase;
-    title.textContent = t(recovery ? 'Recovery' : 'Software updates');
+    title.textContent = t(standalone ? 'Root Updater' : recovery ? 'Recovery' : 'Software updates');
+    introduction.hidden = !standalone;
+    panel.className = standalone ? 'root-settings root-updates companion-app' : 'root-settings root-updates';
+    buttons[7].className = standalone ? 'companion-primary' : '';
+    hint.textContent = t(standalone ? '← → Choose action · Back Open Home' : '↑ ↓ Read notes · ← → Choose action · Back Close');
+    diagnostic.textContent = errorText || (transaction ? JSON.stringify({phase:transaction.phase,error:transaction.error || null}, null, 2) : '');
+    diagnosticButton.hidden = !diagnostic.textContent;
+    if (diagnosticButton.hidden) diagnostic.hidden = true;
     panel.setAttribute('aria-label', title.textContent);
     var descriptions = {
       preparing:'Preparing update and preserving your launcher profile…',
@@ -86,7 +93,11 @@
       aborted:'Update stopped before replacement. Check status before trying again.'
     };
     message.textContent = t(errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : busy ? 'Checking for updates…' : offer && offer.canInstall ? 'A new version of Home is available.' : 'Your apps and settings stay saved.'));
-    if (transaction && transaction.error) message.textContent += ' ' + transaction.error;
+    if (standalone) {
+      if (errorText) message.textContent = t(errorText === 'Could not open Home.' ? 'Could not open Home.' : 'Status is unavailable.') + '\n' + t('Try refreshing. If this continues, reinstall the complete Home package from your computer.');
+      else if (phase === 'recovery-required') message.textContent = t('Recovery needs attention.') + '\n' + t('Refresh status first. If recovery remains unavailable, use the installer on your computer.');
+      else if (!transaction && !busy) message.textContent = t('No recovery needed.') + '\n' + t('Open Home to continue.');
+    }
     if (transaction && transaction.homeResume && transaction.homeResume.status === 'failed') message.textContent += ' ' + t('Home control could not be restored automatically. Open Home settings.');
     if (transaction && transaction.homeResume && transaction.homeResume.status === 'restored') message.textContent += ' ' + t('Your previous Home screen choice has been restored.');
     if (transaction && transaction.homeResume && transaction.homeResume.status === 'cancelled') message.textContent += ' ' + t('Home control remains off because it was disabled during the update.');
@@ -104,7 +115,7 @@
     if (recovery) {
       details.textContent = '';
       if (transaction && transaction.prior) details.textContent = t('Rollback version: {version}', {version:transaction.prior.version});
-      if (!transaction || phase === 'aborted') details.textContent += '\n' + t('No saved update is available to roll back.');
+      if (!transaction || !transaction.prior || !transaction.prior.version || phase === 'aborted') details.textContent += '\n' + t('No saved update is available to roll back.');
       else if (phase === 'complete') details.textContent += '\n' + t('Rollback remains available until the next update.');
       else if (phase === 'rolled-back') details.textContent += '\n' + t('The previous version has already been restored.');
       else if (!rollbackAllowed()) details.textContent += '\n' + t('Rollback is blocked until the installer has definitely stopped. Refresh status to check.');
@@ -119,10 +130,11 @@
     show(5, false);
     show(6, !!(transaction && transaction.homeResume && ['failed', 'skipped'].indexOf(transaction.homeResume.status) >= 0), busy);
     show(7, true, false);
+    buttons[7].textContent = t(standalone ? 'Open Home' : 'Back');
     if (!panel.hidden) {
       var current = enabled().indexOf(document.activeElement);
       if (preserveFocus && current >= 0) selected = current;
-      else focus(selected);
+      else focus(standalone ? enabled().indexOf(buttons[7]) : selected);
     }
   }
   function schedule() {
@@ -150,6 +162,7 @@
   function activate(index) {
     if (buttons[index].hidden || buttons[index].disabled) return;
     if (index === 7) return back();
+    if (index === 8) { diagnostic.hidden = !diagnostic.hidden; diagnosticButton.textContent = t(diagnostic.hidden ? 'Show diagnostics' : 'Hide diagnostics'); diagnosticButton.setAttribute('aria-expanded', String(!diagnostic.hidden)); return; }
     if (busy) return;
     if (index === 0) return refresh(true);
     if (index === 1) return window.HomeI18n.confirm({title:'Install Home update?',message:t('Available: {version}', {version:offer.candidate.version}) + '\n' + t('Home will close during installation. Your apps and settings will be saved.'),action:'Install update'}, function () {
@@ -177,12 +190,15 @@
     notesHeading = document.createElement('h2'); notesHeading.className = 'update-notes-heading'; notesHeading.textContent = t('Release notes'); card.appendChild(notesHeading);
     notes = document.createElement('div'); notes.className = 'release-notes-content'; card.appendChild(notes);
     reading = document.createElement('div'); reading.className = 'update-notes'; reading.setAttribute('role', 'region'); reading.setAttribute('aria-label', t('Software updates'));
+    introduction = document.createElement('p'); introduction.textContent = t('If Home stops working after an update, use this app to restore the previous version. For regular updates, open Home settings.'); reading.appendChild(introduction);
     [details, message, notesHeading, notes].forEach(function (element) { card.removeChild(element); reading.appendChild(element); }); card.appendChild(reading);
+    diagnostic = document.createElement('p'); diagnostic.className = 'root-update-details'; diagnostic.hidden = true; reading.appendChild(diagnostic);
     var actions = document.createElement('div'); actions.className = 'renewal-actions update-actions'; card.appendChild(actions);
-    buttons = ['Try again', 'Update', 'Install update', 'Recovery', 'Roll back', '', 'Root mode settings', 'Back'].map(function (label, index) {
+    buttons = ['Try again', 'Update', 'Install update', 'Recovery', 'Roll back', '', 'Root mode settings', 'Back', 'Show diagnostics'].map(function (label, index) {
       var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; button.onfocus = function () { selected = enabled().indexOf(button); }; actions.appendChild(button); return button;
     });
-    var hint = document.createElement('p'); hint.className = 'update-hint'; hint.textContent = t('↑ ↓ Read notes · ← → Choose action · Back Close'); card.appendChild(hint);
+    diagnosticButton = buttons[8]; diagnosticButton.setAttribute('aria-expanded', 'false');
+    hint = document.createElement('p'); hint.className = 'update-hint'; hint.textContent = t('↑ ↓ Read notes · ← → Choose action · Back Close'); card.appendChild(hint);
     document.body.appendChild(panel);
     document.addEventListener('keydown', function (event) {
       if (panel.hidden || [9,13,27,37,38,39,40,461].indexOf(event.keyCode) < 0) return;
@@ -198,6 +214,8 @@
     options = options || {}; if (!panel) build();
     if (panel.hidden) previous = document.activeElement;
     onClose = options.onClose || null;
+    standalone = options.standalone === true;
+    diagnostic.hidden = true; diagnosticButton.textContent = t('Show diagnostics'); diagnosticButton.setAttribute('aria-expanded', 'false');
     recovery = options.recovery === true; recoveryParent = false; settleUntil = 0; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
     if (!options.error) refresh(!recovery);
   }

@@ -96,3 +96,8 @@
  .settings-main .settings-footer{margin-top:18px;padding-top:14px}
  .settings-main .settings-footer p{font-size:19px}
 }
+
+/* Companion apps lead with returning to Home; recovery is a secondary action. */
+.root-updates.companion-app .update-actions button{background:#343941;color:#f5f7fa}
+.root-updates.companion-app .update-actions .companion-primary{order:-1;background:#dceaff;color:#142335}
+.root-updates.companion-app .update-actions button:focus{background:#46556c;color:#f5f7fa}

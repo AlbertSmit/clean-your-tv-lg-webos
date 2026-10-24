@@ -70,3 +70,5 @@ The update screen now separates versions, status and readable release notes. Up/
 Opening Home settings checks for updates in the background. An orange dot on Software updates means a newer version is available, including releases that require computer setup. Settings stay usable during the check.
 
 No-root: open Home settings → Developer Mode for auto-renewal, session checks and diagnostics. The main screen keeps a brief status and any renewal errors visible. Back returns to Home settings. Both editions place Language, Software updates and TV settings in the same row; an arrow opens each item.
+
+Opening Home Helper shows its purpose and current state. Starting a stopped Helper requires confirmation. Home Updater and Root Updater explain recovery; regular updates are in Home settings. Restore is shown only when a saved version is available and asks for confirmation before replacing Home and its settings.

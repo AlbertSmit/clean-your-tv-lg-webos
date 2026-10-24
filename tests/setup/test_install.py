@@ -113,7 +113,7 @@ printf '["configure"]\\n' >> calls.jsonl
         self.assertEqual(len(installs), 2)
         self.assertTrue(all(c[1:3]==['-d','test-tv'] for c in installs))
         self.assertLess(calls.index(installs[-1]), calls.index(['configure']))
-        self.assertEqual(calls[-1], ['ares-launch','-d','test-tv','com.local.nativehome'])
+        self.assertEqual(calls[-1], ['ares-launch','-d','test-tv','-p','{"nativeHomeStart":true}','com.local.nativehome'])
 
     def test_default_bootstrap_installs_pinned_zig_distribution(self):
         result, calls = self.run_installer()
@@ -128,7 +128,7 @@ printf '["configure"]\\n' >> calls.jsonl
                 pip = [call for call in calls if call[0] == 'pip']
                 self.assertTrue(pip)
                 self.assertFalse(any('ziglang' in arg for call in pip for arg in call))
-                self.assertEqual(calls[-1], ['ares-launch', '-d', 'test-tv', 'com.local.nativehome'])
+                self.assertEqual(calls[-1], ['ares-launch', '-d', 'test-tv', '-p', '{"nativeHomeStart":true}', 'com.local.nativehome'])
 
     def test_termux_without_zig_stops_with_instructions_before_pairing(self):
         result, calls = self.run_installer(termux=True)

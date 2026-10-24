@@ -70,3 +70,5 @@ La pantalla de actualización separa versiones, estado y novedades legibles. Arr
 Al abrir los ajustes de Home se buscan actualizaciones en segundo plano. Un punto naranja en Actualizaciones de software indica una versión más reciente, incluso si requiere instalación desde el ordenador. Puedes seguir usando los ajustes durante la búsqueda.
 
 No-root: abre Ajustes de Home → Modo de desarrollador para la renovación automática, la comprobación de sesión y el diagnóstico. La pantalla principal mantiene visibles el estado resumido y los errores de renovación. Atrás vuelve a los ajustes de Home. Ambas ediciones agrupan Idioma, Actualizaciones de software y Ajustes del TV en la misma fila; la flecha abre cada opción.
+
+Al abrir Home Helper se muestran su función y estado. Iniciar un Helper detenido requiere confirmación. Home Updater y Root Updater explican la recuperación; las actualizaciones normales están en los ajustes de Home. La restauración solo se ofrece si hay una versión guardada y requiere confirmación antes de reemplazar Home y sus ajustes.

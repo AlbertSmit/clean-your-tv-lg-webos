@@ -12,6 +12,8 @@ node tests/renewal-transport.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
 node tests/preview-bridge.cjs
+node tests/helper-entry.cjs
+node tests/helper-service-status.cjs
 node tests/home-control.cjs
 node tests/home-control-bridge.cjs
 node tests/resume.cjs

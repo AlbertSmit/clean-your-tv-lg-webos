@@ -70,3 +70,5 @@ La schermata di aggiornamento separa versioni, stato e novità leggibili. Su/Gi�
 Aprendo le impostazioni Home, gli aggiornamenti vengono cercati in background. Un punto arancione su Aggiornamenti software indica una versione più recente, anche quando richiede l’installazione dal computer. Le impostazioni restano utilizzabili durante la verifica.
 
 No-root: apri Impostazioni Home → Modalità sviluppatore per rinnovo automatico, verifica della sessione e diagnostica. La schermata principale mantiene visibili un breve stato e gli errori di rinnovo. Indietro torna alle impostazioni Home. Entrambe le edizioni raggruppano Lingua, Aggiornamenti software e Impostazioni TV nella stessa riga; la freccia apre ogni voce.
+
+All’apertura, Home Helper mostra il suo scopo e stato. L’avvio di un Helper arrestato richiede conferma. Home Updater e Root Updater spiegano il ripristino; gli aggiornamenti normali sono nelle impostazioni di Home. Il ripristino è proposto solo se esiste una versione salvata e richiede conferma prima di sostituire Home e le sue impostazioni.

@@ -314,7 +314,7 @@ class OperationTests(unittest.TestCase):
         calls = [c for c in remote.calls if c[0] == 'luna']
         installs = [c[2]['id'] for c in calls if c[1].endswith('/install')]
         self.assertEqual(installs, ['com.local.nativehome', 'com.gathin.tvhome'])
-        self.assertEqual(calls[-1][1:], ('com.webos.applicationManager/launch', {'id': 'com.local.nativehome'}))
+        self.assertEqual(calls[-1][1:], ('com.webos.applicationManager/launch', {'id': 'com.local.nativehome', 'params': {'nativeHomeStart': True}}))
         self.assertTrue(any(c[1].endswith('/dev/listApps') for c in calls[:-1]))
         self.assertTrue(any(c[0] == 'upload' and c[1].endswith('ssap-key.json') and c[2] == 0o640 for c in remote.calls))
         self.assertIsNone(self.store.pending(installer.profile))

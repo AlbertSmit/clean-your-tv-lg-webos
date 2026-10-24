@@ -70,3 +70,5 @@ Ekran aktualizacji rozdziela wersje, stan i czytelne informacje o zmianach. Gór
 Otwarcie ustawień Home uruchamia sprawdzanie aktualizacji w tle. Pomarańczowa kropka przy Aktualizacje oprogramowania oznacza nowszą wersję, również gdy wymaga instalacji z komputera. Ustawienia pozostają dostępne podczas sprawdzania.
 
 No-root: otwórz Ustawienia Home → Tryb dewelopera, aby uzyskać dostęp do automatycznego odnawiania, sprawdzania sesji i diagnostyki. Główny ekran nadal pokazuje krótki stan i błędy odnawiania. Wstecz wraca do ustawień Home. Obie edycje umieszczają Język, Aktualizacje oprogramowania i Ustawienia TV w tym samym wierszu; strzałka otwiera daną pozycję.
+
+Po otwarciu Home Helper pokazuje swoje przeznaczenie i stan. Uruchomienie zatrzymanego Helpera wymaga potwierdzenia. Home Updater i Root Updater wyjaśniają przywracanie; zwykłe aktualizacje są w ustawieniach Home. Przywracanie jest dostępne tylko dla zapisanej wersji i wymaga potwierdzenia przed zastąpieniem Home i jego ustawień.

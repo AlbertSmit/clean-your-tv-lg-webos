@@ -148,7 +148,7 @@ class Installer:
         except RuntimeError:
             self.store.checkpoint(self.profile, eim_registered='unknown')
             self.progress('Warning: early input restoration was not confirmed; startup will use the guarded fallback.')
-        self.remote.luna('com.webos.applicationManager/launch', {'id': HELPER})
+        self.remote.luna('com.webos.applicationManager/launch', {'id': HELPER, 'params': {'nativeHomeStart': True}})
         from .state import private_write
         private_write(self.store.device_dir(self.profile) / 'installation.json',
                       json.dumps({'eim_registered': self.store.pending(self.profile).get('eim_registered', 'unknown')}).encode())

@@ -41,7 +41,7 @@ and `#gh-dark-mode-only` fragments. GitHub displays the matching transparent
 image for its active theme. Brown lettering is used on light backgrounds and
 cream lettering on dark backgrounds; neither image has an opaque backing.
 
-Root tiles add a small orange R badge; ordinary Home/Updater tiles do not.
+Root and No-root tiles share the same symbols without letter badges. Application titles identify the edition.
 Helper is the directional pad with orange centre; Updater is the paired rotating arrow.
 Installer uses the project Home symbol. See `../icons/README.md` for package mappings.
 

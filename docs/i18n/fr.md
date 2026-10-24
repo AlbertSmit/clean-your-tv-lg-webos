@@ -70,3 +70,5 @@ L’écran de mise à jour sépare les versions, l’état et les nouveautés li
 L’ouverture des réglages de Home lance une recherche de mises à jour en arrière-plan. Un point orange sur Mises à jour logicielles indique une version plus récente, même si elle nécessite une installation depuis l’ordinateur. Les réglages restent utilisables pendant la recherche.
 
 No-root : ouvrez Réglages de Home → Mode développeur pour le renouvellement automatique, la vérification de session et le diagnostic. L’écran principal conserve un bref état et les erreurs de renouvellement visibles. Retour ramène aux réglages de Home. Les deux éditions regroupent Langue, Mises à jour logicielles et Réglages TV sur la même ligne ; la flèche ouvre chaque option.
+
+À l’ouverture, Home Helper indique son rôle et son état. Le démarrage d’un Helper arrêté nécessite une confirmation. Home Updater et Root Updater expliquent la restauration ; les mises à jour habituelles sont dans les paramètres de Home. La restauration est proposée uniquement si une version enregistrée existe et demande confirmation avant de remplacer Home et ses paramètres.

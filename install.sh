@@ -96,7 +96,7 @@ ares-install -d "$DEVICE" "$launcher"
 stage='configuring Home Helper'
 bash scripts/configure-tv.sh
 stage='starting Home Helper'
-ares-launch -d "$DEVICE" com.local.nativehome
+ares-launch -d "$DEVICE" -p '{"nativeHomeStart":true}' com.local.nativehome
 printf '\nPackages installed and helper launch requested. Check the TV now:\n'
 printf '  Open an app, then press Home to return to your launcher.\n'
 printf '  Hold Home for about 2 seconds to stop the helper and return to LG Home.\n'

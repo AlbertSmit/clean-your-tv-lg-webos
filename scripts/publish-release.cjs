@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// Signing stays separate and local. Both edition feeds must match the release.
+// Normal publication delegates signing to the protected GitHub environment.
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {execFileSync}=require('node:child_process');
 const policy=require('../root-edition/updater/fetch'),homePolicy=require('../updater-service/policy');
@@ -23,7 +23,13 @@ function verifyHomeRelease(feed,build,bytes,key=fs.readFileSync(path.join(__dirn
 }
 function main(args){
  const [tag,option]=args;
- if(!/^v\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(tag||'')||args.length>2||(option&&option!=='--check-only'))throw Error('Usage: node scripts/publish-release.cjs vX.Y.Z [--check-only]');
+ if(!/^v\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(tag||'')||args.length>2||(option&&!['--check-only','--publish-verified'].includes(option)))throw Error('Usage: node scripts/publish-release.cjs vX.Y.Z [--check-only|--publish-verified]');
+ if(!option){
+  execFileSync('gh',['workflow','run','publish-release.yml','--ref','main','-f','tag='+tag,'-f','publish=true'],{stdio:'inherit'});
+  process.stdout.write('Queued signing and checked publication of '+tag+'. Follow the Sign and publish release workflow in GitHub Actions.\n');
+  return;
+ }
+ if(option==='--publish-verified'&&process.env.GITHUB_ACTIONS!=='true')throw Error('Publication requires the protected signing workflow');
  const folder=fs.mkdtempSync(path.join(os.tmpdir(),'cytv-release-'));
  const gh=argv=>execFileSync('gh',argv,{encoding:'utf8',maxBuffer:1024*1024,stdio:['ignore','pipe','pipe']});
  try{

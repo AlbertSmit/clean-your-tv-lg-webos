@@ -1,0 +1,63 @@
+name: Sign and publish release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Prepared release tag (bundles and BUILD-INFO must already exist)
+        required: true
+        type: string
+      publish:
+        description: Upload signed feeds and publish (false validates without changing release assets)
+        type: boolean
+        default: true
+permissions:
+  contents: read
+concurrency:
+  group: release-signing
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    environment: release-signing
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check signing and package regressions
+        run: |
+          node tests/updates/sign-release-feeds.cjs
+          node tests/updates/release-feed.cjs
+          python -m unittest discover -s tests/setup -p test_release_feeds.py
+      - name: Generate and sign both feeds from exact release bundles
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPDATE_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATE_SIGNING_PRIVATE_KEY }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python scripts/prepare-release.py "$RELEASE_TAG" "$RUNNER_TEMP/signed-release"
+      - name: Upload, verify and publish
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/signed-release/"* --clobber
+          node scripts/publish-release.cjs "$RELEASE_TAG" --publish-verified
+          node scripts/publish-release.cjs "$RELEASE_TAG" --check-only
+      - name: Save public signed feed evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-feeds
+          path: ${{ runner.temp }}/signed-release/
+          if-no-files-found: error

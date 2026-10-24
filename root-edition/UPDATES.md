@@ -162,30 +162,23 @@ Automated tests and deterministic offline builds are not TV acceptance evidence.
 
 ## Publish without a stale Root feed
 
-CI builds installer binaries; it does not sign the Root update feed. A release
-is not OTA-ready merely because its installer builds passed.
-
-For a new Root application version, generate `root-update.json` from the exact
-verified release bundle with `root-edition/update_manifest.py` and
-`scripts/sign-root-update.cjs`. Keep the signing key local. Upload the standalone
-IPK before the feed, and include the changed assets in `BUILD-INFO.json` and
-`SHA256SUMS`. A later installer-only release may carry forward the signed feed
-only while its Root version still matches. Recovery infrastructure is not
-updated by an application-only package.
-
-Publish a prepared draft through the checked entry point:
+Installer CI and OTA signing are separate stages of the same release process.
+Once the final bundles and `BUILD-INFO.json` are in a draft, run:
 
 ```sh
-node scripts/publish-release.cjs vX.Y.Z --check-only
 node scripts/publish-release.cjs vX.Y.Z
 ```
 
-This downloads both edition feeds and build metadata, checks Root/Home versions
-and the Helper requirement, verifies signatures, and downloads the referenced
-Root, Home and No-root rollback IPKs to check their hashes. It
-refuses to publish on a stale feed, invalid signature or missing/wrong package.
-The `Release update feed` GitHub workflow repeats this check after publication
-or a release edit; it can also be dispatched manually. Publishing directly with
-`gh release edit` bypasses the pre-publication guard, so use the command above.
-Fully unattended signing would additionally require securely provisioning the
-private signing key to a protected CI environment; it has not been uploaded.
+The protected GitHub workflow generates and signs both edition feeds from the
+actual release IPKs, selects and verifies the No-root rollback package, uploads
+standalone IPKs, refreshes metadata/checksums and verifies all referenced assets
+before publishing. Its key is an encrypted environment secret available only to
+`main`. Package changes require component-version bumps; incompatible rollback
+baselines stop publication. Recovery infrastructure is not updated by an
+application-only package.
+
+`--check-only` checks existing feeds without signing or publishing. The read-only
+Release update feed workflow repeats validation after public release edits.
+Direct `gh release edit` bypasses preparation; use the checked command above.
+See [the release process](../docs/RELEASE-PROCESS.md) for provisioning and the
+`publish=false` end-to-end signing check.

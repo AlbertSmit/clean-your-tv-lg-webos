@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""Prepare signed OTA assets from published/draft bundles; never execute bundle code."""
+import argparse
+import base64
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tarfile
+import tempfile
+import zipfile
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from cytv.package import data_files
+
+REPO = 'Razdva122/clean-your-tv-lg-webos'
+URL = 'https://github.com/' + REPO + '/releases/download/'
+APPS = {'home': 'com.gathin.tvhome', 'root': 'com.cleanyourtv.root.preview', 'helper': 'com.local.nativehome'}
+
+
+def version(value):
+    if not isinstance(value, str) or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}', value):
+        raise ValueError('Invalid component version')
+    return tuple(map(int, value.split('.')))
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def package_version(raw, kind, expected):
+    app = APPS[kind]
+    info = json.loads(data_files(raw)['usr/palm/applications/' + app + '/appinfo.json'])
+    if info.get('id') != app or info.get('version') != expected:
+        raise ValueError(kind + ' package version differs from release metadata')
+    version(expected)
+
+
+def prepare_manifests(tag, build, packages, prior_build, prior_packages, rollback=None, notes=None):
+    if not re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', tag) or build['tag'] != tag:
+        raise ValueError('Invalid release tag')
+    current, prior = build['versions'], prior_build['versions']
+    for kind in APPS:
+        package_version(packages[kind], kind, current[kind])
+        package_version(prior_packages[kind], kind, prior[kind])
+        if version(current[kind]) < version(prior[kind]):
+            raise ValueError(kind + ' version regression')
+    for kind in APPS:
+        if current[kind] == prior[kind] and packages[kind] != prior_packages[kind]:
+            raise ValueError(kind + ' package changed without version bump')
+    if current['helper'] != prior['helper']:
+        raise ValueError('Helper baseline changed; a compatible tested rollback baseline is required')
+    if current['home'] == prior['home']:
+        if rollback is None:
+            raise ValueError('Existing signed rollback required for unchanged Home version')
+        prior_home, previous_bytes = rollback
+        previous_version = prior_home['home']
+        if prior_home['helper'] != current['helper']:
+            raise ValueError('Helper baseline mismatch in rollback')
+    else:
+        previous_version, previous_bytes = prior['home'], prior_packages['home']
+    package_version(previous_bytes, 'home', previous_version)
+    if version(previous_version) < version('1.2.0'):
+        raise ValueError('Rollback predates supported Home profile recovery')
+    if version(previous_version) >= version(current['home']):
+        raise ValueError('Rollback must be older than Home candidate')
+    files = {}
+    def home_manifest(v, raw, notes):
+        name = APPS['home'] + '_' + v + '_all.ipk'
+        files[name] = raw
+        return {'schema': 1, 'release': tag, 'home': v, 'helper': current['helper'], 'url': URL + tag + '/' + name, 'sha256': digest(raw), 'notes': notes}
+    notes = (notes or ('See the ' + tag + ' release notes for changes.')).strip()[:3800]
+    home = home_manifest(current['home'], packages['home'], notes)
+    previous = home_manifest(previous_version, previous_bytes, 'Previous published Home ' + previous_version + ' for rollback.')
+    name = APPS['root'] + '_' + current['root'] + '_all.ipk'
+    raw = packages['root']; files[name] = raw
+    root = {'schema': 1, 'edition': 'root', 'application': APPS['root'], 'release': tag, 'version': current['root'], 'runtime': 1, 'updater': 1, 'profile': 1, 'url': URL + tag + '/' + name, 'sha256': digest(raw), 'size': len(raw), 'notes': notes}
+    return {'root': root, 'home': home, 'previous': previous}, files
+
+
+def gh(*args):
+    return subprocess.check_output(['gh', *args], stderr=subprocess.PIPE)
+
+
+def release_metadata(tag):
+    # Drafts are absent from the tags endpoint. gh resolves them through the list API.
+    info = json.loads(gh('release', 'view', tag, '--repo', REPO, '--json', 'databaseId'))
+    return json.loads(gh('api', 'repos/' + REPO + '/releases/' + str(info['databaseId'])))
+
+
+def download(meta, name, folder):
+    asset = next(a for a in meta['assets'] if a['name'] == name)
+    gh('release', 'download', meta['tag_name'], '--repo', REPO, '--pattern', name, '--dir', str(folder))
+    raw = (folder / name).read_bytes()
+    if asset.get('digest') != 'sha256:' + digest(raw) or asset['size'] != len(raw):
+        raise ValueError('GitHub asset digest mismatch: ' + name)
+    return raw
+
+
+def bundles(meta, folder):
+    folder.mkdir()
+    build = json.loads(download(meta, 'BUILD-INFO.json', folder))
+    if build['tag'] != meta['tag_name'] or not re.fullmatch('[a-f0-9]{40}', build['source_commit']):
+        raise ValueError('Invalid release provenance')
+    commit = json.loads(gh('api', 'repos/' + REPO + '/commits/' + meta['target_commitish']))['sha']
+    if commit != build['source_commit']:
+        raise ValueError('Release source commit mismatch')
+    content = json.loads(gh('api', 'repos/' + REPO + '/contents/release-versions.json?ref=' + commit))
+    if json.loads(base64.b64decode(content['content'])) != build['versions']:
+        raise ValueError('Release versions differ from committed source')
+    versions = build['versions']
+    for v in versions.values(): version(v)
+    home_name = 'clean-your-tv-no-root-' + versions['home'] + '.zip'
+    download(meta, home_name, folder)
+    with zipfile.ZipFile(folder / home_name) as archive:
+        home = archive.read(APPS['home'] + '_' + versions['home'] + '_all.ipk')
+        helper = archive.read(APPS['helper'] + '_' + versions['helper'] + '_arm.ipk')
+    root_name = 'clean-your-tv-root-' + versions['root'] + '.tar.gz'
+    download(meta, root_name, folder)
+    suffix = '/build/root-candidate/' + APPS['root'] + '_' + versions['root'] + '_all.ipk'
+    with tarfile.open(folder / root_name) as archive:
+        members = [m for m in archive if m.name.endswith(suffix) and m.isfile() and m.size <= 32 * 1024 * 1024]
+        if len(members) != 1: raise ValueError('Missing or ambiguous Root package')
+        root = archive.extractfile(members[0]).read()
+    return build, {'home': home, 'helper': helper, 'root': root}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('tag')
+    parser.add_argument('output', type=Path)
+    args = parser.parse_args()
+    if not re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', args.tag): raise ValueError('Invalid release tag')
+    output = args.output
+    output.mkdir(parents=True, exist_ok=False)
+    meta = release_metadata(args.tag)
+    if meta['prerelease']: raise ValueError('Stable feed cannot use a prerelease')
+    releases = json.loads(gh('release', 'list', '--repo', REPO, '--limit', '100', '--json', 'tagName,isDraft,isPrerelease'))
+    tags = [r['tagName'] for r in releases if not r['isDraft'] and not r['isPrerelease'] and re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', r['tagName']) and version(r['tagName'][1:]) < version(args.tag[1:])]
+    if not tags: raise ValueError('Previous stable release required')
+    stable_tags = [r['tagName'] for r in releases if not r['isDraft'] and not r['isPrerelease'] and re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', r['tagName'])]
+    if any(version(t[1:]) > version(args.tag[1:]) for t in stable_tags):
+        raise ValueError('A newer stable release already exists; refusing to move latest backwards')
+    previous_tag = max(tags, key=lambda t: version(t[1:]))
+    prior_meta = release_metadata(previous_tag)
+    with tempfile.TemporaryDirectory(prefix='cytv-release-') as tmp:
+        tmp = Path(tmp)
+        build, packages = bundles(meta, tmp / 'current')
+        prior_build, prior_packages = bundles(prior_meta, tmp / 'previous')
+        rollback = None
+        if build['versions']['home'] == prior_build['versions']['home']:
+            raw = download(prior_meta, 'previous-update.json', tmp / 'previous')
+            envelope_file = tmp / 'previous/previous-update.json'
+            code = "const fs=require('fs'),p=require('./updater-service/policy');process.stdout.write(JSON.stringify(p.verify(JSON.parse(fs.readFileSync(process.argv[1])),fs.readFileSync('updater-service/release-public.pem'))));"
+            prior = json.loads(subprocess.check_output(['node', '-e', code, str(envelope_file)], cwd=ROOT))
+            rollback_meta = release_metadata(prior['release'])
+            rollback_dir = tmp / 'rollback'; rollback_dir.mkdir()
+            raw = download(rollback_meta, Path(prior['url']).name, rollback_dir)
+            if digest(raw) != prior['sha256']: raise ValueError('Signed rollback digest mismatch')
+            rollback = prior, raw
+        manifests, files = prepare_manifests(args.tag, build, packages, prior_build, prior_packages, rollback, meta.get('body'))
+        manifest_file = tmp / 'manifests.json'; manifest_file.write_text(json.dumps(manifests))
+        for name, raw in files.items(): (output / name).write_bytes(raw)
+        subprocess.run(['node', str(ROOT / 'scripts/sign-release-feeds.cjs'), str(manifest_file), str(output)], check=True)
+    build['feed_signing'] = {'workflow_run': os.environ.get('GITHUB_RUN_ID'), 'workflow_commit': os.environ.get('GITHUB_SHA')}
+    build['automatic_update_feeds'] = 'Both feeds generated and signed by GitHub Actions from exact release bundles; versions, signatures, packages and rollback verified before publication.'
+    root, home, prior = manifests['root'], manifests['home'], manifests['previous']
+    build['root_ota'] = {'version': root['version'], 'release': args.tag, 'ipk': Path(root['url']).name, 'sha256': root['sha256'], 'feed_sha256': digest((output / 'root-update.json').read_bytes())}
+    build['no_root_ota'] = {'version': home['home'], 'helper': home['helper'], 'sha256': home['sha256'], 'previous_version': prior['home'], 'previous_sha256': prior['sha256']}
+    (output / 'BUILD-INFO.json').write_text(json.dumps(build, indent=2) + '\n')
+    hashes = {}
+    for asset in meta['assets']:
+        if asset['name'] == 'SHA256SUMS': continue
+        value = asset.get('digest', '')
+        if not re.fullmatch('sha256:[a-f0-9]{64}', value): raise ValueError('Missing asset digest: ' + asset['name'])
+        hashes[asset['name']] = value[7:]
+    hashes.update({p.name: digest(p.read_bytes()) for p in output.iterdir()})
+    (output / 'SHA256SUMS').write_text(''.join(hashes[n] + '  ' + n + '\n' for n in sorted(hashes)))
+    print('Prepared ' + args.tag + ': Root ' + root['version'] + ', Home ' + home['home'] + ', rollback ' + prior['home'] + ' from ' + previous_tag)
+
+
+if __name__ == '__main__':
+    try: main()
+    except (ValueError, KeyError, StopIteration, subprocess.CalledProcessError) as error:
+        # Never echo command environments or key material, including on signing failures.
+        sys.exit('Release preparation failed: ' + (str(error) if not isinstance(error, subprocess.CalledProcessError) else 'command failed; see preceding validation output'))

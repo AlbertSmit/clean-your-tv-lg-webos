@@ -110,10 +110,11 @@ installer. No-root TVs still cannot install packages through this service.
 Startup health reads the version from the installed `appinfo.json`; it never
 substitutes a source literal if the manifest cannot be read or validated.
 
-Publish drafts with `node scripts/publish-release.cjs vX.Y.Z`. The command checks
-Root and No-root feeds against `BUILD-INFO.json`, verifies signatures and Helper
-compatibility, and downloads the Root, Home and rollback packages to check their
-hashes. `previous-update.json` must match the signed `previous` envelope inside
-`update.json`. `--check-only` performs these checks without publishing. The
-Release update feed workflow repeats them after publication. Never carry an
-older Home feed forward when the release’s Home version has changed.
+Publish drafts with `node scripts/publish-release.cjs vX.Y.Z`. This queues the
+protected GitHub signing workflow: both feeds and rollback assets are generated
+from the exact release bundles, signed, uploaded and checked before publication.
+`--check-only` validates existing feeds without signing or publishing. See
+[the release process](RELEASE-PROCESS.md) for setup, failure conditions and a
+non-publishing test run. The read-only Release update feed workflow also checks
+public release edits. Never carry an older Home feed forward when the release's
+Home version has changed.

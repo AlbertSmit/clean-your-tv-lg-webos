@@ -1,6 +1,8 @@
 # Developer Mode auto-renewal (Beta)
 
-Available in Home 1.1.0 / release v0.7.0. **Off by default.** Open **Settings → Enable Beta** to opt in. The Settings panel also contains **TV settings** for the original LG settings screen.
+Introduced in Home 1.1.0 / release v0.7.0; included in current No-root Home.
+**Off by default.** Open **Home settings → Developer Mode auto-renewal (Beta) →
+Turn on auto-renewal** to opt in. Older packages label this **Enable Beta**. The Settings panel also contains **TV settings** for the original LG settings screen.
 
 This feature extends the Developer Mode **session**, not your LG account. It uses an on-TV JavaScript service and requests LG directly; it does not send your session token to a community server or need an always-on computer/router. Your TV must already have an active, readable Developer Mode session.
 
@@ -12,7 +14,7 @@ This feature extends the Developer Mode **session**, not your LG account. It use
 - Healthy sessions are checked at most once a day. When seven days or less remain, the service requests renewal and checks the remaining time again.
 - Only a valid countdown increase of more than one minute produces **Renewal confirmed**. A generic successful response is insufficient.
 - Network errors back off. The hourly activity means short retry delays are normally rounded up to the next hourly callback. **Check session** respects the same cooldown; it does not force repeated renewal.
-- **Disable Beta** saves the disabled setting and cancels its own activity. An already transmitted request cannot be undone, but subsequent requests are gated. If disabling cannot be saved, the UI warns you to retry.
+- **Turn off auto-renewal** (formerly **Disable Beta**) saves the disabled setting and cancels its own activity. An already transmitted request cannot be undone, but subsequent requests are gated. If disabling cannot be saved, the UI warns you to retry.
 - Triple Home continues to stop Home Helper only. Renewal does not resume the helper, clear emergency-stop markers, launch another app, or block launcher startup.
 
 A TV that stays off/offline beyond the session limit cannot renew locally. Login expiry, account changes or LG API changes may require manual action. This feature does not bypass LG's separate offline-reboot restrictions. No wake-from-standby guarantee is made.

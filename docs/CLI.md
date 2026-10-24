@@ -12,12 +12,13 @@ Hardware evidence remains scoped to the documented models. Source/automated chec
 ## Run
 
 Download the console executable matching your computer from the
-[v0.10.3 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3).
+[v0.10.4 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.4).
 Development artifacts are also available from the **cytv standalone builds** workflow. Supported build targets are Windows x64, Linux x64, macOS ARM64 and macOS
 x64. Linux builds use Ubuntu 22.04; macOS builds use macOS 15. Older desktop OS
 compatibility is not established.
 
-Windows: open `cytv.exe`, or run it from PowerShell. The console stays open after
+Windows: download `cytv-windows-x64.exe` and open it, or run it from PowerShell.
+If you rename it to `cytv.exe`, use that name in the command examples. The console stays open after
 the wizard when launched without arguments. macOS/Linux: open a terminal in the
 download directory, restore executable permission if your ZIP extractor removed
 it, then run:
@@ -130,7 +131,7 @@ installation uses `[Y/n]` (Enter continues). Removal and restore still require a
 7. Root installation verifies recovery, stops the old No-root Home Helper,
    enables persistent Home control and opens Clean Your TV Home automatically.
    The installer verifies routing, the recovery guardian and persistent intent
-   before reporting **Root is ready**. Use **Return to LG Home**, three short
+   before reporting **Root is ready**. Turn **Change Home** off, use three short
    Home presses within two seconds, or `cytv restore` to revert.
 
 The old Helper is disabled at startup and stopped through its existing control

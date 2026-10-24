@@ -164,8 +164,8 @@ bash scripts/test.sh
 
 These dependencies support the shared installer's tests; `cytv` itself is not
 run. The tests also require `cc`. The build produces `dist/SHA256SUMS`,
-`dist/com.local.nativehome_0.6.13_arm.ipk` and the Home IPK. At the time of
-writing, `launcher/appinfo.json` specifies version **1.2.2**; check your sources:
+`dist/com.local.nativehome_0.6.16_arm.ipk` and the Home IPK. At the time of
+writing, `launcher/appinfo.json` specifies version **1.3.3**; check your sources:
 
 ```bash
 python3 -c 'import json; print(json.load(open("launcher/appinfo.json"))["version"])'
@@ -180,8 +180,8 @@ older IPKs left in `dist/`.
 Install Helper, then the **exact** new Home IPK, adjusting the version if needed:
 
 ```bash
-ares-install -d lgtv dist/com.local.nativehome_0.6.13_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.2.2_all.ipk
+ares-install -d lgtv dist/com.local.nativehome_0.6.16_arm.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.3_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv bash scripts/configure-tv.sh
 ares-launch -d lgtv com.local.nativehome
 ```
@@ -205,7 +205,7 @@ After syncing your apps:
 ```bash
 mkdir -p dist
 ares-package launcher renewal-service -o dist
-ares-install -d lgtv dist/com.gathin.tvhome_1.2.2_all.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.3_all.ipk
 ares-launch -d lgtv com.gathin.tvhome
 ```
 
@@ -293,12 +293,12 @@ From the source root; this operation does not connect to the TV:
 
 ```bash
 mkdir -p build
-python3 root-edition/build.py --output build/root-candidate --version 0.1.3
+python3 root-edition/build.py --output build/root-candidate --version 0.1.5
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.1.3_all.ipk`, `setup.py`,
+The bundle contains `com.cleanyourtv.root.preview_0.1.5_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.
@@ -362,8 +362,7 @@ If the old No-root Helper is running, press Home three times within two seconds 
 is active or an ambiguous old PID marker exists. Do not manually delete its
 `blocked` or PID files, or run two input handlers together.
 
-For persistent mode, open **Home Root Preview → Home settings → Turn on Home
-control**, or run:
+For persistent mode, open **Home Root Preview → Home settings** and turn **Change Home** on, or run:
 
 ```bash
 python3 build/root-candidate/setup.py enable --ssh my-tv
@@ -384,8 +383,10 @@ First test arrows/OK, short Home, Back/Cancel and a confirmed app exit, then
 the emergency exit. Test standby and cold boot separately; a successful
 software reboot does not establish those behaviors.
 
-During a normal software reboot, the implementation first restores routing,
-then reactivates Root only after normal-boot checks and fresh protections.
+A confirmed normal shutdown retains the selected Root profile for startup.
+Startup recovery reconciles the old transaction before reactivation with fresh
+protections and normal-boot checks. Use webOS power controls; direct
+`systemctl reboot` can be classified as an input fault and disable Home control.
 A fault, failsafe or explicit exit disables persistent intent; the next
 activation requires an explicit `enable`.
 
@@ -393,8 +394,9 @@ activation requires an explicit `enable`.
 
 - **Three short Home presses within two seconds**, releasing the button between
   presses, request emergency restoration to LG Home independently of the web UI.
-- **Home settings → Return to LG Home → Confirm return** performs a normal exit.
-  Older builds may label this **Exit Root mode → Confirm exit**.
+- In **Home settings**, turn **Change Home** off to restore persistent LG routing.
+  **Open LG Home** only visits LG Home once; it does not disable Root. Older
+  builds may offer **Return to LG Home → Confirm return** or **Exit Root mode**.
 - Holding Home **is not** the Root emergency gesture; it can trigger an LG
   system action such as magnification.
 

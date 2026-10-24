@@ -1,41 +1,138 @@
-# No-root Edition installation
+# Install Clean Your TV — No-root and Root
 
-Looking for the other track? See [Choose your edition](EDITIONS.md).
-Root Edition has no supported installer yet; do not use this guide to alter an
-existing root setup.
+Use **cytv** to install either edition. It includes the runtime and TV packages;
+you do not need to build from source. Both editions run on the TV after setup,
+so your computer can be switched off during everyday use.
 
-This release targets a setup tested on LG OLED55C3RLA, firmware 43.21.71.
-Recovery behavior is documented in RECOVERY.md. For another model,
-start with the standalone launcher; native input compatibility is not guaranteed.
+## 1. Choose your edition
 
-## What you need — and what you do not
+| | No-root | Root |
+| --- | --- | --- |
+| TV access | LG Developer Mode and Key Server | An already rooted TV with working root SSH |
+| Setup credentials | Developer Mode passphrase, then separate on-TV control pairing | Root password/key or SSH agent; verify the TV's SSH identity |
+| Home control | On-TV Home Helper | System Home routing with independent recovery |
+| After setup | Keep Developer Mode active and local networking available for Helper | Keep root access and recovery services available |
+| Updates | From your computer; renewal is optional Beta | Compatible signed Home releases through Settings after updater setup |
 
-- **No root access or replacement firmware** on the tested LG C3 setup.
-- **No always-on external device:** both the launcher and helper run on the TV.
-  You do not need a router script, Raspberry Pi, home server or USB drive.
-- **A computer for setup and maintenance:** build, pairing, installation, app-list
-  updates and software updates use the tools below. The computer can be off during use.
-- **LG Developer Mode must remain active.** This is separate from rooting the TV.
-- **A working local network:** initial pairing and the helper's power/foreground
-  watcher use the TV's local control interface. Running on the TV does not make
-  these monitoring features independent of network connectivity.
+Root setup **does not obtain root**, flash firmware or enable Developer Mode.
+Do not install Developer Mode over an existing rooted setup. Never run Root Home
+control and No-root Helper together. See [edition comparison](EDITIONS.md).
 
-## 1. Prepare your TV
+Hardware evidence is scoped to documented builds, principally
+**LG OLED55C3RLA / firmware 43.21.71**. Installation success does not establish
+compatibility with another TV. Read [compatibility](COMPATIBILITY.md) and
+[Root acceptance and remaining checks](../root-edition/RELEASE-ACCEPTANCE.md).
 
-Install LG's **Developer Mode** app, sign in to your LG Developer account and enable
-Developer Mode. Keep the session active. LG can remove sideloaded applications when
-Developer Mode expires or becomes disabled.
+## 2. Prepare your TV and computer
 
-Follow [LG's Developer Mode guide](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
-for account setup, network access and session renewal. TV and computer need to be
-reachable on the same trusted local network.
+Turn on the TV and connect it and your computer to the same trusted local network.
+Guest-network isolation, VPNs and firewalls can prevent discovery or connection.
+Allow Local Network access when your computer asks.
 
-## Recommended: one-script installation
+**No-root:** install LG's Developer Mode app, sign in, enable Developer Mode and
+complete any requested restart. Enable **Key Server** and keep the TV's passphrase
+available. SSH pairing and the later on-screen control-pairing request are separate.
+Keep the official session timer active: expiry can remove sideloaded apps.
+See [Developer Mode preparation](MANUAL_INSTALL.md#2-no-root-prepare-the-tv).
 
-On macOS or Linux, install **Node.js 20+ with npm**, **Python 3.9+** (with `venv`
-and `pip` support), and **Git**. On some Linux distributions Python's `venv` support
-is a separate OS package. Enable **Key Server** in the TV's Developer Mode app.
-Then run:
+**Root:** confirm existing root SSH access and retain recovery backups. The TV
+needs Python 3, luna-send, Homebrew services and a supported ARM32 Magic Remote
+input interface. Investigate a changed SSH host key rather than bypassing the
+check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-access).
+
+## 3. Download and start cytv
+
+Download the matching package from the
+[v0.10.4 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.4):
+
+| Computer | Package and launch |
+| --- | --- |
+| macOS Apple Silicon / Intel | `cytv-macos-arm64.zip` / `cytv-macos-x64.zip`; extract, move `cytv.app` to Applications and open it |
+| Ubuntu 22.04+, Debian 12+, Mint 21+ x64 | Install `cytv-linux-x64.deb`, then open Clean Your TV from the applications menu |
+| Windows x64 | Run `cytv-windows-x64.exe`; this is a console wizard |
+
+macOS desktop dependencies require macOS 13+; acceptance on older systems is not
+established. Mac builds are not Apple-notarized; follow the documented
+[Open Anyway procedure](DESKTOP_INSTALL.md#if-macos-says-cytv-was-not-opened)
+if macOS blocks a trusted project download. Linux ARM desktop packages are not included.
+
+See [desktop setup and troubleshooting](DESKTOP_INSTALL.md) for macOS/Linux,
+or the [console guide](CLI.md) for all supported CLI targets.
+The installer selects the computer's language automatically. TV language is a
+separate preference under **Settings → Language**. [Localized guides](LANGUAGES.md).
+
+## 4. Install No-root or Root
+
+1. Choose **Set up my TV** in the desktop app, or start the console wizard.
+2. Select a discovered TV, or enter its IP address.
+3. Choose **No-root** or **Root** and review the TV and edition.
+4. Complete the appropriate connection step. For No-root, enter the Developer
+   Mode passphrase and approve the separate control-pairing request on the TV.
+   For Root, use your existing root credentials and verify first-use SSH trust.
+5. Continue and keep the TV on until installation and verification finish.
+
+**No-root:** cytv personalizes Home, installs Home and Helper, configures their
+pairing and startup, then starts Helper. An unconfirmed early input registration
+uses the guarded fallback; it is not proof of early restoration.
+
+**Root:** cytv installs Root Home, independent recovery and Root Updater, prepares
+its rollback baseline, verifies setup, then activates Home and opens it.
+There is **no trial countdown or Keep confirmation** in this normal setup flow.
+The manual Root bundle has a separate updater-setup step; do not substitute a
+standalone Root IPK for the complete installation.
+
+For an interrupted operation, use **Check TV status** first. If offered, use
+**Finish Root setup** to complete a verified installation. Retain recovery files;
+unknown package outcomes must be resolved before retrying. Save a diagnostic
+report when the wizard cannot establish a safe next step. [Recovery details](CLI.md#interrupted-operations).
+
+<a id="7-verify-before-daily-use"></a>
+
+## 5. Verify before daily use
+
+Test on your TV after installation:
+
+- Arrows and held arrows, OK, Back/Cancel inside apps, volume, pointer and wheel.
+- Open an app, then press short Home to return to Clean Your TV.
+- Press Home **three times within two seconds**, releasing between presses:
+  LG Home should appear and navigation should work.
+- Resume No-root with **Home Helper**; resume Root by turning **Change Home** on
+  in Home settings. Opening Home alone does not resume a stopped Helper.
+- Test standby/wake and cold boot separately. Record what happens without
+  pressing Home. Root cold-power acceptance remains deferred.
+
+**Change Home** selects the persistent Home behavior. **Open LG Home** only opens
+LG Home once and preserves that selection. To disable Root routing, turn
+**Change Home** off, use the emergency gesture, or restore from cytv.
+Older packages can use different labels; No-root Helper through 0.6.13 uses
+holding Home for about two seconds instead of the triple-press gesture.
+
+If a check fails, leave LG Home active and use [No-root recovery](RECOVERY.md)
+or [Root recovery](../root-edition/ROLLOUT.md#controls-and-recovery).
+A successful installer run verifies commands and state, not physical buttons.
+
+## 6. Updates, recovery and removal
+
+Use cytv's status, diagnostics, restore and uninstall actions with the saved TV
+connection. Removing cytv from your computer does not remove the TV installation.
+Root uninstall through cytv removes project packages, including Root Updater and
+installed No-root components; retained inactive recovery evidence is intentional.
+See [desktop maintenance](DESKTOP_INSTALL.md#remove-the-project-from-a-rooted-tv),
+[CLI maintenance](CLI.md), and [manual maintenance](MAINTENANCE.md).
+
+No-root Developer Mode renewal is optional and **off by default**. In Home
+settings, select **Turn on auto-renewal** only after reading the
+[Beta guide](DEVELOPER-MODE-BETA.md). Real renewal on unrooted TVs remains unverified;
+keep checking the official timer. Root does not use this feature.
+
+## Source installation without cytv
+
+For either edition, use [manual installation](MANUAL_INSTALL.md): it covers
+requirements, app inventory, build, pairing, activation, updater setup and recovery.
+Use a new output directory for Root bundles and retain all support files.
+
+For **No-root only**, `install.sh` automates source setup on macOS/Linux with
+Node.js 20+ and npm, Python 3.9+ with pip/venv, and Git:
 
 ```sh
 git clone https://github.com/Razdva122/clean-your-tv-lg-webos.git
@@ -43,17 +140,22 @@ cd clean-your-tv-lg-webos
 ./install.sh 192.168.1.50
 ```
 
-Use your TV's IP address; without an argument, the script asks for it.
-It downloads Python dependencies into `.venv/`, uses **Zig 0.14.1** from `ZIG`
-or `PATH` when available (otherwise installs it into `.venv/`), and installs the
-official **webOS CLI 3.2.6** in `build/tools/`. No global installation or `sudo` is
-needed. Internet access on the computer is required to download these tools.
+Replace the IP. This prepares local dependencies, Zig 0.14.1 and webOS CLI 3.2.6,
+pairs, syncs your apps, builds and installs Home and Helper. No global install or
+sudo is needed. Internet access is required for tool downloads. The script creates
+`clean-your-tv-<IP-with-dashes>` as its CLI profile; `DEVICE=another-name` selects
+another profile without retargeting an existing TV connection.
+
+Rerunning resyncs and rebuilds the current checkout while preserving
+`launcher/config.js`; update the checkout first to obtain new source changes.
+A failed run does not roll back installed packages. Keep `.lgtv-key.json` and CLI
+keys private and do not use `bash -x`. Native Windows is not supported by this
+Bash script; WSL installation is unvalidated. The Windows cytv console wizard
+is distributed separately.
 
 ### Termux / Android
 
-Supply a working **Zig 0.14.1** executable before running the script. Android has
-no compatible `ziglang==0.14.1` Python distribution; with an explicit compiler,
-`install.sh` skips that distribution and still installs the Python dependencies.
+Supply a working **Zig 0.14.1** executable before running `install.sh`:
 
 ```sh
 export ZIG=/absolute/path/to/zig
@@ -61,162 +163,9 @@ export ZIG=/absolute/path/to/zig
 ./install.sh 192.168.1.50
 ```
 
-A `zig` executable on `PATH` is also accepted. If neither is available, setup
-stops with instructions before pairing or installing anything on the TV. No
-script edits are needed. The compiler must run in your actual Android/Termux
-(or Linux container) environment; a Linux archive's CPU architecture alone does
-not establish Android compatibility. The rest of the Node.js, Python and CLI
-requirements above still apply. End-to-end Termux and C5/webOS 26 hardware
-compatibility have not been verified by these build-tool fixes.
-
-The script creates a separate CLI profile named `clean-your-tv-<IP-with-dashes>`
-and asks the CLI to fetch its SSH key. **Enter the passphrase shown on the TV** when
-prompted. Then accept the separate **remote-control pairing request on the TV**.
-The CLI stores the SSH key/profile in its usual user configuration location;
-the app-sync tool stores the local control key in the ignored `.lgtv-key.json`.
-Do not share these files or run setup under shell tracing (`bash -x`).
-
-The script then syncs your apps and icons, builds the launcher and native helper,
-installs both packages, transfers the helper configuration with the existing
-verified setup script, requests early input restoration, and launches Home Helper.
-If EIM registration is unavailable, setup prints a warning and startup relies on
-the guarded fallback; this is not reported as verified early restoration.
-
-Afterwards, perform [the TV checks below](#7-verify-before-daily-use). A successful
-script run confirms the commands completed, not hardware compatibility. You may
-switch the computer off during everyday use; Developer Mode and local networking
-requirements still apply.
-
-**Run the same command again** to resync apps, rebuild and reinstall from your current
-checkout. It preserves `launcher/config.js`; customize that file if desired. To update
-from GitHub, first update the checkout, then rerun. A failed step stops setup;
-fix the error and rerun. Packages already installed are not automatically rolled back;
-see [Recovery](RECOVERY.md). The script will not retarget an existing CLI profile
-that points to another TV. Set `DEVICE=another-name ./install.sh <IP>` to use a
-separate profile. Native Windows is not supported by this Bash script; WSL and
-Windows setup have not been tested.
-
-## Manual installation
-
-The steps below remain available for developers and launcher-only installation.
-The one-script installation above already performs pairing, app sync, build,
-installation and helper configuration; skip to the TV checks after it completes.
-
-## 2. Prepare your computer
-
-The scripts use Bash, Python 3, Node.js, the webOS CLI and Zig 0.14.1. macOS/Linux are
-the intended script environments; Windows users need a compatible shell/toolchain.
-Windows installation has not been tested.
-
-Install the CLI following [LG's CLI documentation](https://webostv.developer.lge.com/develop/tools/cli-dev-guide).
-Check that `ares-package`, `ares-install`, `ares-launch` and `ares-novacom`
-are on PATH (`npm install -g @webos-tools/cli`). Install Zig 0.14.1 separately or set `ZIG` to its executable.
-
-From the repository root:
-
-```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r requirements.txt
-```
-
-## 3. Pair Developer Mode SSH
-
-Run `ares-setup-device` interactively and add a device named `lgtv`:
-
-- Host: your TV's local IP address.
-- Port: `9922`.
-- User: `prisoner`.
-- No SSH password for the Developer Mode connection.
-
-Enable **Key Server** in the TV's Developer Mode app, then run:
-
-```sh
-ares-novacom --device lgtv --getkey
-ares-device --system-info --device lgtv
-```
-
-Enter the passphrase shown on your TV when prompted. Do not put it in scripts or
-issue reports. This SSH pairing is separate from the on-screen remote-control
-pairing in the next step.
-
-## 4. Discover your apps
-
-Replace the example address with your TV's address:
-
-```sh
-export TV_HOST=192.168.1.50
-python3 sync-apps.py "$TV_HOST"
-```
-
-Accept the pairing request **on the TV**. The tool saves the key in the ignored
-`.lgtv-key.json` file, then generates `launcher/apps.js` and app icons. These are
-personal build inputs: do not publish them. The tool skips an app if its icon
-cannot be downloaded; check the reported count and terminal warnings.
-
-Edit `launcher/config.js` to choose `dockApps`, `hiddenApps` and the column count.
-Find app IDs with `python3 sync-apps.py "$TV_HOST" --list`.
-Hiding a tile does not uninstall an application.
-
-## 5. Test and build
-
-```sh
-scripts/test.sh
-scripts/build.sh
-```
-
-Output:
-
-- `dist/com.gathin.tvhome_1.1.0_all.ipk`
-- `dist/com.local.nativehome_0.6.13_arm.ipk`
-- `dist/SHA256SUMS`
-
-For launcher-only use, run `ares-package launcher renewal-service -o dist`; Zig and the native
-helper are not needed. Short Home interception requires the optional helper.
-
-## 6. Install and configure
-
-```sh
-ares-install -d lgtv dist/com.local.nativehome_0.6.13_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.1.0_all.ipk
-TV_HOST="$TV_HOST" DEVICE=lgtv scripts/configure-tv.sh
-```
-
-The setup script transfers your local SSAP key and app IDs to the helper's state
-directory using a temporary file, verifies SHA-256 and file permissions (640 for the
-key, 644 for app IDs), then atomically replaces each destination. A failed transfer
-leaves that destination unchanged. The two files are verified individually, not as
-a single transaction. Remote `mktemp`, `base64`, `sha256sum`, and `stat -c` are required.
-Do not run setup with shell tracing (`bash -x`): the transfer command contains the
-pairing key in Base64. The script then requests input-source registration. It checks the EIM response
-for a top-level `returnValue: true`. Empty output means registration is unconfirmed,
-not rejected: some firmware returns no bus replies from the Developer Mode shell.
-An explicit rejection and a command failure have separate warnings. The guarded
-startup fallback remains available. Runtime restores state permissions after startup;
-see the C4 follow-up limits in COMPATIBILITY.md.
-
-```sh
-ares-launch -d lgtv com.local.nativehome
-```
-
-The helper opens the launcher and attempts remote interception. Pin the launcher
-to a numbered Quick Access key as a recovery shortcut: open the launcher, then
-assign it through your TV's Quick Access menu (hold **0** on supported LG remotes).
-Existing assignments should be changed explicitly.
-
-## 7. Verify before daily use
-
-- Check arrows and held arrows, OK, Back, volume, pointer and wheel.
-- Open an app and press short Home: the launcher should return.
-- Press Home three times within two seconds: LG Home should appear and navigation should work.
-- Open Home Helper manually to resume interception.
-- Test standby/wake separately from a cold boot. Record what happens without pressing Home.
-
-If any check fails, use [Recovery](RECOVERY.md). Report the failure before treating
-this release as validated on your TV.
-
-## Optional session auto-renewal (Beta)
-
-After installation, open Settings → Enable Beta to opt in. It is disabled by default.
-Read [the Beta guide](DEVELOPER-MODE-BETA.md) before relying on it. Monitor the official
-Developer Mode timer and share feedback; real renewal is not yet validated.
+A matching `zig` on PATH is also accepted. Android has no compatible
+`ziglang==0.14.1` Python distribution; an explicit compiler skips that dependency.
+Without one, setup stops before pairing or changing the TV. The compiler must
+run in your actual Termux/container environment; CPU architecture alone does not
+prove Android compatibility. Node.js, Python and CLI requirements still apply.
+End-to-end Termux and C5/webOS 26 compatibility remain unverified.

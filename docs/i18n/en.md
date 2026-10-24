@@ -2,7 +2,7 @@
 
 ## Before installation
 
-This guide covers installation, daily use and recovery, not development. Language selection and the macOS/Linux desktop app apply to the next build or sources containing this change. Existing v0.9.0 downloads do not include the new desktop app. Obtain matching packages from the project's [releases](https://github.com/Razdva122/clean-your-tv-lg-webos/releases) when published, or from a successful **cytv standalone builds** workflow for this change.
+This guide covers installation, daily use and recovery. Language selection and the macOS/Linux desktop app are included in [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). Older v0.9.0 downloads do not include the desktop app. See the [shared installation guide](../INSTALL.md) for both editions.
 
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root remains a preview with outstanding hardware checks.
 
@@ -47,4 +47,4 @@ After interruption, run `status` before retrying; retain journals and recovery f
 
 Keep known-working packages and private settings backups. Stop No-root Helper before replacing its packages; update from the computer without uninstalling first, since removal may erase settings. The combined cytv Root installation includes an updater for compatible releases under Settings → Software updates; the manual Root bundle has different limitations. Do not replace a live Root runtime with a standalone IPK. Reinstall only through the explicit cytv recovery/reinstallation flow. Removing the desktop app does not remove TV apps.
 
-Technical details in English: [desktop setup](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [No-root setup](../INSTALL.md), [manual installation](../MANUAL_INSTALL.md), [recovery](../RECOVERY.md), [edition comparison](../EDITIONS.md).
+Technical details in English: [desktop setup](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [Installation of both editions](../INSTALL.md), [manual installation](../MANUAL_INSTALL.md), [recovery](../RECOVERY.md), [edition comparison](../EDITIONS.md).

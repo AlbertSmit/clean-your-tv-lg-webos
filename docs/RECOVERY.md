@@ -1,4 +1,9 @@
-# Controls and recovery
+# No-root controls and recovery
+
+For either edition installed with cytv, use its **Check TV status**, restore and
+diagnostics actions first; see [CLI recovery](CLI.md#interrupted-operations). Root
+routing recovery uses the [Root controls and restore commands](../root-edition/ROLLOUT.md#controls-and-recovery).
+The webOS CLI commands below apply to No-root source installations.
 
 For a **one-script installation**, run CLI commands from the repository folder.
 The CLI is local; expose it in your current terminal:
@@ -25,8 +30,10 @@ ares-launch -d lgtv com.local.nativehome
 ```
 
 Opening the launcher alone does not clear the stop flag. If you trigger triple Home by
-accident, manually starting the helper restores interception. This release has no
-pause/resume dialog; that UI remains an unreleased prototype.
+accident, manually starting the helper restores interception. The current **Change Home** switch controls ordinary Home routing; **Open LG Home**
+only visits LG Home once. Neither replaces checking recovery state after a fault.
+Helper versions through 0.6.13 use holding Home for about two seconds instead
+of triple Home.
 
 If the helper fails, heartbeat timeouts and process cleanup release the physical
 remote. Do not repeatedly clear stop flags after a failure: use LG Home and report

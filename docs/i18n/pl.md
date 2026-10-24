@@ -2,7 +2,7 @@
 
 ## Wymagania
 
-Ta instrukcja obejmuje instalację, obsługę i odzyskiwanie. Wybór języka oraz aplikacja okienkowa macOS/Linux dotyczą następnej kompilacji lub źródeł zawierających tę zmianę. Dotychczasowe pliki v0.9.0 nie zawierają nowej aplikacji okienkowej. Pobierz odpowiednie [wydanie projektu](https://github.com/Razdva122/clean-your-tv-lg-webos/releases), gdy zostanie opublikowane, albo wynik udanego przebiegu **cytv standalone builds** z tą zmianą.
+Ta instrukcja obejmuje instalację, obsługę i odzyskiwanie. Wybór języka oraz aplikacja okienkowa macOS/Linux są dostępne w [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). Starsze pliki v0.9.0 nie zawierają aplikacji okienkowej. Zobacz [instalację obu edycji](../INSTALL.md).
 
 Włącz telewizor i połącz go z tą samą zaufaną siecią lokalną co komputer. Później komputer może być wyłączony. Zgodność zależy od modelu, oprogramowania i pilota; Root pozostaje wersją przedpremierową z nieukończonymi testami sprzętowymi.
 

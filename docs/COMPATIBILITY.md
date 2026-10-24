@@ -1,5 +1,9 @@
 # Compatibility and known limits
 
+The v0.10.4 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.5.
+Older version rows below are historical hardware reports, not the current package
+list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
+
 | Configuration | Status |
 | --- | --- |
 | LG OLED55C3RLA, firmware 43.21.71 | Hardware used for development and tests |
@@ -8,7 +12,8 @@
 | Other LG models / firmware / remotes | Unverified |
 | macOS build / CLI | Used locally |
 | Linux | Scripts intended to support it; not hardware-tested here |
-| Windows | Not tested; requires an appropriate shell/toolchain |
+| Windows | Native cytv console build available; real-TV/OS acceptance remains separate. Source Bash scripts require a compatible environment |
+| C5 / webOS 26 | Helper startup remains under investigation; no compatibility claim |
 
 The relay requires compatible `LGE M-RCU - Builtin [0]` and `[1]` devices and checks
 capabilities before interception. Unsupported or busy devices cause it to exit.
@@ -25,7 +30,9 @@ Do not remove these checks to force compatibility.
 - Three short Home presses within two seconds stop interception until a manual helper launch; it does not erase data.
 - Network and foreground monitoring depends on local SSAP pairing and connectivity.
 - Wheel-to-tile navigation is not implemented; wheel events are passed through.
-- App inventory is generated on your computer. Re-sync after installing/removing apps.
+- Initial inventory is prepared during setup. **+ / Add app** requests a fresh
+  inventory through the edition service; unavailable discovery falls back to saved
+  data. Source builds can also re-sync on the computer. See [app management](APP-MANAGEMENT.md).
 - Hiding a tile does not uninstall the app or disable system ads.
 
 This is an alternative launcher, not an LG-supported system Home replacement.

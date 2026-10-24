@@ -1,5 +1,9 @@
 # Final isolated TV update check
 
+Historical development record. Pending steps and version claims below describe
+that investigation, not the current release. Use the [installation guide](../INSTALL.md)
+for current setup; retain these notes as evidence.
+
 Scope is frozen: validate permission setup, an update with preserved data, and rollback. This is not a public installation guide. Production Home, Helper, startup and system profiles must remain unchanged.
 
 ## Prepared locally

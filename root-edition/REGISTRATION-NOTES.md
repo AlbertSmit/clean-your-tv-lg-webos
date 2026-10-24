@@ -1,5 +1,9 @@
 # Preparing the next metadata-registration test
 
+Historical development record. Pending steps and version claims below describe
+that investigation, not the current release. Use the [installation guide](../docs/INSTALL.md)
+for current setup; retain these notes as evidence.
+
 The current blocker is not writing a JSON field. It is making SAM register the
 category and reliably undoing that registration without affecting the working
 launcher and startup behavior.

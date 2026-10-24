@@ -42,6 +42,8 @@ def recover(transaction, reason):
         if result == 'restored':
             j = d.safe_json(d.STATE/'profile-trial.json')
             if j['transaction'] != transaction: return True
+            # A bound confirmed shutdown retains its pending profile for bootd.
+            if bound is True and j['state'] == 'pending': return True
             if d.read() != j['baseline']: return False
             # Routing is already restored even if this optional screen launch fails.
             try: d.sam_transport().call('luna://com.webos.applicationManager/launch', {'id':'com.webos.app.home'})

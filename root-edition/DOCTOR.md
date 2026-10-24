@@ -1,6 +1,8 @@
 # Root Edition doctor
 
-Read-only diagnostics for the planned Root Edition. This directory currently contains a doctor, **not an installer or a root method**. The existing No-root launcher and helper are independent and unchanged.
+Read-only diagnostics for Root Edition. The doctor itself does not install
+software or obtain root. Use the [shared installation guide](../docs/INSTALL.md)
+for cytv or [manual Root setup](ROLLOUT.md). No-root remains a separate edition.
 
 ## Run locally
 
@@ -36,7 +38,7 @@ python3 -m unittest discover -s root-edition/tests
 - `UID_ZERO_CONTEXT_UNVERIFIED`: UID 0 was observed, but host access and persistence are not established.
 - `UNKNOWN`: insufficient identity information.
 - `NOT_DETERMINED_BY_PROBE`: rootability requires separate, current upstream evidence for the exact model and firmware.
-- `NO_VALIDATED_ADAPTER`: Root Edition installation is not yet supported, even if root already exists.
+- `NO_VALIDATED_ADAPTER`: this conservative doctor probe has not validated an installation adapter. This is not the status of the separately implemented Root installer.
 
 Exit code 0 means a report with a recognized UID was collected, **not** that installation or rooting is supported. Exit code 2 means failure or unknown UID. Existing output files are never overwritten. Reports omit addresses, credentials and serial numbers; review any report before sharing.
 

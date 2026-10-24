@@ -2,7 +2,7 @@
 
 ## Prérequis
 
-Ce guide couvre l’installation, l’utilisation et la récupération. Le choix de langue et l’application de bureau macOS/Linux concernent la prochaine compilation ou les sources contenant cette modification. Les téléchargements v0.9.0 existants ne contiennent pas la nouvelle application graphique. Utilisez les [versions du projet](https://github.com/Razdva122/clean-your-tv-lg-webos/releases) lorsqu’elles seront publiées, ou les fichiers d’une exécution réussie de **cytv standalone builds** intégrant ce changement.
+Ce guide couvre l’installation, l’utilisation et la récupération. Le choix de langue et l’application de bureau macOS/Linux sont inclus dans [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). Les anciens téléchargements v0.9.0 ne contiennent pas l’application graphique. Consultez le [guide d’installation des deux éditions](../INSTALL.md).
 
 Allumez le téléviseur et reliez-le au même réseau local de confiance que l’ordinateur. L’ordinateur peut ensuite rester éteint. La compatibilité dépend du modèle, du micrologiciel et de la télécommande ; Root reste une préversion avec des essais matériels à terminer.
 

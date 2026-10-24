@@ -1,5 +1,9 @@
 # Completing TV updates after the isolated test
 
+Historical development record. Pending steps and version claims below describe
+that investigation, not the current release. Use the [installation guide](../INSTALL.md)
+for current setup; retain these notes as evidence.
+
 This is an implementation checklist, not a working installation guide.
 
 ## Permission boundary

@@ -2,7 +2,7 @@
 
 ## Voraussetzungen
 
-Diese Anleitung behandelt Installation, Bedienung und Wiederherstellung. Sprachauswahl und Desktop-App für macOS/Linux gelten für den nächsten Build bzw. den Quellcode mit dieser Änderung. Die bisherigen Downloads von v0.9.0 enthalten die neue Desktop-App nicht. Verwenden Sie nach Veröffentlichung die passenden [Projektveröffentlichungen](https://github.com/Razdva122/clean-your-tv-lg-webos/releases) oder einen erfolgreichen Lauf von **cytv standalone builds** mit dieser Änderung.
+Diese Anleitung behandelt Installation, Bedienung und Wiederherstellung. Sprachauswahl und Desktop-App für macOS/Linux sind in [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3) enthalten. Ältere Downloads von v0.9.0 enthalten die Desktop-App nicht. Siehe die [gemeinsame Installationsanleitung](../INSTALL.md) für beide Editionen.
 
 Fernseher einschalten und mit demselben vertrauenswürdigen Heimnetz wie den Computer verbinden. Danach muss der Computer nicht eingeschaltet bleiben. Die Kompatibilität hängt von Modell, Firmware und Fernbedienung ab; Root ist weiterhin eine Vorschau mit offenen Gerätetests.
 

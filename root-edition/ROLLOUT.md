@@ -7,19 +7,23 @@ and root SSH connection before changing routing.
 
 ## 1. Download or build, then verify
 
-For the published Root Edition archive, extract it and open a terminal in its top
-folder. It includes source instructions and the tested bundle at `build/root-candidate`.
-Skip the build commands below and continue with checksum verification. Do not
+For the complete manual-install archive, extract it and open a terminal in its top
+folder. Check its included instructions and bundle paths. The commands below use
+`build/root-candidate` for Root and `build/root-updater` for its independent updater.
+If those bundles are included, skip their build commands and verify checksums. Do not
 replace the bundled runtime with an untested build while following this release.
 
 To build from source instead:
 
-On your computer, use Python 3.9+, Node.js and OpenSSH. From the repository root:
+On your computer, use Python 3.9+ and OpenSSH. The full tests also need Bash,
+Node.js, a C compiler and the project Python dependencies, including
+`cytv/requirements.txt`. From the repository root:
 
 ```sh
 bash scripts/test.sh
 mkdir -p build
-python3 root-edition/build.py --version 0.1.1 --output build/root-candidate
+python3 root-edition/build.py --version 0.1.5 --output build/root-candidate
+python3 root-edition/build_updater.py --output build/root-updater
 ```
 
 The output directory must be new. Keep the whole directory, including `setup.py`,
@@ -57,7 +61,7 @@ Do not overwrite a live runtime with a newer bundle.
 
 ## 2a. Install the independent updater once
 
-For 0.1.1, install Root Updater before activating Home control. The distribution
+For a manual installation, install Root Updater before activating Home control. The distribution
 contains `build/root-updater`; use the exact newly installed Root bundle as its
 rollback baseline:
 
@@ -74,11 +78,12 @@ state; do not delete that state to bypass the check.
 
 ## 3. Turn on Home control
 
-If Home Helper is active, hold Home for about two seconds to stop it, then release
-all buttons. This is the **old helper's** exit action. Root activation refuses to
+If Home Helper is active, press Home three times within two seconds to stop it,
+then release all buttons. Helper versions through 0.6.13 instead use holding Home
+for about two seconds. Root activation refuses to
 run while that helper is present and never clears its safety latch.
 
-Open **Home Root Preview** from LG Apps, then **Home settings → Turn on Home control**.
+Open **Home Root Preview** from LG Apps, then turn **Change Home** on in **Home settings**.
 Alternatively:
 
 ```sh
@@ -88,14 +93,16 @@ python3 build/root-candidate/setup.py enable --ssh my-tv
 Activation checks input, the recovery guardian and effective Home routing
 before recording permanent intent. No countdown or second confirmation is needed.
 If startup fails, it restores LG Home. Check arrows/OK, short Home and Back.
-Use **Return to LG Home**, three short Home presses, or the restore command below
+Turn **Change Home** off, press Home three times, or use the restore command below
 to turn it off whenever needed.
 
 ## 4. Persistent operation
 
-The mode runs on the TV without a computer. On a normal software reboot it first
-restores the previous route, then reactivates only after normal-boot checks and
-fresh protections. A fault or explicit exit disables intent rather than looping
+The mode runs on the TV without a computer. A confirmed normal shutdown retains
+the selected Home profile for startup. Startup recovery reconciles the old
+transaction before reactivation with fresh protections and normal-boot checks.
+Use webOS power controls: a direct `systemctl reboot` can be classified as an
+input fault and disable Home control. A fault or explicit exit disables intent rather than looping
 through automatic reactivation. Other lifecycle cases remain final release gates.
 
 ## Controls and recovery
@@ -106,7 +113,8 @@ through automatic reactivation. Other lifecycle cases remain final release gates
 | Back inside an app | App handles navigation and its exit confirmation |
 | Confirmed Back exit | Returns to our Home on the tested setup |
 | Three short Home presses in two seconds | Emergency restore to LG, independent of the web interface |
-| Home settings → Return to LG Home → Confirm return | Normal restore; disables Root autostart |
+| Home settings → Change Home off | Restore LG routing; disables Root autostart |
+| Open LG Home | Visit LG Home once; routing preference stays saved |
 
 Release Home between taps. Long Home is **not** the Root emergency action and can
 trigger LG behavior such as zoom. Exiting Root mode does not remove root or resume

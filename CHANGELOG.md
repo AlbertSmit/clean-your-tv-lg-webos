@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.4 — Root Home at startup and clearer settings
+
+- Preserve the confirmed Root Home profile during normal shutdown so webOS opens it as the first app on the next startup. Keep independent boot recovery and explicit emergency restoration.
+- Treat a retained shutdown profile as a successful observer exit.
+- Clarify that Open LG Home is a one-time visit, and add explicit install/recovery confirmation dialogs with complete translations.
+- Refresh the shared installation, edition, maintenance and recovery guides.
+- Components: cytv 0.2.7, Home 1.3.3, Helper 0.6.16, Root 0.1.5 and No-root Updater 0.1.5.
+
 ## v0.10.3 — Redesigned desktop setup and source installation fixes
 
 - Release cytv 0.2.6 with visible setup stages, Root/No-root cards, keyboard focus and collapsible maintenance actions.

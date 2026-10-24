@@ -144,21 +144,16 @@ class Coordinator:
             raise
 
     def shutdown(self, expected):
-        # PID 1 has independently confirmed shutdown. Preserve only an already
-        # confirmed active intent; restore now if services still answer. A new
-        # boot must verify recovery again before creating any replacement route.
+        # Preserve the confirmed profile as well as intent: bootd reads the
+        # generated profile before our recovery activity runs. Restoring here
+        # makes LG Home the first app on the next boot. Boot recovery still
+        # restores the old transaction before arming a fresh guarded route.
         with self.locked(expected):
             if expected['phase'] not in ('active','stopping') or not expected['enabled']:
                 raise ValueError('Shutdown cannot promote unconfirmed intent')
             # Persist classification before any RPC can stall or shutdown kills us.
             # Retry cannot turn this confirmed shutdown into an input fault.
             if expected['phase'] == 'active': self.event(expected,'shutdown')
-            binding = self.read_binding(); tx = binding['transaction']
-            journal = self.route(tx)
-            result = d.restore_once(expected_transaction=tx)
-            if result != 'restored' or d.read() != journal['baseline']:
-                raise ValueError('Shutdown recovery remains pending')
-            self.write_binding(dict(binding,restored=True))
             return True
 
     def _healthy(self, intent):

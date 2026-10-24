@@ -1,12 +1,22 @@
 # Root Edition release acceptance
 
-Updated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
+Distribution references reviewed 2026-10-24; hardware records below are dated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
+
+## 2026-10-24 startup correction
+
+The installed shutdown/observer runtime correction was tested with two webOS
+firmware-managed restarts using reason `remoteKey`: bootManager selected
+`com.cleanyourtv.root.preview` as its first application, with fresh guarded routing
+active after boot. The user confirmed normal operation. The runtime sources
+match those included in Root 0.1.5; this is not an acceptance run of every
+new installer binary or of direct AC power removal. A direct `systemctl reboot`
+can still be treated as an input fault and disable Home control.
 
 ## Current release boundary
 
 The implementation supports protected trials and explicit permanent activation.
-Current distribution: **Root Edition 0.1.1**, with Settings updates and separate
-update recovery. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
+Current distribution: **Root Edition 0.1.5** in v0.10.4, with Settings updates and
+separate update recovery. The 0.1.1 record describes earlier update evidence. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
 routing/lifecycle evidence below applies to its earlier fixed artifact.
 No blanket hardware certification is claimed for the final public artifact.
 

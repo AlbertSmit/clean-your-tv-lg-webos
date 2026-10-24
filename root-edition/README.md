@@ -5,7 +5,9 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-**Root Edition 0.1.1** adds Settings updates and independent update recovery.
+The v0.10.4 distribution includes **Root Edition 0.1.5**. Settings updates and
+independent update recovery were introduced in 0.1.1; that earlier hardware
+record does not certify the current binary.
 Evidence is scoped to **LG OLED55C3RLA / firmware 43.21.71**. Other models and
 firmware are unvalidated. Read the [0.1.1 release scope](ROOT-0.1.1.md), including
 one-time setup, legacy migration and the limits of isolated hardware testing.
@@ -22,12 +24,14 @@ Keep the working No-root installation and recovery backups.
   interception helper running.
 - Confirmed **Back** exit returns to our launcher without an observed LG flash.
   In-app navigation and exit confirmation remain under the application's control.
-- **Turn on Home control** enables permanent intent after automatic input and recovery checks.
-- Normal software reboot restores routing safely, then reactivates after the
-  normal-boot checks and fresh input/guardian health checks pass.
+- Turning **Change Home** on enables permanent intent after automatic input and recovery checks.
+- A confirmed normal shutdown retains our Home profile so bootManager selects
+  our launcher as its first app on the next startup. Recovery then renews the
+  routing transaction after normal-boot and fresh input/guardian checks pass.
 - **Three short Home presses within two seconds** request emergency restoration
   independently of the web interface. Release Home between presses; do not hold it.
-- **Home settings → Return to LG Home → Confirm return** restores the original Home routing.
+- Turning **Change Home** off in Home settings restores the original routing.
+  **Open LG Home** only visits LG Home once and preserves the routing selection.
 - Two independent health checks and recovery state protect the system route.
   Failed startup or a later health failure automatically restores LG Home.
 

@@ -6,25 +6,26 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| Status | Stable release | 0.1.2, based on scoped evidence on OLED55C3RLA / 43.21.71 |
+| Status | Home 1.3.3 + Helper 0.6.16 | Root 0.1.5, based on scoped evidence on OLED55C3RLA / 43.21.71 |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |
 | Short Home | On-TV helper redirects it | System Home routing; old helper must be stopped |
 | Confirmed Back exit | Preserves navigation; LG can briefly flash | No LG flash observed in tested Kinopoisk exits |
 | Emergency exit | Three short Home presses within two seconds | Three short Home presses within two seconds |
-| Enable again | Home Helper | Turn on Home control; stays on until disabled |
-| Normal exit | Three short Home presses stop helper | Settings → Exit Root mode → Confirm exit |
-| Startup evidence | Standby and cold boot on tested setup | Permanent software-reboot startup confirmed; final cold/standby/failsafe matrix pending |
+| Enable again | Home Helper | Turn Change Home on in Home settings; stays on until disabled |
+| Normal exit | Turn Change Home off, or use the emergency gesture | Turn Change Home off; Open LG Home only visits once |
+| Startup evidence | Standby and cold boot on tested setup | Software reboot, quick standby and failsafe have scoped evidence; cold-power testing deferred |
 | Developer Mode | Session must remain active; auto-renewal is opt-in Beta | Not used by Root installer; do not install Developer Mode over root |
-| Updates | Signed Home update path in stable release | Settings updates with separate Root Updater, saved profile and rollback; isolated C3 validation, one-time host setup required ([guide](../root-edition/UPDATES.md)) |
+| Updates | Computer-assisted on unrooted TVs; the separate Home Updater requires root ([details](UPDATES.md)) | Settings updates with separate Root Updater, saved profile and rollback; isolated C3 validation, one-time host setup required ([guide](../root-edition/UPDATES.md)) |
 | Early black screen | Known limitation | Not solved |
 
 ## Get started
 
 - **Without cytv:** [Manual installation of No-root and Root](MANUAL_INSTALL.md), including requirements for each edition and recovery commands.
 
-- **No-root:** [Install](INSTALL.md), [recover](RECOVERY.md), [compatibility](COMPATIBILITY.md).
+- **Both editions:** [Install with cytv](INSTALL.md).
+- **No-root:** [recover](RECOVERY.md), [compatibility](COMPATIBILITY.md).
 - **Root Stable:** [Overview](../root-edition/README.md), [install and activate](../root-edition/ROLLOUT.md), [evidence and gates](../root-edition/RELEASE-ACCEPTANCE.md).
 
 The Root hardware evidence is from **LG OLED55C3RLA, firmware 43.21.71** with a

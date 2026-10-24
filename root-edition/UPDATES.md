@@ -21,7 +21,7 @@ First install an updater-compatible Root bundle using [ROLLOUT](ROLLOUT.md),
 with Root mode disabled. Keep that exact bundle as the rollback baseline:
 
 ```sh
-python3 root-edition/build.py --version 0.1.3 --output build/root-candidate
+python3 root-edition/build.py --version 0.1.5 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
 python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate
 ```
@@ -63,7 +63,7 @@ result; never rerun it blindly.
 4. LG Home is selected while the independent worker installs. Keep the TV on.
 5. The new Root Home restores the profile before rendering. Test the remote and
    select Confirm working update within two minutes.
-6. To enable Root routing again, use **Home settings → Turn on Home control**.
+6. To enable Root routing again, use **Home settings → Change Home** (turn it on).
    This enables persistent Home control after the recovery checks; no trial or
    Keep confirmation is required. Update confirmation itself does not enable routing.
 
@@ -113,8 +113,8 @@ tag with ordinary Home. Build, inspect and test the exact artifacts first:
 
 ```sh
 bash scripts/test.sh
-python3 root-edition/build.py --version 0.1.3 --output build/root-0.1.1
-python3 root-edition/update_manifest.py --bundle build/root-0.1.1 --release v0.9.0 --notes 'Root application improvements' --output build/root-update.manifest.json
+python3 root-edition/build.py --version 0.1.5 --output build/root-0.1.5
+python3 root-edition/update_manifest.py --bundle build/root-0.1.5 --release v0.10.4 --notes 'Root application improvements' --output build/root-update.manifest.json
 node scripts/sign-root-update.cjs build/root-update.manifest.json /absolute/path/to/release-private.pem build/root-update.json
 ```
 

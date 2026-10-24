@@ -1,8 +1,12 @@
 # Root Edition recovery contract
 
-This is the contract for the future installer. It is not an instruction to modify
-your TV manually. Use the released [No-root recovery guide](../docs/RECOVERY.md)
-for the current helper.
+Historical metadata-recovery design. References to a future installer and open
+implementation gates below describe the original investigation. Current Root
+uses a separate package and implemented recovery runtime; it does not patch the
+ordinary launcher manifest as an installation step. For current operations use
+[Root controls and recovery](ROLLOUT.md#controls-and-recovery),
+[release acceptance](RELEASE-ACCEPTANCE.md), or the [shared installation guide](../docs/INSTALL.md).
+Keep this document as design history, not a manual TV modification procedure.
 
 ## One transaction, four things to restore
 

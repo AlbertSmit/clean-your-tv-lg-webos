@@ -132,12 +132,22 @@ class IntegrationTests(unittest.TestCase):
   self.assertEqual(self.home,CANDIDATE)
 
 class ShutdownTests(IntegrationTests):
- def test_system_shutdown_restores_route_but_preserves_confirmed_intent(self):
+ def test_input_observer_accepts_retained_shutdown_profile(self):
+  from emergency_trial import recover
+  with patch('shutdown_state.stopping',return_value=True):
+   self.assertTrue(recover('route-a','observer_exit'))
+  self.assertTrue(self.target.exists());self.assertEqual(self.home,CANDIDATE)
+  self.assertEqual(self.store.read()['phase'],'stopping')
+ def test_system_shutdown_keeps_home_profile_for_first_app_on_next_boot(self):
   from persistent_recovery import bound_exit
+  before=self.read();binding=self.c.read_binding();payload=self.target.read_bytes()
   with patch('shutdown_state.stopping',return_value=True):
    self.assertTrue(bound_exit('route-a'))
-  self.assertEqual(self.read(),self.baseline)
+  self.assertEqual(self.read(),before);self.assertEqual(self.target.read_bytes(),payload)
+  self.assertEqual(self.c.read_binding(),binding)
   self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.store.read()['phase'],'stopping')
+  outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
+  self.assertEqual(outcome['effect'],'start_guarded');self.assertEqual(self.read(),self.baseline)
  def test_explicit_escape_during_shutdown_still_disables_intent(self):
   from persistent_recovery import bound_exit
   with patch('shutdown_state.stopping',return_value=True):
@@ -153,7 +163,8 @@ class ShutdownTests(IntegrationTests):
    reason.write_text('poweroff_reason=remoteKey')
    self.assertTrue(observer.poll());shutdown.record('route-a',source='firmware-remoteKey')
    self.assertTrue(bound_exit('route-a',reason='observer_exit'))
-  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.home,CANDIDATE)
+  self.assertTrue(self.target.exists())
   outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
   self.assertEqual(outcome['effect'],'start_guarded')
  def test_same_input_fault_without_shutdown_revokes_intent(self):
@@ -165,19 +176,19 @@ class ShutdownTests(IntegrationTests):
   outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
   self.assertEqual(outcome['effect'],'none')
 
- def test_recognized_shutdown_is_not_downgraded_on_restore_retry(self):
+ def test_recognized_shutdown_does_not_need_available_system_services(self):
   from persistent_recovery import bound_exit
-  original=d.restore_once
-  with patch('shutdown_state.stopping',return_value=True),patch.object(d,'restore_once',side_effect=OSError('manager shutting down')):
-   with self.assertRaises(OSError):bound_exit('route-a',reason='observer_exit')
+  with patch('shutdown_state.stopping',return_value=True),patch.object(d,'restore_once',side_effect=OSError('manager shutting down')),patch.object(d,'read',side_effect=OSError('manager shutting down')):
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
   self.assertEqual(self.store.read()['phase'],'stopping')
   with patch('shutdown_state.stopping',return_value=False):
    self.assertTrue(bound_exit('route-a',reason='observer_exit'))
-  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+  self.assertTrue(self.store.read()['enabled']);self.assertEqual(self.home,CANDIDATE)
+  self.assertTrue(self.target.exists())
  def test_explicit_escape_overrides_already_recorded_shutdown(self):
   from persistent_recovery import bound_exit
-  with patch('shutdown_state.stopping',return_value=True),patch.object(d,'restore_once',side_effect=OSError('busy')):
-   with self.assertRaises(OSError):bound_exit('route-a',reason='observer_exit')
+  with patch('shutdown_state.stopping',return_value=True):
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
   with patch('shutdown_state.stopping',return_value=True):
    self.assertTrue(bound_exit('route-a',reason='escape'))
   self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)

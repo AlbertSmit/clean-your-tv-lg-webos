@@ -97,5 +97,6 @@ Local tests exercise the gesture, synthetic input pipe, real stopped/killed chil
 processes, malformed health messages, startup refusal and transaction-bound
 recovery. These tests alone do not establish TV key delivery or frozen-renderer recovery;
 see RELEASE-ACCEPTANCE.md for the earlier hardware evidence.
-Permanent-mode supervision is a separate path; test it through `enable` and
-explicit Keep Root mode, using the same emergency and fault matrix.
+Permanent-mode supervision is a separate path; test it through `enable` or
+turning **Change Home** on, using the same emergency and fault matrix. No Keep
+confirmation is required by the current normal activation flow.

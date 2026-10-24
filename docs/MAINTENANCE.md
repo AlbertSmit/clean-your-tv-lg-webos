@@ -1,5 +1,15 @@
 # Update, disable, rollback and uninstall
 
+For cytv installations of either edition, use its saved connection and maintenance
+actions: [desktop maintenance](DESKTOP_INSTALL.md), [CLI reference](CLI.md).
+For manual Root setup, follow [Root removal and replacement](../root-edition/ROLLOUT.md#remove-or-replace-root-edition)
+and [Root updates](../root-edition/UPDATES.md). Root recovery/updater state is
+retained intentionally; never delete it to force reinstallation.
+
+The webOS CLI procedure below applies to **No-root source installations**.
+Stop Helper with triple Home in current builds, or hold Home for about two
+seconds in Helper versions through 0.6.13.
+
 For a **one-script installation**, run CLI commands from the repository folder.
 The CLI is local; expose it in your current terminal:
 

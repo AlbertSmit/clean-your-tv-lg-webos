@@ -43,13 +43,22 @@ Triple-Home recovery in the updated No-root Helper still needs verification on a
 
 ## C4 follow-up fixes (hardware verification pending)
 
-- At controller/service startup, known state directories are restored to 0770,
-  the pairing key to 0640 and app IDs to 0644 without changing contents or owners.
-  The key permissions are checked again before SSAP use. A permission failure is
-  reported and SSAP is disabled rather than using an unprotected key. Ordinary
-  relay input remains independent of SSAP. Firmware can still expose a window
-  between boot-time permission changes and runtime startup; the boot-time writer
-  has not been identified. Device ownership may prevent chmod and must be checked.
+- Helper 0.6.15 could disable SSAP on C4 because the installer owns the state
+  directory and Developer Mode owns the uploaded files: the helper cannot chmod
+  either. The working-tree fix keeps the existing shared paths, attempts 0770 on
+  state directories and accepts a non-world-writable 0775 directory owned by the
+  packaged prisoner:jailer identity when the runtime belongs to that group.
+  A pairing key already at 0640 remains usable. If chmod of a foreign-owned key
+  fails, the runtime stages the same key privately and atomically replaces it at
+  0640, preserving the shared group for the separate app-inventory service.
+  This changes the key's owner to the process performing the repair. Failed
+  staging/replacement keeps the original key and SSAP remains disabled if it
+  cannot be protected. App-list permission warnings no longer disable SSAP.
+  Ordinary relay input, stop flags and boot state paths remain independent.
+  Modeled multi-UID tests run on macOS/Linux; real multi-UID tests require Linux
+  root and run in CI. C4/C3 hardware validation of this fix is still pending.
+  Firmware can still expose the key between boot-time permission changes and
+  runtime startup; the boot-time writer has not been identified.
 - Resume Home waits up to five seconds for source/destination keys to be released,
   without grabbing the remote, while continuing controller heartbeat/stop handling.
   A timeout or device error retains the persistent stop behavior.

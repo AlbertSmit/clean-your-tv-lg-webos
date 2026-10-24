@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Keep No-root SSAP available with a protected key in a trusted installer-owned state directory even when directory chmod is denied.
+- Recover boot-expanded foreign-owned pairing keys through private staging and atomic replacement, preserving the shared group used by app inventory; keep SSAP blocked if protection fails.
+- Treat app-list permission failures separately from pairing-key security and add modeled multi-UID regressions plus real Linux ownership checks in CI. C4/C3 hardware validation remains pending.
+
 ## v0.10.8 — Current No-root updates and stable update controls
 
 - Read the installed Home manifest version for No-root startup health instead of reporting 1.2.2.

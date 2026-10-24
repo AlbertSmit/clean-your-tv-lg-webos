@@ -16,7 +16,7 @@ try {
  fs.unlinkSync(path.join(state,'ssap-key.json'));fs.mkdirSync(path.join(state,'ssap-key.json'));a.equal(secure(state),false);
  fs.symlinkSync(state,path.join(root,'linked'));a.equal(secure(path.join(root,'linked')),false);
  a.equal(secure(path.join(root,'missing')),false);
- const vm=require('vm'),sandbox={module:{exports:{}},require:()=>Object.assign({},fs,{fchmodSync(){const e=Error('denied');e.code='EPERM';throw e;}})};
+ const vm=require('vm'),sandbox={module:{exports:{}},process,Buffer,require:()=>Object.assign({},fs,{fchmodSync(){const e=Error('denied');e.code='EPERM';throw e;}})};
  vm.runInNewContext(fs.readFileSync(file,'utf8'),sandbox);
  fs.chmodSync(state,0o775);a.equal(sandbox.module.exports(state),false);
  a.equal(fs.statSync(state).mode&0o777,0o775);

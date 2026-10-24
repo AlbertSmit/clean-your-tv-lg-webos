@@ -26,7 +26,9 @@ resume a draft for the same commit. Publication rechecks the draft immediately
 before upload. A newer published version blocks older release attempts.
 
 For pipeline maintenance, **Automatic release** also accepts a successful build
-run ID for its exact commit and `validate_only=true`. This rebuilds/verifies the
+run ID and `validate_only=true`. Build provenance is validated before checking
+out its source. Packaging tools and the tested release source are checked out
+separately, so a packaging fix can reuse verified build artifacts. This rebuilds/verifies the
 complete release asset set without creating a draft, signing or publishing.
 The signing workflow's separate `publish=false` mode validates production
 signatures without changing release assets. These modes are for testing the

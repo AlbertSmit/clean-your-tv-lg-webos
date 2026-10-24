@@ -17,7 +17,7 @@ import tarfile
 import tempfile
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get('RELEASE_SOURCE_ROOT', Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(ROOT))
 from cytv import package
 
@@ -44,7 +44,7 @@ def plan_release(versions, commit, releases, validate_only=False):
 
 
 def validate_build_run(run, commit):
-    if (run['conclusion'] != 'success' or run['status'] != 'completed' or
+    if (not re.fullmatch('[a-f0-9]{40}', commit) or run['conclusion'] != 'success' or run['status'] != 'completed' or
         run['head_sha'] != commit or run['head_branch'] != 'main' or
         run['event'] not in ('push', 'workflow_dispatch') or
         run['path'] != '.github/workflows/cytv.yml' or
@@ -67,6 +67,17 @@ def verify_embedded(data, versions):
         if info['id'] != app or info['version'] != versions[key]:
             raise ValueError('Embedded application version mismatch: ' + app)
     return len(manifest['files'])
+
+
+def open_deb_tar(parts, prefix):
+    names = [n for n in parts if n.startswith(prefix + '.tar.')]
+    if len(names) != 1: raise ValueError('Invalid Debian archive')
+    name = names[0]
+    raw = parts[name]
+    # Python 3.12 has no stdlib zstd reader; Ubuntu's dpkg uses zstd by default.
+    if name.endswith('.zst'):
+        raw = subprocess.check_output(['zstd', '-q', '-d', '-c'], input=raw)
+    return tarfile.open(fileobj=io.BytesIO(raw))
 
 
 def assemble(artifacts, output, versions, commit):
@@ -101,14 +112,10 @@ def assemble(artifacts, output, versions, commit):
                 raise ValueError('Desktop installer version mismatch')
             checked(lambda n: archive.read('cytv.app/Contents/Resources/payload/' + n), name)
     parts = package.read_ar((output / 'cytv-linux-x64.deb').read_bytes())
-    def deb_tar(prefix):
-        names = [n for n in parts if n.startswith(prefix + '.tar.')]
-        if len(names) != 1: raise ValueError('Invalid Debian archive')
-        return tarfile.open(fileobj=io.BytesIO(parts[names[0]]))
-    with deb_tar('control') as archive:
+    with open_deb_tar(parts, 'control') as archive:
         control = archive.extractfile(next(m for m in archive if m.name in ('control', './control'))).read().decode()
         if '\nVersion: ' + versions['cytv'] + '\n' not in control: raise ValueError('Debian version mismatch')
-    with deb_tar('data') as archive:
+    with open_deb_tar(parts, 'data') as archive:
         prefix = next(m.name[:-len('payload.json')] for m in archive if m.name.endswith('/payload/payload.json'))
         checked(lambda n: archive.extractfile(prefix + n).read(), 'cytv-linux-x64.deb')
     with tempfile.TemporaryDirectory(prefix='cytv-bundles-') as tmp:
@@ -157,12 +164,19 @@ def assemble(artifacts, output, versions, commit):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plan', action='store_true')
+    parser.add_argument('--build-source', action='store_true')
     parser.add_argument('--validate-only', action='store_true')
     parser.add_argument('--build-run', type=int)
     parser.add_argument('--require-unpublished', action='store_true')
     parser.add_argument('--artifacts', type=Path)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    if args.build_source:
+        if not args.build_run: parser.error('--build-run is required')
+        run = json.loads(subprocess.check_output(['gh', 'api', 'repos/Razdva122/clean-your-tv-lg-webos/actions/runs/' + str(args.build_run)]))
+        validate_build_run(run, run['head_sha'])
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output: output.write('commit=' + run['head_sha'] + '\n')
+        return
     versions = json.loads((ROOT / 'release-versions.json').read_text())
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
     if args.plan:

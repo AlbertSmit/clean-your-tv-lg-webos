@@ -55,3 +55,16 @@ class AutomaticRelease(unittest.TestCase):
         for field, value in [('conclusion', 'failure'), ('head_sha', 'b' * 40), ('event', 'pull_request'), ('head_branch', 'feature'), ('path', '.github/workflows/other.yml'), ('head_repository', {'full_name': 'someone/fork'})]:
             with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'trusted main'):
                 release.validate_build_run({**run, field: value}, SHA)
+
+    def test_debian_zstandard_archives_work_on_python_312(self):
+        import gzip
+        import shutil
+        import subprocess
+        from cytv.package import tgz
+        if not shutil.which('zstd'):
+            self.skipTest('zstd CLI is installed by the release packaging job')
+        raw = gzip.decompress(tgz({'control': b'Package: cytv\nVersion: 0.2.12\n'}))
+        compressed = subprocess.check_output(['zstd', '-q', '-c'], input=raw)
+        self.assertTrue(hasattr(release, 'open_deb_tar'), 'Debian zstd reader is required')
+        with release.open_deb_tar({'control.tar.zst': compressed}, 'control') as archive:
+            self.assertIn(b'Version: 0.2.12', archive.extractfile('control').read())

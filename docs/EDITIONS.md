@@ -8,7 +8,7 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| Status | Home 1.3.3 + Helper 0.6.16 | Root 0.1.6, based on scoped evidence on OLED55C3RLA / 43.21.71 |
+| Status | Home 1.3.6 + Helper 0.6.17 | Root 0.1.10, based on scoped evidence on OLED55C3RLA / 43.21.71 |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |
@@ -23,6 +23,10 @@ upgrade or remove your ordinary launcher.
 | Early black screen | Known limitation | Not solved |
 
 ## Get started
+
+Component versions above match the v1.0.0 distribution. For the current source
+versions, use [`release-versions.json`](../release-versions.json); hardware evidence
+remains specific to the artifacts and scenarios recorded in the compatibility guides.
 
 - **Without cytv:** [Manual installation of No-root and Root](MANUAL_INSTALL.md), including requirements for each edition and recovery commands.
 

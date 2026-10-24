@@ -166,8 +166,10 @@ bash scripts/test.sh
 
 These dependencies support the shared installer's tests; `cytv` itself is not
 run. The tests also require `cc`. The build produces `dist/SHA256SUMS`,
-`dist/com.local.nativehome_0.6.16_arm.ipk` and the Home IPK. At the time of
-writing, `launcher/appinfo.json` specifies version **1.3.3**; check your sources:
+`dist/com.local.nativehome_0.6.17_arm.ipk` and the Home IPK. The v1.0.0
+distribution uses Home **1.3.6**, Helper **0.6.17** and Root **0.1.10**, as recorded
+in [`release-versions.json`](../release-versions.json). For another source revision,
+check the Home manifest and use the matching generated package filenames:
 
 ```bash
 python3 -c 'import json; print(json.load(open("launcher/appinfo.json"))["version"])'
@@ -182,8 +184,8 @@ older IPKs left in `dist/`.
 Install Helper, then the **exact** new Home IPK, adjusting the version if needed:
 
 ```bash
-ares-install -d lgtv dist/com.local.nativehome_0.6.16_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.3_all.ipk
+ares-install -d lgtv dist/com.local.nativehome_0.6.17_arm.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.6_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv bash scripts/configure-tv.sh
 ares-launch -d lgtv com.local.nativehome
 ```
@@ -207,7 +209,7 @@ After syncing your apps:
 ```bash
 mkdir -p dist
 ares-package launcher renewal-service -o dist
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.3_all.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.3.6_all.ipk
 ares-launch -d lgtv com.gathin.tvhome
 ```
 
@@ -295,12 +297,12 @@ From the source root; this operation does not connect to the TV:
 
 ```bash
 mkdir -p build
-python3 root-edition/build.py --output build/root-candidate --version 0.1.6
+python3 root-edition/build.py --output build/root-candidate --version 0.1.10
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.1.6_all.ipk`, `setup.py`,
+The bundle contains `com.cleanyourtv.root.preview_0.1.10_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.

@@ -151,11 +151,14 @@ Home 1.2.0 → 1.2.1 using public GitHub assets completed, followed by signed ro
 
 ## Current feed and publication guard
 
-The v0.10.8 feed offers Home 1.3.4 with Helper 0.6.16. Its signed rollback is the
-exact Home 1.3.3 package from v0.10.7, republished as a standalone asset. The
-current in-app upgrade baseline is therefore Home 1.3.3 / Helper 0.6.16 with root,
-Homebrew Channel and scoped permissions. Other baselines use the computer
-installer. No-root TVs still cannot install packages through this service.
+The v1.0.0 distribution uses Home 1.3.6 with Helper 0.6.17, matching
+[`release-versions.json`](../release-versions.json). Its signed Home rollback
+retains the exact Home 1.3.5 package from v0.10.9, paired with Helper 0.6.17
+under the reviewed compatibility record introduced in v0.10.10. See
+[the update and rollback requirements](RELEASE-0.10.10.md#updating-and-rollback).
+In-app installation requires root, Homebrew Channel, scoped permissions and a
+baseline accepted by the signed feed. Other baselines use the computer installer.
+No-root TVs still cannot install packages through this service.
 
 Startup health reads the version from the installed `appinfo.json`; it never
 substitutes a source literal if the manifest cannot be read or validated.

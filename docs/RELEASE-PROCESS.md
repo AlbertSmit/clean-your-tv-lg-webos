@@ -69,6 +69,13 @@ A wrong/missing key, absent bundle, version regression, incompatible rollback,
 changed package without a component-version bump, or mismatched provenance
 stops the workflow. A Helper version change needs a compatible, tested rollback
 baseline; the automation stops rather than publish an unusable No-root offer.
+A permission-only Helper transition can be approved in
+`native/helper-rollback-compatibility.json`: it pins both Helper versions, the
+previous Helper package, the exact previous Home rollback and the reviewed
+permission-module hash. Preparation requires unchanged input executables and
+all other runtime/protocol files; only version metadata and PNG assets may
+also differ. Unapproved transitions still stop publication. Existing clients
+with the older Helper must use the full installer before Home-only updates.
 The previous stable release must have current build metadata and public bundles.
 Version selection, release notes and TV acceptance remain development work;
 all release build, packaging, signing and publication commands run in CI.

@@ -16,6 +16,13 @@ from cytv.i18n import translate as tr
 from cytv.desktop import Channel
 from cytv.gui_style import STYLE, TVPreview, Select, EditionOption, BrandSignature
 
+MAINTENANCE_ACTIONS = (
+    ('Check TV status', 'status'),
+    ('Check connection and create a diagnostic report', 'doctor'),
+    ('Return to LG Home', 'restore'),
+    ('Uninstall Clean Your TV', 'uninstall'),
+)
+
 
 class Events(QObject):
     event = Signal(str, object)
@@ -128,7 +135,7 @@ class Wizard(QMainWindow):
         self.content.setFrameShape(QFrame.Shape.NoFrame)
         self.content.document().setDefaultStyleSheet(
             'p { margin-top: 6px; margin-bottom: 12px; line-height: 140%; } '
-            'h3 { color: #f3ede3; font-size: 15px; margin-top: 12px; margin-bottom: 10px; }')
+            'h3 { color: #f3ede3; font-size: 16px; margin-top: 12px; margin-bottom: 10px; }')
         layout.addWidget(self.content, 1)
         self.progress = QProgressBar()
         self.progress.setRange(0, 0)
@@ -236,7 +243,7 @@ class Wizard(QMainWindow):
         maintenance_layout.setSpacing(10)
         actions = Select()
         actions.setAccessibleName(tr('Maintenance action'))
-        for label, command in [('Check TV status', 'status'), ('Check connection and create a diagnostic report', 'doctor'), ('Return to LG Home', 'restore'), ('Uninstall Clean Your TV', 'uninstall')]:
+        for label, command in MAINTENANCE_ACTIONS:
             actions.addItem(tr(label), command)
         maintenance_layout.addWidget(actions)
         execute = QPushButton(tr('Run selected maintenance action'))
@@ -256,19 +263,20 @@ class Wizard(QMainWindow):
             return
         self.running = True
         self.command = command
+        self.operation_title = next((label for label, key in MAINTENANCE_ACTIONS if key == command), 'Set up my TV')
         self.preview.hide()
         self.subtitle.show()
         self.steps.setVisible(command == 'install')
         self.update_steps(1)
-        self.badge.setText(tr('Connecting to your TV'))
+        self.badge.setText(tr('Connecting to your TV' if command == 'install' else 'Maintenance action'))
         if command != 'install':
-            self.rail_title.setText(tr('Maintenance action'))
+            self.rail_title.setText(tr(self.operation_title))
         self.language.setEnabled(False)
         self.report = None
         self.pending = None
         self.content.clear()
         self.clear_form()
-        self.title.setText(tr('Connecting to your TV'))
+        self.title.setText(tr('Connecting to your TV' if command == 'install' else self.operation_title))
         self.subtitle.setText(tr('Keep your TV on and watch for a pairing request.'))
         self.cancel.setText(tr('Cancel'))
         self.cancel.setEnabled(False)
@@ -292,11 +300,16 @@ class Wizard(QMainWindow):
     def receive(self, kind, value):
         if kind == 'step':
             number, title, clear = value
-            self.title.setText(tr(title))
-            self.subtitle.hide()
-            self.badge.setText(tr(f'Step {number} of 4'))
             if self.command == 'install':
+                self.title.setText(tr(title))
+                self.subtitle.hide()
+                self.badge.setText(tr(f'Step {number} of 4'))
                 self.update_steps(number)
+            else:
+                self.title.setText(tr(self.operation_title))
+                self.subtitle.setText(tr(title))
+                self.subtitle.show()
+                self.badge.setText(tr('Maintenance action'))
             if clear:
                 self.content.clear()
         elif kind in ('text', 'heading'):
@@ -336,7 +349,7 @@ class Wizard(QMainWindow):
         self.progress.hide()
         self.cancel.setEnabled(True)
         self.clear_form()
-        label = QLabel(tr(prompt.title))
+        label = QLabel(tr('Connection check' if self.command != 'install' and prompt.label.startswith('Edition [') else prompt.title))
         label.setWordWrap(True)
         label.setObjectName('promptTitle')
         self.form_layout.addWidget(label)

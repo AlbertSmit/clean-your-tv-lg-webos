@@ -9,6 +9,44 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_each_maintenance_command_reaches_its_operation_without_installing(self):
+        from unittest.mock import MagicMock
+        for command in ('status', 'doctor', 'restore', 'uninstall'):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as tmp, \
+                    patch('cytv.cli.Installer') as installer, \
+                    patch('cytv.cli.package.verify_payload') as verify:
+                operation = installer.return_value
+                operation.status.return_value = {}
+                operation.restore.return_value = {}
+                operation.uninstall.return_value = {}
+                code, output, calls = self.run_cli(
+                    [command, '--host', '192.0.2.10', '--data-dir', tmp, '--yes'],
+                    ['1'], remote=MagicMock())
+                self.assertEqual(code, 0, output)
+                self.assertTrue(calls)
+                verify.assert_not_called()
+                operation.install.assert_not_called()
+                if command == 'doctor':
+                    operation.preflight.assert_called_once_with()
+                    operation.status.assert_called_once_with()
+                elif command == 'uninstall':
+                    operation.uninstall.assert_called_once_with(full_project=True)
+                else:
+                    getattr(operation, command).assert_called_once_with()
+
+    def test_maintenance_chooses_connection_without_installation_steps(self):
+        from cytv.desktop import DesktopConsole
+        for command in ('status', 'doctor', 'restore', 'uninstall'):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as tmp:
+                events = []
+                args = cli.parser().parse_args([command, '--host', '192.0.2.10'])
+                profile = cli.choose_profile(args, state.Store(tmp), lambda _: '1',
+                    DesktopConsole(lambda *event: events.append(event)),
+                    lambda: [], lambda *args: {'developer_ssh': True})
+                self.assertEqual(profile['edition'], 'no-root')
+                self.assertIn(('step', (2, 'Choose how you normally connect to this TV.', True)), events)
+                self.assertFalse(any(event[0] == 'step' and event[1][1] == 'Choose your edition' for event in events))
+
     def test_connected_version_review_can_cancel_before_install_or_pairing(self):
         class Remote:
             def luna(self, uri, payload):

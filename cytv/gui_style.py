@@ -1,7 +1,7 @@
 """Desktop presentation only; installation stays in the semantic CLI bridge."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QRectF, QSize
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPalette, QPen
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QWidget, QComboBox, QRadioButton
 
@@ -9,28 +9,28 @@ from PySide6.QtWidgets import QWidget, QComboBox, QRadioButton
 # warm charcoal surfaces and restrained controls rather than bright brand fills.
 STYLE = '''
 QMainWindow, QMessageBox { background: #1d1c1a; }
-QWidget { font-family: "Noto Sans", "Segoe UI", "Helvetica Neue"; font-size: 14px; color: #f3ede3; }
+QWidget { font-family: "Segoe UI", "Noto Sans", "Helvetica Neue"; font-size: 16px; color: #f3ede3; }
 QWidget#sidebar { background: #171614; }
 QLabel { background: transparent; }
 QLabel#railTitle { color: #e0d4c4; font-size: 14px; font-weight: 600; }
-QLabel#railNote, QLabel#version { color: #c0b5a5; font-size: 13px; }
-QLabel#version { font-size: 12px; }
+QLabel#railNote, QLabel#version { color: #c0b5a5; font-size: 14px; }
+QLabel#version { font-size: 13px; }
 QFrame#step { border: none; border-radius: 10px; background: transparent; }
 QFrame#step[state="current"] { background: #302c27; }
 QLabel#stepNumber { color: #c0b5a5; border: 1px solid #8e7b68; border-radius: 15px; font-weight: 600; }
-QLabel#stepName { color: #c0b5a5; font-size: 13px; }
+QLabel#stepName { color: #c0b5a5; font-size: 14px; }
 QFrame#step[state="current"] QLabel { color: #fff8eb; }
 QFrame#step[state="current"] QLabel#stepNumber { background: #51483e; border-color: #b49c7e; }
 QFrame#step[state="complete"] QLabel { color: #b9d4c5; }
 QFrame#step[state="complete"] QLabel#stepNumber { border-color: #94b8a5; }
 QFrame#step[state="error"] QLabel { color: #edb7a7; }
 QFrame#step[state="error"] QLabel#stepNumber { border-color: #edb7a7; }
-QLabel#badge { color: #d6c5ae; font-size: 12px; background: #302c27; border-radius: 11px; padding: 5px 12px; }
+QLabel#badge { color: #d6c5ae; font-size: 14px; background: #302c27; border-radius: 11px; padding: 5px 12px; }
 QLabel#title { font-size: 30px; font-weight: 700; color: #f3ede3; }
-QLabel#subtitle { color: #c0b5a5; font-size: 14px; }
+QLabel#subtitle { color: #c0b5a5; font-size: 15px; }
 QTextBrowser { background: transparent; color: #c0b5a5; border: none; padding: 0; selection-background-color: #51483e; }
 QWidget#form { background: #272521; border-radius: 12px; }
-QLabel#promptTitle { font-size: 15px; font-weight: 600; }
+QLabel#promptTitle { font-size: 16px; font-weight: 600; }
 QPushButton { background: #302d28; border: 1px solid #796956; border-radius: 8px; padding: 10px 16px; font-weight: 500; min-height: 22px; }
 QPushButton:hover { background: #3a342d; border-color: #a28c73; }
 QPushButton:pressed { background: #443b32; }
@@ -49,7 +49,7 @@ QComboBox::down-arrow { image: none; }
 QComboBox::drop-down { border: none; width: 26px; }
 QComboBox QAbstractItemView { color: #f3ede3; background: #24221e; selection-background-color: #51483e; selection-color: #fff8eb; padding: 6px; }
 QComboBox:disabled { background: #272521; color: #a79a88; }
-QComboBox#language { font-size: 12px; min-height: 18px; padding: 6px 30px 6px 10px; }
+QComboBox#language { font-size: 14px; min-height: 18px; padding: 6px 30px 6px 10px; }
 QProgressBar { background: #302c27; border: none; border-radius: 3px; }
 QProgressBar::chunk { background: #b49c7e; border-radius: 3px; }
 QScrollBar:vertical { background: #272521; width: 8px; border-radius: 4px; }
@@ -123,6 +123,14 @@ class TVPreview(QWidget):
 
 class Select(QComboBox):
     """A visible disclosure indicator on both native and Fusion styles."""
+    def showPopup(self):
+        # Qt paints the popup margins using the container's Base palette role.
+        popup = self.view().window()
+        palette = popup.palette()
+        palette.setColor(QPalette.ColorRole.Base, QColor('#24221e'))
+        popup.setPalette(palette)
+        super().showPopup()
+
     def paintEvent(self, event):
         super().paintEvent(event)
         p = QPainter(self)

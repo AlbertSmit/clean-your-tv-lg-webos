@@ -44,6 +44,51 @@ class GuiTests(unittest.TestCase):
         self.assertFalse(w.maintenance_toggle.isChecked())
         w.close()
 
+    def test_select_popup_has_no_light_bands(self):
+        from cytv.gui_style import Select, STYLE
+        self.app.setStyle('Fusion')
+        select = Select()
+        self.addCleanup(select.close)
+        select.setStyleSheet(STYLE)
+        select.addItems(['Automatic', 'English', 'Русский'])
+        select.show()
+        for _ in range(2):
+            select.showPopup()
+            self.app.processEvents()
+            image = select.view().window().grab().toImage()
+            for y in (2, image.height() - 3):
+                self.assertLess(image.pixelColor(image.width() // 2, y).lightness(), 80)
+            select.hidePopup()
+
+    def test_maintenance_buttons_dispatch_selected_command_and_keep_action_visible(self):
+        for index, (command, title) in enumerate([
+                ('status', 'Check TV status'),
+                ('doctor', 'Check connection and create a diagnostic report'),
+                ('restore', 'Return to LG Home'),
+                ('uninstall', 'Uninstall Clean Your TV')]):
+            with self.subTest(command=command):
+                calls = []
+                def runner(argv, **kwargs):
+                    calls.append(argv)
+                    kwargs['write'].step(2, 'Choose how you normally connect to this TV.')
+                    kwargs['ask']('TV IP address: ')
+                    return 0
+                w = Wizard(run=runner)
+                self.addCleanup(w.close)
+                w.maintenance_toggle.click()
+                w.maintenance.findChild(QComboBox).setCurrentIndex(index)
+                w.maintenance.findChild(QPushButton).click()
+                self.pump(lambda: w.pending is not None)
+                self.assertEqual(calls[0][0], command)
+                self.assertEqual('--report' in calls[0], command == 'doctor')
+                actual_title, actual_badge = w.title.text(), w.badge.text()
+                w.submit(None)
+                self.pump(lambda: not w.running)
+                self.assertEqual(actual_title, title)
+                self.assertEqual(actual_badge, 'Maintenance action')
+                self.assertTrue(w.steps.isHidden())
+                w.close()
+
     def test_steps_follow_events_without_marking_failed_install_complete(self):
         w = Wizard()
         w.receive('step', (3, 'Prepare the TV connection', True))

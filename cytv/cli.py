@@ -85,7 +85,7 @@ def choose_profile(args, store, ask, write, search, inspect):
                 write('Checking TV connections…')
                 info = inspect(host, args.port)
             default_choice = 2 if info.get('root_ssh') else 1
-            write.step(2, 'Choose your edition')
+            write.step(2, 'Choose your edition' if args.command == 'install' else 'Choose how you normally connect to this TV.')
             write('TV: ' + host)
             write.heading('Connection check')
             if info.get('root_ssh'):
@@ -100,8 +100,9 @@ def choose_profile(args, store, ask, write, search, inspect):
             write.option(2, 'Root',
                          'For an already rooted TV with existing SSH access.')
             write('')
-            write('No-root and Root are equal options for different TV setups.')
-            write('This installer does not obtain root.')
+            if args.command == 'install':
+                write('No-root and Root are equal options for different TV setups.')
+                write('This installer does not obtain root.')
             write('Enter = current choice   |   q = quit')
             choice = prompts.number(ask, write, f'Edition [{default_choice}]: ', 1, 2, default=default_choice)
             edition = 'no-root' if choice == 1 else 'root'

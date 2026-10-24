@@ -1,10 +1,13 @@
 # Install cytv without a terminal
 
-The desktop wizard opens in its own window. It includes Python and the TV packages;
+The desktop wizard opens in its own window. The sidebar follows the four setup
+steps; Root and No-root are shown with descriptions before you choose. Expand
+**Maintenance action** on the start screen for status, diagnostics, restore and removal.
+It includes Python and the TV packages;
 you do not need developer tools or terminal commands.
 
 Download the desktop package for your computer from the
-[v0.10.1 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1).
+[v0.10.3 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3).
 The older v0.9.0 macOS/Linux files are console programs, not the desktop app.
 
 ## macOS
@@ -69,12 +72,12 @@ After installation, cytv runs as your normal user. It does not ask for your Linu
 administrator password when connecting to the TV. Uninstall cytv using your
 software manager; this does not uninstall TV apps or delete saved recovery data.
 
-## Language selection (next build/source)
+## Language selection
 
-The source version with localization chooses the computer’s language automatically.
+The installer chooses the computer’s language automatically.
 Use the language selector to save another language, or choose **Auto** to follow
 system settings. On the TV, use **Settings → Language**; this is a separate preference.
-These language controls are not a claim about the existing v0.10.1 download.
+These language controls are included in v0.10.3 and later downloads.
 See the [ten localized installation, use and recovery guides](LANGUAGES.md).
 
 ## In the wizard
@@ -138,3 +141,10 @@ Every desktop build verifies its embedded payload and launches the frozen window
 with an offline `--smoke-test`; this does not contact a TV. Widget tests cover
 selection, secret entry, safe cancellation and destructive confirmation defaults.
 The Qt libraries remain separate dynamic files in the app/package.
+
+### Offline interface previews
+
+With desktop dependencies installed, `python scripts/preview-installer.py --language ru`
+saves screenshots of the real Qt widgets to `build/installer-preview/`. These use
+sample TV data and do not discover, connect to, or modify a TV. Add `--all-locales`
+to capture every supported language at the minimum window size.

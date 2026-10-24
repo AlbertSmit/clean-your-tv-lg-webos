@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 try:
-    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox
+    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QRadioButton
     from cytv.gui import Wizard
     from cytv.desktop import Prompt
     HAS_QT = True
@@ -32,6 +32,43 @@ class GuiTests(unittest.TestCase):
         languages = patch('cytv.i18n.system_languages', return_value=['en'])
         languages.start()
         self.addCleanup(languages.stop)
+
+    def test_maintenance_is_disclosed_and_resets_on_home(self):
+        w = Wizard()
+        w.show()
+        self.assertTrue(w.maintenance.isHidden())
+        w.maintenance_toggle.click()
+        self.assertFalse(w.maintenance.isHidden())
+        w.home()
+        self.assertTrue(w.maintenance.isHidden())
+        self.assertFalse(w.maintenance_toggle.isChecked())
+        w.close()
+
+    def test_steps_follow_events_without_marking_failed_install_complete(self):
+        w = Wizard()
+        w.receive('step', (3, 'Prepare the TV connection', True))
+        self.assertEqual([row.property('state') for row in w.step_rows],
+                         ['complete', 'complete', 'current', 'upcoming'])
+        w.receive('done', 1)
+        self.assertEqual(w.step_rows[2].property('state'), 'error')
+        self.assertEqual(w.step_rows[3].property('state'), 'upcoming')
+        w.home()
+        self.assertTrue(all(row.property('state') == 'upcoming' for row in w.step_rows))
+        w.close()
+
+    def test_edition_cards_keep_default_and_submit_selected_machine_key(self):
+        w = Wizard()
+        from cytv.desktop import Channel
+        w.channel = Channel(lambda *args: None)
+        w.show_prompt(Prompt('Edition [2]: ', [('1', 'No-root', 'For a TV without root. Uses LG Developer Mode.'),
+                                               ('2', 'Root', 'For an already rooted TV with existing SSH access.')]))
+        cards = w.form.findChildren(QRadioButton)
+        self.assertEqual(len(cards), 2)
+        self.assertTrue(cards[1].isChecked())
+        cards[0].click()
+        next(b for b in w.form.findChildren(QPushButton) if b.isDefault()).click()
+        self.assertEqual(w.channel.answers.get_nowait(), '1')
+        w.close()
 
     def test_language_selection_rerenders_and_persists_all_locales(self):
         from cytv import i18n
@@ -87,9 +124,9 @@ class GuiTests(unittest.TestCase):
         w = Wizard(run=runner)
         w.start('install')
         self.pump(lambda: w.pending is not None)
-        combo = w.form.findChild(QComboBox)
-        self.assertEqual(combo.currentData(), '2')
-        w.submit(combo.currentData())
+        cards = w.form.findChildren(QRadioButton)
+        self.assertTrue(cards[1].isChecked())
+        next(b for b in w.form.findChildren(QPushButton) if b.isDefault()).click()
         self.pump(lambda: w.pending is not None)
         self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
         w.submit('private-password')

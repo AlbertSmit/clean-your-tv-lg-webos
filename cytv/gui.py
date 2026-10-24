@@ -5,15 +5,16 @@ import shutil
 import sys
 import threading
 
-from PySide6.QtCore import QObject, Signal, QUrl, QTimer
+from PySide6.QtCore import QObject, Signal, QUrl, QTimer, Qt
 from PySide6.QtGui import QDesktopServices, QIcon, QFontDatabase, QFont
-from PySide6.QtWidgets import (QApplication, QComboBox, QFileDialog, QFrame, QHBoxLayout,
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout,
                               QLabel, QLineEdit, QMainWindow, QMessageBox, QProgressBar,
-                              QPushButton, QTextBrowser, QVBoxLayout, QWidget)
+                              QPushButton, QTextBrowser, QVBoxLayout, QWidget, QButtonGroup)
 
 from cytv import __version__, cli, diagnostics, i18n
 from cytv.i18n import translate as tr
 from cytv.desktop import Channel
+from cytv.gui_style import STYLE, TVPreview, Select, EditionOption
 
 
 class Events(QObject):
@@ -30,29 +31,108 @@ class Wizard(QMainWindow):
         self.report = None
         self.worker = None
         self.setWindowTitle('Clean Your TV')
-        self.resize(820, 740)
-        self.setMinimumSize(620, 540)
+        self.resize(1060, 820)
+        self.setMinimumSize(900, 680)
+        self.setStyleSheet(STYLE)
+        self.current_step = 0
+        self.command = 'install'
         self.events = Events()
         self.events.event.connect(self.receive)
         body = QWidget()
         self.setCentralWidget(body)
-        layout = QVBoxLayout(body)
-        layout.setContentsMargins(28, 24, 28, 24)
-        layout.setSpacing(14)
-        brand = QLabel('CLEAN YOUR TV')
-        brand.setStyleSheet('font-weight: 700; letter-spacing: 2px; color: #385db3;')
-        layout.addWidget(brand)
-        self.title = QLabel(tr('Make your TV feel like yours'))
+        shell = QHBoxLayout(body)
+        shell.setContentsMargins(0, 0, 0, 0)
+        shell.setSpacing(0)
+        sidebar = QWidget()
+        sidebar.setObjectName('sidebar')
+        sidebar.setFixedWidth(248)
+        rail = QVBoxLayout(sidebar)
+        rail.setContentsMargins(20, 36, 20, 26)
+        rail.setSpacing(8)
+        brand = QLabel('Clean Your TV')
+        brand.setObjectName('brand')
+        rail.addWidget(brand)
+        platform = QLabel('LG webOS')
+        platform.setObjectName('platform')
+        rail.addWidget(platform)
+        rail.addSpacing(58)
+        self.rail_title = QLabel()
+        self.rail_title.setObjectName('railTitle')
+        self.rail_title.setWordWrap(True)
+        rail.addWidget(self.rail_title)
+        rail.addSpacing(12)
+        self.steps = QWidget()
+        step_layout = QVBoxLayout(self.steps)
+        step_layout.setContentsMargins(0, 0, 0, 0)
+        step_layout.setSpacing(12)
+        self.step_rows = []
+        self.step_names = []
+        self.step_numbers = []
+        for number in range(1, 5):
+            row = QFrame()
+            row.setObjectName('step')
+            line = QHBoxLayout(row)
+            line.setContentsMargins(10, 12, 10, 12)
+            line.setSpacing(12)
+            marker = QLabel(str(number))
+            marker.setObjectName('stepNumber')
+            marker.setFixedSize(32, 32)
+            marker.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            name = QLabel()
+            name.setObjectName('stepName')
+            name.setWordWrap(True)
+            line.addWidget(marker)
+            line.addWidget(name, 1)
+            self.step_rows.append(row)
+            self.step_names.append(name)
+            self.step_numbers.append(marker)
+            step_layout.addWidget(row)
+        rail.addWidget(self.steps)
+        rail.addStretch()
+        self.rail_note = QLabel()
+        self.rail_note.setObjectName('railNote')
+        self.rail_note.setWordWrap(True)
+        rail.addWidget(self.rail_note)
+        rail.addSpacing(20)
+        version = QLabel('cytv ' + __version__)
+        version.setObjectName('version')
+        rail.addWidget(version)
+        shell.addWidget(sidebar)
+        main = QWidget()
+        layout = QVBoxLayout(main)
+        layout.setContentsMargins(40, 30, 40, 24)
+        layout.setSpacing(12)
+        header = QHBoxLayout()
+        self.badge = QLabel()
+        self.badge.setObjectName('badge')
+        header.addWidget(self.badge)
+        header.addStretch()
+        self.language = Select()
+        self.language.setObjectName('language')
+        self.language.setAccessibleName(tr('Language'))
+        for code, name in i18n.LANGUAGES.items():
+            self.language.addItem(tr(name) if code == 'auto' else name, code)
+        self.language.setCurrentIndex(list(i18n.LANGUAGES).index(i18n.language_choice()))
+        self.language.currentIndexChanged.connect(self.change_language)
+        header.addWidget(self.language)
+        layout.addLayout(header)
+        layout.addSpacing(18)
+        self.title = QLabel()
+        self.title.setObjectName('title')
         self.title.setWordWrap(True)
-        self.title.setStyleSheet('font-size: 26px; font-weight: 700;')
         layout.addWidget(self.title)
-        self.subtitle = QLabel(tr('Install Root or No-root. We will help you choose.'))
+        self.subtitle = QLabel()
+        self.subtitle.setObjectName('subtitle')
         self.subtitle.setWordWrap(True)
         layout.addWidget(self.subtitle)
+        self.preview = TVPreview()
+        layout.addWidget(self.preview)
         self.content = QTextBrowser()
         self.content.setOpenExternalLinks(False)
         self.content.setFrameShape(QFrame.Shape.NoFrame)
-        self.content.document().setDefaultStyleSheet('p { margin-bottom: 12px; } h3 { margin-top: 20px; }')
+        self.content.document().setDefaultStyleSheet(
+            'p { margin-top: 6px; margin-bottom: 12px; line-height: 140%; } '
+            'h3 { color: #182c46; font-size: 15px; margin-top: 12px; margin-bottom: 10px; }')
         layout.addWidget(self.content, 1)
         self.progress = QProgressBar()
         self.progress.setRange(0, 0)
@@ -61,25 +141,25 @@ class Wizard(QMainWindow):
         self.progress.hide()
         layout.addWidget(self.progress)
         self.form = QWidget()
+        self.form.setObjectName('form')
         self.form_layout = QVBoxLayout(self.form)
-        self.form_layout.setContentsMargins(0, 0, 0, 0)
+        self.form_layout.setContentsMargins(16, 16, 16, 16)
         self.form_layout.setSpacing(10)
         layout.addWidget(self.form)
         footer = QHBoxLayout()
-        footer.addWidget(QLabel('cytv ' + __version__))
         footer.addStretch()
-        self.language = QComboBox()
-        self.language.setAccessibleName(tr('Language'))
-        for code, name in i18n.LANGUAGES.items():
-            self.language.addItem(tr(name) if code == 'auto' else name, code)
-        self.language.setCurrentIndex(list(i18n.LANGUAGES).index(i18n.language_choice()))
-        self.language.currentIndexChanged.connect(self.change_language)
-        footer.addWidget(self.language)
         self.cancel = QPushButton(tr('Close'))
+        self.cancel.setObjectName('close')
         self.cancel.clicked.connect(self.close)
         footer.addWidget(self.cancel)
         layout.addLayout(footer)
+        shell.addWidget(main, 1)
         self.home()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, 'preview'):
+            self.preview.setFixedHeight(144 if self.height() < 760 else 206)
 
     def change_language(self):
         if self.running:
@@ -109,31 +189,84 @@ class Wizard(QMainWindow):
 
     def button(self, label, callback, default=False):
         button = QPushButton(tr(label))
-        button.setMinimumHeight(38)
+        button.setMinimumHeight(44)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
         button.setDefault(default)
-        if default:
-            button.setStyleSheet('QPushButton { background: #315fc4; color: white; border: none; border-radius: 6px; padding: 8px; } QPushButton:focus { border: 2px solid #163775; }')
+        button.setProperty('primary', default)
         button.clicked.connect(callback)
         self.form_layout.addWidget(button)
         return button
 
+    def update_steps(self, number=0, result=None):
+        self.current_step = number
+        for index, row in enumerate(self.step_rows, 1):
+            state = 'complete' if index < number else 'current' if index == number else 'upcoming'
+            if result == 0:
+                state = 'complete'
+            elif index == number and result is not None:
+                state = 'error' if result != 130 else 'upcoming'
+            row.setProperty('state', state)
+            self.step_numbers[index - 1].setText('✓' if state == 'complete' else '!' if state == 'error' else str(index))
+            row.style().unpolish(row)
+            row.style().polish(row)
+            for label in (self.step_numbers[index - 1], self.step_names[index - 1]):
+                label.style().unpolish(label)
+                label.style().polish(label)
+            row.update()
+
     def home(self):
         self.clear_form()
+        self.preview.show()
+        self.subtitle.show()
+        self.steps.show()
+        self.progress.hide()
+        self.update_steps()
+        self.badge.setText(tr('Before you begin'))
+        self.rail_title.setText(tr('Set up my TV'))
+        self.rail_note.setText(tr('Keep your TV on and watch for a pairing request.'))
+        for label, title in zip(self.step_names, ('Connect to your TV', 'Choose your edition', 'Prepare the TV connection', 'Review and install')):
+            label.setText(tr(title))
         self.title.setText(tr('Make your TV feel like yours'))
         self.subtitle.setText(tr('Install Root or No-root. We will help you choose.'))
         self.content.setHtml('<h3>' + html.escape(tr('Before you begin')) + '</h3><p>' + html.escape(tr('Turn on your LG webOS TV and connect it to the same home network as this computer.')) + '</p><p>' + html.escape(tr('cytv will look for your TV automatically. Keep the remote nearby to approve pairing on the TV.')) + '</p>')
         self.button('Set up my TV', lambda: self.start('install'), True)
-        actions = QComboBox()
+        self.maintenance_toggle = self.button('Maintenance action', self.toggle_maintenance)
+        self.maintenance_toggle.setObjectName('maintenanceToggle')
+        self.maintenance_toggle.setCheckable(True)
+        self.maintenance_toggle.setText(tr('Maintenance action') + '  ▸')
+        self.maintenance = QWidget()
+        maintenance_layout = QVBoxLayout(self.maintenance)
+        maintenance_layout.setContentsMargins(0, 0, 0, 0)
+        maintenance_layout.setSpacing(10)
+        actions = Select()
         actions.setAccessibleName(tr('Maintenance action'))
         for label, command in [('Check TV status', 'status'), ('Check connection and create a diagnostic report', 'doctor'), ('Return to LG Home', 'restore'), ('Uninstall Clean Your TV', 'uninstall')]:
             actions.addItem(tr(label), command)
-        self.form_layout.addWidget(actions)
-        self.button('Run selected maintenance action', lambda: self.start(actions.currentData()))
+        maintenance_layout.addWidget(actions)
+        execute = QPushButton(tr('Run selected maintenance action'))
+        execute.setMinimumHeight(44)
+        execute.clicked.connect(lambda: self.start(actions.currentData()))
+        maintenance_layout.addWidget(execute)
+        self.form_layout.addWidget(self.maintenance)
+        self.maintenance.hide()
+
+    def toggle_maintenance(self):
+        expanded = self.maintenance_toggle.isChecked()
+        self.maintenance.setVisible(expanded)
+        self.maintenance_toggle.setText(tr('Maintenance action') + ('  ▾' if expanded else '  ▸'))
 
     def start(self, command):
         if self.running:
             return
         self.running = True
+        self.command = command
+        self.preview.hide()
+        self.subtitle.show()
+        self.steps.setVisible(command == 'install')
+        self.update_steps(1)
+        self.badge.setText(tr('Connecting to your TV'))
+        if command != 'install':
+            self.rail_title.setText(tr('Maintenance action'))
         self.language.setEnabled(False)
         self.report = None
         self.pending = None
@@ -164,7 +297,10 @@ class Wizard(QMainWindow):
         if kind == 'step':
             number, title, clear = value
             self.title.setText(tr(title))
-            self.subtitle.setText(tr(f'Step {number} of 4'))
+            self.subtitle.hide()
+            self.badge.setText(tr(f'Step {number} of 4'))
+            if self.command == 'install':
+                self.update_steps(number)
             if clear:
                 self.content.clear()
         elif kind in ('text', 'heading'):
@@ -186,13 +322,18 @@ class Wizard(QMainWindow):
             self.cancel.setEnabled(True)
             self.clear_form()
             self.title.setText(tr('Finished' if value == 0 else 'Cancelled' if value == 130 else 'Let’s resolve this'))
+            self.subtitle.show()
             self.subtitle.setText(tr('Read the result below before continuing.'))
+            self.rail_note.setText(tr('Read the result below before continuing.'))
+            self.badge.setText(self.title.text())
+            if self.command == 'install':
+                self.update_steps(self.current_step, value)
             self.content.moveCursor(self.content.textCursor().MoveOperation.End)
             if self.report:
                 self.button('Save diagnostic report…', self.save_report)
             if value not in (0, 130):
                 self.button('Open an issue', lambda: QDesktopServices.openUrl(QUrl(diagnostics.ISSUE_URL)))
-            self.button('Back to start', self.home)
+            self.button('Back to start', self.home, True)
 
     def show_prompt(self, prompt):
         self.pending = prompt
@@ -201,7 +342,7 @@ class Wizard(QMainWindow):
         self.clear_form()
         label = QLabel(tr(prompt.title))
         label.setWordWrap(True)
-        label.setStyleSheet('font-weight: 600;')
+        label.setObjectName('promptTitle')
         self.form_layout.addWidget(label)
         if prompt.kind == 'confirm':
             yes = self.button('Connect and remember' if prompt.label.startswith('Connect') else 'Continue', lambda: self.submit('y'), prompt.default == 'y')
@@ -209,8 +350,26 @@ class Wizard(QMainWindow):
             (yes if prompt.default == 'y' else no).setFocus()
             if prompt.label.startswith('Connect'):
                 self.button('Connection details', lambda: self.submit('?'))
+        elif prompt.kind == 'choice' and prompt.label.startswith('Edition'):
+            options = QWidget()
+            row = QHBoxLayout(options)
+            row.setContentsMargins(0, 0, 0, 0)
+            row.setSpacing(12)
+            group = QButtonGroup(options)
+            for key, name, detail in prompt.options:
+                card = EditionOption(tr(name), tr(detail), key)
+                group.addButton(card)
+                row.addWidget(card, 1)
+                if key == prompt.default:
+                    card.setChecked(True)
+            self.form_layout.addWidget(options)
+            proceed = self.button('Continue', lambda: self.submit(group.checkedButton().key), True)
+            proceed.setEnabled(group.checkedButton() is not None)
+            group.buttonToggled.connect(lambda: proceed.setEnabled(group.checkedButton() is not None))
+            if group.checkedButton():
+                group.checkedButton().setFocus()
         elif prompt.kind == 'choice':
-            choices = QComboBox()
+            choices = Select()
             choices.setAccessibleName(tr(prompt.title))
             for key, name, detail in prompt.options:
                 choices.addItem(tr(name) + (' — ' + tr(detail) if detail else ''), key)
@@ -288,7 +447,7 @@ def main():
     app.setApplicationName('Clean Your TV')
     app.setOrganizationName('CleanYourTV')
     app.setWindowIcon(QIcon(str(cli.payload_dir() / 'fallback.png')))
-    app.setStyleSheet('QWidget { font-size: 14px; } QTextBrowser { padding: 8px; } QLineEdit, QComboBox { padding: 8px; }')
+    app.setStyle('Fusion')
     window = Wizard()
     window.show()
     if '--smoke-test' in sys.argv:

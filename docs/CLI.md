@@ -12,7 +12,7 @@ Hardware evidence remains scoped to the documented models. Source/automated chec
 ## Run
 
 Download the console executable matching your computer from the
-[v0.10.1 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.1).
+[v0.10.3 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3).
 Development artifacts are also available from the **cytv standalone builds** workflow. Supported build targets are Windows x64, Linux x64, macOS ARM64 and macOS
 x64. Linux builds use Ubuntu 22.04; macOS builds use macOS 15. Older desktop OS
 compatibility is not established.

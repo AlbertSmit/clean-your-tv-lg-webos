@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.3 — Redesigned desktop setup and source installation fixes
+
+- Release cytv 0.2.6 with visible setup stages, Root/No-root cards, keyboard focus and collapsible maintenance actions.
+- Include the localized setup, Root recovery/removal and Home startup fixes from the v0.10.2 source tag.
+- Repair permissions in the current Helper package instead of a hardcoded old IPK.
+- Honor Zig from ZIG/PATH in Termux without requesting the unavailable Android Python distribution.
+- Components: cytv 0.2.6, Home 1.3.2, Helper 0.6.16, Root 0.1.4 and No-root Updater 0.1.4. C5/webOS 26 remains under investigation.
+
 ## v0.10.2 — Localized setup and complete project removal
 
 - Complete cytv translations for interrupted setup, reinstallation, removal and recovery messages across all supported languages.

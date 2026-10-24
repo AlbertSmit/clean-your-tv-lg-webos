@@ -1,5 +1,16 @@
 # Contributing
 
+In the maintained local workspace, use `stable/` as the only active checkout for
+all development, documentation, builds, commits and releases. This includes
+No-root, Root and the desktop/console installer. `stable` is the directory name;
+`main` is the integration branch. Switch branches within this checkout as needed.
+The former `release-desktop/` checkout is archived under
+`archives/2026-10-24-release-desktop/` in the workspace container. Archives and the
+legacy Root checkout are for reference/recovery only; do not develop or publish
+from them. Coordinate concurrent edits and commit or stash incomplete changes
+before switching branches. Contributors with their own clone can use its normal
+checkout path; the single-checkout rule describes this maintained workspace.
+
 Write technical and developer documentation in English. Maintain the ten localized
 user guides under `docs/i18n/` when changing user-facing setup or controls.
 

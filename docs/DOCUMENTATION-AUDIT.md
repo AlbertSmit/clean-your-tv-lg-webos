@@ -1,9 +1,10 @@
 # Documentation audit — 2026-10-24
 
 Scope: the primary `stable/` checkout's 61 tracked Markdown files, plus the local
-workspace README. Release-desktop is a secondary checkout with uncommitted UI
-work, not a second documentation source to edit. Archives and legacy symlinked
-checkouts retain their historical contents. Third-party notices and vendored
+workspace README. The former release-desktop checkout is now archived at
+`archives/2026-10-24-release-desktop/` in the workspace container, including its
+uncommitted UI work. All future work uses `stable/` only. Archives and legacy
+symlinked checkouts retain their historical contents. Third-party notices and vendored
 library documentation are upstream material.
 
 Sources of truth: `release-versions.json`, application manifests, `cytv` setup

@@ -1,6 +1,6 @@
 # Compatibility and known limits
 
-The v0.10.6 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.6.
+The v0.10.8 distribution contains Home 1.3.3, Helper 0.6.16 and Root 0.1.7.
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
 
@@ -58,3 +58,10 @@ Triple-Home recovery in the updated No-root Helper still needs verification on a
   event ordering need confirmation on C4 and regression testing on C3.
 - The C4 report measured a full remote power cycle with Quick Start+ disabled,
   not standby/resume. It does not establish that EIM caused the startup delay.
+
+No-root installer architecture detection reads the ELF header of the TV shell.
+A verified little-endian ARM32 userspace is accepted on an ARM32 or aarch64
+kernel. Unknown or incompatible runtimes stop before package installation.
+The diagnostic report includes allowlisted kernel architecture, userland ABI and
+ARM32 verification results, without raw command output. Passing this check does
+not certify remote-control, startup or firmware compatibility.

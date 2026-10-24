@@ -25,6 +25,21 @@ class DiagnosticTests(unittest.TestCase):
             self.assertEqual(value['connection'], {'protocol':'ssap','close_code':1008,'reason_code':'connection-closed'})
             self.assertNotIn('PRIVATE-REMOTE-REASON', path.read_text())
 
+    def test_report_includes_only_allowlisted_tv_architecture_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = state.Store(tmp)
+            info = {'kernel_arch': 'aarch64', 'userland_abi': 'arm32',
+                    'arm32_supported': True, 'raw_elf': 'PRIVATE-ELF', 'host': '192.0.2.55'}
+            path = diagnostics.create_report(store, 'install', None, 'preflight', tv_info=info)
+            self.assertEqual(json.loads(path.read_text())['tv'], {
+                'kernel_arch': 'aarch64', 'userland_abi': 'arm32', 'arm32_supported': True})
+            info.update(kernel_arch='PRIVATE-KERNEL', userland_abi='PRIVATE-ABI', arm32_supported='SECRET')
+            path = diagnostics.create_report(store, 'install', None, 'preflight', tv_info=info)
+            self.assertEqual(json.loads(path.read_text())['tv'], {
+                'kernel_arch': 'unknown', 'userland_abi': 'unknown'})
+            for private in ('PRIVATE-', '192.0.2.55', 'SECRET'):
+                self.assertNotIn(private, path.read_text())
+
     def test_report_excludes_exception_text_addresses_keys_and_inventory(self):
         with tempfile.TemporaryDirectory() as tmp:
             store = state.Store(tmp)
@@ -43,6 +58,23 @@ class DiagnosticTests(unittest.TestCase):
             self.assertEqual(value['pending'], {'action': 'install', 'stage': 'pending'})
             self.assertTrue(value['trace'])
             self.assertEqual(value['edition'], 'root')
+
+    def test_cli_architecture_failure_preserves_probe_results_in_report(self):
+        class Remote:
+            def run(self, command, **kwargs):
+                if command == 'uname -m': return 'aarch64'
+                if command == 'LC_ALL=C od -An -v -t u1 -N 20 /bin/sh':
+                    return '127 69 76 70 2 1 1 0 0 0 0 0 0 0 0 0 2 0 183 0'
+                raise AssertionError('Unexpected command')
+            def close(self): pass
+        with tempfile.TemporaryDirectory() as tmp:
+            code = cli.main(['doctor', '--host', '192.0.2.55', '--edition', 'no-root',
+                             '--data-dir', tmp], write=lambda _: None, connect=lambda *args: Remote())
+            self.assertEqual(code, 2)
+            reports = list(Path(tmp).glob('reports/*.json'))
+            self.assertEqual(len(reports), 1)
+            self.assertEqual(json.loads(reports[0].read_text())['tv'], {
+                'kernel_arch': 'aarch64', 'userland_abi': 'arm64', 'arm32_supported': False})
 
     def test_cli_failure_provides_issue_link_report_and_requested_debug_details(self):
         with tempfile.TemporaryDirectory() as tmp:

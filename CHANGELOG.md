@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.10.8 — No-root ARM32 runtime detection
+
+- Verify the TV shell ELF ABI instead of rejecting aarch64 kernels that run ARM32 userspace.
+- Reject unconfirmed, non-ARM and ARM64-only shell environments before package installation.
+- Add allowlisted TV kernel architecture, userland ABI and ARM32 verification results to diagnostic reports.
+- Add architecture and diagnostic privacy regressions; translate the clearer failure message in ten languages.
+- Components: cytv 0.2.11; Home 1.3.3, Helper 0.6.16, Root 0.1.7 and No-root Updater 0.1.5 are unchanged. Reporter hardware confirmation for issue #15 remains pending.
+
 ## v0.10.7 — Root update readiness repair
 
 - Exclude the Add app action tile from restored-application readiness checks.

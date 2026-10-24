@@ -12,6 +12,7 @@ from .terminal import console
 from .errors import TVConnectionError
 
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
+KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
 
 
 def create_report(store, action, profile, phase, error=None, tv_info=None):
@@ -31,6 +32,12 @@ def create_report(store, action, profile, phase, error=None, tv_info=None):
     }
     if isinstance(error, TVConnectionError):
         report['connection'] = {'protocol': 'ssap', 'close_code': error.close_code, 'reason_code': error.reason_code}
+    for name, allowed in (('kernel_arch', KERNEL_ARCHES),
+                          ('userland_abi', ('arm32', 'arm64', 'other', 'unknown'))):
+        if tv_info and name in tv_info:
+            report['tv'][name] = tv_info[name] if tv_info[name] in allowed else 'unknown'
+    if tv_info and type(tv_info.get('arm32_supported')) is bool:
+        report['tv']['arm32_supported'] = tv_info['arm32_supported']
     path = store.root / 'reports' / ('diagnostic-' + uuid.uuid4().hex[:12] + '.json')
     private_write(path, json.dumps(report, indent=2).encode())
     return path

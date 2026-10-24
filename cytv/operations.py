@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import uuid
 
-from . import package, i18n
+from . import package, i18n, diagnostics
 from .errors import UserError, TVRejected, ExistingRoot
 
 HOME = 'com.gathin.tvhome'
@@ -30,10 +30,11 @@ def root_updater_paths():
 
 
 class Installer:
-    def __init__(self, remote, store, profile, payload, manifest, progress=print):
+    def __init__(self, remote, store, profile, payload, manifest, progress=print, tv_info=None):
         self.remote, self.store, self.profile = remote, store, profile
         self.payload, self.manifest, self.progress = Path(payload), manifest, progress
         self.helper_retry = lambda: False
+        self.tv_info = tv_info if tv_info is not None else {}
 
     def root_action(self, action, bundle=None, migrate=False):
         driver = (bundle or ROOT_STATE) + '/deploy.py'
@@ -64,8 +65,23 @@ class Installer:
                     raise ExistingRoot('Root is already installed or recovery state remains. Connect interactively to review reinstallation; existing state was left unchanged.')
         else:
             arch = self.remote.run('uname -m').strip()
-            if arch not in ('armv7l', 'armv7', 'armv8l'):
-                raise UserError('The bundled Home Helper requires ARM32. This TV architecture is not supported.')
+            self.tv_info.update(kernel_arch=arch if arch in diagnostics.KERNEL_ARCHES else 'unknown',
+                                userland_abi='unknown', arm32_supported=False)
+            # uname describes the kernel, which may be aarch64 while the
+            # running TV shell (and supported native apps) still uses ARM32.
+            words = self.remote.run('LC_ALL=C od -An -v -t u1 -N 20 /bin/sh').split()
+            try:
+                header = bytes(int(word) for word in words) if len(words) == 20 else b''
+            except ValueError:
+                header = b''
+            abi = 'unknown'
+            if len(header) == 20 and header[:4] == b'\x7fELF' and header[5:7] == b'\x01\x01' and header[4] in (1, 2):
+                machine = int.from_bytes(header[18:20], 'little')
+                abi = {(1, 40): 'arm32', (2, 183): 'arm64'}.get((header[4], machine), 'other')
+            supported = abi == 'arm32' and arch in ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64')
+            self.tv_info.update(userland_abi=abi, arm32_supported=supported)
+            if not supported:
+                raise UserError('The bundled Home Helper requires ARM32. A compatible TV runtime could not be confirmed.')
             root_state = self.remote.run(
                 'if [ -e /var/webos-profile/override/clean-your-tv-root.json ] || '
                 '[ -L /var/webos-profile/override/clean-your-tv-root.json ]; then printf CYTV_ROOT_STATE; fi')

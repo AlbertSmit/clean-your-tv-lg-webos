@@ -19,6 +19,8 @@ class Remote:
         if 'CYTV_HELPER_IDLE' in command: return 'CYTV_HELPER_IDLE'
         if command == 'uname -m':
             return 'armv7l'
+        if command == 'LC_ALL=C od -An -v -t u1 -N 20 /bin/sh':
+            return '127 69 76 70 1 1 1 0 0 0 0 0 0 0 0 0 2 0 40 0'
         if 'CYTV_ROOT_STATE' in command:
             return ''
         if 'CYTV_ROOT_READY' in command:
@@ -597,15 +599,41 @@ class OperationTests(unittest.TestCase):
         self.assertEqual(actions, ['uninstall','inspect','archive','install','status','status','enable','status'])
         self.assertIsNone(self.store.pending(installer.profile))
 
-    def test_non_arm_helper_install_is_rejected_before_mutation(self):
+    def test_no_root_accepts_arm32_userspace_on_aarch64_kernel(self):
         remote = Remote()
         original = remote.run
         remote.run = lambda command, **kwargs: 'aarch64' if command == 'uname -m' else original(command, **kwargs)
         installer = self.installer(remote)
-        with self.assertRaisesRegex(RuntimeError, 'ARM32'):
-            installer.install(self.inventory, 'key')
+        installer.preflight(install=True)
+        self.assertEqual(installer.tv_info, {
+            'kernel_arch': 'aarch64', 'userland_abi': 'arm32', 'arm32_supported': True})
         self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
-        self.assertIsNone(self.store.pending(installer.profile))
+
+    def test_no_root_requires_valid_little_endian_arm32_elf_before_mutation(self):
+        valid = [127, 69, 76, 70, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 40, 0]
+        arm64 = valid.copy(); arm64[4] = 2; arm64[18] = 183
+        x86 = valid.copy(); x86[18] = 3
+        big_endian = valid.copy(); big_endian[5] = 2
+        bad_magic = valid.copy(); bad_magic[0] = 0
+        for data, abi in [(arm64, 'arm64'), (x86, 'other'), (big_endian, 'unknown'),
+                          (bad_magic, 'unknown'), (valid[:19], 'unknown'), ([], 'unknown'),
+                          (['PRIVATE-UNEXPECTED-OUTPUT'], 'unknown')]:
+            with self.subTest(data=data):
+                remote = Remote()
+                original = remote.run
+                def run(command, **kwargs):
+                    if command == 'uname -m': return 'aarch64'
+                    if command == 'LC_ALL=C od -An -v -t u1 -N 20 /bin/sh':
+                        return ' '.join(map(str, data))
+                    return original(command, **kwargs)
+                remote.run = run
+                installer = self.installer(remote)
+                with self.assertRaisesRegex(RuntimeError, 'ARM32'):
+                    installer.install(self.inventory, 'key')
+                self.assertEqual(installer.tv_info['userland_abi'], abi)
+                self.assertFalse(installer.tv_info['arm32_supported'])
+                self.assertFalse(any(c[0] in ('upload', 'luna') for c in remote.calls))
+                self.assertIsNone(self.store.pending(installer.profile))
 
     def test_restore_does_not_clear_uncertain_install_receipt(self):
         remote = Remote()

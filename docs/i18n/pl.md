@@ -52,3 +52,5 @@ Dokumentacja techniczna po angielsku: [aplikacja komputerowa](../DESKTOP_INSTALL
 Po połączeniu cytv odczytuje wersje na telewizorze i pokazuje obecną → dołączoną wersję dla Home i Home Helper (No-root) albo Root i Root Updater. Sprawdź i potwierdź przed instalacją. Pierwsza instalacja, ponowna instalacja i instalacja starszej wersji są oznaczone osobno; `--yes` pomija potwierdzenie, ale wyświetla wersje.
 
 Aktualizacje oprogramowania pokazują szczegóły tylko zainstalowanej lub nowszej wersji. Otwórz Odzyskiwanie, aby zobaczyć zapisaną wersję do przywrócenia lub powód niedostępności; Wstecz wraca do aktualizacji.
+
+No-root sprawdza ABI powłoki TV i akceptuje jądro 64-bitowe ze zweryfikowanym środowiskiem ARM32. Jeśli weryfikacja się nie powiedzie, dołącz wygenerowany raport JSON; nie udostępniaj kluczy ani haseł.

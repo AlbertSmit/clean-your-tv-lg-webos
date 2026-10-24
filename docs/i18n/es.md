@@ -52,3 +52,5 @@ Documentación técnica en inglés: [escritorio](../DESKTOP_INSTALL.md), [CLI](.
 Tras conectar, cytv lee las versiones del televisor y muestra la versión actual → incluida para Home y Home Helper (No-root), o Root y Root Updater. Revise y confirme antes de instalar. Se indican las instalaciones nuevas, reinstalaciones y versiones anteriores; `--yes` omite la confirmación, pero muestra las versiones.
 
 Actualizaciones de software muestra detalles solo de la versión instalada o una más reciente. Abre Recuperación para ver la versión guardada para restaurar o por qué no está disponible; Atrás vuelve a las actualizaciones.
+
+No-root comprueba la ABI de la consola del TV y acepta un núcleo de 64 bits con entorno ARM32 verificado. Si falla la comprobación, adjunta el JSON de diagnóstico generado; no compartas claves ni frases de contraseña.

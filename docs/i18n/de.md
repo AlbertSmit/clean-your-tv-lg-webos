@@ -52,3 +52,5 @@ Technische Anleitungen auf Englisch: [Desktop](../DESKTOP_INSTALL.md), [CLI](../
 Nach dem Verbinden liest cytv die installierten TV-Versionen und zeigt aktuelle → mitgelieferte Version für Home und Home Helper (No-root) oder Root und Root Updater. Prüfen und bestätigen Sie die Versionen vor der Installation. Erstinstallation, Neuinstallation und ältere Versionen werden gekennzeichnet; `--yes` überspringt die Bestätigung, zeigt aber weiterhin die Versionen.
 
 Software-Updates zeigt Versionsdetails nur für die installierte oder eine neuere Version. Unter Wiederherstellung siehst du die gespeicherte Version für die Rückkehr oder den Grund, warum sie nicht verfügbar ist; Zurück führt zu den Updates.
+
+No-root prüft die ABI der TV-Shell und akzeptiert einen 64-Bit-Kernel mit bestätigtem ARM32-Benutzerraum. Schlägt die Prüfung fehl, hängen Sie den erzeugten Diagnosebericht an; teilen Sie keine Schlüssel oder Passphrasen.

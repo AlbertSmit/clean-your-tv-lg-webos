@@ -242,7 +242,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 remote = SSH.connect(profile, store.device_dir(profile), secret_with_help, trust,
                                      identity_prompt=None if args.non_interactive else lambda: prompts.root_credentials(ask, write))
             store.save(profile)
-            installer = Installer(remote, store, profile, payload, manifest, write)
+            installer = Installer(remote, store, profile, payload, manifest, write, tv_info=tv_info)
             if args.command == 'install':
                 reinstall = None
                 resume = False

@@ -158,3 +158,32 @@ Before a public release, test on a separate controlled Root installation:
   after package replacement on the actual supported firmware.
 
 Automated tests and deterministic offline builds are not TV acceptance evidence.
+
+## Publish without a stale Root feed
+
+CI builds installer binaries; it does not sign the Root update feed. A release
+is not OTA-ready merely because its installer builds passed.
+
+For a new Root application version, generate `root-update.json` from the exact
+verified release bundle with `root-edition/update_manifest.py` and
+`scripts/sign-root-update.cjs`. Keep the signing key local. Upload the standalone
+IPK before the feed, and include the changed assets in `BUILD-INFO.json` and
+`SHA256SUMS`. A later installer-only release may carry forward the signed feed
+only while its Root version still matches. Recovery infrastructure is not
+updated by an application-only package.
+
+Publish a prepared draft through the checked entry point:
+
+```sh
+node scripts/publish-release.cjs vX.Y.Z --check-only
+node scripts/publish-release.cjs vX.Y.Z
+```
+
+This downloads the draft’s signed feed and build metadata, checks their Root
+versions, downloads the referenced IPK and checks its size and SHA-256. It
+refuses to publish on a stale feed, invalid signature or missing/wrong package.
+The `Release update feed` GitHub workflow repeats this check after publication
+or a release edit; it can also be dispatched manually. Publishing directly with
+`gh release edit` bypasses the pre-publication guard, so use the command above.
+Fully unattended signing would additionally require securely provisioning the
+private signing key to a protected CI environment; it has not been uploaded.

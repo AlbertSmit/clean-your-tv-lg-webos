@@ -31,8 +31,10 @@ it does not establish full installation or rollback acceptance for the new
 - Console executables and complete Root/No-root manual bundles are included.
 
 The installers and manual bundles contain the new Root application and existing
-recovery runtime. Signed automatic-update feeds are preserved unchanged from
-v0.10.4; they do not perform a recovery infrastructure migration.
+recovery runtime. The signed Root update feed offers Root 0.1.6 for compatible installed updater
+infrastructure, with a verified cached rollback package required. The standalone
+IPK matches the manual bundle exactly. This app update does not replace recovery
+infrastructure; No-root automatic-update feeds remain unchanged.
 
 `BUILD-INFO.json` records source and build provenance; `SHA256SUMS` covers the
 release assets. macOS builds are ad-hoc signed, not Apple-notarized.

@@ -446,7 +446,7 @@ def main():
     QFont.insertSubstitutions(app.font().family(), ['Noto Sans', 'Noto Sans Devanagari', 'Noto Sans KR'])
     app.setApplicationName('Clean Your TV')
     app.setOrganizationName('CleanYourTV')
-    app.setWindowIcon(QIcon(str(cli.payload_dir() / 'fallback.png')))
+    app.setWindowIcon(QIcon(str(cli.payload_dir() / 'installer.png')))
     app.setStyle('Fusion')
     window = Wizard()
     window.show()

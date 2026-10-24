@@ -104,6 +104,7 @@ def build_payload():
         if name.startswith('fonts/Noto'):
             (payload / name).write_bytes(data)
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
+    (payload / 'installer.png').write_bytes((ROOT / 'assets/icons/installer.png').read_bytes())
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
@@ -147,7 +148,8 @@ def main():
         return
     environment = dict(os.environ, PYINSTALLER_CONFIG_DIR=str(ROOT / 'build/cytv/pyinstaller-cache'))
     subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onefile', '--console',
-                    '--name', 'cytv', '--paths', str(ROOT), '--add-data', str(payload) + os.pathsep + 'payload',
+                    '--name', 'cytv', *(['--icon', str(ROOT / 'assets/icons/installer.ico')] if os.name == 'nt' else []),
+                    '--paths', str(ROOT), '--add-data', str(payload) + os.pathsep + 'payload',
                     '--workpath', str(ROOT / 'build/cytv/freeze'), '--specpath', str(ROOT / 'build/cytv'),
                     '--distpath', str(ROOT / 'dist'), str(ROOT / 'cytv/__main__.py')], cwd=ROOT, env=environment, check=True)
     executable = ROOT / 'dist' / ('cytv.exe' if os.name == 'nt' else 'cytv')

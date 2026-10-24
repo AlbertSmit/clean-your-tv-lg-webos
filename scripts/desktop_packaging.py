@@ -22,7 +22,7 @@ def deb_tree(root, frozen, version, destination):
     desktop.write_text('[Desktop Entry]\nType=Application\nName=Clean Your TV\nComment=Set up Clean Your TV on your LG webOS TV\nExec=/opt/clean-your-tv/cytv-desktop\nIcon=cytv\nTerminal=false\nCategories=Utility;\nStartupNotify=true\n', encoding='utf-8')
     icon = destination / 'usr/share/icons/hicolor/256x256/apps/cytv.png'
     icon.parent.mkdir(parents=True)
-    shutil.copyfile(root / 'launcher/brand-v2-icon.png', icon)
+    shutil.copyfile(root / 'assets/icons/installer-256.png', icon)
     docs = destination / 'usr/share/doc/cytv-desktop'
     docs.mkdir(parents=True)
     shutil.copyfile(root / 'LICENSE', docs / 'copyright')
@@ -60,7 +60,7 @@ def build_desktop(root, payload, environment, version):
             for scale in (1, 2):
                 target = iconset / (f'icon_{size}x{size}' + ('@2x' if scale == 2 else '') + '.png')
                 subprocess.run(['sips', '-z', str(size * scale), str(size * scale),
-                                str(root / 'launcher/brand-v2-icon.png'), '--out', str(target)],
+                                str(root / 'assets/icons/installer.png'), '--out', str(target)],
                                check=True, stdout=subprocess.DEVNULL)
         icon = iconset.with_suffix('.icns')
         subprocess.run(['iconutil', '-c', 'icns', str(iconset), '-o', str(icon)], check=True)

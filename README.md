@@ -1,7 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
-  <img src="assets/brand/logo-light.svg" alt="Clean Your TV — for LG webOS" width="720">
-</picture>
+![Clean Your TV — for LG webOS](assets/brand/readme-logo.png)
 
 # Clean Your TV — LG webOS
 

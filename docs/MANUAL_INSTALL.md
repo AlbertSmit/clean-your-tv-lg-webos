@@ -362,7 +362,7 @@ If the old No-root Helper is running, press Home three times within two seconds 
 is active or an ambiguous old PID marker exists. Do not manually delete its
 `blocked` or PID files, or run two input handlers together.
 
-For persistent mode, open **Home Root Preview → Home settings** and turn **Change Home** on, or run:
+For persistent mode, open **Home Root → Home settings** and turn **Change Home** on, or run:
 
 ```bash
 python3 build/root-candidate/setup.py enable --ssh my-tv

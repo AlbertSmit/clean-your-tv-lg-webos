@@ -23,6 +23,8 @@ class PreviewTests(unittest.TestCase):
             info = json.loads((app / 'appinfo.json').read_text())
             self.assertEqual(info['id'], 'com.cleanyourtv.root.preview')
             self.assertEqual(info['appCategory'], ['home'])
+            self.assertEqual(info['title'], 'Home Root')
+            self.assertNotEqual((app / info['icon']).read_bytes(), (ROOT / 'launcher/brand-v2-icon.png').read_bytes())
             self.assertFalse(info['needNetworkToLaunchOnBoot'])
             self.assertEqual((app / 'apps.js').read_text(), 'window.TV_APPS = {apps: [], inputs: []};\n')
             html = (app / 'index.html').read_text()

@@ -9,5 +9,8 @@
   "resolution": "1920x1080",
   "requiredACG": [
     "application.launcher"
-  ]
+  ],
+  "largeIcon": "largeIcon.png",
+  "iconColor": "#241d19",
+  "titleVisible": true
 }

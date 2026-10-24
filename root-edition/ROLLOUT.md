@@ -83,7 +83,7 @@ then release all buttons. Helper versions through 0.6.13 instead use holding Hom
 for about two seconds. Root activation refuses to
 run while that helper is present and never clears its safety latch.
 
-Open **Home Root Preview** from LG Apps, then turn **Change Home** on in **Home settings**.
+Open **Home Root** from LG Apps, then turn **Change Home** on in **Home settings**.
 Alternatively:
 
 ```sh

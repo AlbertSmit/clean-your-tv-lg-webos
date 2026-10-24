@@ -30,7 +30,12 @@ def prepare(version='0.0.1'):
     info = json.loads(files['appinfo.json'])
     if (info.get('id'), info.get('type'), info.get('main')) != ('com.gathin.tvhome', 'web', 'index.html'):
         raise ValueError('Unexpected launcher manifest')
-    info.update(id=APP_ID, title='Home Root Preview', version=version, appCategory=['home'])
+    info.update(id=APP_ID, title='Home Root', version=version, appCategory=['home'])
+    for name in ('brand-v2-icon.png', 'brand-v2-largeIcon.png'):
+        path = UI.parent / 'assets' / ('home.png' if name == 'brand-v2-icon.png' else 'home-large.png')
+        if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(UI.parent.resolve()):
+            raise ValueError('Missing or indirect Root icon: ' + name)
+        files[name] = path.read_bytes()
     for field in ('icon', 'largeIcon', 'splashBackground'):
         if info.get(field) not in files:
             raise ValueError('Unpackaged manifest resource: ' + field)

@@ -32,9 +32,10 @@ def build(output):
     code['setup-updater.py']=source(ROOT/'setup_updater.py')
     files={}
     prefix='usr/palm/applications/'+APP+'/'
-    app={'id':APP,'version':'0.1.0','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'icon.png','largeIcon':'icon.png','noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
+    app={'id':APP,'version':'0.1.0','vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'icon.png','largeIcon':'largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
     files[prefix+'appinfo.json']=(json.dumps(app)+'\n').encode()
-    files[prefix+'icon.png']=source(ROOT.parent/'launcher/brand-v2-icon.png')
+    files[prefix+'icon.png']=source(ROOT/'assets/updater.png')
+    files[prefix+'largeIcon.png']=source(ROOT/'assets/updater-large.png')
     files[prefix+'root-settings.css']=source(ROOT/'ui/root-settings.css')
     files[prefix+'i18n.js']=source(ROOT.parent/'launcher/i18n.js')
     for name in ('catalogs.js', 'i18n.css', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt'):

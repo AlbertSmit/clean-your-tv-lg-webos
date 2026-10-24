@@ -29,3 +29,5 @@ class DesktopPackageTests(unittest.TestCase):
             self.assertIn('Architecture: amd64', control)
             self.assertIn('libxcb-cursor0', control)
             self.assertFalse((tree / 'DEBIAN/postinst').exists())
+            self.assertEqual((tree / 'usr/share/icons/hicolor/256x256/apps/cytv.png').read_bytes(),
+                             (root / 'assets/icons/installer-256.png').read_bytes())

@@ -110,7 +110,10 @@ installer. No-root TVs still cannot install packages through this service.
 Startup health reads the version from the installed `appinfo.json`; it never
 substitutes a source literal if the manifest cannot be read or validated.
 
-Publish drafts with `node scripts/publish-release.cjs vX.Y.Z`. This queues the
+Normal releases start automatically after a new `release` version in
+`release-versions.json` is merged into `main`: CI builds and tests the exact
+commit, prepares the draft and invokes signing/publication. For prepared-draft
+repairs, `node scripts/publish-release.cjs vX.Y.Z` still queues the
 protected GitHub signing workflow: both feeds and rollback assets are generated
 from the exact release bundles, signed, uploaded and checked before publication.
 `--check-only` validates existing feeds without signing or publishing. See

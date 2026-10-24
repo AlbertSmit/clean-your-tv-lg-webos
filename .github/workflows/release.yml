@@ -1,0 +1,113 @@
+name: Automatic release
+on:
+  workflow_run:
+    workflows: [cytv standalone builds]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: Successful main cytv build run for this exact commit
+        required: true
+        type: string
+      validate_only:
+        description: Assemble and verify all packages without creating/publishing a release
+        type: boolean
+        default: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: automatic-release
+  cancel-in-progress: false
+jobs:
+  plan:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.plan.outputs.release }}
+      tag: ${{ steps.plan.outputs.tag }}
+      commit: ${{ steps.plan.outputs.commit }}
+      build_run: ${{ steps.plan.outputs.build_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: plan
+        name: Plan a new version or skip an already published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN: ${{ inputs.build_run || github.event.workflow_run.id }}
+          VALIDATE_ONLY: ${{ inputs.validate_only || false }}
+        run: |
+          if [ "$VALIDATE_ONLY" = true ]; then
+            python scripts/assemble-release.py --plan --build-run "$BUILD_RUN" --validate-only
+          else
+            python scripts/assemble-release.py --plan --build-run "$BUILD_RUN"
+          fi
+  tests:
+    needs: plan
+    if: needs.plan.outputs.release == 'true'
+    uses: ./.github/workflows/tests.yml
+    with:
+      source_sha: ${{ needs.plan.outputs.commit }}
+  assemble:
+    needs: [plan, tests]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.commit }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyinstaller==6.22.3
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.plan.outputs.build_run }}
+          github-token: ${{ github.token }}
+          pattern: cytv-*
+          path: ${{ runner.temp }}/release-builds
+      - name: Verify seven installers and assemble final public bundles
+        env:
+          SOURCE_BUILD_RUN: ${{ needs.plan.outputs.build_run }}
+        run: python scripts/assemble-release.py --artifacts "$RUNNER_TEMP/release-builds" --output "$RUNNER_TEMP/release-assets"
+      - name: Create or resume the draft from the exact build commit
+        if: inputs.validate_only != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+          SOURCE_COMMIT: ${{ needs.plan.outputs.commit }}
+          BUILD_RUN: ${{ needs.plan.outputs.build_run }}
+        run: |
+          python scripts/assemble-release.py --plan --build-run "$BUILD_RUN" --require-unpublished
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --draft --target "$SOURCE_COMMIT" --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-assets/RELEASE-NOTES.md"
+          fi
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/release-assets/"* --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: assembled-release
+          path: ${{ runner.temp }}/release-assets/
+          if-no-files-found: error
+  publish:
+    needs: [plan, assemble]
+    if: needs.plan.outputs.release == 'true' && inputs.validate_only != true
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish-release.yml
+    with:
+      tag: ${{ needs.plan.outputs.tag }}
+      publish: true
+    secrets: inherit

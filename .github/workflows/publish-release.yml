@@ -1,5 +1,13 @@
 name: Sign and publish release
 on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      publish:
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       tag:

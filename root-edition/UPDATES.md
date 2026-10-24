@@ -162,8 +162,10 @@ Automated tests and deterministic offline builds are not TV acceptance evidence.
 
 ## Publish without a stale Root feed
 
-Installer CI and OTA signing are separate stages of the same release process.
-Once the final bundles and `BUILD-INFO.json` are in a draft, run:
+Installer CI, packaging and OTA signing are automatic stages of the same
+release process. Merging a new `release` version in `release-versions.json`
+with matching component manifests and release notes starts the full pipeline.
+For an explicit repair of an already prepared draft, the fallback command is:
 
 ```sh
 node scripts/publish-release.cjs vX.Y.Z

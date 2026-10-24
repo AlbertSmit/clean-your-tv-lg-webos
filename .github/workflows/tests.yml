@@ -1,5 +1,12 @@
 name: Tests
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_call:
+    inputs:
+      source_sha:
+        required: true
+        type: string
 permissions:
   contents: read
 jobs:
@@ -10,6 +17,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22

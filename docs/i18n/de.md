@@ -56,3 +56,9 @@ Software-Updates zeigt Versionsdetails nur für die installierte oder eine neuer
 No-root prüft die ABI der TV-Shell und akzeptiert einen 64-Bit-Kernel mit bestätigtem ARM32-Benutzerraum. Schlägt die Prüfung fehl, hängen Sie den erzeugten Diagnosebericht an; teilen Sie keine Schlüssel oder Passphrasen.
 
 Home-Updates erfordern eine Bestätigung vor der Installation; danach wird der Start automatisch geprüft. Die Statusabfrage im Hintergrund behält die mit der Fernbedienung gewählte Taste bei.
+
+In Root und No-root wird die Startbereitschaft nach der Installation automatisch bestätigt; eine manuelle Bestätigung ist nicht nötig. Die Wiederherstellung bleibt danach ohne Zeitlimit bis zum nächsten Update verfügbar. Sie stellt die vorherige Home-Version und die vor dem Update gespeicherten Einstellungen wieder her; spätere Einstellungsänderungen können verloren gehen. Vor dem Start erscheint eine Warnung. Updates und Wiederherstellung von No-root direkt am Fernseher erfordern weiterhin Root und Homebrew Channel; andernfalls den Computer-Installer verwenden.
+
+Der Update-Bildschirm trennt Versionen, Status und lesbare Neuerungen. Oben/Unten blättert durch die Änderungen, Links/Rechts wählt die festen Aktionen darunter. Nach automatischen Startprüfungen stellt Root die zuvor aktivierte Home-Steuerung wieder her; No-root erhält den Zustand des separaten Helpers. Deaktivierte Einstellungen sowie ausdrückliches oder Notfall-Ausschalten bleiben erhalten.
+
+Beim Öffnen der Home-Einstellungen wird im Hintergrund nach Updates gesucht. Ein blauer Punkt bei Softwareupdates zeigt eine neuere Version an, auch wenn sie die Einrichtung am Computer erfordert. Die Einstellungen bleiben während der Prüfung bedienbar.

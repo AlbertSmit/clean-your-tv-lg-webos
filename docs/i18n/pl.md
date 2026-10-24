@@ -56,3 +56,9 @@ Aktualizacje oprogramowania pokazują szczegóły tylko zainstalowanej lub nowsz
 No-root sprawdza ABI powłoki TV i akceptuje jądro 64-bitowe ze zweryfikowanym środowiskiem ARM32. Jeśli weryfikacja się nie powiedzie, dołącz wygenerowany raport JSON; nie udostępniaj kluczy ani haseł.
 
 Aktualizacje Home wymagają potwierdzenia przed instalacją; później uruchomienie jest sprawdzane automatycznie. Odświeżanie stanu zachowuje przycisk wybrany pilotem.
+
+W Root i No-root gotowość po instalacji jest potwierdzana automatycznie; nie musisz potwierdzać, że wszystko działa. Przywracanie pozostaje dostępne po potwierdzeniu, bez limitu czasu, aż do następnej aktualizacji. Przywraca poprzednią wersję Home i ustawienia zapisane przed aktualizacją; późniejsze zmiany ustawień mogą zostać utracone. Przed rozpoczęciem pojawia się ostrzeżenie. Aktualizacja i przywracanie No-root z telewizora nadal wymagają roota i Homebrew Channel; w przeciwnym razie użyj instalatora na komputerze.
+
+Ekran aktualizacji rozdziela wersje, stan i czytelne informacje o zmianach. Góra/Dół przewija informacje; Lewo/Prawo wybiera stałe działania poniżej. Po automatycznych testach uruchomienia Root przywraca wcześniej włączone sterowanie Home; No-root zachowuje stan oddzielnego Helpera. Wyłączone ustawienie oraz jawne lub awaryjne wyłączenie pozostają wyłączone.
+
+Otwarcie ustawień Home uruchamia sprawdzanie aktualizacji w tle. Niebieska kropka przy Aktualizacje oprogramowania oznacza nowszą wersję, również gdy wymaga instalacji z komputera. Ustawienia pozostają dostępne podczas sprawdzania.

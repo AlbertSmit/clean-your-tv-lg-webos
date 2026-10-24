@@ -108,7 +108,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home will close during installation. Your apps and settings will be saved.",
     "The previous Home version and saved settings will be restored.": "The previous Home version and saved settings will be restored.",
     "Install update": "Install update",
-    "Restore previous Home": "Restore previous Home"
+    "Restore previous Home": "Restore previous Home",
+    "Release notes": "Release notes",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Read notes · ← → Choose action · Back Close",
+    "← → Choose action · Back Open Home": "← → Choose action · Back Open Home",
+    "Home control could not be restored automatically. Open Home settings.": "Home control could not be restored automatically. Open Home settings.",
+    "Your previous Home screen choice has been restored.": "Your previous Home screen choice has been restored.",
+    "Home control remains off because it was disabled during the update.": "Home control remains off because it was disabled during the update.",
+    "Rollback remains available until the next update.": "Rollback remains available until the next update.",
+    "Previous Root version and profile restored.": "Previous Root version and profile restored.",
+    "Installed: {version}": "Installed: {version}",
+    "Available: {version}": "Available: {version}",
+    "Software updates. Update available.": "Software updates. Update available."
   },
   "de": {
     "A signed Home update is available.": "Ein signiertes Home-Update ist verfügbar.",
@@ -219,7 +230,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home wird während der Installation geschlossen. Ihre Apps und Einstellungen werden gespeichert.",
     "The previous Home version and saved settings will be restored.": "Die vorherige Home-Version und die gespeicherten Einstellungen werden wiederhergestellt.",
     "Install update": "Update installieren",
-    "Restore previous Home": "Vorheriges Home wiederherstellen"
+    "Restore previous Home": "Vorheriges Home wiederherstellen",
+    "Release notes": "Neuerungen",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Änderungen lesen · ← → Aktion wählen · Zurück Schließen",
+    "← → Choose action · Back Open Home": "← → Aktion wählen · Zurück Home öffnen",
+    "Home control could not be restored automatically. Open Home settings.": "Die Home-Steuerung konnte nicht automatisch wiederhergestellt werden. Öffne die Home-Einstellungen.",
+    "Your previous Home screen choice has been restored.": "Deine vorherige Startbildschirmauswahl wurde wiederhergestellt.",
+    "Home control remains off because it was disabled during the update.": "Die Home-Steuerung bleibt aus, weil sie während des Updates deaktiviert wurde.",
+    "Rollback remains available until the next update.": "Die Rückkehr bleibt bis zum nächsten Update verfügbar.",
+    "Previous Root version and profile restored.": "Vorherige Root-Version und Profil wiederhergestellt.",
+    "Installed: {version}": "Installiert: {version}",
+    "Available: {version}": "Verfügbar: {version}",
+    "Software updates. Update available.": "Softwareupdates. Ein Update ist verfügbar."
   },
   "es": {
     "A signed Home update is available.": "Hay una actualización firmada de Home disponible.",
@@ -330,7 +352,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home se cerrará durante la instalación. Tus aplicaciones y ajustes se guardarán.",
     "The previous Home version and saved settings will be restored.": "Se restaurarán la versión anterior de Home y los ajustes guardados.",
     "Install update": "Instalar actualización",
-    "Restore previous Home": "Restaurar Home anterior"
+    "Restore previous Home": "Restaurar Home anterior",
+    "Release notes": "Novedades",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Leer cambios · ← → Elegir acción · Atrás Cerrar",
+    "← → Choose action · Back Open Home": "← → Elegir acción · Atrás Abrir Home",
+    "Home control could not be restored automatically. Open Home settings.": "No se pudo restaurar el control de Home automáticamente. Abre los ajustes de Home.",
+    "Your previous Home screen choice has been restored.": "Se ha restaurado tu selección anterior de pantalla de inicio.",
+    "Home control remains off because it was disabled during the update.": "El control de Home sigue desactivado porque se desactivó durante la actualización.",
+    "Rollback remains available until the next update.": "La restauración sigue disponible hasta la próxima actualización.",
+    "Previous Root version and profile restored.": "Se restauraron la versión anterior de Root y el perfil.",
+    "Installed: {version}": "Instalada: {version}",
+    "Available: {version}": "Disponible: {version}",
+    "Software updates. Update available.": "Actualizaciones de software. Hay una actualización disponible."
   },
   "pt-BR": {
     "A signed Home update is available.": "Uma atualização assinada do Home está disponível.",
@@ -441,7 +474,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "O Home será fechado durante a instalação. Seus aplicativos e configurações serão salvos.",
     "The previous Home version and saved settings will be restored.": "A versão anterior do Home e as configurações salvas serão restauradas.",
     "Install update": "Instalar atualização",
-    "Restore previous Home": "Restaurar Home anterior"
+    "Restore previous Home": "Restaurar Home anterior",
+    "Release notes": "Novidades",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Ler alterações · ← → Escolher ação · Voltar Fechar",
+    "← → Choose action · Back Open Home": "← → Escolher ação · Voltar Abrir Home",
+    "Home control could not be restored automatically. Open Home settings.": "Não foi possível restaurar o controle do Home automaticamente. Abra as configurações do Home.",
+    "Your previous Home screen choice has been restored.": "Sua escolha anterior de tela inicial foi restaurada.",
+    "Home control remains off because it was disabled during the update.": "O controle do Home continua desligado porque foi desativado durante a atualização.",
+    "Rollback remains available until the next update.": "A reversão continua disponível até a próxima atualização.",
+    "Previous Root version and profile restored.": "Versão anterior do Root e perfil restaurados.",
+    "Installed: {version}": "Instalada: {version}",
+    "Available: {version}": "Disponível: {version}",
+    "Software updates. Update available.": "Atualizações de software. Há uma atualização disponível."
   },
   "fr": {
     "A signed Home update is available.": "Une mise à jour signée de Home est disponible.",
@@ -552,7 +596,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home se fermera pendant l’installation. Vos applications et paramètres seront enregistrés.",
     "The previous Home version and saved settings will be restored.": "La version précédente de Home et les paramètres enregistrés seront restaurés.",
     "Install update": "Installer la mise à jour",
-    "Restore previous Home": "Restaurer Home précédent"
+    "Restore previous Home": "Restaurer Home précédent",
+    "Release notes": "Nouveautés",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Lire les changements · ← → Choisir · Retour Fermer",
+    "← → Choose action · Back Open Home": "← → Choisir · Retour Ouvrir Home",
+    "Home control could not be restored automatically. Open Home settings.": "Le contrôle de Home n’a pas pu être rétabli automatiquement. Ouvrez les réglages de Home.",
+    "Your previous Home screen choice has been restored.": "Votre choix précédent d’écran d’accueil a été rétabli.",
+    "Home control remains off because it was disabled during the update.": "Le contrôle de Home reste désactivé car il a été désactivé pendant la mise à jour.",
+    "Rollback remains available until the next update.": "Le retour en arrière reste disponible jusqu’à la prochaine mise à jour.",
+    "Previous Root version and profile restored.": "La version précédente de Root et le profil ont été restaurés.",
+    "Installed: {version}": "Version installée : {version}",
+    "Available: {version}": "Version disponible : {version}",
+    "Software updates. Update available.": "Mises à jour logicielles. Une mise à jour est disponible."
   },
   "it": {
     "A signed Home update is available.": "È disponibile un aggiornamento firmato di Home.",
@@ -663,7 +718,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home si chiuderà durante l’installazione. Le app e le impostazioni verranno salvate.",
     "The previous Home version and saved settings will be restored.": "Verranno ripristinati la versione precedente di Home e le impostazioni salvate.",
     "Install update": "Installa aggiornamento",
-    "Restore previous Home": "Ripristina Home precedente"
+    "Restore previous Home": "Ripristina Home precedente",
+    "Release notes": "Novità",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Leggi modifiche · ← → Scegli azione · Indietro Chiudi",
+    "← → Choose action · Back Open Home": "← → Scegli azione · Indietro Apri Home",
+    "Home control could not be restored automatically. Open Home settings.": "Impossibile ripristinare automaticamente il controllo Home. Apri le impostazioni Home.",
+    "Your previous Home screen choice has been restored.": "La scelta precedente della schermata Home è stata ripristinata.",
+    "Home control remains off because it was disabled during the update.": "Il controllo Home resta disattivato perché è stato disattivato durante l’aggiornamento.",
+    "Rollback remains available until the next update.": "Il ripristino rimane disponibile fino al prossimo aggiornamento.",
+    "Previous Root version and profile restored.": "Versione precedente di Root e profilo ripristinati.",
+    "Installed: {version}": "Installata: {version}",
+    "Available: {version}": "Disponibile: {version}",
+    "Software updates. Update available.": "Aggiornamenti software. È disponibile un aggiornamento."
   },
   "ko": {
     "A signed Home update is available.": "서명된 Home 업데이트가 있습니다.",
@@ -774,7 +840,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "설치 중 Home이 닫힙니다. 앱과 설정은 저장됩니다.",
     "The previous Home version and saved settings will be restored.": "이전 Home 버전과 저장된 설정이 복원됩니다.",
     "Install update": "업데이트 설치",
-    "Restore previous Home": "이전 Home 복원"
+    "Restore previous Home": "이전 Home 복원",
+    "Release notes": "새로운 기능",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ 변경 사항 읽기 · ← → 동작 선택 · 뒤로 닫기",
+    "← → Choose action · Back Open Home": "← → 동작 선택 · 뒤로 Home 열기",
+    "Home control could not be restored automatically. Open Home settings.": "Home 제어를 자동으로 복원하지 못했습니다. Home 설정을 여세요.",
+    "Your previous Home screen choice has been restored.": "이전에 선택한 홈 화면이 복원되었습니다.",
+    "Home control remains off because it was disabled during the update.": "업데이트 중 Home 제어를 껐으므로 꺼진 상태로 유지됩니다.",
+    "Rollback remains available until the next update.": "다음 업데이트 전까지 이전 버전으로 복원할 수 있습니다.",
+    "Previous Root version and profile restored.": "이전 Root 버전과 프로필이 복원되었습니다.",
+    "Installed: {version}": "설치됨: {version}",
+    "Available: {version}": "사용 가능: {version}",
+    "Software updates. Update available.": "소프트웨어 업데이트. 업데이트가 있습니다."
   },
   "hi": {
     "A signed Home update is available.": "Home का हस्ताक्षरित अपडेट उपलब्ध है।",
@@ -885,7 +962,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "इंस्टॉलेशन के दौरान Home बंद हो जाएगा। आपके ऐप्स और सेटिंग्स सहेजे जाएंगे।",
     "The previous Home version and saved settings will be restored.": "Home का पिछला संस्करण और सहेजी गई सेटिंग्स बहाल की जाएंगी।",
     "Install update": "अपडेट स्थापित करें",
-    "Restore previous Home": "पिछला Home बहाल करें"
+    "Restore previous Home": "पिछला Home बहाल करें",
+    "Release notes": "नया क्या है",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ बदलाव पढ़ें · ← → कार्रवाई चुनें · वापस बंद करें",
+    "← → Choose action · Back Open Home": "← → कार्रवाई चुनें · वापस Home खोलें",
+    "Home control could not be restored automatically. Open Home settings.": "Home नियंत्रण अपने आप बहाल नहीं हो सका। Home सेटिंग खोलें।",
+    "Your previous Home screen choice has been restored.": "आपका पिछला होम स्क्रीन चयन बहाल कर दिया गया है।",
+    "Home control remains off because it was disabled during the update.": "अपडेट के दौरान बंद किए जाने के कारण Home नियंत्रण बंद रहता है।",
+    "Rollback remains available until the next update.": "अगले अपडेट तक पिछले संस्करण पर वापस जा सकते हैं।",
+    "Previous Root version and profile restored.": "Root का पिछला संस्करण और प्रोफ़ाइल बहाल हो गए हैं।",
+    "Installed: {version}": "स्थापित: {version}",
+    "Available: {version}": "उपलब्ध: {version}",
+    "Software updates. Update available.": "सॉफ़्टवेयर अपडेट। अपडेट उपलब्ध है।"
   },
   "pl": {
     "A signed Home update is available.": "Dostępna jest podpisana aktualizacja Home.",
@@ -996,7 +1084,18 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home zamknie się na czas instalacji. Aplikacje i ustawienia zostaną zapisane.",
     "The previous Home version and saved settings will be restored.": "Poprzednia wersja Home i zapisane ustawienia zostaną przywrócone.",
     "Install update": "Zainstaluj aktualizację",
-    "Restore previous Home": "Przywróć poprzedni Home"
+    "Restore previous Home": "Przywróć poprzedni Home",
+    "Release notes": "Co nowego",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Czytaj zmiany · ← → Wybierz działanie · Wstecz Zamknij",
+    "← → Choose action · Back Open Home": "← → Wybierz działanie · Wstecz Otwórz Home",
+    "Home control could not be restored automatically. Open Home settings.": "Nie udało się automatycznie przywrócić sterowania Home. Otwórz ustawienia Home.",
+    "Your previous Home screen choice has been restored.": "Przywrócono poprzedni wybór ekranu głównego.",
+    "Home control remains off because it was disabled during the update.": "Sterowanie Home pozostaje wyłączone, ponieważ zostało wyłączone podczas aktualizacji.",
+    "Rollback remains available until the next update.": "Przywracanie pozostaje dostępne do następnej aktualizacji.",
+    "Previous Root version and profile restored.": "Przywrócono poprzednią wersję Root i profil.",
+    "Installed: {version}": "Zainstalowano: {version}",
+    "Available: {version}": "Dostępna: {version}",
+    "Software updates. Update available.": "Aktualizacje oprogramowania. Dostępna jest aktualizacja."
   },
   "ru": {
     "A signed Home update is available.": "Доступно подписанное обновление Home.",
@@ -1107,6 +1206,17 @@ HomeI18n.add({
     "Home will close during installation. Your apps and settings will be saved.": "Home закроется на время установки. Приложения и настройки сохранятся.",
     "The previous Home version and saved settings will be restored.": "Будут восстановлены предыдущая версия Home и сохранённые настройки.",
     "Install update": "Установить обновление",
-    "Restore previous Home": "Восстановить предыдущую версию"
+    "Restore previous Home": "Восстановить предыдущую версию",
+    "Release notes": "Что нового",
+    "↑ ↓ Read notes · ← → Choose action · Back Close": "↑ ↓ Читать изменения · ← → Выбрать действие · Назад Закрыть",
+    "← → Choose action · Back Open Home": "← → Выбрать действие · Назад Открыть Home",
+    "Home control could not be restored automatically. Open Home settings.": "Не удалось автоматически восстановить управление Home. Откройте настройки Home.",
+    "Your previous Home screen choice has been restored.": "Прежний выбор домашнего экрана восстановлен.",
+    "Home control remains off because it was disabled during the update.": "Управление Home осталось выключенным: его отключили во время обновления.",
+    "Rollback remains available until the next update.": "Откат доступен до следующего обновления.",
+    "Previous Root version and profile restored.": "Предыдущая версия Root и профиль восстановлены.",
+    "Installed: {version}": "Установлено: {version}",
+    "Available: {version}": "Доступно: {version}",
+    "Software updates. Update available.": "Обновление ПО. Доступна новая версия."
   }
 });

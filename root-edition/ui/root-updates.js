@@ -2,9 +2,9 @@
 (function () {
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
-  var panel, title, message, details, buttons, previous, selected = 0, timer, onClose;
+  var panel, title, message, details, reading, notes, notesHeading, buttons, previous, selected = 0, timer, onClose;
   var busy = false, polling = false, recovery = false, offer = null, transaction = null, errorText = '';
-  var recoveryParent = false;
+  var recoveryParent = false, settleUntil = 0;
   var terminal = ['complete', 'rolled-back', 'aborted'];
   function unprovisioned() {
     var error = Error('Updater unavailable. Run the one-time computer setup for Software updates.');
@@ -52,7 +52,7 @@
     close();
   }
   function rollbackAllowed() {
-    return !!(transaction && transaction.phase === 'recovery-required' && transaction.installEvidence && transaction.installEvidence.terminal && !transaction.rollbackAttempted);
+    return !!(transaction && ['complete', 'recovery-required'].indexOf(transaction.phase) >= 0 && transaction.installEvidence && transaction.installEvidence.terminal && !transaction.rollbackAttempted);
   }
   function currentOrNewer(candidate, installed) {
     var a = String(candidate).split('.'), b = String(installed).split('.');
@@ -81,24 +81,31 @@
       complete:'Update complete. Your apps and settings are preserved.',
       'rolling-back':'Restoring the previous Root package and saved profile…',
       'verifying-rollback':'Checking the restored Root launcher and saved profile…',
-      'rolled-back':'Previous Root version and profile restored. LG Home remains selected.',
+      'rolled-back':'Previous Root version and profile restored.',
       'recovery-required':'Recovery required. LG Home remains selected. Recover status first; rollback stays blocked until the installer has definitely stopped.',
       aborted:'Update stopped before replacement. Check status before trying again.'
     };
     message.textContent = t(errorText || descriptions[phase] || (recovery ? 'Inspect the independent updater and recover a previous transaction.' : busy ? 'Checking for updates…' : offer && offer.canInstall ? 'A new version of Home is available.' : 'Your apps and settings stay saved.'));
     if (transaction && transaction.error) message.textContent += ' ' + transaction.error;
+    if (transaction && transaction.homeResume && transaction.homeResume.status === 'failed') message.textContent += ' ' + t('Home control could not be restored automatically. Open Home settings.');
+    if (transaction && transaction.homeResume && transaction.homeResume.status === 'restored') message.textContent += ' ' + t('Your previous Home screen choice has been restored.');
+    if (transaction && transaction.homeResume && transaction.homeResume.status === 'cancelled') message.textContent += ' ' + t('Home control remains off because it was disabled during the update.');
     var installed = offer && offer.installed;
     details.textContent = t('Installed: {version}', {version:installed && installed.version || installed || window.ROOT_VERSION || t('unknown')});
-    if (!recovery && offer && offer.candidate && currentOrNewer(offer.candidate.version, installed && installed.version || installed || window.ROOT_VERSION)) details.textContent += '\n' + t('Available: {version}', {version:offer.candidate.version}) + '\n' + (offer.candidate.notes || '');
+    var candidate = !recovery && offer && offer.candidate && currentOrNewer(offer.candidate.version, installed && installed.version || installed || window.ROOT_VERSION) ? offer.candidate : null;
+    if (candidate) details.textContent += '  →  ' + t('Available: {version}', {version:candidate.version});
+    window.HomeReleaseNotes.render(notes, candidate && candidate.notes || '');
+    notesHeading.hidden = !candidate || !candidate.notes;
+    notes.hidden = recovery || !candidate || !candidate.notes;
     if (!recovery && offer && !offer.canInstall && offer.reason) {
       var reasons = {current:'This Root version is up to date.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
-      details.textContent += '\n' + t(reasons[offer.reason] || 'This release cannot be installed with the current setup.');
+      message.textContent += '\n' + t(reasons[offer.reason] || 'This release cannot be installed with the current setup.');
     }
     if (recovery) {
       details.textContent = '';
       if (transaction && transaction.prior) details.textContent = t('Rollback version: {version}', {version:transaction.prior.version});
       if (!transaction || phase === 'aborted') details.textContent += '\n' + t('No saved update is available to roll back.');
-      else if (phase === 'complete') details.textContent += '\n' + t('This update is already confirmed. Rollback is no longer available.');
+      else if (phase === 'complete') details.textContent += '\n' + t('Rollback remains available until the next update.');
       else if (phase === 'rolled-back') details.textContent += '\n' + t('The previous version has already been restored.');
       else if (!rollbackAllowed()) details.textContent += '\n' + t('Rollback is blocked until the installer has definitely stopped. Refresh status to check.');
       else details.textContent += '\n' + t('The previous Home version and saved settings will be restored.');
@@ -110,7 +117,7 @@
     show(3, true, busy);
     show(4, recovery && rollbackAllowed(), busy);
     show(5, false);
-    show(6, !recovery && !!(transaction && (phase === 'complete' || phase === 'rolled-back') && transaction.oldRoute && transaction.oldRoute.active), busy);
+    show(6, !!(transaction && transaction.homeResume && ['failed', 'skipped'].indexOf(transaction.homeResume.status) >= 0), busy);
     show(7, true, false);
     if (!panel.hidden) {
       var current = enabled().indexOf(document.activeElement);
@@ -120,13 +127,16 @@
   }
   function schedule() {
     clearTimeout(timer);
-    if (!panel.hidden && active()) timer = setTimeout(function () { refresh(false, true); }, 1500);
+    if (!panel.hidden && (active() || settleUntil > Date.now())) timer = setTimeout(function () { refresh(false, true); }, 1500);
   }
   function refresh(check, background) {
     if (busy || polling) return Promise.resolve();
     if (background) polling = true; else { busy = true; render(); }
     return rpc('status', {}).then(function (state) {
+      var wasActive = active();
       transaction = state;
+      if (wasActive && transaction && ['complete', 'rolled-back'].indexOf(transaction.phase) >= 0 && transaction.homeResumePhase !== transaction.phase) settleUntil = Date.now() + 15000;
+      if (transaction && transaction.homeResumePhase === transaction.phase) settleUntil = 0;
       if (check && !recovery) return rpc('check', {}).then(function (value) { offer = value; });
     }).then(function () { if (check || transaction && terminal.indexOf(transaction.phase) >= 0) errorText = ''; }).catch(function (error) { errorText = error.message; }).then(function () { if (background) polling = false; else busy = false; render(background); schedule(); });
   }
@@ -151,26 +161,36 @@
       if (!recovery) { recovery = true; recoveryParent = true; selected = 0; errorText = ''; render(); return refresh(false); }
       return operation('reconcile', {});
     }
-    if (index === 4) return window.HomeI18n.confirm({title:'Restore previous Home?',message:t('Restore Home {version} and the saved settings? Keep the TV powered on.', {version:transaction.prior && transaction.prior.version || t('unknown')}),action:'Restore previous Home'}, function () { if (!buttons[4].hidden && !buttons[4].disabled) operation('rollback', {}); });
+    if (index === 4) return window.HomeI18n.confirm({title:'Restore previous Home?',message:t('Restore Home {version} and pre-update settings? Settings changed after the update will be lost. Keep the TV powered on.', {version:transaction.prior && transaction.prior.version || t('unknown')}),action:'Restore previous Home'}, function () { if (!buttons[4].hidden && !buttons[4].disabled) operation('rollback', {}); });
     if (index === 6) { close(); if (window.RenewalPanel) window.RenewalPanel.open(); }
   }
   function build() {
     panel = document.createElement('section'); panel.className = 'root-settings root-updates'; panel.hidden = true;
     panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', t('Root Software updates'));
     var card = document.createElement('div'); card.className = 'root-settings-card'; panel.appendChild(card);
-    title = document.createElement('h1'); title.textContent = t('Software updates'); card.appendChild(title);
-    message = document.createElement('p'); message.className = 'root-update-status'; message.setAttribute('aria-live', 'polite'); card.appendChild(message);
+    var heading = document.createElement('div'); heading.className = 'settings-heading'; card.appendChild(heading);
+    title = document.createElement('h1'); title.textContent = t('Software updates'); heading.appendChild(title);
+    var edition = document.createElement('span'); edition.className = 'settings-edition'; edition.textContent = 'Root'; heading.appendChild(edition);
+    message = document.createElement('p'); message.className = 'root-update-status'; message.setAttribute('aria-live', 'polite');
     details = document.createElement('p'); details.className = 'root-update-details'; card.appendChild(details);
-    buttons = ['Try again', 'Update', 'Install update', 'Recovery', 'Roll back', 'Confirm working update', 'Root mode settings', 'Back'].map(function (label, index) {
-      var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; button.onfocus = function () { selected = enabled().indexOf(button); }; card.appendChild(button); return button;
+    card.appendChild(message);
+    notesHeading = document.createElement('h2'); notesHeading.className = 'update-notes-heading'; notesHeading.textContent = t('Release notes'); card.appendChild(notesHeading);
+    notes = document.createElement('div'); notes.className = 'release-notes-content'; card.appendChild(notes);
+    reading = document.createElement('div'); reading.className = 'update-notes'; reading.setAttribute('role', 'region'); reading.setAttribute('aria-label', t('Software updates'));
+    [details, message, notesHeading, notes].forEach(function (element) { card.removeChild(element); reading.appendChild(element); }); card.appendChild(reading);
+    var actions = document.createElement('div'); actions.className = 'renewal-actions update-actions'; card.appendChild(actions);
+    buttons = ['Try again', 'Update', 'Install update', 'Recovery', 'Roll back', '', 'Root mode settings', 'Back'].map(function (label, index) {
+      var button = document.createElement('button'); button.textContent = t(label); button.onclick = function () { activate(index); }; button.onfocus = function () { selected = enabled().indexOf(button); }; actions.appendChild(button); return button;
     });
+    var hint = document.createElement('p'); hint.className = 'update-hint'; hint.textContent = t('↑ ↓ Read notes · ← → Choose action · Back Close'); card.appendChild(hint);
     document.body.appendChild(panel);
     document.addEventListener('keydown', function (event) {
       if (panel.hidden || [9,13,27,37,38,39,40,461].indexOf(event.keyCode) < 0) return;
       event.preventDefault(); event.stopImmediatePropagation();
       if (event.keyCode === 27 || event.keyCode === 461) return back();
+      if (event.keyCode === 38 || event.keyCode === 40) { window.HomeReleaseNotes.scroll(reading, event.keyCode === 38 ? -1 : 1); return; }
       var list = enabled(); if (!list.length) return;
-      if (event.keyCode === 13) return list[selected % list.length].onclick();
+      if (event.keyCode === 13) { if (!event.repeat) list[selected % list.length].onclick(); return; }
       focus(selected + (event.keyCode === 37 || event.keyCode === 38 || (event.keyCode === 9 && event.shiftKey) ? -1 : 1));
     }, true);
   }
@@ -178,7 +198,7 @@
     options = options || {}; if (!panel) build();
     if (panel.hidden) previous = document.activeElement;
     onClose = options.onClose || null;
-    recovery = options.recovery === true; recoveryParent = false; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
+    recovery = options.recovery === true; recoveryParent = false; settleUntil = 0; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
     if (!options.error) refresh(!recovery);
   }
   window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }};

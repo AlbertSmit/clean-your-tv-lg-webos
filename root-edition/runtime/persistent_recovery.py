@@ -257,6 +257,12 @@ def bound_exit(transaction, reason=None):
     if (binding['generation'], binding['token']) != (intent['generation'], intent['token']):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
+    if reason == 'escape':
+        from update_guard import cancel
+        try:cancel(d.STATE,d.EXPECTED_UID,intent)
+        except Exception:
+            c.exit(intent, reason='fault')
+            raise
     from shutdown_state import stopping
     shutdown = reason != 'escape' and intent['enabled'] and (
         intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))

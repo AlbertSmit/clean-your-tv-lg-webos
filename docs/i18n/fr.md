@@ -56,3 +56,9 @@ Les mises à jour logicielles affichent uniquement les détails de la version in
 No-root vérifie l’ABI du shell du téléviseur et accepte un noyau 64 bits avec un environnement ARM32 confirmé. En cas d’échec, joignez le JSON de diagnostic généré ; ne partagez ni clés ni phrases secrètes.
 
 Les mises à jour de Home demandent une confirmation avant l’installation ; le démarrage est ensuite vérifié automatiquement. L’actualisation de l’état conserve le bouton sélectionné avec la télécommande.
+
+Dans Root et No-root, le démarrage est vérifié automatiquement après l’installation ; aucune confirmation manuelle du bon fonctionnement n’est nécessaire. Le retour en arrière reste disponible après confirmation, sans limite de temps, jusqu’à la prochaine mise à jour. Il restaure la version précédente de Home et les réglages enregistrés avant la mise à jour ; les modifications ultérieures peuvent être perdues. Un avertissement apparaît avant le lancement. La mise à jour et la restauration de No-root depuis le téléviseur nécessitent toujours root et Homebrew Channel ; sinon, utilisez l’installateur sur ordinateur.
+
+L’écran de mise à jour sépare les versions, l’état et les nouveautés lisibles. Haut/Bas fait défiler les notes ; Gauche/Droite choisit les actions fixes en bas. Après les vérifications automatiques du démarrage, Root rétablit le contrôle de Home s’il était activé ; No-root conserve l’état du Helper séparé. Un réglage désactivé ou une désactivation explicite ou d’urgence reste désactivé.
+
+L’ouverture des réglages de Home lance une recherche de mises à jour en arrière-plan. Un point bleu sur Mises à jour logicielles indique une version plus récente, même si elle nécessite une installation depuis l’ordinateur. Les réglages restent utilisables pendant la recherche.

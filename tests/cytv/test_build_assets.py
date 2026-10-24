@@ -9,6 +9,7 @@ class BuildAssetsTests(unittest.TestCase):
         build = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/build-cytv.py'))
         self.assertIn('state-permissions.js', list(build['tracked_files']('native/app')))
         self.assertIn('app-library.js', list(build['tracked_files']('launcher')))
+        self.assertIn('release-notes.js', list(build['tracked_files']('launcher')))
         self.assertIn('app-inventory.js', list(build['tracked_files']('native/service')))
 
     def test_release_metadata_rejects_old_embedded_versions(self):

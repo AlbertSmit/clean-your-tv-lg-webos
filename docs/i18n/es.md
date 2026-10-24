@@ -56,3 +56,9 @@ Actualizaciones de software muestra detalles solo de la versión instalada o una
 No-root comprueba la ABI de la consola del TV y acepta un núcleo de 64 bits con entorno ARM32 verificado. Si falla la comprobación, adjunta el JSON de diagnóstico generado; no compartas claves ni frases de contraseña.
 
 Las actualizaciones de Home piden confirmación antes de instalar; después el inicio se verifica automáticamente. La actualización del estado conserva el botón seleccionado con el mando.
+
+En Root y No-root, el inicio se verifica automáticamente después de la instalación; no tienes que confirmar que todo funciona. La restauración sigue disponible tras la confirmación, sin límite de tiempo, hasta la próxima actualización. Devuelve la versión anterior de Home y los ajustes guardados antes de actualizar; los cambios posteriores pueden perderse. Aparece una advertencia antes de iniciar la restauración. Actualizar y restaurar No-root desde el televisor sigue requiriendo root y Homebrew Channel; de lo contrario, usa el instalador del ordenador.
+
+La pantalla de actualización separa versiones, estado y novedades legibles. Arriba/Abajo desplaza las notas; Izquierda/Derecha elige las acciones fijas de abajo. Tras las comprobaciones automáticas de inicio, Root restaura el control de Home si estaba activado; No-root conserva el estado del Helper independiente. Si estaba desactivado o se desactiva de forma explícita o de emergencia, sigue desactivado.
+
+Al abrir los ajustes de Home se buscan actualizaciones en segundo plano. Un punto azul en Actualizaciones de software indica una versión más reciente, incluso si requiere instalación desde el ordenador. Puedes seguir usando los ajustes durante la búsqueda.

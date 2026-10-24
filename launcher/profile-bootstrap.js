@@ -1,7 +1,7 @@
 (window.HomeI18n?HomeI18n.ready:function(callback){callback();})(function(){
 (function(){
  'use strict';
- var booted=false,profileError=false;
+ var booted=false,profileError=false,restoreMarker='tvhome.rollback.restored.v1';
  function rpc(method,payload,cb,service){var b,done=false;var timer=setTimeout(function(){finish(null);},2000);
   function finish(r,ok){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r,ok===true);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?(r.result===undefined?r.state:r.result):null,r.returnValue===true);}catch(_){finish(null);}};b.call((service||'luna://com.cleanyourtv.updater.service/')+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
@@ -16,7 +16,7 @@
    if(info.id==='com.gathin.tvhome'&&typeof info.version==='string'&&/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(info.version))rpc('healthy',{version:info.version},function(){});
   }catch(_){} };manifest.onerror=manifest.ontimeout=function(){};manifest.send();
  };document.body.appendChild(s);}
- function use(s,restore){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();HomeData.apply(localStorage,s);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
+ function use(s,restore,identity){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();['tvhome.order','tvhome.layout','tvhome.language'].forEach(function(key){if(s.settings[key]===undefined)localStorage.removeItem(key);});HomeData.apply(localStorage,s);if(identity)localStorage.setItem(restoreMarker,identity);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
  function icon(url,cb){if(/^data:image\/(png|jpeg|webp);base64,/.test(url)){cb(null,url);return;}
   // Only packaged relative icon paths; never turn arbitrary remote content into a profile.
   if(typeof url!=='string'||url.indexOf('..')>=0||/^([a-z]+:|\/)/i.test(url)){cb(Error('icon-path'));return;}
@@ -38,11 +38,24 @@
    },'luna://com.gathin.tvhome.renewal/');
   }next();
  }};
- try{var saved=HomeData.load(localStorage);if(saved){use(saved);boot();return;}}catch(_){profileError=true;boot();return;}
+ var saved;try{saved=HomeData.load(localStorage);}catch(_){profileError=true;boot();return;}
  // Personalized packages render immediately; generic upgrades may restore from
  // the independent updater's backup before constructing the tile grid.
- if(window.TV_APPS&&TV_APPS.apps&&TV_APPS.apps.length){boot();return;}
- rpc('restore',{},function(saved,ok){if(!ok)profileError=true;if(saved)try{use(saved,true);}catch(_){profileError=true;}boot();});
+ if(!saved&&window.TV_APPS&&TV_APPS.apps&&TV_APPS.apps.length){boot();return;}
+ rpc('restore',{withTransaction:true},function(value,ok){
+  var tx=value&&value.transaction,snapshot=value&&Object.prototype.hasOwnProperty.call(value,'transaction')?value.profile:value;
+  function finish(restore,identity){try{if(restore&&snapshot)use(snapshot,true,identity);else if(saved)use(saved);}catch(_){profileError=true;}boot();}
+  if(!ok&&!saved)profileError=true;
+  if(tx&&['rolling-back','rolled-back'].indexOf(tx.status)>=0&&tx.prior&&snapshot){
+   var identity=tx.id+':'+tx.prior.home;
+   if(localStorage.getItem(restoreMarker)!==identity){
+    var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
+    manifest.onload=function(){try{var info=JSON.parse(manifest.responseText);finish((manifest.status===0||manifest.status===200)&&info.id==='com.gathin.tvhome'&&info.version===tx.prior.home,identity);}catch(_){finish(false);}};
+    manifest.onerror=manifest.ontimeout=function(){finish(false);};manifest.send();return;
+   }
+  }
+  finish(!saved);
+ });
 }());
 
 });

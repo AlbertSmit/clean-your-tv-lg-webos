@@ -62,6 +62,10 @@ class Device:
         self.calls.append('verify:' + manifest['version'])
         return self.verify_ok and self.version == manifest['version']
     def launch(self): self.calls.append('launch')
+    def finish(self, tx):
+        self.calls.append('finish:'+tx['phase'])
+        tx['homeResume']={'status':'unchanged'};tx['homeResumePhase']=tx['phase']
+        self.store.write('transaction',tx)
 
 
 def competing_lock(root, queue):
@@ -76,6 +80,7 @@ class UpdateTests(unittest.TestCase):
         self.root = os.path.realpath(self.tmp.name)
         self.store = Store(self.root, uid=os.getuid())
         self.io = Device()
+        self.io.store = self.store
         self.m = Manager(self.store, self.io)
     def tearDown(self): self.tmp.cleanup()
     def advance(self, phase, limit=20):
@@ -122,6 +127,61 @@ class UpdateTests(unittest.TestCase):
         self.io.time+=119.9;self.receipt(tx)
         self.io.time+=3;self.m=Manager(Store(self.root,uid=os.getuid()),self.io)
         self.assertEqual('complete',self.m.run()['phase'])
+
+    def test_confirmed_update_can_roll_back_days_later_after_restart(self):
+        tx = self.start()
+        self.advance('verifying'); self.receipt(tx); self.advance('complete')
+        self.io.time += 30 * 86400
+        self.io.active = True
+        self.m = Manager(Store(self.root, uid=os.getuid()), self.io)
+        self.assertEqual('rolling-back', self.m.rollback()['phase'])
+        self.advance('verifying-rollback')
+        self.assertFalse(self.io.active)
+        self.assertEqual(profile(), self.m.restore_profile()['profile'])
+        self.assertEqual('verifying-rollback', self.m.run()['phase'])
+        self.m.ready(tx['id'], '1.0.0')
+        self.assertEqual('rolled-back', self.m.run()['phase'])
+        self.assertEqual('1.0.0', self.store.read('current')['version'])
+        for _ in range(3): self.m.rollback(); self.m.run()
+        self.assertEqual(['install:1.1.0', 'install:1.0.0'], self.installs())
+
+    def test_confirmed_update_rollback_does_not_replace_an_unrelated_version(self):
+        tx = self.start()
+        self.advance('verifying'); self.receipt(tx); self.advance('complete')
+        self.io.version = '2.0.0'
+        with self.assertRaisesRegex(ValueError, 'installed version changed'):
+            self.m.rollback()
+        self.assertEqual('complete', self.m.status()['phase'])
+        self.assertEqual(['install:1.1.0'], self.installs())
+
+    def test_next_update_replaces_confirmed_rollback_target_and_snapshot(self):
+        tx = self.start()
+        self.advance('verifying'); self.receipt(tx); self.advance('complete')
+        self.io.prior = self.io.candidate
+        self.io.candidate = {'version': '1.2.0', 'sha256': 'c' * 64}
+        self.io.outcomes = [True, True]
+        snapshot = profile(); snapshot['config']['columns'] = 6
+        tx = self.m.install('1.2.0', snapshot)
+        self.assertIn('finish:complete',self.io.calls)
+        self.advance('verifying')
+        self.m.ready(tx['id'], '1.2.0'); self.m.confirm(tx['id'], '1.2.0')
+        self.advance('complete')
+        self.assertEqual('rolling-back', self.m.rollback()['phase'])
+        self.advance('verifying-rollback')
+        self.assertEqual(snapshot, self.m.restore_profile()['profile'])
+        self.m.ready(tx['id'], '1.1.0')
+        self.assertEqual('rolled-back', self.m.run()['phase'])
+        self.assertEqual(['install:1.1.0', 'install:1.2.0', 'install:1.1.0'], self.installs())
+
+    def test_next_update_cannot_replace_transaction_with_unresolved_home_cleanup(self):
+        tx=self.start();self.advance('verifying');self.receipt(tx);self.advance('complete')
+        self.io.prior=self.io.candidate
+        self.io.candidate={'version':'1.2.0','sha256':'c'*64}
+        self.io.finish=lambda previous:None
+        with self.assertRaisesRegex(ValueError,'Home recovery pending'):
+            self.m.install('1.2.0',profile())
+        self.assertEqual(tx['id'],self.m.status()['id'])
+        self.assertEqual(['install:1.1.0'],self.installs())
 
     def test_crash_at_durable_launch_boundary_reopens_without_reinstall(self):
         self.start();self.advance('awaiting-launch')

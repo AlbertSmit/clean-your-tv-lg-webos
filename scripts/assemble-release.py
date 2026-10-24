@@ -126,7 +126,7 @@ def assemble(artifacts, output, versions, commit):
         builder['verify_release_versions'](payload, versions)
         app = builder['tracked_files']('updater-app')
         if json.loads(app['appinfo.json'])['version'] != versions['updater']: raise ValueError('No-root Updater version mismatch')
-        for name in ('i18n.js', 'catalogs.js', 'i18n.css'):
+        for name in ('renewal-panel.css', 'i18n.js', 'catalogs.js', 'i18n.css'):
             app[name] = (ROOT / 'launcher' / name).read_bytes()
         app['root-locales.js'] = (ROOT / 'root-edition/ui/root-locales.js').read_bytes()
         for path in (ROOT / 'launcher/fonts').glob('NotoSans*'):

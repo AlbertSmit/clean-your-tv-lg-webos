@@ -18,6 +18,56 @@ The new Home loads its saved profile before rendering, or restores the independe
 
 ## Recovery
 
+Root and No-root confirm startup health automatically after installation; users do
+not need to confirm that the updated launcher works. Confirmation does not remove
+the previous-version rollback. Recovery has no time limit and refers to the last
+update until a subsequent update replaces the saved transaction and profile.
+Rollback restores the previous Home version and the pre-update settings snapshot;
+the confirmation dialog warns that settings changed afterward will be lost.
+An unrelated installed version blocks a confirmed transaction's rollback, and an
+uncertain or failed rollback cannot be submitted repeatedly.
+
+Root uses the independently saved package cache and profile, restores LG Home
+before rollback, and checks the restored launcher's profile readiness before
+finishing. After verified startup, it automatically restores Home control if it
+was persistently enabled immediately before the update suspended it. A disabled
+choice stays disabled. Explicit or emergency off during installation cancels
+resumption; changed boot, failsafe, changed intent or failed input/guardian
+readiness leaves LG Home selected. There is no user health-confirmation step or
+two-minute confirmation prompt. The internal startup health deadline still
+protects the installation.
+
+No-root retains its signed previous package reference and saved
+profile; its on-device updater still requires root and Homebrew Channel. On an
+unrooted TV, use the computer installer. This change does not add package-install
+privileges to an unrooted TV. Its separate Helper is not replaced or restarted, so
+its existing Home-control preference, controller and emergency-stop state stay
+in place. An explicit or emergency stop is never undone by update completion.
+
+Both editions use the same readable update layout: versions and status above the
+release notes, a stationary action row below, Up/Down to read notes, Left/Right to
+choose an action, and Back to return. Notes use an inert Markdown subset for
+headings, lists and emphasis; release HTML, scripts and links are never executed.
+Background polling preserves reading position and remote focus.
+
+No-root stores new snapshots inside the same atomic journal as their transaction;
+legacy journals still read the separate profile backup. Transaction-aware
+launchers restore retained browser settings once, using the rollback transaction
+and installed version as the restoration marker. A prior package released before
+this bootstrap fix may keep its retained local settings; it can only restore the
+backup automatically when local package data is absent. The stronger settings
+restoration guarantee therefore requires a previous package containing this fix.
+Root's independently provisioned updater must also be upgraded from the computer;
+installing a new Root launcher IPK alone does not replace the pinned updater code.
+Setup and the updater check `HOME_RESUME_PROTOCOL = 1` in the verified runtime
+before reserving routing. The runtime owns private `update-home-resume.json` and
+`update-home-cancel.json` records tied to the update reservation and suspension
+cycle. An activation-attempt receipt is synced before enabling Home, preventing
+replayed activation after a process interruption. Unresolved cleanup can be
+reconciled without reinstalling or repeating an activation attempt. An uncertain
+activation is restored off, not silently retried. Home restoration errors are
+reported separately from successful package installation.
+
 Open Home Updater to inspect the transaction or restore the signed previous Home package. Recovery checks root, helper compatibility, manifest signature and package hash. The previous package must remain downloadable; this is not an offline recovery image or a full TV backup.
 
 Homebrew does not distinguish transport failures from terminal installer failures in its error envelope. A failed installation call therefore stays in recovery; it does not automatically start another install. Timeouts and interrupted installation remain blocked in `recovery-required`; reading a version is not proof that an installer has stopped. There is no clear-lock-and-retry button. A confirmed install waits for the populated Home grid on launch before restoring renewal. This is a startup signal, not a complete UI health test.

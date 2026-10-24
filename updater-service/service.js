@@ -24,7 +24,7 @@ var manager=require('./manager')({load:function(){return store.read('transaction
   if(!imported.state||imported.state.error)throw Error('pause-import-unconfirmed');
   var r=await rpc('luna://com.gathin.tvhome.renewal/resumeAfterUpdate',{id:receipt.id});
   return {restored:!!(r.state&&!r.state.error&&!r.state.updatePause&&r.state.completedUpdate===receipt.id)};},
- backup:async function(s){var existing=store.read('profile');if(existing!==null)data.validate(existing);store.write('profile',data.validate(s));},
+ backup:async function(s){var tx=store.read('transaction'),existing=tx&&tx.profile!==undefined?tx.profile:store.read('profile');if(existing!==null)data.validate(existing);data.validate(s);},
  install:function(m){var checked=policy.verify(m.proof,key);if(checked.home!==m.home||checked.url!==m.url||checked.sha256!==m.sha256||checked.helper!==m.helper)throw Error('invalid-saved-manifest');return rpc('luna://org.webosbrew.hbchannel.service/install',{ipkUrl:m.url,ipkHash:m.sha256,id:'com.gathin.tvhome',subscribe:true},true);}
 });
 function authorized(m){
@@ -48,7 +48,11 @@ register('check',async function(){
   canInstall:r&&policy.offer(candidate,v.home,v.helper)==='available'&&!!prior&&prior.home===v.home&&prior.helper===v.helper&&policy.compare(prior.home,'1.2.0')>=0};
 });
 register('status',async function(){return {transaction:manager.status(),root:await root()};});
-register('restore',function(){return store.read('profile');});
+register('restore',function(p){
+ var tx=store.read('transaction'),profile=tx&&tx.profile!==undefined?data.validate(tx.profile):store.read('profile');
+ if(!p.withTransaction)return profile;
+ return {profile:profile,transaction:tx?{id:tx.id,status:tx.status,prior:tx.prior,candidate:tx.candidate}:null};
+});
 register('install',async function(p){var selected=await readOffer();if(!selected||!selected.prior||policy.compare(selected.prior.home,'1.2.0')<0||p.version!==selected.candidate.home)throw Error('check-first');
  // Services may stop between UI actions. Fetch and verify again; never trust caller URLs/hashes.
  var renewal=await rpc('luna://com.gathin.tvhome.renewal/status',{});

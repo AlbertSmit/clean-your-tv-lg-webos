@@ -56,3 +56,9 @@ Software updates shows release details only for the installed version or newer. 
 No-root checks the TV shell ABI, so a 64-bit kernel with verified ARM32 userspace is accepted. If verification fails, attach the generated diagnostic JSON; do not share keys or passphrases.
 
 Home updates require confirmation before installation; startup verification is automatic afterward. Background status refresh keeps the selected remote-control button in place.
+
+In Root and No-root, startup health is confirmed automatically after installation; you do not need to confirm that everything works. Recovery remains available after confirmation, without a time limit, until the next update. Rollback returns the previous Home version and its saved pre-update settings; later settings changes may be lost. A warning appears before you start rollback. On-device No-root updates and rollback still require root and Homebrew Channel; otherwise use the computer installer.
+
+The update screen now separates versions, status and readable release notes. Up/Down reads the notes; Left/Right selects the fixed actions below. After automatic startup checks, Root restores previously enabled Home control; No-root preserves the separate Helper state. Disabled preferences and explicit or emergency off remain off.
+
+Opening Home settings checks for updates in the background. A blue dot on Software updates means a newer version is available, including releases that require computer setup. Settings stay usable during the check.

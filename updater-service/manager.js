@@ -26,7 +26,7 @@ module.exports=function(io){
    var v=await io.versions();
    if(!prior||prior.home!==v.home||candidate.helper!==v.helper||prior.helper!==v.helper||require('./policy').compare(candidate.home,v.home)<=0)throw Error('incompatible-update');
    await io.backup(snapshot);
-   var s=save({schema:1,id:require('crypto').randomBytes(16).toString('hex'),status:'preparing',candidate:candidate,prior:prior,startedAt:Date.now()});
+   var s=save({schema:1,id:require('crypto').randomBytes(16).toString('hex'),status:'preparing',candidate:candidate,prior:prior,profile:snapshot,startedAt:Date.now()});
    if(!await pause(s))return s;
    s.status='installing';save(s);
    try{await io.install(candidate);s.status='awaiting-launch';save(s);}

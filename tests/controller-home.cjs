@@ -6,6 +6,15 @@ const context={Buffer,require(n){if(n==='./state-permissions')return()=>true;if(
 vm.runInNewContext(fs.readFileSync('native/app/native.js','utf8'),context);start();worker.stdout.emit('data',Buffer.from('READY\n'));
 let seq=0;function rpc(n,p={}){files.set('/media/developer/apps/usr/palm/applications/com.local.nativehome/state/home-request.json',JSON.stringify({id:(++seq).toString(16).padStart(32,'0'),method:n,enabled:p.enabled,expires:Date.now()+5000}));tick();return JSON.parse(files.get('/media/developer/apps/usr/palm/applications/com.local.nativehome/state/home-response.json'));}
 assert.equal(rpc('homeStatus').enabled,true);
+// Installing the separate Home app closes its UI. That foreground transition
+// must leave the detached helper/relay alive without trying to reopen the app
+// while SAM may still be replacing it.
+watch.fg('com.gathin.tvhome');const beforeUpdateClose=calls.length;
+watch.fg('');watch.fg('com.webos.app.home');
+assert.equal(calls.length,beforeUpdateClose,'Home closure must not trigger a helper launch attempt');
+assert.equal(rpc('homeStatus').enabled,true,'Home closure must preserve routing');
+assert.equal(files.get('/media/developer/apps/usr/palm/applications/com.local.nativehome/state/controller.pid'),'1');
+assert(!commands.includes('Q'),'Home closure must not stop the relay');
 watch.fg('test.app');worker.stdout.emit('data',Buffer.from('LGHOME\n'));assert.equal(calls.at(-1),'com.webos.app.home');
 const count=calls.length;watch.fg('com.webos.app.home');assert.equal(calls.length,count,'explicit visit must not bounce back');assert.equal(rpc('homeStatus').enabled,true);
 worker.stdout.emit('data',Buffer.from('HOME\n'));assert.equal(calls.at(-1),'com.gathin.tvhome');

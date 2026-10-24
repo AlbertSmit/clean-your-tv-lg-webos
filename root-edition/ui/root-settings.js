@@ -3,6 +3,17 @@
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
   var panel, message, buttons, selected = 0, busy = false, previous, rootStatus = null;
+  var checkingUpdates = false;
+  function checkUpdates() {
+    if (checkingUpdates || !window.RootUpdates || !window.RootUpdates.rpc) return;
+    checkingUpdates = true;
+    window.RootUpdates.rpc('check', {}).then(function (offer) {
+      if (!offer) return;
+      var available = offer.canInstall === true || offer.reason === 'missing-rollback';
+      buttons[4].setAttribute('data-update-available', String(available));
+      buttons[4].setAttribute('aria-label', t(available ? 'Software updates. Update available.' : 'Software updates'));
+    }).catch(function () {}).then(function () { checkingUpdates = false; });
+  }
   function request(uri, payload, timeout) {
     return new Promise(function (resolve, reject) {
       var bridge, timer, done = false;
@@ -88,7 +99,7 @@
     if (index === 4) {
       if (!window.RootUpdates) { message.textContent = t('Software updates require the one-time computer setup.'); return; }
       panel.hidden = true;
-      window.RootUpdates.open({onClose:function () { panel.hidden = false; focus(4); refreshMode(); }}); return;
+      window.RootUpdates.open({onClose:function () { panel.hidden = false; focus(4); refreshMode(); checkUpdates(); }}); return;
     }
     if (index === 0) { launch('com.palm.app.settings').catch(function (e) { message.textContent = t(e.message); }); return; }
     busy = true; buttons.forEach(function (b) { b.disabled = true; });
@@ -157,6 +168,7 @@
       previous = document.activeElement;
       message.textContent = t('Checking whether Home control is on…');
       panel.hidden = false; focus(3); refreshMode().then(function () { if (!panel.hidden && !busy && !buttons[3].disabled) focus(3); });
+      checkUpdates();
     }
   };
 }());

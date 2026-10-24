@@ -80,6 +80,8 @@ def apply(bundle,baseline):
         target=runtime/name
         if recovery.get('files',{}).get(str(target))!=digest(safe_bytes(target,uid=0)):
             raise ValueError('Updater-compatible Root infrastructure required; migrate from computer first')
+    from updater.device import Device
+    Device.require_home_resume_runtime(ROOT_STATE)
     current=json.loads(safe_bytes(Path('/media/developer/apps/usr/palm/applications')/APP/'appinfo.json'))
     if current.get('version')!=descriptor['version']:raise ValueError('Baseline must match installed Root version')
     if STATE.exists() or STATE.is_symlink():raise FileExistsError('Updater setup exists; inspect retained state')

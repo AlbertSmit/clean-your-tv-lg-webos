@@ -39,6 +39,8 @@ class PreviewTests(unittest.TestCase):
             self.assertNotIn('<script src="app.js"></script>', html)
             self.assertIn('root-profile.js', html)
             self.assertIn('root-updates.js', html)
+            self.assertTrue((app/'release-notes.js').is_file())
+            self.assertLess(html.index('release-notes.js'), html.index('root-updates.js'))
             self.assertIn('root-profile-data.js', html)
             self.assertIn('com.cleanyourtv.root.preview', (app / 'config.js').read_text())
             self.assertEqual((app / 'app.js').read_bytes(), (ROOT / 'launcher/app.js').read_bytes())

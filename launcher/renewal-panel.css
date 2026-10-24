@@ -15,6 +15,8 @@
 .renewal-actions button:focus,.root-settings button:focus{outline:3px solid #b8d3ff;outline-offset:3px;border-color:#f5f7fa;background:#46556c}
 .renewal-actions button:disabled,.root-settings button:disabled{opacity:.5;cursor:default}
 .settings-links button{flex:1;text-align:left}
+.settings-links button[data-update-available="true"]{position:relative;padding-right:54px}
+.settings-links button[data-update-available="true"]:after{content:"";position:absolute;right:22px;top:50%;margin-top:-6px;width:12px;height:12px;border-radius:50%;background:#b8d3ff}
 .settings-footer{display:flex;justify-content:space-between;align-items:center;gap:24px;border-top:1px solid #414650;margin-top:24px;padding-top:18px}
 .settings-footer p{font-size:21px;margin:0}
 .settings-danger{color:#ffd1bd!important}
@@ -23,7 +25,7 @@
 #updateStatus,#updateNotes{white-space:pre-line}
 .root-updates button{display:block;width:100%;margin-top:12px;text-align:left}
 .root-updates h1{margin-bottom:18px}
-.root-updates .root-update-details{max-height:180px;overflow:auto}
+
 @media(max-width:1000px){.renewal-card,.root-settings-card{padding:24px;max-height:94vh}.renewal-card h2,.root-settings h1{font-size:32px}.renewal-card p,.root-settings p,.renewal-actions button,.root-settings button{font-size:22px}.settings-heading{gap:12px}.settings-edition{font-size:18px}.settings-footer p{font-size:18px}}
 
 /* Routing is the first remote-control action, with a stable, labelled switch. */
@@ -40,3 +42,22 @@
 #homeRoutingStatus{min-height:32px;color:#e2e8f1}
 .home-routing-actions button:focus{outline:4px solid #b8d3ff;outline-offset:4px;border-color:#f5f7fa;background:#46556c}
 @media(max-width:700px){.home-routing-actions{flex-direction:column}.home-visit-action{width:100%;flex:auto}.home-routing-actions button{width:100%;flex:auto}.settings-footer{flex-wrap:wrap}}
+
+/* Update dialogs reserve a TV-scale reading area and keep every action visible. */
+.root-updates .root-settings-card,#updatePanel .update-card{display:flex;flex-direction:column;width:1440px;max-width:92vw;height:88vh;max-height:920px;overflow:hidden;padding:36px 44px;background:#20262d}
+.root-updates .settings-heading,#updatePanel .settings-heading{flex-shrink:0;margin-bottom:18px}
+.root-updates h1,#updatePanel h2{font-size:44px;line-height:1.2;margin:0}
+.root-updates .root-update-details,#updatePanel .update-versions{flex-shrink:0;max-height:none;overflow:visible;white-space:pre-line;font-size:30px;line-height:1.35;color:#f4f6f8;margin:0 0 14px}
+.root-updates .root-update-status,#updatePanel .root-update-status{flex-shrink:0;height:auto;min-height:36px;overflow:visible;white-space:pre-line;font-size:25px;line-height:1.4;color:#bfc9d5;margin:0 0 18px}
+.root-updates .update-notes-heading,#updatePanel .update-notes-heading{flex-shrink:0;border-top:1px solid #414b58;padding-top:18px;font-size:30px;line-height:1.25;margin:0 0 14px}
+.update-notes{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overflow-wrap:anywhere;white-space:normal;scrollbar-color:#7d8da0 #20262d;padding:0 24px 0 0;color:#e0e6ed}
+.root-updates .release-notes-content h2,#updatePanel .release-notes-content h2{font-size:30px;line-height:1.3;margin:20px 0 12px}
+.root-updates .release-notes-content h3,#updatePanel .release-notes-content h3{font-size:27px;line-height:1.3;margin:18px 0 10px}
+.root-updates .release-notes-content p,#updatePanel .release-notes-content p,.update-notes ul,.update-notes ol{font-size:28px;line-height:1.5;margin:0 0 18px;max-width:72ch}
+.update-notes ul,.update-notes ol{padding-left:36px}.update-notes li{padding-left:6px;margin-bottom:14px}.update-notes code{font-size:.92em}.update-notes>:first-child{margin-top:0!important}
+.root-updates .update-actions,#updatePanel .update-actions{flex-shrink:0;flex-wrap:wrap;border-top:1px solid #414b58;margin-top:auto;padding-top:20px;gap:16px}
+.root-updates .update-actions button,#updatePanel .update-actions button{display:block;width:auto;margin:0;min-height:64px;text-align:center;font-size:26px;padding:14px 24px}
+.root-updates .update-actions button[hidden],#updatePanel .update-actions button[hidden],#updatePanel .release-notes-content[hidden],#updatePanel .update-notes-heading[hidden],.root-updates .release-notes-content[hidden],.root-updates .update-notes-heading[hidden]{display:none}
+.root-updates .update-actions button:nth-child(2),#updateInstall{background:#dceaff;color:#142335}
+.root-updates .update-hint,#updatePanel .update-hint{flex-shrink:0;font-size:21px;line-height:1.3;color:#b9c3cf;margin:18px 0 0}
+@media(max-height:800px),(max-width:1000px){.root-updates .root-settings-card,#updatePanel .update-card{padding:24px 32px;height:92vh}.root-updates h1,#updatePanel h2{font-size:34px}.root-updates .root-update-details,#updatePanel .update-versions{font-size:25px}.root-updates .root-update-status,#updatePanel .root-update-status{font-size:22px;margin-bottom:12px}.root-updates .release-notes-content p,#updatePanel .release-notes-content p,.update-notes ul,.update-notes ol{font-size:24px}.root-updates .update-actions button,#updatePanel .update-actions button{font-size:23px;min-height:56px;padding:12px 20px}.root-updates .update-hint,#updatePanel .update-hint{font-size:18px;margin-top:14px}.root-updates .update-actions,#updatePanel .update-actions{margin-top:auto;padding-top:14px}}

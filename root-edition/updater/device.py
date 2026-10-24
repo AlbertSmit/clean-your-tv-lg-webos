@@ -42,7 +42,19 @@ class Device:
             path=Path(name)
             if not path.is_relative_to(self.root_state):raise ValueError('Foreign recovery infrastructure')
             if hashlib.sha256(safe_bytes(path,limit=1048576,uid=0)).hexdigest()!=digest:raise ValueError('Recovery integrity failed')
+        self.require_home_resume_runtime(self.root_state)
         return receipt
+
+    @staticmethod
+    def require_home_resume_runtime(root_state):
+        # Called only after the root-owned recovery inventory has been verified.
+        import ast
+        tree=ast.parse((Path(root_state)/'runtime/update_guard.py').read_bytes())
+        for node in tree.body:
+            if (isinstance(node,ast.Assign) and any(isinstance(target,ast.Name) and target.id=='HOME_RESUME_PROTOCOL' for target in node.targets)
+                    and isinstance(node.value,ast.Constant) and type(node.value.value) is int and node.value.value==1):
+                return
+        raise ValueError('Home-resume compatible Root runtime required; migrate from computer first')
 
     def fetch(self, method, payload=None, binary=False):
         if method not in ('offer','verify','package'):raise ValueError('Invalid verifier operation')
@@ -103,10 +115,16 @@ class Device:
         try:os.fsync(fd)
         finally:os.close(fd)
 
-    def runtime(self, mode):
-        result=subprocess.run(['/usr/bin/python3',str(self.root_state/'runtime/cli.py'),mode],
+    def runtime(self, mode, transaction=None):
+        command=['/usr/bin/python3',str(self.root_state/'runtime/cli.py'),mode]
+        if transaction is not None:
+            import re
+            if mode not in ('suspend-update','finish-update','abort-update') or not re.fullmatch('[a-f0-9]{32}',transaction):
+                raise ValueError('Invalid runtime update request')
+            command.append(transaction)
+        result=subprocess.run(command,
                               stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
-                              timeout=630 if mode=='restore' else 45,check=True)
+                              timeout=630 if mode in ('restore','suspend-update') else 45,check=True)
         value=json.loads(result.stdout)
         if value.get('returnValue') is not True:raise ValueError('Root recovery operation failed')
         return value.get('result')
@@ -135,16 +153,28 @@ class Device:
 
     def restore_route(self):
         self.reserve_route()
-        if self.runtime('restore') not in ('absent','restored'):raise ValueError('Root route restoration unconfirmed')
+        transaction=self.store.read('transaction')['id']
+        if self.runtime('suspend-update',transaction) not in ('absent','restored'):raise ValueError('Root route restoration unconfirmed')
         status=self.runtime('status')
         intent=status.get('intent')
         if intent and intent.get('phase')!='disabled':raise ValueError('Root intent remains enabled')
 
     def finish(self, transaction):
-        if transaction and transaction.get('phase') in ('complete','rolled-back','aborted'):
-            sys.path.insert(0,str(self.root_state/'runtime'))
-            import update_guard
-            update_guard.release(transaction['id'],self.root_state)
+        if not transaction or transaction.get('phase') not in ('complete','rolled-back','aborted'):return
+        with self.store.lock():
+            current=self.store.read('transaction')
+            if not current or (current['id'],current['phase'])!=(transaction['id'],transaction['phase']):return
+            if current.get('homeResumePhase')==current['phase']:return current.get('homeResume')
+            try:
+                result=self.runtime('abort-update' if current['phase']=='aborted' else 'finish-update',current['id'])
+                if not isinstance(result,dict) or result.get('status') not in ('restored','skipped','cancelled','failed','unchanged','attempted'):
+                    raise ValueError('Home state restoration unconfirmed')
+                current['homeResumePhase']=current['phase']
+            except Exception as error:
+                result={'status':'failed','error':str(error)[:512]}
+            current['homeResume']=result
+            self.store.write('transaction',current)
+            return result
 
     def install(self, manifest, on_submit, on_terminal):
         self.descriptor(manifest)

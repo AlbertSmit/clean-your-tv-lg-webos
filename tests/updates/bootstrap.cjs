@@ -19,7 +19,7 @@ console.log('PASS enabled renewal permits profile capture without changing its p
 // resolve to English, so the TV system locale can be queried on the new startup.
 let pref='en',reloads=0,restoreScript;
 const restoring={...context,TV_APPS:{apps:[],inputs:[]},CONFIG:{},
- localStorage:{getItem:()=>null,setItem:(k,v)=>{if(k==='tvhome.language')pref=v;}},
+ localStorage:{getItem:()=>null,setItem:(k,v)=>{if(k==='tvhome.language')pref=v;},removeItem(){}},
  HomeI18n:{ready:cb=>cb(),preference:()=>pref,refresh:()=> 'en'},location:{reload:()=>reloads++},
  document:{...context.document,body:{appendChild:s=>{restoreScript=s;}}},
  PalmServiceBridge:function(){this.cancel=()=>{};this.call=uri=>{if(uri.endsWith('/restore'))this.onservicecallback(JSON.stringify({returnValue:true,result:{...profile,settings:{'tvhome.language':'auto'}}}));};}};
@@ -39,3 +39,19 @@ for(const {version,id='com.gathin.tvhome',status=200,invalid=false,healthy} of [
  assert.deepEqual(calls.filter(c=>c[0].endsWith('/healthy')).map(c=>c[1]),healthy?[{version}]:[]);
 }
 console.log('PASS No-root startup reports the installed app manifest version across releases');
+
+// A retained local profile must not bypass rollback restoration, or overwrite
+// subsequent edits again every time the old version starts.
+const rollbackMemory=new Map([[data.key,JSON.stringify({...profile,config:{...profile.config,columns:7}})],['tvhome.order','later'],['tvhome.layout','later-layout']]);
+const rollbackStorage={getItem:k=>rollbackMemory.has(k)?rollbackMemory.get(k):null,setItem:(k,v)=>rollbackMemory.set(k,v),removeItem:k=>rollbackMemory.delete(k)};
+function rollbackBoot(version='1.2.0',transaction='rollback-one'){
+ let script;const run={...context,HomeI18n:null,TV_APPS:{apps:[],inputs:[]},CONFIG:{},localStorage:rollbackStorage,
+ document:{...context.document,querySelector:()=>null,body:{appendChild:s=>{script=s;}}},
+ XMLHttpRequest:class{open(method,url){assert.equal(url,'appinfo.json');}send(){this.status=200;this.responseText=JSON.stringify({id:'com.gathin.tvhome',version});this.onload();}},
+ PalmServiceBridge:function(){this.cancel=()=>{};this.call=(uri,raw)=>{assert(uri.endsWith('/restore'));assert.equal(JSON.parse(raw).withTransaction,true);this.onservicecallback(JSON.stringify({returnValue:true,result:{profile,transaction:{id:transaction,status:'rolled-back',prior:{home:'1.2.0'}}}}));};}};
+ run.window=run;vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),run);assert(script);return run;
+}
+let rollback=rollbackBoot();assert.equal(rollback.CONFIG.columns,5);assert.equal(rollbackMemory.get('tvhome.order'),'old');assert(!rollbackMemory.has('tvhome.layout'));
+rollbackMemory.set('tvhome.order','edited-after-rollback');rollback=rollbackBoot();assert.equal(rollbackMemory.get('tvhome.order'),'edited-after-rollback');
+rollback=rollbackBoot('1.3.0','stale-rollback');assert.equal(rollbackMemory.get('tvhome.order'),'edited-after-rollback');
+console.log('PASS rollback restores retained local settings once and rejects stale package versions');

@@ -9,6 +9,18 @@
  var status=document.getElementById('renewalStatus'),toggle=document.getElementById('renewalToggle'),check=document.getElementById('renewalCheck'),details=document.getElementById('renewalDetails');
  var previous;
  var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,state=null,busy=false;
+ var checkingUpdates=false;
+ function checkUpdates(){
+  if(checkingUpdates||!window.HomeUpdates||!window.HomeUpdates.rpc)return;
+  checkingUpdates=true;
+  window.HomeUpdates.rpc('check',{},function(offer){
+   checkingUpdates=false;if(!offer)return;
+   var available=offer.state==='available'||offer.state==='helper-update-required';
+   var button=document.getElementById('renewalUpdates');
+   button.setAttribute('data-update-available',String(available));
+   button.setAttribute('aria-label',tr(available?'Software updates. Update available.':'Software updates'));
+  });
+ }
  function openNow(){return !panel.classList.contains('hidden');}
  function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled){index=j;buttons[index].focus();return;}}}
  function rpc(method,callback){
@@ -75,7 +87,7 @@
  function close(){panel.classList.add('hidden');if(previous&&previous.focus)previous.focus();}
  document.getElementById('renewalClose').onclick=close;
  document.getElementById('homeLanguage').onclick=function(){if(window.HomeI18n)HomeI18n.openLanguagePicker();};
- document.getElementById('renewalUpdates').onclick=function(){panel.classList.add('hidden');window.HomeUpdates.open({onClose:function(){panel.classList.remove('hidden');focus(buttons.indexOf(document.getElementById('renewalUpdates')));}});};
+ document.getElementById('renewalUpdates').onclick=function(){panel.classList.add('hidden');window.HomeUpdates.open({onClose:function(){panel.classList.remove('hidden');focus(buttons.indexOf(document.getElementById('renewalUpdates')));checkUpdates();}});};
  document.getElementById('renewalTV').onclick=function(){close();try{var b=new PalmServiceBridge();b.onservicecallback=function(){b.cancel();};b.call('luna://com.webos.applicationManager/launch',JSON.stringify({id:'com.palm.app.settings',params:{}}));}catch(_){}};
  buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.addEventListener('mouseover',function(){focus(i);});});
  document.addEventListener('keydown',function(e){if(!openNow())return;var k=e.keyCode;
@@ -83,7 +95,7 @@
   e.preventDefault();e.stopImmediatePropagation();
   if(k===461||k===27)close();else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
- window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();}};
+ window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
  // No session request, token access or scheduler setup happens on launcher startup.
 }());
 

@@ -55,7 +55,15 @@ The public bundle contains no personal app list. Installation can copy validated
 profile data from an existing Home installation without modifying it. It does not
 migrate arbitrary browser storage. Root excludes the ordinary Home updater and
 Developer Mode renewal UI. Its own **Settings → Software updates** uses an
-independent Root Updater with saved profiles and one-attempt rollback. See
+independent Root Updater with saved profiles and one-attempt rollback. Startup
+health confirmation is automatic. Rollback remains available after confirmation,
+without a time limit, until the next update replaces the saved transaction. It
+restores the previous package and pre-update settings; the rollback dialog warns
+that later settings changes will be lost. After verified startup, previously
+enabled Home control resumes automatically through its existing guarded activation
+path. Explicit or emergency off during the update wins; disabled preferences,
+failsafe and uncertain activation stay off. The runtime and independent updater
+must be migrated together from the computer for this behavior. See
 [Root updates and one-time setup](UPDATES.md) and the
 [isolated update/rollback validation](../docs/development/ROOT-UPDATES-TV-VALIDATION.md). Recovery/updater infrastructure upgrades remain
 computer-assisted.

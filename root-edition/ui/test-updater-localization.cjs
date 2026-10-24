@@ -14,7 +14,7 @@ for(const locale of Object.keys(catalogs)){
  assert.equal(document.title,tr('Home Updater'));assert.equal(elements.refresh.textContent,tr('Refresh status'));
  assert.equal(elements.status.textContent,tr('Update state: {status}',{status:tr('Awaiting launch')+' (awaiting-launch)'}));
  elements.restore.onclick();assert.equal(elements.restore.textContent,tr('Restore previous Home'));assert.equal(confirmation.options.action,'Restore previous Home');
- assert.equal(confirmation.options.message,'Restore the signed previous Home package. Home Helper will remain unchanged.');
+ assert.equal(confirmation.options.message,tr('Restore the previous Home version and pre-update settings. Settings changed after the update will be lost. Keep the TV powered on.'));
  status='rolled-back';confirmation.accept();assert.equal(elements.status.textContent,tr('Recovery state: {status}',{status:tr('Rolled back')+' (rolled-back)'}));
 }
 console.log('PASS independent updater startup, status, restore confirmation and diagnostic codes in ten languages');

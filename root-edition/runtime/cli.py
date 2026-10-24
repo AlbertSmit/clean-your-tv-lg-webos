@@ -20,6 +20,10 @@ def main(mode, transaction=None):
 
 
 def execute(mode, transaction=None):
+    if mode in ('suspend-update','finish-update','abort-update'):
+        from update_guard import suspend, finish, abort
+        operation = {'suspend-update':suspend,'finish-update':finish,'abort-update':abort}[mode]
+        return operation(transaction,d.STATE,d.EXPECTED_UID)
     if mode == 'confirm':
         from intent_runtime import confirm
         return confirm(transaction)
@@ -36,9 +40,15 @@ def execute(mode, transaction=None):
         from bounded_profile_trial import begin, spawn
         return begin(spawn)
     if mode == 'restore':
+        from update_guard import cancel
         from intent_runtime import restore
-        result = restore()
-        return d.main('recover') if result is None else result
+        try:
+            cancel(d.STATE,d.EXPECTED_UID)
+        finally:
+            # Damaged updater evidence must never prevent explicit Home recovery.
+            result = restore()
+            result = d.main('recover') if result is None else result
+        return result
     if mode == 'boot':
         from intent_runtime import boot
         result = boot()
@@ -50,13 +60,14 @@ def execute(mode, transaction=None):
             result['recovery'] = verify()
         except (OSError, ValueError, TypeError) as exc:
             result['recovery'] = {'integrity_verified':False,'error':str(exc)}
+        result['update_home_resume_available'] = True
         result['candidate'] = d.CANDIDATE
         result['persistent_enable_available'] = result['recovery'].get('integrity_verified',False)
         from intent_runtime import coordinator
         c = coordinator()
         result['intent'] = c.store.read() if c is not None else None
         return result
-    raise ValueError('Expected status, trial, emergency-trial, restore, boot, enable or confirm')
+    raise ValueError('Expected status, trial, emergency-trial, restore, boot, enable, confirm, suspend-update, finish-update or abort-update')
 
 
 if __name__ == '__main__':

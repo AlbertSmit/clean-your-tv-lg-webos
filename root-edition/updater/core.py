@@ -118,8 +118,15 @@ class Manager:
     def install(self, version, profile):
         snapshot = validate(profile)
         _version(version)
+        # Finish outside the transaction lock: the adapter serializes its own
+        # bounded Home recovery. Never orphan its reservation with a new journal.
+        previous=self._load()
+        if previous and previous['phase'] in FINISHED and previous.get('homeResumePhase')!=previous['phase']:
+            self.io.finish(previous)
         with self.store.lock():
             current = self._load()
+            if current and current['phase'] in FINISHED and current.get('homeResumePhase')!=current['phase']:
+                raise ValueError('Home recovery pending; refresh Recovery status before another update')
             if current and current['phase'] not in FINISHED:
                 self._profile(current)
                 if current['phase'] != 'recovery-required' and current['candidate']['version'] == version:
@@ -331,9 +338,11 @@ class Manager:
     def rollback(self):
         with self.store.lock():
             tx = self._load()
-            if tx is None or tx['phase'] in FINISHED: return tx
+            if tx is None or tx['phase'] in {'rolled-back', 'aborted'}: return tx
             if tx['rollbackAttempted']:
                 return tx
+            if tx['phase'] == 'complete' and self.io.installed().get('version') != tx['candidate']['version']:
+                raise ValueError('installed version changed since confirmed update')
             if tx['installEvidence']['terminal'] is None:
                 if tx['phase'] in {'installing', 'recovery-required'}:
                     return self._save(tx, 'recovery-required', 'original installer outcome unknown')

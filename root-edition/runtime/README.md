@@ -10,6 +10,21 @@ Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-o
 - `confirm TRANSACTION`: diagnostic promotion of that exact live trial. Requires fresh input/guardian heartbeats, effective candidate routing and at least five seconds before rollback. No confirmation means automatic rollback.
 - `intent-trial`: diagnostic intent-bound trial, useful for regression checks; separate from user activation.
 
+The independent updater uses root-only internal commands `suspend-update TX`,
+`finish-update TX` and `abort-update TX` with its exact 32-character transaction
+identity. Suspension preserves the prior confirmed Home preference before
+restoring LG Home. After automatic application-health success, finish restores an
+enabled preference only when the suspension snapshot, boot and reservation still
+match and failsafe is absent. Activation uses the normal guardian/input checks.
+There is no manual post-update confirmation. Abort never activates Home.
+
+Private `update-home-resume.json` records the suspension and one activation
+attempt; `update-home-cancel.json` records explicit/emergency off without waiting
+for the update lock. Reconciliation never replays an uncertain activation. A
+fresh reservation starts a new suspension cycle, including a later rollback of
+the same update. Successful No-root updates preserve their independent Helper
+state instead of using this Root runtime.
+
 A confirmed normal shutdown retains the Home override, generated profile and transaction binding so bootd can select Clean Your TV as its first app. Startup recovery still restores the old transaction before arming fresh health protection. Explicit exit, input failure without a shutdown signal, and failsafe recovery restore LG Home.
 
 Runtime state is `/var/lib/clean-your-tv-root`; owned profile is `/var/webos-profile/override/clean-your-tv-root.json`. Both directories must be root-owned and not group/world writable, and must reside on the same filesystem for crash-safe hard-link publication. Runtime never edits app files, stock libraries, zoom behavior, or the existing no-root launcher.

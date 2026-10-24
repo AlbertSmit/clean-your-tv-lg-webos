@@ -27,6 +27,15 @@ class SetupTests(unittest.TestCase):
             manifest=verify_bundle(out)
             self.assertIn('updater/core.py',manifest['files'])
             self.assertIn('root-updater.ipk',manifest['files'])
+            import io, tarfile
+            sys.path.insert(0, str(ROOT.parent))
+            from cytv.package import read_ar
+            data = read_ar((out/'root-updater.ipk').read_bytes())['data.tar.gz']
+            with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+                prefix = 'usr/palm/applications/com.cleanyourtv.root.updater/'
+                html = archive.extractfile(prefix+'index.html').read().decode()
+                self.assertLess(html.index('release-notes.js'), html.index('root-updates.js'))
+                self.assertEqual(archive.extractfile(prefix+'release-notes.js').read(), (ROOT.parent/'launcher/release-notes.js').read_bytes())
             self.assertFalse(any('state/' in name or 'private' in name for name in manifest['files']))
             (out/'updater/core.py').write_text('changed')
             with self.assertRaises(ValueError):verify_bundle(out)

@@ -95,7 +95,9 @@ python3 --version
 "$ZIG" version
 ```
 
-Node.js 20+ and Zig **0.14.1** are required. For Home alone, without Helper,
+Node.js 20+ and Zig **0.14.1** are required. For Termux/Android, supply a working Zig 0.14.1 executable instead of installing
+the `ziglang` Python distribution; see [Termux setup](INSTALL.md#termux--android).
+For Home alone, without Helper,
 you can omit `ziglang` and the `ZIG` variable. In a new terminal, reactivate
 `.venv`, add the local CLI to PATH and set `ZIG` again.
 You can also install the webOS CLI separately using [LG's documentation](https://webostv.developer.lge.com/develop/tools/cli-dev-guide),

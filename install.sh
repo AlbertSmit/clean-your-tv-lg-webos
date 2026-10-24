@@ -32,9 +32,21 @@ umask 077
 printf '\nPreparing local build tools (no sudo)...\n'
 python3 -m venv .venv
 export PATH="$PWD/.venv/bin:$PATH"
-python3 -m pip install -r requirements.txt 'ziglang==0.14.1'
-export ZIG="${ZIG:-$(python3 -c 'from pathlib import Path; import ziglang; print(Path(ziglang.__file__).parent / "zig")')}"
-[[ "$("$ZIG" version)" == 0.14.1 ]] || { echo 'ZIG must point to Zig 0.14.1.' >&2; exit 1; }
+# An explicit compiler also works on platforms without a ziglang Python wheel.
+if [[ -z "${ZIG:-}" ]] && command -v zig >/dev/null; then
+  ZIG="$(command -v zig)"
+fi
+if [[ -z "${ZIG:-}" ]]; then
+  if [[ -n "${TERMUX_VERSION:-}" || "${PREFIX:-}" == */com.termux/* || "${OSTYPE:-}" == linux-android* ]]; then
+    echo 'Termux requires a working Zig 0.14.1 compiler. Set ZIG=/absolute/path/to/zig and rerun ./install.sh; the ziglang Python distribution is not available for Android.' >&2
+    exit 1
+  fi
+  python3 -m pip install 'ziglang==0.14.1'
+  ZIG="$(python3 -c 'from pathlib import Path; import ziglang; print(Path(ziglang.__file__).parent / "zig")')"
+fi
+export ZIG
+[[ "$("$ZIG" version)" == 0.14.1 ]] || { echo 'ZIG must point to a working Zig 0.14.1 executable.' >&2; exit 1; }
+python3 -m pip install -r requirements.txt
 # Pin the official CLI locally instead of depending on a global CLI's version.
 npm install --prefix build/tools --no-audit --no-fund '@webos-tools/cli@3.2.6'
 export PATH="$PWD/build/tools/node_modules/.bin:$PATH"

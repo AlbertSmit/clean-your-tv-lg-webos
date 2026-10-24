@@ -44,9 +44,30 @@ cd clean-your-tv-lg-webos
 ```
 
 Use your TV's IP address; without an argument, the script asks for it.
-It downloads Python dependencies and **Zig 0.14.1** into `.venv/` and installs the
+It downloads Python dependencies into `.venv/`, uses **Zig 0.14.1** from `ZIG`
+or `PATH` when available (otherwise installs it into `.venv/`), and installs the
 official **webOS CLI 3.2.6** in `build/tools/`. No global installation or `sudo` is
 needed. Internet access on the computer is required to download these tools.
+
+### Termux / Android
+
+Supply a working **Zig 0.14.1** executable before running the script. Android has
+no compatible `ziglang==0.14.1` Python distribution; with an explicit compiler,
+`install.sh` skips that distribution and still installs the Python dependencies.
+
+```sh
+export ZIG=/absolute/path/to/zig
+"$ZIG" version  # must print 0.14.1
+./install.sh 192.168.1.50
+```
+
+A `zig` executable on `PATH` is also accepted. If neither is available, setup
+stops with instructions before pairing or installing anything on the TV. No
+script edits are needed. The compiler must run in your actual Android/Termux
+(or Linux container) environment; a Linux archive's CPU architecture alone does
+not establish Android compatibility. The rest of the Node.js, Python and CLI
+requirements above still apply. End-to-end Termux and C5/webOS 26 hardware
+compatibility have not been verified by these build-tool fixes.
 
 The script creates a separate CLI profile named `clean-your-tv-<IP-with-dashes>`
 and asks the CLI to fetch its SSH key. **Enter the passphrase shown on the TV** when

@@ -1,4 +1,8 @@
 import io
+import json
+import os
+import shutil
+import sys
 from pathlib import Path
 import subprocess
 import tarfile
@@ -8,6 +12,57 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 
 class PackageTests(unittest.TestCase):
+    def test_build_repairs_current_metadata_package_and_preserves_stale_package(self):
+        with tempfile.TemporaryDirectory(prefix='helper build ') as tmp:
+            root = Path(tmp)
+            (root/'scripts').mkdir()
+            for name in ('build.sh', 'fix-package-data.py'):
+                shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
+            for directory in ('native/app', 'native/service', 'launcher'):
+                path = root/directory
+                path.mkdir(parents=True)
+                (path/'example.js').write_text('// fixture')
+                (path/'icon.png').write_bytes(b'fixture')
+                (path/'appinfo.json').write_text(json.dumps({
+                    'id': 'com.local.nativehome' if directory == 'native/app' else 'com.gathin.tvhome',
+                    'version': '9.8.7'}))
+            (root/'native/app/vendor').mkdir()
+            (root/'bin').mkdir()
+            zig = root/'bin/zig'
+            zig.write_text('#!/bin/sh\nfor arg do target="$arg"; done\n: > "$target"\n')
+            zig.chmod(0o755)
+            packager = root/'bin/ares-package'
+            packager.write_text('#!' + sys.executable + "\n" + '''
+import json, sys
+from pathlib import Path
+from cytv.package import ipk
+app = json.loads((Path(sys.argv[1])/'appinfo.json').read_text())
+helper = app['id'] == 'com.local.nativehome'
+files = {'usr/palm/applications/'+app['id']+'/state/.keep': b''}
+if helper:
+    files['usr/palm/services/com.local.nativehome.service/state/.keep'] = b''
+arch = 'arm' if helper else 'all'
+(Path('dist')/(app['id']+'_'+app['version']+'_'+arch+'.ipk')).write_bytes(
+    ipk(app['id'], app['version'], files, architecture=arch))
+''')
+            packager.chmod(0o755)
+            (root/'dist').mkdir()
+            stale = root/'dist/com.local.nativehome_0.6.14_arm.ipk'
+            stale.write_bytes(b'old package must stay untouched')
+            env = dict(os.environ, PATH=str(root/'bin')+os.pathsep+os.environ['PATH'],
+                       ZIG=str(zig), ARES_PACKAGE=str(packager), PYTHONPATH=str(ROOT))
+            result = subprocess.run(['bash', 'scripts/build.sh'], cwd=root, env=env, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+            self.assertEqual(stale.read_bytes(), b'old package must stay untouched')
+            sys.path.insert(0, str(ROOT))
+            from cytv.package import read_ar
+            data = read_ar((root/'dist/com.local.nativehome_9.8.7_arm.ipk').read_bytes())['data.tar.gz']
+            with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+                for name in ('usr/palm/applications/com.local.nativehome/state',
+                             'usr/palm/services/com.local.nativehome.service/state'):
+                    entry = archive.getmember(name)
+                    self.assertEqual((entry.uid, entry.gid, entry.mode), (5999, 5000, 0o770))
+
     def test_archive_members_and_state_permissions(self):
         payload = io.BytesIO()
         names = ['usr/palm/applications/com.local.nativehome/state',

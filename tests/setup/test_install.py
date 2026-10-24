@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class InstallTests(unittest.TestCase):
-    def run_installer(self, fault='', existing=False, host='192.0.2.10'):
+    def run_installer(self, fault='', existing=False, host='192.0.2.10',
+                      external_zig=False, path_zig=False, termux=False, zig_version='0.14.1'):
         with tempfile.TemporaryDirectory(prefix='tv install ') as tmp:
             root = Path(tmp)
             installer = ROOT / 'install.sh'
@@ -26,6 +27,9 @@ class InstallTests(unittest.TestCase):
                 (root / name / 'appinfo.json').write_text(json.dumps({'id': appid, 'version': version}))
             # External CLI calls are recorded; failure must stop subsequent TV mutations.
             bindir = root / 'bin'; bindir.mkdir()
+            # Keep an installed host Zig out of the simulated tool search.
+            for tool in ('bash', 'dirname', 'mkdir', 'ln'):
+                (bindir / tool).symlink_to(shutil.which(tool))
             cli = bindir / 'cli'
             cli.write_text('''#!/usr/bin/env python3
 import json, os, pathlib, sys
@@ -53,7 +57,13 @@ if [ "$1" = -m ] && [ "$2" = venv ]; then
  ln -s "$0" "$3/bin/python3"
  exit 0
 fi
-if [ "$1" = -m ] && [ "$2" = pip ]; then exit 0; fi
+if [ "$1" = -m ] && [ "$2" = pip ]; then
+ '{sys.executable}' -c 'import json,sys; open("calls.jsonl","a").write(json.dumps(["pip"]+sys.argv[1:])+"\\n")' "$@"
+ if [ -n "$TERMUX_VERSION" ]; then
+  case "$*" in *ziglang*) exit 1 ;; esac
+ fi
+ exit 0
+fi
 exec '{sys.executable}' "$@"
 '''); py.chmod(0o755)
             zigpkg = root / 'ziglang'; zigpkg.mkdir(); (zigpkg / '__init__.py').touch()
@@ -76,10 +86,19 @@ printf 'package' > dist/com.local.nativehome_0.6.13_arm.ipk
 printf '["configure"]\\n' >> calls.jsonl
 [ "$FAULT" != configure ]
 ''')
-            env = dict(os.environ, PATH=str(bindir)+':'+os.environ['PATH'],
+            env = dict(os.environ, PATH=str(bindir),
                        PYTHONPATH=str(root), FAULT=fault, EXISTING='1' if existing else '0',
                        DEVICE='test-tv', PROFILE_HOST='192.0.2.99' if fault=='profile' else host)
             env.pop('ZIG', None); env.pop('TV_HOST', None)
+            env.pop('TERMUX_VERSION', None); env.pop('PREFIX', None)
+            if termux:
+                env['TERMUX_VERSION'] = 'test'
+            if external_zig or path_zig:
+                supplied = bindir / ('zig' if path_zig else 'external-zig')
+                supplied.write_text('#!/bin/sh\necho ' + zig_version + '\n')
+                supplied.chmod(0o755)
+                if external_zig:
+                    env['ZIG'] = str(supplied)
             result = subprocess.run(['bash', 'install.sh', host], cwd=root, env=env,
                                     text=True, capture_output=True)
             calls = [json.loads(line) for line in (root/'calls.jsonl').read_text().splitlines()] if (root/'calls.jsonl').exists() else []
@@ -95,6 +114,35 @@ printf '["configure"]\\n' >> calls.jsonl
         self.assertTrue(all(c[1:3]==['-d','test-tv'] for c in installs))
         self.assertLess(calls.index(installs[-1]), calls.index(['configure']))
         self.assertEqual(calls[-1], ['ares-launch','-d','test-tv','com.local.nativehome'])
+
+    def test_default_bootstrap_installs_pinned_zig_distribution(self):
+        result, calls = self.run_installer()
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertTrue(any('ziglang==0.14.1' in call for call in calls if call[0] == 'pip'))
+
+    def test_termux_supplied_zig_skips_python_zig_distribution(self):
+        for option in ('external_zig', 'path_zig'):
+            with self.subTest(option=option):
+                result, calls = self.run_installer(termux=True, **{option: True})
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                pip = [call for call in calls if call[0] == 'pip']
+                self.assertTrue(pip)
+                self.assertFalse(any('ziglang' in arg for call in pip for arg in call))
+                self.assertEqual(calls[-1], ['ares-launch', '-d', 'test-tv', 'com.local.nativehome'])
+
+    def test_termux_without_zig_stops_with_instructions_before_pairing(self):
+        result, calls = self.run_installer(termux=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('ZIG', result.stdout+result.stderr)
+        self.assertIn('Termux', result.stdout+result.stderr)
+        self.assertFalse(any('ziglang' in arg for call in calls if call[0] == 'pip' for arg in call))
+        self.assertFalse(any(call[0].startswith('ares-') for call in calls))
+
+    def test_wrong_external_zig_stops_before_pairing(self):
+        result, calls = self.run_installer(external_zig=True, zig_version='0.15.0')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('0.14.1', result.stdout+result.stderr)
+        self.assertFalse(any(call[0].startswith('ares-') for call in calls))
 
     def test_reuses_profile_without_retargeting(self):
         result, calls = self.run_installer(existing=True)

@@ -25,3 +25,7 @@
 - Android 15 ARM64: app launches; both edition screens captured; No-root hidden passphrase callback and missing-Key-Server recovery passed; Root real SSH fingerprint confirmation and hidden password callback passed against a loopback fixture rejecting a dummy password. No commands were executed on a physical TV.
 - Actual Android screenshots: `android/screenshots/android-*`; browser simulated states are explicitly labeled separately.
 - Installable artifact: `dist/android/cytv-android-0.1.0-preview-arm64.apk`, debug signed.
+
+## Review follow-up
+
+Independent read-only review identified preview payload caching by versionCode, outdated WebView handling and form preservation during key import. Fixed all three: manifest-SHA256 cache directories, a native WebView 108+ feature check/update message, and saving form values before key import. The key-import regression was observed failing before the fix and passing afterward. Final assembleDebug/lintDebug and UI checks passed; the final APK was reinstalled with the same versionCode and the native No-root callback/recovery test passed. The new manifest-hash cache directory was confirmed inside the emulator.

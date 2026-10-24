@@ -4,7 +4,7 @@ A self-contained Android installer for the existing No-root and Root editions of
 
 ## Install and connect
 
-1. Copy the preview APK to a **64-bit ARM phone running Android 7.0 or later**. Allow the browser/file manager to install this APK when Android requests it.
+1. Copy the preview APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
 2. Keep the phone and LG webOS TV on the same local network. Turn the TV on; disconnect VPNs or guest-network isolation if the connection fails.
 3. Choose **No-root** for Developer Mode, or **Root** for a TV with existing root SSH access. Enter the TV IPv4 address. Default SSH ports are 9922 and 22 respectively; Root ports are editable.
 4. No-root: enable **Dev Mode Status** and **Key Server** in the TV's Developer Mode app. Enter its passphrase when CYTV asks. Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.
@@ -39,7 +39,7 @@ cd android
 ./gradlew :app:assembleDebug :app:lintDebug
 ```
 
-Output: `android/app/build/outputs/apk/debug/app-debug.apk` relative to the repository root. No release signing material is stored in the repository. The first build downloads dependencies; runtime installation uses the embedded payload. Staging validates every payload hash and copies only public source modules, excluding Qt/desktop entry points, caches and local profiles. It does not automatically rebuild TV payloads during Gradle execution.
+Output: `android/app/build/outputs/apk/debug/app-debug.apk` relative to the repository root. No release signing material is stored in the repository. The first build downloads dependencies; runtime installation uses the embedded payload. Runtime extraction is cached by the bundled manifest SHA-256, so reinstalling a preview with the same versionCode cannot reuse a different older payload. Staging validates every payload hash and copies only public source modules, excluding Qt/desktop entry points, caches and local profiles. It does not automatically rebuild TV payloads during Gradle execution.
 
 Python dependencies are resolved normally against PyPI and the official Chaquopy wheel index: Paramiko 3.5.1, websockets 15.0.1, cryptography 42.0.8, bcrypt 3.2.2 and PyNaCl 1.5.0. Python 3.12/arm64 is used because its available bcrypt wheel satisfies Paramiko's minimum version; dependency constraints are not bypassed. These versions are the available Android package combination, not a claim that all packages are the latest upstream versions.
 

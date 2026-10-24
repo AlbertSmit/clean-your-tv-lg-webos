@@ -52,6 +52,19 @@ class MainActivity : Activity() {
         }
         web.addJavascriptInterface(Bridge(), "CYTV")
         web.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                // Android 7 can have an old, never-updated WebView. Show a useful
+                // native message instead of leaving a blank page on syntax errors.
+                web.evaluateJavascript("typeof Array.prototype.at === 'function' && typeof HTMLDialogElement !== 'undefined' && typeof CSS !== 'undefined' && CSS.supports('height', '100dvh')") { supported ->
+                    if (supported != "true" && !isDestroyed) {
+                        android.app.AlertDialog.Builder(this@MainActivity)
+                            .setTitle("CYTV / WebView")
+                            .setMessage("Обновите Android System WebView или Chrome и откройте CYTV снова.\n\nUpdate Android System WebView or Chrome, then reopen CYTV (WebView 108+ required).")
+                            .setPositiveButton("OK") { _, _ -> finish() }
+                            .setCancelable(false).show()
+                    }
+                }
+            }
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = request?.url.toString() != entry
             override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                 val url = request?.url.toString()

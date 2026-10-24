@@ -8,6 +8,7 @@ import com.chaquo.python.android.AndroidPlatform
 import org.json.JSONObject
 import java.io.File
 import java.util.UUID
+import java.security.MessageDigest
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -97,7 +98,12 @@ class InstallerService : Service() {
     private fun execute(config: String) {
         try {
             if (!Python.isStarted()) Python.start(AndroidPlatform(this))
-            val payload = File(filesDir, "payload-${BuildConfig.VERSION_CODE}")
+            // Preview APKs may be reinstalled with the same versionCode. Key the
+            // extraction by its bundled manifest, never by the app version alone.
+            val manifest = assets.open("payload/payload.json").use { it.readBytes() }
+            val digest = MessageDigest.getInstance("SHA-256").digest(manifest)
+                .joinToString("") { "%02x".format(it) }
+            val payload = File(filesDir, "payload-$digest")
             if (!File(payload, ".ready").exists()) {
                 if (payload.exists()) payload.deleteRecursively()
                 copyAsset("payload", payload)

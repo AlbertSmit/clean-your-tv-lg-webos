@@ -3,8 +3,9 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 
+let browser;
 (async () => {
-  const browser = await chromium.launch({headless: true, executablePath: process.env.CYTV_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+  browser = await chromium.launch({headless: true, executablePath: process.env.CYTV_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
   const page = await browser.newPage({viewport:{width:412,height:892},deviceScaleFactor:2});
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -42,6 +43,12 @@ const fs = require('node:fs');
   await page.getByRole('button',{name:'SSH-ключ',exact:true}).click();
   await page.getByRole('button',{name:'Проверить и установить',exact:true}).click();
   assert.equal(await page.locator('#key-error').isVisible(),true);
+  await page.locator('#host').fill('192.168.1.88');
+  await page.locator('#port').fill('2222');
+  await page.getByRole('button',{name:'Выбрать файл ключа',exact:true}).click();
+  await page.evaluate(()=>receiveNative({kind:'key-imported'}));
+  assert.equal(await page.locator('#host').inputValue(),'192.168.1.88');
+  assert.equal(await page.locator('#port').inputValue(),'2222');
   for (const width of [320,375,412,768,1024]) {
     await page.setViewportSize({width,height:892});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth),true,`overflow at ${width}`);
@@ -49,4 +56,4 @@ const fs = require('node:fs');
   assert.deepEqual(errors,[]);
   console.log('Android UI: validation, both editions, explicit trust, secret separation, recovery and responsive widths passed.');
   await browser.close();
-})().catch(e=>{console.error(e);process.exitCode=1});
+})().catch(async e=>{console.error(e);if(browser)await browser.close();process.exitCode=1});

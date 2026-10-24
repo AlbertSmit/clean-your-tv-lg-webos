@@ -39,9 +39,10 @@ async function main() {
     offset += png.length;
   });
   await fs.writeFile(path.join(root, 'assets/icons/installer.ico'), Buffer.concat([header, ...images]));
-  await sharp(path.join(root, 'assets/brand/logo-light.svg'), { density: 144 })
-    .resize(1440).flatten({ background: '#ffffff' }).png()
-    .toFile(path.join(root, 'assets/brand/readme-logo.png'));
+  for (const [source, output] of [['logo-light.svg', 'readme-logo.png'], ['logo-dark.svg', 'readme-logo-dark.png']]) {
+    await sharp(path.join(root, 'assets/brand', source), { density: 144 })
+      .resize(1440).png().toFile(path.join(root, 'assets/brand', output));
+  }
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });

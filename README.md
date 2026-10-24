@@ -1,4 +1,5 @@
-![Clean Your TV — for LG webOS](assets/brand/readme-logo.png)
+![Clean Your TV — for LG webOS](assets/brand/readme-logo.png#gh-light-mode-only)
+![Clean Your TV — for LG webOS](assets/brand/readme-logo-dark.png#gh-dark-mode-only)
 
 # Clean Your TV — LG webOS
 

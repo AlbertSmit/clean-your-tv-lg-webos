@@ -10,7 +10,7 @@ The project lockup reads **clean your tv / FOR LG webOS**.
 - `symbol-color.svg`, `symbol-reversed.svg`: standalone house for light/dark backgrounds.
 - `symbol-black.svg`, `symbol-white.svg`: true single-colour house marks.
 - `wordmark.svg`: custom lettering only, converted from the approved study into smoothed vector contours.
-- `readme-logo.png`: Markdown-compatible README header on a white background.
+- `readme-logo.png`, `readme-logo-dark.png`: transparent README headers for light/dark themes.
 - `brand-overview.svg`, `brand-overview.png`: identity and application-family preview.
 
 SVG masters contain vector paths, no raster images, filters, external fonts or live text.
@@ -35,8 +35,10 @@ rotate, outline, add effects, or independently rearrange parts of the signature.
 Use the provided reversed variant on dark backgrounds. Use the symbol alone below
 360 px horizontal signature width; keep standalone symbols at least 16 px.
 The 80/130 px TV tiles use their own generous internal padding.
-README embeds `readme-logo.png` with standard Markdown image syntax so viewers
-that disable raw HTML still display the logo. Its white background blends into the light README page.
+README uses standard Markdown image syntax with GitHub's `#gh-light-mode-only`
+and `#gh-dark-mode-only` fragments. GitHub displays the matching transparent
+image for its active theme. Brown lettering is used on light backgrounds and
+cream lettering on dark backgrounds; neither image has an opaque backing.
 
 Root tiles add a small orange R badge; ordinary Home/Updater tiles do not.
 Helper is the directional pad with orange centre; Updater is the paired rotating arrow.

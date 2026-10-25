@@ -57,6 +57,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: python scripts/prepare-release.py "$RELEASE_TAG" "$RUNNER_TEMP/signed-release"
       - name: Upload, verify and publish
+        id: publication
         if: inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -73,8 +74,14 @@ jobs:
           name: signed-release-feeds
           path: ${{ runner.temp }}/signed-release/
           if-no-files-found: error
-      - name: Notify shipped pull requests and issues after verified publication
+      - name: Start the next cycle and open its draft after verified publication
         if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python scripts/release-flow.py start-cycle --tag "$RELEASE_TAG"
+      - name: Notify shipped pull requests and issues after verified publication
+        if: inputs.publish && !cancelled() && steps.publication.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}

@@ -1,5 +1,7 @@
 # Manual installation of No-root and Root without cytv
 
+**1.1.0 RC is unreleased.** The [latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) and its `/latest/download/` links currently deliver **1.0.3 stable**. For explicit RC testing, use [Actions run 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from product commit `acf1acc`; later documentation edits do not change those artifacts. RC versions are cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Physical-TV acceptance remains pending; see [release notes](RELEASE-1.1.0.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 This guide uses commands from the source repository: the webOS CLI for No-root
@@ -17,7 +19,7 @@ failsafe checks remain open: [validation scope](../root-edition/RELEASE-ACCEPTAN
 | Requirement | No-root | Root |
 | --- | --- | --- |
 | TV access | LG Developer Mode, Key Server, SSH `prisoner:9922` | Existing root, a trusted SSH host key, authentication without an interactive password |
-| On the TV | Active Developer Mode session; local control access for Helper | `/usr/bin/python3`, `/usr/bin/luna-send`, Homebrew services, `/media/developer/apps`, a compatible ARM32 Magic Remote input interface |
+| On the TV | Active Developer Mode session; local control access for Helper | Python 3.9+ (manual commands assume `/usr/bin/python3`), Node.js 8+, `/usr/bin/luna-send`, Homebrew services, `/media/developer/apps`, a compatible ARM32 Magic Remote input interface |
 | Ready-made artifacts | A personalized Home IPK and, optionally, a Helper IPK | The **entire** Root bundle: IPK, `setup.py`, support files, `runtime/`, manifests and checksums |
 | Build from source | Git, Python 3.9+ with pip/venv, Node.js 20.19+ with npm, webOS CLI 3.2.6; Zig 0.14.1 for Helper | Git, Python 3.9+, Node.js 20.19+ and npm for compatible web assets; no webOS CLI/Zig |
 | Additional tools for the full test suite | Bash, Node.js, Python 3, a C compiler named `cc` | The same tools; the build and SSH installer themselves do not require Bash |
@@ -167,8 +169,8 @@ bash scripts/test.sh
 
 These dependencies support the shared installer's tests; `cytv` itself is not
 run. The tests also require `cc`. The build produces `dist/SHA256SUMS`,
-`dist/com.local.nativehome_0.6.17_arm.ipk` and the Home IPK. The v1.0.1
-distribution uses Home **1.3.7**, Helper **0.6.17** and Root **0.1.11**, as recorded
+`dist/com.local.nativehome_0.6.19_arm.ipk` and the Home IPK. The 1.1.0 RC
+source uses Home **1.4.0**, Helper **0.6.19** and Root **0.2.0**, as recorded
 in [`release-versions.json`](../release-versions.json). For another source revision,
 check the Home manifest and use the matching generated package filenames:
 
@@ -185,8 +187,8 @@ older IPKs left in `dist/`.
 Install Helper, then the **exact** new Home IPK, adjusting the version if needed:
 
 ```bash
-ares-install -d lgtv dist/com.local.nativehome_0.6.17_arm.ipk
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.7_all.ipk
+ares-install -d lgtv dist/com.local.nativehome_0.6.19_arm.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.4.0_all.ipk
 TV_HOST="$TV_HOST" DEVICE=lgtv bash scripts/configure-tv.sh
 ares-launch -d lgtv com.local.nativehome
 ```
@@ -211,7 +213,7 @@ After syncing your apps:
 mkdir -p dist
 python3 scripts/tv_web_build.py --input launcher --output build/home-app
 ares-package build/home-app renewal-service -o dist
-ares-install -d lgtv dist/com.gathin.tvhome_1.3.7_all.ipk
+ares-install -d lgtv dist/com.gathin.tvhome_1.4.0_all.ipk
 ares-launch -d lgtv com.gathin.tvhome
 ```
 
@@ -279,6 +281,14 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=yes my-tv 'id -u; /usr/bin/python3
 python3 root-edition/doctor.py --ssh my-tv --output doctor-report.json
 ```
 
+The TV requires Python 3.9+ (including required modules), Node.js 8+,
+`luna-send`, Homebrew services and supported ARM32 remote input. The manual
+commands below assume a suitable `/usr/bin/python3`. For eligible ARMv7 TVs
+without one, use cytv's verified on-demand [Python provisioning](OPTIONAL-PYTHON.md)
+and its retained interpreter bindings; do not create a system Python symlink.
+Manual drivers do not automatically download Python. Status, recovery and removal
+must use the installation's verified interpreter, including after an interruption.
+
 The session must use UID 0. UID 0 and a doctor report alone **do not prove**
 input compatibility, root persistence after reboot or working recovery.
 Doctor reads state without obtaining root or changing settings. It refuses
@@ -300,12 +310,12 @@ From the source root; this operation does not connect to the TV:
 ```bash
 mkdir -p build
 npm ci --ignore-scripts --no-audit --no-fund
-python3 root-edition/build.py --output build/root-candidate --version 0.1.11
+python3 root-edition/build.py --output build/root-candidate --version 0.2.0
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.1.11_all.ipk`, `setup.py`,
+The bundle contains `com.cleanyourtv.root.preview_0.2.0_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.
@@ -458,10 +468,12 @@ Home and your Quick Access assignment. See [No-root maintenance](MAINTENANCE.md)
 
 ### Root
 
-Root supports compatible signed application updates through Settings after the
+Root supports compatible signed edition release sets through Settings after the
 [one-time Root Updater setup](../root-edition/UPDATES.md). Manual installations
 require that separate setup with the exact installed rollback baseline; cytv
-performs it automatically for fresh installations. `setup.py` has no manual
+performs Root Updater setup automatically for fresh installations. The independent
+System Updater requires a separate explicit computer bootstrap; follow the linked
+guide before using whole-edition updates. `setup.py` has no manual
 `reinstall` command. Do not install a new IPK over a live runtime: the package,
 recovery files, manifests and journals must match. Retain the original bundle
 and private backups outside the TV.

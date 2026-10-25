@@ -16,6 +16,11 @@ No terminal commands, manual log collection or separate C5 Helper are required.
 
 ## Release handoff
 
+The published v1.0.3 contains Helper 0.6.18 and cytv 0.2.16 with this diagnostic
+workflow. The unpublished 1.1.0 candidate contains Helper 0.6.19 and cytv 0.3.0;
+use its [test build](RC-1.1.0-TESTING.md) for candidate feedback. Do not claim a
+C5 or another model fixed merely because capture is available.
+
 Send the reply below only after a normal release candidate contains both the
 updated Helper and installer. Published Helper 0.6.17 does not contain this mode.
 The normal release process selects a new Helper version and builds it from source;
@@ -54,7 +59,7 @@ A missing start acknowledgement tells the user to update/start Helper.
 Thanks for the logs. They show Home events reaching the Helper and successful
 launch acknowledgements. We need to see which app actually becomes visible next.
 
-The new release candidate includes a simple diagnostic tool in the normal
+The linked release or release candidate includes a simple diagnostic tool in the normal
 installer. Please update both the installer and TV components using the RC linked
 in this reply, then:
 

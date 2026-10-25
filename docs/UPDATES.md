@@ -1,8 +1,113 @@
-# Signed Home updates and recovery
+# Updates and recovery — 1.1.0 candidate
+
+**1.1.0 is unpublished.** The stable `releases/latest` feeds still describe the
+published release. Candidate installers come from Actions; see
+[candidate testing](RC-1.1.0-TESTING.md). Checking the stable feed cannot test a
+future signed 1.1.0 offer. Keep legacy recovery available until the transition
+and the new supervisor have both been verified.
+
+## Updating every component from the TV
+
+The independent System Updater adds **Update all** to Software updates. It uses
+one signed release set for the installed edition:
+
+- No-root edition on a rooted TV: Home, Home Helper and Home Updater.
+- Root edition: Root Home, Root Updater and the Home routing/recovery runtime.
+
+Unrooted TVs continue using the computer installer. Root, suitable TV Python 3.9+,
+Node.js 8+ and working webOS installer services are required for this supervisor.
+The supervisor is a small fixed bootstrap outside these packages; its pinned
+verification key and destination allowlist cannot be replaced by release data.
+
+The computer installer can supply a verified optional ARMv7 Python if the TV's
+existing interpreter fails its requirements. Other root, Node and platform
+requirements still apply. See [optional Python](OPTIONAL-PYTHON.md).
+
+### One-time computer preparation
+
+Install the transition Home release containing the new shared update interface
+**before** provisioning the supervisor. A Root transition through the existing
+Home-only update screen requires an explicitly prepared compatible signed release;
+the unpublished RC is absent from the stable feed. Fresh Root setups use the
+complete installer. Existing Root installations with a retained Root Updater must
+first inspect its transaction and recovery status: generic reinstallation is
+deliberately refused. Follow the [existing-TV checkpoint](RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv)
+and review the infrastructure transition; do not delete updater state to bypass it.
+Ordinary edition users can use the
+computer installer to update Home/Helper and install Home Updater. Then use a
+release containing the System Updater bundle.
+In the desktop installer, choose **Enable updates for all TV components (root
+required)**. The equivalent command, using a saved root SSH connection, is:
+
+```sh
+cytv enable-system-updates --edition root --host TV_ADDRESS
+```
+
+This maintenance action provisions the independent service without reinstalling
+Home or changing its routing. It snapshots the actual installed app, service and
+package files into verified rollback IPKs, including personalized inventory.
+The setup checks `systemUpdateProtocol = 1` in the installed Home metadata before
+capturing a baseline; older Home interfaces are refused without mutation.
+Existing runtime/updater files are cached separately. Missing files from the
+pinned bootstrap inventory (including certificates absent in older Root Updater
+installations) are recorded explicitly. Rollback removes such newly introduced
+files only when their bytes match the verified candidate. Mutable settings and
+credentials are excluded from the package archives.
+
+For a rooted TV running the ordinary No-root edition, use an existing OpenSSH
+host alias that logs in as root. Install the matching Home/Helper/Home Updater
+transition release using the computer first, then run the packaged setup from
+the directory containing the generated `system-updater/` bundle (not repository
+source `system-updater/setup.py`):
+
+```sh
+python3 system-updater/setup-system-updater.py --bundle system-updater \
+  --edition no-root --ssh TV_ROOT_ALIAS --apply
+```
+
+The script prints the permission plan without `--apply`. Both editions require
+an already installed edition-specific recovery Updater. After provisioning, use the shared system update screen for all subsequent
+compatible releases. Updating through a legacy Home-only installer would
+invalidate the captured baseline and is disabled while the supervisor is installed. A retained or partial supervisor setup is refused;
+do not delete its state or rerun installation after an uncertain result.
+
+### Installation and recovery
+
+All candidate packages and the previous release are verified and cached before
+replacement. Settings/profile backups and the transaction journal live outside
+all replaced packages. The worker continues if Home or an Updater app closes.
+Root Home routing returns to LG during installation. Helper settings and emergency
+stop markers are preserved; explicit or emergency off is never cleared to resume
+Home control. Startup health is tied to the transaction and installed version,
+and checks the restored launcher grid before completion.
+
+Open either edition's Updater to inspect **Recovery**. Rollback restores the
+complete previous component set and its saved profile; settings edited after the
+update are lost. An ambiguous installer result blocks rollback and reinstallation.
+Version readback alone never proves that installation ended. Boot reconciliation
+never resubmits an uncertain external installer call. Keep the TV powered on and
+retain the journal for diagnosis.
+
+Local tests cover signed policy, package inspection, durable interruption,
+profile restoration, UI navigation, bootstrap packaging and release signing.
+This new multi-component update path still requires acceptance tests on a real
+TV, including power loss, Helper input release and runtime/Updater rollback.
+No release feed or TV installation is changed by building or running local tests.
+
+
+---
+
+# Legacy Home-only updates (through v1.0.3)
+
+The remainder records the older Home-only path and its historical evidence.
+It applies only while no System Updater is installed. Its promise that Helper
+is unchanged does not describe the 1.1.0 whole-edition path above. Retain this
+reference for existing installations; do not apply legacy permissions or sign
+legacy example manifests as a shortcut to the new bootstrap.
 
 Available in v0.8.1. Published signed Home update and rollback were verified on LG OLED55C3RLA / 43.21.71, including app preservation, remote controls and disabled renewal. Installation from the TV requires root, Homebrew Channel and the scoped setup below.
 
-## What users get
+## Legacy: What users get
 
 Home Settings → Software updates → Check for updates shows installed and available Home versions. The separate **Home Updater** app owns the backup and recovery journal. Installation requires root, Homebrew Channel and the scoped LS2 permission setup below. The no-root launcher remains supported with computer-assisted updates; checking releases through this updater also depends on access to Homebrew's metadata API and is not promised on an unrooted TV.
 
@@ -10,13 +115,13 @@ Developer Mode renewal Beta is paused automatically before installation and its 
 
 The first upgrade to Home 1.2.0 requires a personalized package using the existing sync/build flow. Subsequent in-app updates require an installed Home version at least 1.2.0 and a signed matching previous package. Never install an empty generic package over a pre-1.2.0 installation expecting migration.
 
-## Preserved data
+## Legacy: Preserved data
 
 Home captures the app inventory, embedded icons, input labels, configuration, tile order and renewal diagnostic history. It saves a local copy and then an independent updater backup before installation. The transaction's renewal receipt, not diagnostic history, controls restoration of the enabled preference. Missing icons, invalid profiles and storage failures stop installation.
 
 The new Home loads its saved profile before rendering, or restores the independent backup when local data is absent. A damaged local profile is not silently replaced. Current bounds are 200 apps, 100 inputs, 256 KiB per icon and 4 MiB profile JSON; maximum-sized profiles have not been validated on hardware. A personalized rebuild is not an inventory reset once a saved profile exists.
 
-## Recovery
+## Legacy: Recovery
 
 Root and No-root confirm startup health automatically after installation; users do
 not need to confirm that the updated launcher works. Confirmation does not remove
@@ -74,7 +179,7 @@ Homebrew does not distinguish transport failures from terminal installer failure
 
 The service fetches and verifies metadata again at confirmation so idle shutdown between Check and Confirm does not lose the offer. A changed offered version requires a new confirmation. Installation uses a subscription and waits for Homebrew's terminal `finished` reply; progress messages are not success.
 
-## Scoped permission setup (maintainer procedure)
+## Legacy: Scoped permission setup (maintainer procedure)
 
 The package alone does not grant cross-package permissions. Build `scripts/build-updater.sh`; its `dist/updater-setup/` directory contains the CLI and its dependencies. Transfer that directory intact to a temporary directory on an already-rooted TV. From that directory, as root:
 
@@ -99,7 +204,7 @@ Removal deletes only files matching the receipt, removes the manifest first and 
 
 On the tested C3, scoped grants persisted through a software reboot. Activity Manager required that reboot to adopt the new canonical API grants. Keep the same setup directory to remove/update its owned permissions. The alternative `/var/luna-service2` root, factory reset and all power-loss cases are not validated. No additional boot hook is installed.
 
-## Build, signing and release checklist
+## Legacy: Build, signing and release checklist
 
 ```sh
 scripts/test.sh
@@ -133,7 +238,7 @@ Before publishing:
 - Keep the previous package downloadable. Test the public asset URLs before making the release latest. Do not publish the lab's signed envelopes to the stable feed.
 - Include updater setup files, install/removal instructions, bootstrap limitations and recovery instructions. Publishing metadata and changing the stable feed are separate from merging this PR.
 
-## Validation and limits
+## Legacy: Validation and limits
 
 On 2026-10-22, the corrected service completed a user-triggered isolated 1.2.0 → 1.2.1 update, restored the enabled renewal preference, and rolled back to 1.2.0 automatically. The user confirmed the preserved test tile, remote navigation and working production Home afterwards. Scoped permissions were removed and the temporary server stopped; production package metadata and helper processes matched the baseline.
 
@@ -174,80 +279,3 @@ from the exact release bundles, signed, uploaded and checked before publication.
 non-publishing test run. The read-only Release update feed workflow also checks
 public release edits. Never carry an older Home feed forward when the release's
 Home version has changed.
-
-
-## Updating every component from the TV
-
-The independent System Updater adds **Update all** to Software updates. It uses
-one signed release set for the installed edition:
-
-- No-root edition on a rooted TV: Home, Home Helper and Home Updater.
-- Root edition: Root Home, Root Updater and the Home routing/recovery runtime.
-
-Unrooted TVs continue using the computer installer. Root, TV Python 3.9+,
-Node.js 8+ and working webOS installer services are required for this supervisor.
-The supervisor is a small fixed bootstrap outside these packages; its pinned
-verification key and destination allowlist cannot be replaced by release data.
-
-### One-time computer preparation
-
-Install the transition Home release containing the new shared update interface
-**before** provisioning the supervisor. Root users can install that Home release
-through the existing Home-only update screen. Ordinary edition users can use the
-computer installer to update Home/Helper and install Home Updater. Then use a
-release containing the System Updater bundle.
-In the desktop installer, choose **Enable updates for all TV components (root
-required)**. The equivalent command, using a saved root SSH connection, is:
-
-```sh
-cytv enable-system-updates --edition root --host TV_ADDRESS
-```
-
-This maintenance action provisions the independent service without reinstalling
-Home or changing its routing. It snapshots the actual installed app, service and
-package files into verified rollback IPKs, including personalized inventory.
-The setup checks `systemUpdateProtocol = 1` in the installed Home metadata before
-capturing a baseline; older Home interfaces are refused without mutation.
-Existing runtime/updater files are cached separately. Missing files from the
-pinned bootstrap inventory (including certificates absent in older Root Updater
-installations) are recorded explicitly. Rollback removes such newly introduced
-files only when their bytes match the verified candidate. Mutable settings and
-credentials are excluded from the package archives.
-
-For a rooted TV running the ordinary No-root edition, use an existing OpenSSH
-host alias that logs in as root. Install the matching Home/Helper/Home Updater
-transition release using the computer first, then run the packaged setup:
-
-```sh
-python3 system-updater/setup-system-updater.py --bundle system-updater \
-  --edition no-root --ssh TV_ROOT_ALIAS --apply
-```
-
-The script prints the permission plan without `--apply`. Both editions require
-an already installed edition-specific recovery Updater. After provisioning, use the shared system update screen for all subsequent
-compatible releases. Updating through a legacy Home-only installer would
-invalidate the captured baseline and is disabled while the supervisor is installed. A retained or partial supervisor setup is refused;
-do not delete its state or rerun installation after an uncertain result.
-
-### Installation and recovery
-
-All candidate packages and the previous release are verified and cached before
-replacement. Settings/profile backups and the transaction journal live outside
-all replaced packages. The worker continues if Home or an Updater app closes.
-Root Home routing returns to LG during installation. Helper settings and emergency
-stop markers are preserved; explicit or emergency off is never cleared to resume
-Home control. Startup health is tied to the transaction and installed version,
-and checks the restored launcher grid before completion.
-
-Open either edition's Updater to inspect **Recovery**. Rollback restores the
-complete previous component set and its saved profile; settings edited after the
-update are lost. An ambiguous installer result blocks rollback and reinstallation.
-Version readback alone never proves that installation ended. Boot reconciliation
-never resubmits an uncertain external installer call. Keep the TV powered on and
-retain the journal for diagnosis.
-
-Local tests cover signed policy, package inspection, durable interruption,
-profile restoration, UI navigation, bootstrap packaging and release signing.
-This new multi-component update path still requires acceptance tests on a real
-TV, including power loss, Helper input release and runtime/Updater rollback.
-No release feed or TV installation is changed by building or running local tests.

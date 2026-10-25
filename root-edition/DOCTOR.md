@@ -1,5 +1,21 @@
 # Root Edition doctor
 
+## cytv requirement diagnostics (1.1.0 RC)
+
+`cytv doctor --report` uses the shared installer's saved connection and writes a
+private issue-ready report. Root checks include UID, Python executable/modules
+and version/features, Luna, developer/service directories and TV Node.js 8+.
+`tv.root_requirements` records each result as `pass`, `fail` or `unknown`;
+`ssh_command.exit_status` can record a safe numeric remote exit status without raw
+output or credentials. Review reports before sharing. A failed Python check is
+not a complete compatibility diagnosis.
+
+Doctor is read-only and never downloads Python. Eligible setup can separately
+provision pinned ARMv7 Python; maintenance uses retained verified bindings.
+[Runtime compatibility](../docs/OPTIONAL-PYTHON.md) and other Root prerequisites
+remain independent. The standalone probe below has its own conservative report
+schema; it is not the cytv requirements report and does not certify compatibility.
+
 Read-only diagnostics for Root Edition. The doctor itself does not install
 software or obtain root. Use the [shared installation guide](../docs/INSTALL.md)
 for cytv or [manual Root setup](ROLLOUT.md). No-root remains a separate edition.

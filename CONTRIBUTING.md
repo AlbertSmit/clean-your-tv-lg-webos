@@ -17,6 +17,9 @@ checkout path; the single-checkout rule describes this maintained workspace.
 
 Write technical and developer documentation in English. Maintain the ten localized
 user guides under `docs/i18n/` when changing user-facing setup or controls.
+For every release candidate, complete the [documentation pass](docs/RELEASE-FLOW.md#update-documentation-for-every-candidate),
+record reviewed guides and verification in the release PR, and keep candidate
+instructions separate from published downloads and historical hardware evidence.
 
 Run `npm ci` first. TV web packages use Babel/core-js and PostCSS, with a strict
 compatibility check after conversion; see [TV web build](docs/TV-WEB-BUILD.md).

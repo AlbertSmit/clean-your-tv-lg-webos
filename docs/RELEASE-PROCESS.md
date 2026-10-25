@@ -85,7 +85,17 @@ A wrong/missing key, absent bundle, version regression, incompatible rollback,
 changed package without a component-version bump, or mismatched provenance
 stops the workflow. A Helper version change needs a compatible, tested rollback
 baseline; the automation stops rather than publish an unusable No-root offer.
-A permission-only Helper transition can be approved in
+An operator-tested runtime transition can be approved in
+`native/helper-rollback-compatibility.json` by pinning the exact new Helper
+archive (`candidate_archive_sha256`), previous Helper package, published Home
+rollback and a nonempty acceptance record. The new archive hash includes every
+uncompressed archive byte and metadata field; gzip headers are excluded for
+portability between build hosts. A changed payload, installation control or
+rollback baseline stops publication. Acceptance must state its actual hardware
+scope and any missing device/artifact details. This is a specific reviewed
+transition, not permission for arbitrary Helper changes.
+
+A permission-only Helper transition can alternatively be approved in
 `native/helper-rollback-compatibility.json`: it pins both Helper versions, the
 previous Helper package, the exact previous Home rollback and the reviewed
 permission-module hash. Preparation requires unchanged input executables and

@@ -3,6 +3,7 @@
 import argparse
 import base64
 import hashlib
+import gzip
 import io
 import json
 import os
@@ -16,7 +17,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from cytv.package import data_files, read_ar, safe_name
+from cytv.package import ar, data_files, read_ar, safe_name
 
 REPO = 'Razdva122/clean-your-tv-lg-webos'
 URL = 'https://github.com/' + REPO + '/releases/download/'
@@ -54,8 +55,15 @@ def package_version(raw, kind, expected):
     version(expected)
 
 
+def helper_archive_digest(raw):
+    """Pin all archive bytes and metadata independently of gzip implementation headers."""
+    return digest(ar({
+        name: gzip.decompress(data) if name.endswith('.tar.gz') else data
+        for name, data in read_ar(raw).items()}))
+
+
 def verify_helper_transition(current, prior, packages, prior_packages, compatibility):
-    """Only a reviewed, hash-pinned permission repair may reuse the old Home ABI."""
+    """Require either an exact tested runtime pin or the narrow permission repair."""
     expected = {'from_helper':prior['helper'], 'to_helper':current['helper'],
                 'rollback_home':prior['home'], 'rollback_sha256':digest(prior_packages['home']),
                 'prior_helper_sha256':digest(prior_packages['helper'])}
@@ -63,6 +71,12 @@ def verify_helper_transition(current, prior, packages, prior_packages, compatibi
         raise ValueError('Helper rollback compatibility approval mismatch')
     if version(current['home']) <= version(prior['home']):
         raise ValueError('Helper rollback compatibility requires a new Home candidate')
+    if 'candidate_archive_sha256' in compatibility:
+        acceptance = compatibility.get('acceptance')
+        if (not isinstance(acceptance, str) or not acceptance.strip()
+                or helper_archive_digest(packages['helper']) != compatibility['candidate_archive_sha256']):
+            raise ValueError('Helper rollback compatibility tested archive mismatch')
+        return
     def layout(raw):
         parts = read_ar(raw)
         if set(parts) != {'debian-binary', 'control.tar.gz', 'data.tar.gz'} or parts['debian-binary'] != b'2.0\n':

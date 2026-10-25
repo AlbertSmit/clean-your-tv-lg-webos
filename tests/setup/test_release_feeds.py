@@ -120,3 +120,39 @@ class ReleaseFeeds(unittest.TestCase):
                                       'postinst':b'#!/bin/sh\nexit 99\n'}, executable={'postinst'})
         with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
             prepare(raw=ar(parts))
+
+    def test_tested_runtime_transition_requires_exact_archive_and_rollback_pins(self):
+        import gzip
+        import hashlib
+        prior = packages('1.3.7', '0.1.11', '0.6.17')
+        current = packages('1.3.8', '0.1.11', '0.6.18')
+        parts = read_ar(current['helper'])
+        canonical = ar({n: gzip.decompress(b) if n.endswith('.tar.gz') else b for n, b in parts.items()})
+        approval = {'from_helper':'0.6.17', 'to_helper':'0.6.18',
+                    'rollback_home':'1.3.7', 'rollback_sha256':release.digest(prior['home']),
+                    'prior_helper_sha256':release.digest(prior['helper']),
+                    'candidate_archive_sha256':hashlib.sha256(canonical).hexdigest(),
+                    'acceptance':'Operator confirmed successful candidate and rollback checks.'}
+        def prepare(candidate=current, approved=approval):
+            return release.prepare_manifests('v1.0.2',
+                {'tag':'v1.0.2','versions':{'home':'1.3.8','root':'0.1.11','helper':'0.6.18'}},
+                candidate, build('1.3.7','0.1.11','0.6.17'), prior, compatibility=approved)
+        manifests, files = prepare()
+        self.assertEqual(manifests['previous']['helper'], '0.6.18')
+        self.assertEqual(files['com.gathin.tvhome_1.3.7_all.ipk'], prior['home'])
+        for field in approval:
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+                prepare(approved={**approval, field:''})
+        recompressed = ar({n: gzip.compress(gzip.decompress(b), compresslevel=1, mtime=123)
+                           if n.endswith('.tar.gz') else b for n, b in parts.items()})
+        self.assertEqual(prepare(candidate={**current, 'helper':recompressed})[0], manifests)
+        changed_modes = data_files(current['helper'])
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(candidate={**current, 'helper':ipk('com.local.nativehome','0.6.18',
+                changed_modes, executable=set(changed_modes))})
+        changed = data_files(current['helper']); changed['runtime.js'] = b'unreviewed'
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(candidate={**current, 'helper':ipk('com.local.nativehome','0.6.18',changed)})
+        parts['control.tar.gz'] = tgz({'control':b'changed installation control'})
+        with self.assertRaisesRegex(ValueError, 'Helper.*compatibility'):
+            prepare(candidate={**current, 'helper':ar(parts)})

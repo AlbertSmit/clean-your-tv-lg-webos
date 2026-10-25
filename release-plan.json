@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": null,
+  "version": "1.2.0",
   "changes": [
     {
       "pr": 60,
@@ -14,14 +14,14 @@
       "issues": [
         55
       ],
-      "summary": "Validate Root migration early and recover pre-provision removal"
+      "summary": "Validate Root migration early and recover pre-provision removal; OLED Flex recovery-service startup remains unresolved"
     },
     {
       "pr": 62,
       "issues": [
         51
       ],
-      "summary": "Retain safe Luna rejection metadata in installer diagnostics"
+      "summary": "Retain safe Luna rejection metadata in installer diagnostics; UN70006LA installation refusal remains unresolved"
     },
     {
       "pr": 63,

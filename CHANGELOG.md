@@ -1,6 +1,17 @@
 # Changelog
 
-## v1.1.0 — Unpublished release candidate
+## v1.2.0 — Unpublished release candidate
+
+- Offer confirmed Helper start when firmware denies status (#59, #60).
+- Validate Root migration before installation and recover verified cleanup before
+  provisioning (#55, #61); the reported recovery-service startup failure remains unresolved.
+- Preserve sanitized Luna rejection codes in installer diagnostics (#51, #62);
+  the original installation refusal remains unresolved.
+- Add Root control for Homebrew-owned LG firmware update blocking (#63).
+- See [candidate notes](docs/RELEASE-1.2.0.md). Hardware acceptance and final
+  publication checks remain pending.
+
+## v1.1.0 — System updates and automatic Root Python
 
 - Fix Home Helper startup on TV Node 0.12.2 with a separate Babel/polyfill build,
   compatible WebSocket client and guarded error logging (#47, #54). Original-TV input,
@@ -14,9 +25,8 @@
   package metadata, protected staging and bundled HTTPS trust.
 - Prepare cytv 0.3.0, Home 1.4.0, Helper 0.6.19, Root and both Updaters 0.2.0,
   Android 0.2.0-preview / code 9 and supervisor 1.0.0 / protocol 1.
-- See [candidate notes](docs/RELEASE-1.1.0.md) and
-  [test instructions](docs/RC-1.1.0-TESTING.md). Physical-TV acceptance and the
-  Helper rollback transition remain pending; this is not a published release.
+- See [release notes](docs/RELEASE-1.1.0.md) and the dated
+  [acceptance record](docs/RELEASE-1.1.0-ACCEPTANCE.md) for tested and untested paths.
 
 ## v1.0.3 — Home recovery and installer diagnostics
 

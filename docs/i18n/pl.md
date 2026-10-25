@@ -103,3 +103,5 @@ No-root: Ustawienia Home → Tryb dewelopera zawiera odnawianie Beta, kontrolę 
 Dokumentacja techniczna: [aplikacja komputerowa](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [instalacja ręczna](../MANUAL_INSTALL.md), [odzyskiwanie](../RECOVERY.md), [edycje](../EDITIONS.md), [aktualizacje](../UPDATES.md).
 
 Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy, zamknij i ponownie otwórz Home Root jeden raz, a następnie sprawdź aktualizacje. Jeśli błąd pozostaje, zachowaj diagnostykę i dane odzyskiwania.
+
+Następny kandydat (#55): Root sprawdza dane migracji przed instalacją. Instalację przerwaną przed konfiguracją usług można usunąć bez nigdy nieutworzonej migawki LS2; zachowuje zweryfikowany zapis dla zwykłej archiwizacji i ponownej instalacji cytv. Brak migawki na późniejszym etapie lub sprzeczne dowody nadal blokują czyszczenie. Wymagany jest nowy sterownik; problem startu usługi odzyskiwania na OLED Flex pozostaje nierozwiązany.

@@ -103,3 +103,5 @@ No-root: Impostazioni Home → Modalità sviluppatore raccoglie rinnovo Beta, ve
 Documentazione tecnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [installazione manuale](../MANUAL_INSTALL.md), [ripristino](../RECOVERY.md), [edizioni](../EDITIONS.md), [aggiornamenti](../UPDATES.md).
 
 Se Root mostra `Denied methods call status` subito dopo la preparazione del supervisore, chiudi e riapri Home Root una volta, poi controlla gli aggiornamenti. Se persiste, conserva diagnostica e stato di ripristino.
+
+Prossimo candidato (#55): Root verifica la migrazione prima di installare. Un’installazione interrotta prima del provisioning può essere rimossa senza uno snapshot LS2 mai creato; conserva una ricevuta verificata per la normale archiviazione e reinstallazione di cytv. Snapshot mancanti nelle fasi successive o prove in conflitto bloccano ancora la pulizia. Serve il nuovo driver; il problema di avvio del servizio di recupero su OLED Flex resta irrisolto.

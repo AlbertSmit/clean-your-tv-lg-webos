@@ -113,3 +113,5 @@ No-root : ouvrez Réglages de Home → Mode développeur pour le renouvellement 
 Si Root affiche `Denied methods call status` juste après la préparation du superviseur, fermez puis rouvrez Home Root une fois et vérifiez les mises à jour. Si l’erreur persiste, conservez le diagnostic et les données de récupération.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+Prochain candidat (#55) : Root valide la migration avant l’installation. Une installation interrompue avant le provisionnement peut être supprimée sans instantané LS2 jamais créé ; un reçu vérifié est conservé pour l’archivage et la réinstallation habituels de cytv. Un instantané manquant plus tard ou des preuves contradictoires bloquent toujours le nettoyage. Le nouveau pilote est requis ; l’échec du démarrage du service de récupération sur OLED Flex reste non résolu.

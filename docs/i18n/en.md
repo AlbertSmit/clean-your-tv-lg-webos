@@ -109,3 +109,5 @@ No-root: open Home settings → Developer Mode for auto-renewal, session checks 
 Opening Home Helper shows its purpose and current state. Starting a stopped Helper requires confirmation. Home Updater and Root Updater explain recovery; regular updates are in Home settings. Restore is shown only when a saved version is available and asks for confirmation before replacing Home and its settings.
 
 If Root shows `Denied methods call status` immediately after supervisor bootstrap, close and reopen Home Root once, then check updates again. If it persists, retain diagnostics and recovery state.
+
+Next candidate (#55): Root validates migration data before installing. Interrupted cleanup before provisioning can remove the package without a nonexistent LS2 snapshot, retaining a verified receipt for the normal cytv archive/reinstall flow. Later missing snapshots or conflicting evidence still stop cleanup. These changes require the new driver; the OLED Flex recovery-service startup failure remains unresolved.

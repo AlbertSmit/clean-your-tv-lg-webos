@@ -36,13 +36,19 @@ def operate(action, root, installed, override, destination=None, expected=None, 
     for kind, name in (('applications',app), ('services',app+'.service'), ('packages',app)):
         if os.path.lexists(installed/kind/name): raise ValueError('Root package files remain')
     if os.path.lexists(override): raise ValueError('Root Home routing remains')
-    if record('ls2-provision-snapshot.json')[0].get('phase') != 'rolled-back':
+    snapshot = root/'ls2-provision-snapshot.json'
+    if os.path.lexists(snapshot):
+        rolled_back = record('ls2-provision-snapshot.json')[0].get('phase') == 'rolled-back'
+    else:
+        rolled_back = journal.get('provisioning_not_started') is True
+    if not rolled_back:
         raise ValueError('Recovery service rollback is incomplete')
     if os.path.lexists(root/'persistent-intent.json') and record('persistent-intent.json')[0].get('phase') != 'disabled':
         raise ValueError('Root control is still enabled')
     if os.path.lexists(root/'profile-trial.json') and record('profile-trial.json')[0].get('state') != 'restored':
         raise ValueError('Home recovery is incomplete')
-    for path in (*artifacts, root/'permissions/client.json', root/'permissions/api.json', root/'recovery-provision.json'):
+    pending = () if os.path.lexists(snapshot) else (root/'recovery-provision.pending.json',)
+    for path in (*artifacts, *pending, root/'permissions/client.json', root/'permissions/api.json', root/'recovery-provision.json'):
         if os.path.lexists(path): raise ValueError('Root registration artifacts remain')
     info = root.stat()
     identity = {'device':info.st_dev, 'inode':info.st_ino, 'journal':digest}

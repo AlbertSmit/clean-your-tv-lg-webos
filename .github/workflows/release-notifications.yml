@@ -1,0 +1,37 @@
+name: Retry release notifications
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag to verify and notify
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+concurrency:
+  group: release-signing
+  cancel-in-progress: false
+jobs:
+  notify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify publication and retry missing notices
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python scripts/release-flow.py notify --tag "$RELEASE_TAG"

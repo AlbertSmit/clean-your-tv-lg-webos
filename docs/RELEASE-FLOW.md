@@ -57,7 +57,8 @@ release version. A final plan looks like:
 ```
 
 The required **Release policy** status is produced by a trusted
-`pull_request_target` workflow executing policy from `main`. Candidate commits
+`pull_request_target` workflow executing policy from `main`. Feature PRs receive a separate **Integration policy** status, so their checks
+cannot satisfy the release gate on another PR with the same SHA. Candidate commits
 are fetched and read as data; their scripts are never executed by this workflow.
 It rejects:
 

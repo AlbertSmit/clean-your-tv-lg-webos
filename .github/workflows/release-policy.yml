@@ -8,6 +8,8 @@ permissions:
   pull-requests: read
   issues: read
   statuses: write
+env:
+  POLICY_CONTEXT: ${{ github.event.pull_request.base.ref == 'main' && 'Release policy' || 'Integration policy' }}
 concurrency:
   group: release-policy-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -23,7 +25,7 @@ jobs:
           script: |
             await github.rest.repos.createCommitStatus({
               ...context.repo, sha: context.payload.pull_request.head.sha,
-              context: 'Release policy', state: 'pending',
+              context: process.env.POLICY_CONTEXT, state: 'pending',
               description: 'Validating release routing and candidate',
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
             });
@@ -55,7 +57,7 @@ jobs:
             const ok = process.env.POLICY_OUTCOME === 'success';
             await github.rest.repos.createCommitStatus({
               ...context.repo, sha: context.payload.pull_request.head.sha,
-              context: 'Release policy', state: ok ? 'success' : 'failure',
+              context: process.env.POLICY_CONTEXT, state: ok ? 'success' : 'failure',
               description: ok ? 'Release policy passed' : 'Release policy failed; see workflow logs',
               target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
             });

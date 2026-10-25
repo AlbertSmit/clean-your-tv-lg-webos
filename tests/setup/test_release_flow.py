@@ -134,6 +134,31 @@ class ReleaseFlow(unittest.TestCase):
             self.flow.deliver_notices(inventory, 'https://example.com/release')
             self.assertEqual(sorted(writes), [8, 25, 30])
 
+    def test_legacy_release_skips_notices_and_modern_missing_inventory_fails(self):
+        calls = []
+        modern = False
+        def github(path, **kwargs):
+            calls.append((path, kwargs))
+            if path.startswith('releases/'):
+                return {'assets': [], 'draft': False, 'tag_name': 'v1.0.1'}
+            if path.startswith('commits/'):
+                return {'sha': 'a' * 40}
+            if path.startswith('git/trees/'):
+                return {'tree': [{'path': 'release-plan.json'}] if modern else []}
+            raise AssertionError(path)
+        with patch.object(self.flow, 'api', side_effect=github), \
+             patch.object(self.flow.subprocess, 'run') as command:
+            self.flow.notify('v1.0.1')
+            self.assertIn('--check-only', command.call_args.args[0])
+            self.assertFalse(any(kwargs.get('method', 'GET') != 'GET' for _, kwargs in calls))
+            modern = True
+            with self.assertRaisesRegex(ValueError, 'inventory is missing'):
+                self.flow.notify('v1.0.1')
+        with patch.object(self.flow, 'api', side_effect=github), \
+             patch.object(self.flow.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, ['node'])):
+            with self.assertRaises(subprocess.CalledProcessError):
+                self.flow.notify('v1.0.1')
+
     def test_publication_identity_requires_exact_tag_and_commit(self):
         release = {'draft': False, 'prerelease': False, 'tag_name': 'v1.0.2'}
         inventory = {'schema': 1, 'tag': 'v1.0.2', 'source_commit': 'c' * 40}

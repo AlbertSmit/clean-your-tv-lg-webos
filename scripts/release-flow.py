@@ -319,16 +319,19 @@ def protect():
         'required_conversation_resolution': True}
     # Preserve candidate ancestry across releases. GitHub merge methods are repo-wide.
     api('', method='PATCH', data={'allow_merge_commit': True, 'allow_squash_merge': False,
-                                 'allow_rebase_merge': False})
+                                 'allow_rebase_merge': False, 'delete_branch_on_merge': False})
     settings = api('')
-    if not settings['allow_merge_commit'] or settings['allow_squash_merge'] or settings['allow_rebase_merge']:
+    if not settings['allow_merge_commit'] or settings['allow_squash_merge'] or settings['allow_rebase_merge'] or settings['delete_branch_on_merge']:
         raise ValueError('Release flow requires merge commits; repository settings were not applied')
     api('branches/main/protection', method='PUT', data=policy)
     actual = api('branches/main/protection')
     expected = {c['context'] for c in policy['required_status_checks']['checks']}
     if (not actual['enforce_admins']['enabled'] or not actual['required_status_checks']['strict'] or
         {c['context'] for c in actual['required_status_checks']['checks']} != expected or
-        actual['allow_force_pushes']['enabled'] or actual['allow_deletions']['enabled']):
+        actual['allow_force_pushes']['enabled'] or actual['allow_deletions']['enabled'] or
+        not actual['required_conversation_resolution']['enabled'] or
+        actual.get('required_pull_request_reviews') is None or
+        any(c.get('app_id') != 15368 for c in actual['required_status_checks']['checks'])):
         raise ValueError('main protection read-back does not match the requested policy')
     print('Verified main protection: PR + release policy + Linux/macOS tests; admins included')
 

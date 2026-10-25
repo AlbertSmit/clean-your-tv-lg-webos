@@ -71,9 +71,10 @@
     {
       "pr": 52,
       "issues": [
-        47
+        47,
+        54
       ],
-      "summary": "Compile Helper app/service for TV Node 0.12.2 with Babel and local polyfills, compatible WebSocket clients and guarded error logging; issue #47 original-TV input/standby/cold-boot acceptance pending"
+      "summary": "Compile Helper app/service for TV Node 0.12.2+ with Babel and local polyfills, compatible WebSocket clients and guarded error logging; fixes Node 0.12 startup (#47) and Node 8.12 ws loading (#54), with original-TV acceptance pending"
     }
   ],
   "excluded": [],

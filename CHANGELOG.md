@@ -3,7 +3,7 @@
 ## v1.1.0 — Unpublished release candidate
 
 - Fix Home Helper startup on TV Node 0.12.2 with a separate Babel/polyfill build,
-  compatible WebSocket client and guarded error logging (#47). Original-TV input,
+  compatible WebSocket client and guarded error logging (#47, #54). Original-TV input,
   standby and cold-boot acceptance remains pending.
 
 - Add a fixed System Updater supervisor and signed whole-edition updates with

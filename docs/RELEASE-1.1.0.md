@@ -19,9 +19,10 @@ artifacts still need validation before merging into main or publishing.
 
 - Compile No-root Helper app/service JS for TV Node 0.12.2+ with Babel,
   core-js and safe-buffer. Select a compatible WebSocket implementation on old
-  TV runtimes and preserve controller errors when logging fails (#47).
+  TV runtimes and preserve controller errors when logging fails (#47, #54).
   Input-device, standby and cold-boot acceptance on the reported LG 49UJ750V
-  remains outstanding.
+  remains outstanding. Node 8.12.0 also passes the runtime regression for #54;
+  confirmation on LG OLED55C11LB (C1) / firmware 03.53.45 remains pending.
 - Update compatible TV edition components through a signed release set with an
   independent supervisor, preserved profile and explicit rollback. Computer
   setup provisions the supervisor and captures existing recovery baselines;
@@ -49,7 +50,7 @@ artifacts still need validation before merging into main or publishing.
   release scope/notification provenance.
 
 Related implementation/preparation PRs: #36, #38, #39, #40, #42, #43, #44, #45,
-#46, #48, #49, #50 and #52; the Helper Node 0.12 correction relates to issue #47.
+#46, #48, #49, #50 and #52; the Helper runtime correction relates to issues #47 and #54.
 Integrated PRs are recorded in release-plan.json. Issue #37 remains open for
 UK6540PTD device feedback; issue #24's original unfinished removal is not claimed
 resolved by its separate Android receipt fix.

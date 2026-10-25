@@ -115,3 +115,9 @@ Next candidate (#51): after a TV package rejection, the diagnostic JSON retains 
 Next candidate (#59): if Helper status cannot be checked, **Start Helper** remains available with confirmation. Opening the tile does not restart Helper or clear an emergency stop. Home button settings require a responding controller.
 
 Next candidate (#55): Root validates migration data before installing. Interrupted cleanup before provisioning can remove the package without a nonexistent LS2 snapshot, retaining a verified receipt for the normal cytv archive/reinstall flow. Later missing snapshots or conflicting evidence still stop cleanup. These changes require the new driver; the OLED Flex recovery-service startup failure remains unresolved.
+
+## LG firmware blocking in the next candidate
+
+Root only: Home settings → LG firmware updates changes the existing Homebrew Channel preference. This includes firmware security updates; Clean Your TV updates remain separate. A real TV restart is needed in both directions; standby is not enough. The switch shows the saved preference, not verified active blocking. Some TVs check before blocking starts, so prompts may remain and router blocking may be needed. Homebrew keeps the preference after CYTV removal or rollback. If unavailable or unconfirmed, check Homebrew and refresh status. Physical-TV acceptance is pending.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)

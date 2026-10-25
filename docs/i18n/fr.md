@@ -119,3 +119,9 @@ Prochain candidat (#51) : après un refus de paquet par le téléviseur, le rapp
 Prochain candidat (#59) : si l’état de Helper ne peut pas être vérifié, **Démarrer Helper** reste disponible avec confirmation. Ouvrir la tuile ne redémarre pas Helper et ne lève pas un arrêt d’urgence. Les réglages Home nécessitent un contrôle qui répond.
 
 Prochain candidat (#55) : Root valide la migration avant l’installation. Une installation interrompue avant le provisionnement peut être supprimée sans instantané LS2 jamais créé ; un reçu vérifié est conservé pour l’archivage et la réinstallation habituels de cytv. Un instantané manquant plus tard ou des preuves contradictoires bloquent toujours le nettoyage. Le nouveau pilote est requis ; l’échec du démarrage du service de récupération sur OLED Flex reste non résolu.
+
+## Blocage du micrologiciel LG dans le prochain candidat
+
+Root uniquement : Réglages Home → Mises à jour du micrologiciel LG modifie le réglage existant de Homebrew Channel. Cela inclut les mises à jour de sécurité du micrologiciel ; celles de Clean Your TV restent séparées. Un vrai redémarrage du TV est nécessaire dans les deux sens ; la veille ne suffit pas. Le bouton montre le réglage enregistré, pas un blocage effectif vérifié. Certains TV vérifient avant le blocage ; les alertes peuvent rester et un blocage sur le routeur peut être nécessaire. Homebrew conserve le réglage après suppression ou retour arrière de CYTV. En cas d’indisponibilité ou de résultat non confirmé, vérifiez Homebrew et actualisez l’état. La validation sur TV reste à faire.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)

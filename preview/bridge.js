@@ -3,6 +3,7 @@
   'use strict';
   var homeEnabled = true;
   var enabled = false, rootPhase = 'disabled';
+  var firmwareBlocked = false;
   var rootTransaction = 'preview-root-activation';
   var toastTimer;
   function message(text) {
@@ -19,7 +20,14 @@
     var bridge = this, payload = JSON.parse(raw || '{}');
     bridge.timer = setTimeout(function () {
       var result = {returnValue: false, errorText: 'Unavailable in browser preview'};
-      if (uri.indexOf('luna://com.cleanyourtv.system.updater.service/') === 0) {
+      if (uri === 'luna://org.webosbrew.hbchannel.service/getConfiguration') {
+        result = {returnValue:true, root:true, blockUpdates:firmwareBlocked};
+      } else if (uri === 'luna://org.webosbrew.hbchannel.service/setConfiguration') {
+        if (Object.keys(payload).length === 1 && typeof payload.blockUpdates === 'boolean') {
+          firmwareBlocked = payload.blockUpdates;
+          result = {returnValue:true, blockUpdates:firmwareBlocked};
+        }
+      } else if (uri.indexOf('luna://com.cleanyourtv.system.updater.service/') === 0) {
         var systemMethod = uri.split('/').pop();
         if (systemMethod === 'restoreProfile' || systemMethod === 'status') result = {returnValue:true,result:null};
         else if (systemMethod === 'check') {

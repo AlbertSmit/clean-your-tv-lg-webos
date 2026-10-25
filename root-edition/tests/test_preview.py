@@ -33,6 +33,8 @@ class PreviewTests(unittest.TestCase):
                 self.assertNotIn(name, html)
                 self.assertFalse((app / name).exists())
             self.assertIn('root-settings.js', html)
+            self.assertIn('root-firmware.js', html)
+            self.assertLess(html.index('root-firmware-control.js'), html.index('root-firmware.js'))
             self.assertLess(html.index('i18n.js'),html.index('root-locales.js'))
             self.assertLess(html.index('root-locales.js'),html.index('root-settings.js'))
             for name in ('i18n.js','catalogs.js','i18n.css','root-locales.js','fonts/NotoSans.ttf','fonts/NotoSansDevanagari.ttf','fonts/NotoSansKR.ttf'):

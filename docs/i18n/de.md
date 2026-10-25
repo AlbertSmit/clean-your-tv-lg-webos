@@ -119,3 +119,9 @@ Nächster Kandidat (#51): Nach einer Paket-Ablehnung durch den TV enthält der D
 Nächster Kandidat (#59): Wenn der Helper-Status nicht geprüft werden kann, bleibt **Helper starten** mit Bestätigung verfügbar. Das Öffnen der Kachel startet Helper nicht neu und hebt keinen Notstopp auf. Die Home-Tasteneinstellungen benötigen eine antwortende Steuerung.
 
 Nächster Kandidat (#55): Root prüft die Migrationsdaten vor der Installation. Eine vor der Provisionierung unterbrochene Installation kann ohne einen noch nicht erstellten LS2-Snapshot entfernt werden; ein geprüfter Beleg bleibt für die normale cytv-Archivierung und Neuinstallation erhalten. Später fehlende Snapshots oder widersprüchliche Daten stoppen die Bereinigung weiterhin. Dies erfordert den neuen Treiber; der Startfehler des Recovery-Dienstes auf OLED Flex bleibt ungelöst.
+
+## LG-Firmware-Sperre im nächsten Kandidaten
+
+Nur Root: Home-Einstellungen → LG-Firmware-Updates ändert die vorhandene Homebrew-Channel-Einstellung. Dies betrifft auch Firmware-Sicherheitsupdates; Clean Your TV wird separat aktualisiert. Beide Richtungen erfordern einen echten TV-Neustart; Standby reicht nicht aus. Der Schalter zeigt die gespeicherte Einstellung, keine geprüfte aktive Sperre. Manche TVs prüfen vor Beginn der Sperre; Hinweise können bleiben und eine Router-Sperre kann nötig sein. Homebrew behält die Einstellung nach Entfernung oder Rollback von CYTV. Bei fehlender Verfügbarkeit oder Bestätigung Homebrew prüfen und Status aktualisieren. TV-Tests stehen aus.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)

@@ -5,7 +5,7 @@ for(const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']){
  assert.deepEqual(Object.keys(catalogs[locale]).sort(),sources.slice().sort());
  for(const source of sources){assert(catalogs[locale][source].trim());assert.deepEqual((catalogs[locale][source].match(/\{\w+\}/g)||[]).sort(),(source.match(/\{\w+\}/g)||[]).sort());}
 }
-for(const file of ['root-settings.js','root-updates.js','root-profile.js','root-profile-data.js','root-exit.js']){
+for(const file of ['root-settings.js','root-firmware.js','root-updates.js','root-profile.js','root-profile-data.js','root-exit.js']){
  const content=fs.readFileSync(__dirname+'/'+file,'utf8');
  for(const match of content.matchAll(/'([^'\n]*)'/g)){
   const source=match[1];if((/^[A-Z]/.test(source)&&source.includes(' '))||['Back','Update','Language','unknown'].includes(source))assert(source in catalogs.en,file+' missing '+source);

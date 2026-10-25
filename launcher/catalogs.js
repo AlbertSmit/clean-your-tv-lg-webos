@@ -1494,6 +1494,7 @@ HomeI18n.add({
 // Shared system updater and standalone recovery interface.
 HomeI18n.add({
   "en": {
+    "System updater removal is in progress. Continue removal from the computer.": "System updater removal is in progress. Continue removal from the computer.",
     "Update information could not be verified.": "Update information could not be verified.",
     "Could not connect to the update server. Nothing was installed.": "Could not connect to the update server. Nothing was installed.",
     "Update information is not available yet. Nothing was installed.": "Update information is not available yet. Nothing was installed.",
@@ -1531,6 +1532,7 @@ HomeI18n.add({
     "Restore previous system": "Restore previous system"
   },
   "de": {
+    "System updater removal is in progress. Continue removal from the computer.": "Der System-Updater wird entfernt. Setze die Entfernung am Computer fort.",
     "Update information could not be verified.": "Update-Informationen konnten nicht überprüft werden.",
     "Could not connect to the update server. Nothing was installed.": "Keine Verbindung zum Update-Server. Es wurde nichts installiert.",
     "Update information is not available yet. Nothing was installed.": "Update-Informationen sind noch nicht verfügbar. Es wurde nichts installiert.",
@@ -1568,6 +1570,7 @@ HomeI18n.add({
     "Restore previous system": "Vorheriges System wiederherstellen"
   },
   "es": {
+    "System updater removal is in progress. Continue removal from the computer.": "Se está desinstalando el actualizador del sistema. Continúa la desinstalación desde el ordenador.",
     "Update information could not be verified.": "No se pudo verificar la información de actualización.",
     "Could not connect to the update server. Nothing was installed.": "No se pudo conectar al servidor de actualizaciones. No se instaló nada.",
     "Update information is not available yet. Nothing was installed.": "La información de actualización aún no está disponible. No se instaló nada.",
@@ -1605,6 +1608,7 @@ HomeI18n.add({
     "Restore previous system": "Restaurar el sistema anterior"
   },
   "pt-BR": {
+    "System updater removal is in progress. Continue removal from the computer.": "O atualizador do sistema está sendo removido. Continue a remoção pelo computador.",
     "Update information could not be verified.": "Não foi possível verificar as informações de atualização.",
     "Could not connect to the update server. Nothing was installed.": "Não foi possível conectar ao servidor de atualizações. Nada foi instalado.",
     "Update information is not available yet. Nothing was installed.": "As informações de atualização ainda não estão disponíveis. Nada foi instalado.",
@@ -1642,6 +1646,7 @@ HomeI18n.add({
     "Restore previous system": "Restaurar o sistema anterior"
   },
   "fr": {
+    "System updater removal is in progress. Continue removal from the computer.": "La suppression du programme de mise à jour système est en cours. Poursuivez la suppression depuis l’ordinateur.",
     "Update information could not be verified.": "Les informations de mise à jour n’ont pas pu être vérifiées.",
     "Could not connect to the update server. Nothing was installed.": "Impossible de se connecter au serveur de mise à jour. Rien n’a été installé.",
     "Update information is not available yet. Nothing was installed.": "Les informations de mise à jour ne sont pas encore disponibles. Rien n’a été installé.",
@@ -1679,6 +1684,7 @@ HomeI18n.add({
     "Restore previous system": "Restaurer le système précédent"
   },
   "it": {
+    "System updater removal is in progress. Continue removal from the computer.": "La rimozione del programma di aggiornamento del sistema è in corso. Continua la rimozione dal computer.",
     "Update information could not be verified.": "Impossibile verificare le informazioni sugli aggiornamenti.",
     "Could not connect to the update server. Nothing was installed.": "Impossibile connettersi al server degli aggiornamenti. Non è stato installato nulla.",
     "Update information is not available yet. Nothing was installed.": "Le informazioni sugli aggiornamenti non sono ancora disponibili. Non è stato installato nulla.",
@@ -1716,6 +1722,7 @@ HomeI18n.add({
     "Restore previous system": "Ripristina il sistema precedente"
   },
   "ko": {
+    "System updater removal is in progress. Continue removal from the computer.": "시스템 업데이터를 제거하는 중입니다. 컴퓨터에서 제거를 계속하세요.",
     "Update information could not be verified.": "업데이트 정보를 검증할 수 없습니다.",
     "Could not connect to the update server. Nothing was installed.": "업데이트 서버에 연결할 수 없습니다. 아무것도 설치되지 않았습니다.",
     "Update information is not available yet. Nothing was installed.": "업데이트 정보를 아직 사용할 수 없습니다. 아무것도 설치되지 않았습니다.",
@@ -1753,6 +1760,7 @@ HomeI18n.add({
     "Restore previous system": "이전 시스템 복원"
   },
   "hi": {
+    "System updater removal is in progress. Continue removal from the computer.": "सिस्टम अपडेटर को हटाया जा रहा है। कंप्यूटर से हटाने की प्रक्रिया जारी रखें।",
     "Update information could not be verified.": "अपडेट की जानकारी सत्यापित नहीं हो सकी।",
     "Could not connect to the update server. Nothing was installed.": "अपडेट सर्वर से कनेक्ट नहीं हो सका। कुछ भी इंस्टॉल नहीं हुआ।",
     "Update information is not available yet. Nothing was installed.": "अपडेट की जानकारी अभी उपलब्ध नहीं है। कुछ भी इंस्टॉल नहीं हुआ।",
@@ -1790,6 +1798,7 @@ HomeI18n.add({
     "Restore previous system": "पिछला सिस्टम बहाल करें"
   },
   "pl": {
+    "System updater removal is in progress. Continue removal from the computer.": "Trwa usuwanie aktualizatora systemu. Kontynuuj usuwanie z komputera.",
     "Update information could not be verified.": "Nie udało się zweryfikować informacji o aktualizacji.",
     "Could not connect to the update server. Nothing was installed.": "Nie udało się połączyć z serwerem aktualizacji. Nic nie zainstalowano.",
     "Update information is not available yet. Nothing was installed.": "Informacje o aktualizacji nie są jeszcze dostępne. Nic nie zainstalowano.",
@@ -1827,6 +1836,7 @@ HomeI18n.add({
     "Restore previous system": "Przywróć poprzedni system"
   },
   "ru": {
+    "System updater removal is in progress. Continue removal from the computer.": "Выполняется удаление средства обновления системы. Продолжите удаление с компьютера.",
     "Update information could not be verified.": "Не удалось проверить информацию об обновлении.",
     "Could not connect to the update server. Nothing was installed.": "Не удалось подключиться к серверу обновлений. Ничего не установлено.",
     "Update information is not available yet. Nothing was installed.": "Информация об обновлении пока недоступна. Ничего не установлено.",

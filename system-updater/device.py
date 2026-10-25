@@ -64,6 +64,7 @@ class Device:
         self.legacy_states=[self.root_updater/'transaction.json',self.installed_root/'usr/palm/services/com.cleanyourtv.updater.service/state/transaction.json']
 
     def integrity(self):
+        if os.path.lexists(self.state/'cytv-removal.json'):raise ValueError('System updater removal is in progress. Continue removal from the computer.')
         receipt=self.store.read('infrastructure')
         if not isinstance(receipt,dict) or receipt.get('schema')!=1 or not isinstance(receipt.get('code'),dict) or not receipt['code']:raise ValueError('One-time System Updater setup required')
         for name,expected in receipt['code'].items():
@@ -670,6 +671,7 @@ class Device:
         subprocess.run([str(executable),'scan-services'],stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=20,check=True)
 
     def enforce_legacy_lockdown(self):
+        if os.path.lexists(self.state/'cytv-removal.json'):raise ValueError('System updater removal is in progress. Continue removal from the computer.')
         receipt=self.store.read('legacy-lockdown')
         if not isinstance(receipt,dict) or receipt.get('schema')!=1 or not isinstance(receipt.get('files'),dict):raise ValueError('Legacy updater exclusion setup required')
         writes=[];allowed=self._legacy_lockdown_paths()

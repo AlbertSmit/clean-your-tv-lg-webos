@@ -51,6 +51,20 @@ class Tests(DeviceBase):
     def test_supervisor_integrity_detects_code_change(self):
         p=self.root/'code/fixed.py';p.write_bytes(b'trusted');self.store.write('infrastructure',{'schema':1,'code':{'fixed.py':digest(b'trusted')}});self.device.integrity();p.write_bytes(b'tampered')
         with self.assertRaises(ValueError):self.device.integrity()
+    def test_removal_journal_blocks_integrity_before_legacy_writes(self):
+        from unittest.mock import patch
+        p=self.root/'code/fixed.py';p.write_bytes(b'trusted')
+        self.store.write('infrastructure',{'schema':1,'code':{'fixed.py':digest(b'trusted')}})
+        for raw in ('{"phase":"disabled"}','{','null'):
+            with self.subTest(raw=raw):
+                (self.root/'state/cytv-removal.json').write_text(raw)
+                before={str(p):p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
+                with patch.object(self.device,'enforce_legacy_lockdown') as enforce:
+                    with self.assertRaisesRegex(ValueError,'removal'):self.device.integrity()
+                    enforce.assert_not_called()
+                with self.assertRaisesRegex(ValueError,'removal'):self.device.enforce_legacy_lockdown()
+                self.assertEqual(before,{str(p):p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
+
     def test_cached_bytes_are_rechecked_before_mutation(self):
         raw=ipk();c={'name':'home','application':'com.gathin.tvhome','version':'1.0.0','kind':'ipk','sha256':digest(raw),'size':len(raw),'local':True};(self.root/'state/cache'/c['sha256']).write_bytes(b'tampered')
         with self.assertRaises(ValueError):self.device.inspect(self.device.cache_bytes(c),c)

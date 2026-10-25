@@ -309,7 +309,7 @@ def deliver_notices(inventory, url):
 
 def protect():
     # No mandatory second maintainer: this repository can be maintained solo.
-    policy = {'required_status_checks': {'strict': True, 'contexts': [], 'checks': [
+    policy = {'required_status_checks': {'strict': True, 'checks': [
         {'context': name, 'app_id': 15368} for name in
         ['Release policy', 'tests (ubuntu-latest)', 'tests (macos-latest)']]},
         'enforce_admins': True, 'required_pull_request_reviews': {

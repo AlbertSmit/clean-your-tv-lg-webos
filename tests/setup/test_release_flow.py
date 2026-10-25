@@ -30,6 +30,20 @@ class ReleaseFlow(unittest.TestCase):
                             version='1.0.2', previous_version='1.0.1',
                             merged_prs=self.prs, commits={'a' * 40}, notes='Release notes')
 
+    def test_protection_uses_app_bound_checks_without_deprecated_contexts(self):
+        names = ['Release policy', 'tests (ubuntu-latest)', 'tests (macos-latest)']
+        actual = {'enforce_admins': {'enabled': True},
+                  'required_status_checks': {'strict': True, 'checks': [{'context': n, 'app_id': 15368} for n in names]},
+                  'allow_force_pushes': {'enabled': False}, 'allow_deletions': {'enabled': False},
+                  'required_conversation_resolution': {'enabled': True}, 'required_pull_request_reviews': {}}
+        settings = {'allow_merge_commit': True, 'allow_squash_merge': False,
+                    'allow_rebase_merge': False, 'delete_branch_on_merge': False}
+        with patch.object(self.flow, 'api', side_effect=[{}, settings, {}, actual]) as call:
+            self.flow.protect()
+            payload = call.call_args_list[2].kwargs['data']['required_status_checks']
+            self.assertIn('checks', payload)
+            self.assertNotIn('contexts', payload, 'GitHub rejects both contexts and checks in one protection request')
+
     def test_repository_api_path_has_no_trailing_slash(self):
         with patch.object(self.flow.subprocess, 'check_output', return_value=b'{}') as call:
             self.flow.api('')

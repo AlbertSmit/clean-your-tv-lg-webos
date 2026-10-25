@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "version": "1.0.3",
+  "version": null,
   "changes": [],
   "excluded": [],
-  "acceptance": "2026-10-25: operator confirmed all requested RC checks successful and authorized publication, including Helper 0.6.18, diagnostic export and Home 1.3.8 to 1.3.7 rollback. Model, firmware and tested artifact hashes were not supplied; no cross-model certification is claimed. Historical SDK 7.5.9 / firmware 04.56.75 evidence applies only to equivalent earlier corrections; C5/webOS 26 and reporting NANO81 models remain unverified. Root shared app.js/style.css changes require Root 0.1.12; the failed v1.0.2 draft was never published. Root routing/runtime is unchanged and prior model-scoped limitations remain."
+  "acceptance": ""
 }

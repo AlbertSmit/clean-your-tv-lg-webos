@@ -8,7 +8,7 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| 1.1.0 RC source (unreleased) | Home 1.4.0 + Helper 0.6.19 | Root 0.2.0; new candidate hardware acceptance pending |
+| 1.1.0 stable | Home 1.4.0 + Helper 0.6.19; current Helper TV acceptance pending | Root 0.2.0; scoped C3 controls and standby/wake checks passed |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |
@@ -24,11 +24,7 @@ upgrade or remove your ordinary launcher.
 
 ## Get started
 
-The latest published download is 1.0.3 stable; the versions above describe the
-unreleased [1.1.0 RC](RELEASE-1.1.0.md). Its [test artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
-are from product commit `acf1acc`. For the current source
-versions, use [`release-versions.json`](../release-versions.json); hardware evidence
-remains specific to the artifacts and scenarios recorded in the compatibility guides.
+Download [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0). Current component versions are recorded in [`release-versions.json`](../release-versions.json); hardware evidence remains specific to the artifacts and scenarios recorded in [compatibility](COMPATIBILITY.md).
 
 - **Without cytv:** [Manual installation of No-root and Root](MANUAL_INSTALL.md), including requirements for each edition and recovery commands.
 
@@ -40,4 +36,4 @@ The Root hardware evidence is from **LG OLED55C3RLA, firmware 43.21.71** with a
 Magic Remote. Other hardware is unvalidated. Keep your working installation and
 private backups; never publish credentials, pairing data or device inventories.
 
-See [release scope and known limitations](../root-edition/ROOT-0.1.1.md), including the unresolved intermittent emergency-gesture observation.
+The current C3 check passed triple-Home emergency exit and explicit resume. True cold boot and a complete signed system upgrade/rollback remain untested. See [current hardware scope](COMPATIBILITY.md#current-110-hardware-evidence); [earlier Root release observations](../root-edition/ROOT-0.1.1.md) retain their original scope.

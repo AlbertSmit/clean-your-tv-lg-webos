@@ -1,16 +1,12 @@
 # Root software updates and recovery
 
-The unreleased **1.1.0 RC** updates a complete signed edition release set through
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** updates a complete signed edition release set through
 an independent fixed **System Updater supervisor**. Root's set includes Root Home,
 Root Updater and the compatible Root recovery infrastructure. No-root's separate
 set includes Home, Helper and Home Updater. The editions are not interchangeable;
 third-party apps and TV firmware are outside the set.
 
-The [latest published release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest)
-remains **1.0.3 stable**. [RC test installers](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
-are built from product commit `acf1acc`. The candidate has not passed new physical-TV
-upgrade/rollback acceptance. Earlier isolated [Root update evidence](../docs/development/ROOT-UPDATES-TV-VALIDATION.md)
-validates only the earlier artifacts and scenarios recorded there.
+Current C3 checks covered supervisor bootstrap, installed-version menus and friendly feed-unavailable handling. A complete signed system upgrade and rollback remain untested. See [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md); [earlier Root update evidence](../docs/development/ROOT-UPDATES-TV-VALIDATION.md) retains its original artifact and scenario scope.
 
 ## Computer-assisted bootstrap
 
@@ -31,9 +27,8 @@ Use the saved TV connection, or supply `--host` and the existing root credential
 For an existing Root installation with a retained Root Updater, first inspect its
 status, transaction and matching recovery flow. Generic cytv reinstallation is
 deliberately refused while that updater remains; these fresh-setup commands do
-not provide a migration shortcut. Follow the [existing-TV checkpoint](../docs/RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv)
-and review the infrastructure transition before replacing anything. The
-unpublished candidate is not available through the stable OTA feed.
+not provide a migration shortcut. Follow the [existing-TV checkpoint](../docs/UPDATES.md#one-time-computer-preparation)
+and review the infrastructure transition before replacing anything. A standalone launcher update does not install the supervisor.
 For the No-root edition on an already rooted TV, use the manual supervisor
 command below with `--edition no-root` and an existing root SSH alias. The cytv
 No-root connection logs in as `prisoner`; changing its port does not grant root.
@@ -71,6 +66,8 @@ The supervisor's private state is `/var/lib/clean-your-tv-system-updater`; its
 normal-boot worker uses `52-clean-your-tv-system-updater`. Root Updater retains
 its independent recovery role and interpreter binding. Never replace private
 code, cached baselines or state files to bypass a setup failure.
+
+If Root immediately shows `Denied methods call status` after supervisor bootstrap, close and reopen **Home Root** once to restart the GUI, then check Software updates again. If it persists, retain diagnostics and recovery state.
 
 ## Update on the TV
 
@@ -110,11 +107,11 @@ submitted twice automatically. See [CLI recovery](../docs/CLI.md#interrupted-ope
 ## Release preparation and validation
 
 Follow [the release process](../docs/RELEASE-PROCESS.md) and the
-[1.1.0 candidate gates](../docs/RELEASE-1.1.0.md). Legacy `root-update.json`
+[1.1.0 release scope](../docs/RELEASE-1.1.0.md). Legacy `root-update.json`
 application metadata alone does not describe a complete system release set.
 The fixed supervisor remains separate from the components it installs.
 
-Before publication, validate the exact signed artifacts on physical hardware:
+Remaining physical-hardware validation for the published release includes:
 first bootstrap and caller permissions, complete upgrade and explicit rollback,
 profile preservation, startup/remote input, normal and cold boot, failsafe and
 interruptions around terminal installer evidence. Helper 0.6.19 needs its own

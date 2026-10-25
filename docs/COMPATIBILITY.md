@@ -15,17 +15,22 @@ use ws 8.21.0. The Node 0.12.2 regression exercises controller startup and a loc
 WebSocket exchange. Input-device access, firmware SSAP behavior, standby and cold
 boot still require hardware acceptance on the LG 49UJ750V from issue #47.
 
-The unreleased 1.1.0 RC source contains cytv 0.3.0, Home 1.4.0, Helper 0.6.19,
+The [v1.1.0 stable release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0) contains cytv 0.3.0, Home 1.4.0, Helper 0.6.19,
 Root 0.2.0, both edition Updaters 0.2.0 and Android 0.2.0-preview / code 9.
-The latest published download remains 1.0.3 stable. [RC test artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
-are from product commit `acf1acc`; they do not establish hardware acceptance.
+The latest-download links follow the stable release. Publication does not establish hardware acceptance for every component or model.
 Root setup can provision a pinned private ARMv7 Python on eligible TVs without a
 suitable interpreter. Working system Python skips the download; compatible
 loader/libc, root/Homebrew services, Node.js 8+ and input support remain required.
 The issue #37 UK6540PTD / 05.50.70 remains unvalidated for this runtime.
-See [optional Python](OPTIONAL-PYTHON.md) and [RC scope](RELEASE-1.1.0.md).
+See [optional Python](OPTIONAL-PYTHON.md) and [release scope](RELEASE-1.1.0.md).
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
+
+## Current 1.1.0 hardware evidence
+
+Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
+
+The remaining version rows below are historical reports.
 
 | Configuration | Status |
 | --- | --- |

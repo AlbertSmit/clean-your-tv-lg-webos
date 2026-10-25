@@ -1,8 +1,9 @@
 # v1.1.0 — system updates and automatic Root Python
 
-**Candidate preparation; not published.** The release PR remains in draft.
-Physical-TV acceptance, the new Helper rollback transition and exact final
-artifacts still need validation before merging into main or publishing.
+Stable 1.1.0 adds whole-edition system updates and optional Python delivery for
+Root. The maintainer authorized publication with limited physical-TV evidence;
+see the [device checks and accepted remaining risks](RELEASE-1.1.0-ACCEPTANCE.md).
+Download the final packages from the [1.1.0 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0).
 
 | Component | Previous release | Candidate |
 | --- | --- | --- |
@@ -48,9 +49,13 @@ artifacts still need validation before merging into main or publishing.
   app the user already launched; initial presentation remains native to webOS.
 - Maintain subsequent release candidates after verified publication and preserve
   release scope/notification provenance.
+- Keep installed versions and understandable update/recovery messages visible
+  when a feed is unavailable, without exposing internal commands (#53).
+- Resume interrupted supervisor removal without corrupting verified ownership
+  of the downstream Root Updater registration (#56).
 
 Related implementation/preparation PRs: #36, #38, #39, #40, #42, #43, #44, #45,
-#46, #48, #49, #50 and #52; the Helper runtime correction relates to issues #47 and #54.
+#46, #48, #49, #50, #52, #53 and #56; the Helper runtime correction relates to issues #47 and #54.
 Integrated PRs are recorded in release-plan.json. Issue #37 remains open for
 UK6540PTD device feedback; issue #24's original unfinished removal is not claimed
 resolved by its separate Android receipt fix.
@@ -70,26 +75,23 @@ Root/updater infrastructure transitions require computer-assisted setup; this
 release does not promise that a legacy app-only OTA update installs new runtime
 or supervisor infrastructure.
 
-Previously recorded hardware evidence remains limited to its original model,
-firmware and artifact scope. New physical Android/TV checks, normal/cold startup,
-Home/back handling, failsafe, complete system upgrade and rollback are pending.
-The Helper 0.6.19 archive and rollback approval must be recorded from actual
-validation; the retained 0.6.18 approval does not authorize this new package.
+Root 0.2.0 with both updater layers was exercised on an OLED55C3RLA with firmware
+43.21.71: Home/navigation, app launch, Home/Back, volume/mute, emergency exit,
+manual resume, standby/wake and update/recovery screens. Full removal needed
+supervised recovery before the corrected resumption and fresh installation
+completed. Restart Home once if an already-running GUI retains an LS2 denial
+immediately after supervisor setup.
 
-## Test installers
+True cold boot, physical Helper 0.6.19, signed whole-edition upgrade/rollback and
+actual Android installation remain unverified. The exact new Helper and previous
+Home rollback are hash-pinned; its approval explicitly records the maintainer's
+decision to ship with automated evidence and outstanding physical checks.
 
-[Five-platform test build 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
-passed at `acf1acccb0ec0802c993f94a39080859dcda9591`. Follow the
-[candidate testing guide](RC-1.1.0-TESTING.md), including existing Root/Updater
-inspection before reinstallation. Those installer bytes predate the product
-fixes in #49, #50 and #52; rebuild the desktop/Android installers and affected TV
-packages for current candidate feedback. Final frozen-head builds are still required. The
-[documentation audit](DOCUMENTATION-AUDIT.md) records current guide/translation
-coverage separately from historical device evidence.
+## Packages and provenance
 
-Maintainers can explicitly run **cytv standalone builds** on `release/next` with
-`test_build=true` after version metadata and these notes are present. This produces
-GitHub Actions artifacts for device feedback while acceptance remains empty.
-It does not finalize the candidate, publish a release, sign OTA feeds, or allow
-merging the release PR. Final publication still requires the complete existing
-release policy and a fresh build of the actual finalized commit.
+Use final release assets instead of earlier Actions test installers: those
+earlier builds predate later corrections. Android remains labelled preview.
+The final release includes BUILD-INFO.json, RELEASE-INVENTORY.json and SHA256SUMS;
+publication verifies exact-source desktop/Android packages and signs the update
+feeds. The [documentation audit](DOCUMENTATION-AUDIT.md) records guide and
+translation coverage separately from hardware evidence.

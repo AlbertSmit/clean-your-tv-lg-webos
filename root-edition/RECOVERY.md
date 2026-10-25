@@ -1,6 +1,6 @@
 # Root Edition recovery contract
 
-## 1.1.0 RC runtime and update recovery
+## 1.1.0 runtime and update recovery
 
 Current setup can use a separately provisioned pinned ARMv7 Python when eligible
 TVs lack suitable Python 3.9+. Root, boot recovery and independent updaters retain
@@ -14,7 +14,7 @@ it needs explicit computer bootstrap. Unknown installer outcomes or interrupted
 removals retain evidence and stop unsafe replay. Use `cytv status`, then the saved
 connection's recovery/removal flow. New physical-TV acceptance is pending;
 see [current updates](UPDATES.md). The design notes below do not extend historical
-hardware claims to the RC.
+hardware claims to the current release.
 
 Historical metadata-recovery design. References to a future installer and open
 implementation gates below describe the original investigation. Current Root

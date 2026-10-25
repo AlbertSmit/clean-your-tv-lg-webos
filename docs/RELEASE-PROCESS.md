@@ -99,6 +99,12 @@ rollback baseline stops publication. Acceptance must state its actual hardware
 scope and any missing device/artifact details. This is a specific reviewed
 transition, not permission for arbitrary Helper changes.
 
+For 1.1.0 the maintainer explicitly authorized stable publication with incomplete
+physical Helper/rollback validation. Its exact-archive approval records that
+exception and automated evidence; it does not claim an operator-tested Helper
+transition. See [the bounded acceptance record](RELEASE-1.1.0-ACCEPTANCE.md).
+Hash, provenance, signature and protected-branch checks still apply unchanged.
+
 A permission-only Helper transition can alternatively be approved in
 `native/helper-rollback-compatibility.json`: it pins both Helper versions, the
 previous Helper package, the exact previous Home rollback and the reviewed

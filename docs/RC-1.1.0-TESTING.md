@@ -1,4 +1,6 @@
-# Test the 1.1.0 release candidate
+# Historical 1.1.0 release-candidate testing guide
+
+**Superseded by [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0).** Use the [current installation guide](INSTALL.md), [update guide](UPDATES.md) and [release notes](RELEASE-1.1.0.md). The instructions and Actions run below are a historical candidate record, not the final release download. Later C3 evidence and remaining limits are recorded in [compatibility](COMPATIBILITY.md#current-110-hardware-evidence).
 
 This is an unpublished candidate for device feedback, not the stable release.
 Keep the working installer and recovery data. Do not uninstall first or delete

@@ -75,8 +75,18 @@
         54
       ],
       "summary": "Compile Helper app/service for TV Node 0.12.2+ with Babel and local polyfills, compatible WebSocket clients and guarded error logging; fixes Node 0.12 startup (#47) and Node 8.12 ws loading (#54), with original-TV acceptance pending"
+    },
+    {
+      "pr": 53,
+      "issues": [],
+      "summary": "Explain unavailable system releases and preserve recovery state on screen"
+    },
+    {
+      "pr": 56,
+      "issues": [],
+      "summary": "Preserve updater ownership while resuming System Updater removal"
     }
   ],
   "excluded": [],
-  "acceptance": ""
+  "acceptance": "2026-10-25: maintainer explicitly authorized stable 1.1.0 with limited hardware coverage. LG OLED55C3RLA / firmware43.21.71 / webOS SDK11.2.0 / macOS ARM64: Root0.2.0, RootUpdater0.2.0, SystemUpdater1.0.0; navigation/app/Home/Back/volume/mute/emergency exit/resume/standby-wake/menus confirmed. Product source d344d92 (merged4b66951); supervised interrupted-removal recovery and fresh installation completed. No true cold boot, physical Helper0.6.19/rollback, complete signed system upgrade/rollback, Android-device or UK6540PTD optional-Python acceptance claimed. Exact Helper transition is hash-pinned with explicit risk acceptance. See docs/RELEASE-1.1.0-ACCEPTANCE.md."
 }

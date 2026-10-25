@@ -1,6 +1,6 @@
 # Root Edition doctor
 
-## cytv requirement diagnostics (1.1.0 RC)
+## cytv requirement diagnostics (1.1.0)
 
 `cytv doctor --report` uses the shared installer's saved connection and writes a
 private issue-ready report. Root checks include UID, Python executable/modules

@@ -1,14 +1,14 @@
 # Companion application entry flows
 
-## 1.1.0 RC update ownership
+## 1.1.0 update ownership
 
 Home 1.4.0 / Helper 0.6.19 and Root 0.2.0 / Root Updater 0.2.0 belong to the
-unreleased candidate. The independent System Updater supervisor owns complete
+v1.1.0 stable release. The independent System Updater supervisor owns complete
 signed edition release sets after explicit root/Homebrew computer bootstrap;
 legacy standalone app updates do not install that infrastructure. Recovery
 restores the saved compatible components and pre-update profile. Unknown outcomes
 remain blocked. See [current update setup and limits](../root-edition/UPDATES.md).
-Physical-TV acceptance of this flow remains pending. The dated inspection below
+The C3 check covered installed-version menus and friendly feed-unavailable handling; a complete signed system upgrade and rollback remain untested. The dated inspection below
 retains its original artifact scope.
 
 Home Helper's tile opens an explanatory panel inside Home. It reads controller

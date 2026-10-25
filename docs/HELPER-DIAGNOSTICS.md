@@ -16,10 +16,7 @@ No terminal commands, manual log collection or separate C5 Helper are required.
 
 ## Release handoff
 
-The published v1.0.3 contains Helper 0.6.18 and cytv 0.2.16 with this diagnostic
-workflow. The unpublished 1.1.0 candidate contains Helper 0.6.19 and cytv 0.3.0;
-use its [test build](RC-1.1.0-TESTING.md) for candidate feedback. Do not claim a
-C5 or another model fixed merely because capture is available.
+[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0) contains Helper 0.6.19 and cytv 0.3.0 with this diagnostic workflow. Download the stable installer for new feedback. Helper 0.6.19 still needs physical-TV acceptance; diagnostic capture alone does not establish that C5 or another model is fixed. The earlier v1.0.3 diagnostic baseline was Helper 0.6.18 / cytv 0.2.16.
 
 Send the reply below only after a normal release candidate contains both the
 updated Helper and installer. Published Helper 0.6.17 does not contain this mode.

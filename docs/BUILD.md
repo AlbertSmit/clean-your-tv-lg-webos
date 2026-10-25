@@ -37,4 +37,4 @@ The 1.1.0 payload also includes the fixed System Updater bootstrap and support
 files. Use `python scripts/build-cytv.py --payload-only` for a payload check or
 `--desktop` for the host application. The optional TV Python archive is downloaded
 only when needed or explicitly cached with `cytv --prepare-python-runtime`; it
-is not embedded by this build. See [candidate testing](RC-1.1.0-TESTING.md).
+is not embedded by this build. See [installation](INSTALL.md) and [release notes](RELEASE-1.1.0.md).

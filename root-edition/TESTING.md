@@ -1,11 +1,6 @@
 # Root Edition test plan
 
-For the unpublished **1.1.0 candidate / Root 0.2.0**, start with the
-[candidate test guide](../docs/RC-1.1.0-TESTING.md). It covers macOS artifacts,
-existing Root/Updater inspection, current automatic activation, the separate
-supervisor bootstrap and what a modern TV cannot establish about old ARMv7 TVs.
-The bounded trials below are explicit developer tests, not a normal installer
-Keep/confirmation step. Historical acceptance remains tied to its original build.
+For **[v1.1.0 stable / Root 0.2.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**, start with [installation](../docs/INSTALL.md), [supervisor setup](UPDATES.md) and [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md). The [candidate test guide](../docs/RC-1.1.0-TESTING.md) is superseded historical guidance. The bounded trials below are explicit developer tests, not a normal installer Keep/confirmation step. Historical acceptance remains tied to its original build.
 
 ## Local checks (no TV required)
 

@@ -4,9 +4,9 @@ No-root e Root são opções equivalentes para diferentes configurações da TV.
 
 ## Requisitos
 
-Este guia descreve a **candidata 1.1.0, ainda não publicada**. Para uso estável, baixe a [v1.0.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest); os links `releases/latest/download` ainda entregam essa versão. Para testar a candidata, use os [artefatos do Actions](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948) do commit `acf1acc`, com as mesmas versões de produto das alterações posteriores de documentação. Esses artefatos não são uma versão estável nem autorizam a publicação. Veja as [notas da candidata](../RELEASE-1.1.0.md) e a [instalação das duas edições](../INSTALL.md).
+Este guia descreve **[v1.1.0 estável](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Os links `releases/latest/download` entregam a versão estável publicada. Veja [instalação](../INSTALL.md) e [notas da versão](../RELEASE-1.1.0.md).
 
-Versões da candidata: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater e Root Updater **0.2.0**, Android **0.2.0-preview** (código **9**), supervisor System Updater **1.0.0**, protocolo **1**.
+Versões da publicação: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater e Root Updater **0.2.0**, Android **0.2.0-preview** (código **9**), supervisor System Updater **1.0.0**, protocolo **1**.
 
 Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois, o computador pode ficar desligado. A compatibilidade depende do modelo, firmware e controle remoto; Root ainda tem testes em hardware pendentes.
 
@@ -20,7 +20,7 @@ O Helper No-root atualizado exige Node.js 0.12.2 ou posterior na TV. O instalado
 
 Root exige Python 3.9+ na TV. O instalador verifica os módulos e operações de verdade, incluindo `json`, `fcntl`, bloqueios, arquivos e subprocessos; o número da versão não basta. Se o interpretador existente for adequado, não há outro download de Python. Caso contrário, durante a configuração, o computador ou Android pode baixar CPython **3.13.17 para ARMv7 soft-float**, fixado por URL, tamanho e SHA-256, e transferi-lo pela conexão SSH já confiável. Os pacotes comuns dos instaladores não incluem esse arquivo; a TV não precisa de Internet nessa etapa.
 
-O download opcional tem cerca de **26,3 MB**, a transferência SSH normalizada **51,5 MB** e os arquivos instalados **119,3 MB**; a preparação exige **320 MiB** livres na TV. A compatibilidade do carregador e das bibliotecas é verificada antes da ativação. O runtime ocupa versões privadas em `/var/lib/clean-your-tv-python/`, sem alterar Python do sistema, libc ou PATH global. Os demais requisitos continuam: root, serviços webOS adequados e Node.js **8+** para Root/System Updater; o Helper No-root precisa de Node.js **10+**.
+O download opcional tem cerca de **26,3 MB**, a transferência SSH normalizada **51,5 MB** e os arquivos instalados **119,3 MB**; a preparação exige **320 MiB** livres na TV. A compatibilidade do carregador e das bibliotecas é verificada antes da ativação. O runtime ocupa versões privadas em `/var/lib/clean-your-tv-python/`, sem alterar Python do sistema, libc ou PATH global. Os demais requisitos continuam: root, serviços webOS adequados e Node.js **8+** para Root/System Updater; o Helper No-root precisa de Node.js **0.12.2+**.
 
 Em um computador com Internet, prepare o cache verificado sem descobrir nem contatar uma TV:
 
@@ -78,7 +78,7 @@ A candidata acrescenta **Atualizar tudo** em Configurações → Atualizações 
 
 Em uma instalação nova, use o instalador completo da candidata para preparar Home e o Updater de recuperação da edição. Essa versão de transição não está disponível no feed estável.
 
-Se Root já estiver instalado e houver um Root Updater preservado, uma reinstalação genérica poderá ser recusada por segurança. Primeiro execute `status` e os diagnósticos, depois confira a transação e a recuperação no Updater existente. Resolva operações ativas ou incertas pelo fluxo de recuperação correspondente à instalação anterior; a transição de infraestrutura precisa ser avaliada conforme o estado real da TV. Não apague o diário nem contorne o bloqueio com `--yes`, uma IPK isolada ou OTA antigo. O OTA apenas do aplicativo não instala a nova infraestrutura. Siga o [primeiro ponto de verificação da candidata](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv).
+Se Root já estiver instalado e houver um Root Updater preservado, uma reinstalação genérica poderá ser recusada por segurança. Primeiro execute `status` e os diagnósticos, depois confira a transação e a recuperação no Updater existente. Resolva operações ativas ou incertas pelo fluxo de recuperação correspondente à instalação anterior; a transição de infraestrutura precisa ser avaliada conforme o estado real da TV. Não apague o diário nem contorne o bloqueio com `--yes`, uma IPK isolada ou OTA antigo. O OTA apenas do aplicativo não instala a nova infraestrutura. Siga o [verificação da TV existente](../UPDATES.md#one-time-computer-preparation).
 
 Só depois de verificar uma configuração compatível com Home `systemUpdateProtocol = 1` e o Updater de recuperação adequado, habilite o supervisor pelo computador. No instalador, escolha habilitar as atualizações de todos os componentes da TV; para Root, com uma conexão SSH root salva:
 
@@ -94,10 +94,12 @@ Após uma interrupção, execute `status` e preserve o diário e os dados de rec
 
 ## Testes em hardware e limites
 
-A **LG UK6540PTD, firmware 05.50.70, ARM32** da issue #37 tinha Python 2.7.12 e nenhum Python 3 disponível. O novo runtime ainda não foi validado nessa TV. Testes automatizados e inicialização ARM32 em QEMU não comprovam carregador/libc, APIs webOS, controle remoto, partida a frio ou retorno de versão. Os testes anteriores do Home na **LG OLED55C3RLA / 43.21.71** abrangem os pacotes antigos, não esta candidata. Faltam testes físicos de atualização completa, perda de energia, liberação das entradas pelo Helper **0.6.19** e retorno de runtime/updater; a aprovação do Helper 0.6.18 não vale para o novo arquivo.
+Root 0.2.0, Root Updater 0.2.0 e supervisor 1.0.0 foram verificados em OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0 (`d344d92`, conteúdo idêntico a `4b66951`). Passaram controles, Home triplo e retomada, espera/retomada com Emby aberto por 70 segundos, menus de versões e aviso claro de feed indisponível. Inicialização a frio real, Helper 0.6.19 na TV, UK6540PTD e atualização/retorno completo assinado não foram testados. A publicação estável aceita essas evidências limitadas; outros modelos não estão validados.
 
 No-root verifica a ABI do shell e aceita kernel de 64 bits somente com ambiente ARM32 confirmado. Nome de modelo ou `armv7l` não garante compatibilidade. As evidências anteriores continuam restritas ao hardware e aos pacotes testados.
 
 No-root: Configurações Home → Modo de desenvolvedor reúne renovação Beta, verificação de sessão e diagnósticos. Confira sempre o cronômetro oficial. Home Helper mostra o estado e pede confirmação para retomar após uma parada.
 
 Documentação técnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [instalação manual](../MANUAL_INSTALL.md), [recuperação](../RECOVERY.md), [edições](../EDITIONS.md), [atualizações](../UPDATES.md).
+
+Se Root mostrar `Denied methods call status` logo após preparar o supervisor, feche e reabra Home Root uma vez e verifique as atualizações novamente. Se persistir, guarde o diagnóstico e o estado de recuperação.

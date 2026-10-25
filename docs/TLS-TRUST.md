@@ -37,6 +37,11 @@ Existing on-TV services need their package/infrastructure updated explicitly.
 Root Updater's independently provisioned code is deliberately immutable during
 ordinary Home updates; those updates alone will not refresh an older CA store.
 Use the existing host recovery/migration workflow for that infrastructure.
+After the 1.1.0 supervisor is explicitly provisioned, a compatible signed
+whole-edition update can replace its allowlisted Root Updater infrastructure,
+including the CA store, with verified rollback. This does not update the fixed
+supervisor itself or turn a legacy Home-only update into an infrastructure update.
+See [transition and recovery](UPDATES.md).
 
 Wrong TV time, expired leaf certificates, a proxy's private CA and unsupported TLS
 protocols still cause a safe failure. The bundled roots do not bypass those checks.

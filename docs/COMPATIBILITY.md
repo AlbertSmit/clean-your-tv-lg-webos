@@ -15,8 +15,15 @@ use ws 8.21.0. The Node 0.12.2 regression exercises controller startup and a loc
 WebSocket exchange. Input-device access, firmware SSAP behavior, standby and cold
 boot still require hardware acceptance on the LG 49UJ750V from issue #47.
 
-The v1.0.0 distribution contains cytv 0.2.14, Home 1.3.6, Helper 0.6.17,
-Root 0.1.10 and No-root Updater 0.1.5; the Android installer is 0.1.5-preview.
+The unreleased 1.1.0 RC source contains cytv 0.3.0, Home 1.4.0, Helper 0.6.19,
+Root 0.2.0, both edition Updaters 0.2.0 and Android 0.2.0-preview / code 9.
+The latest published download remains 1.0.3 stable. [RC test artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
+are from product commit `acf1acc`; they do not establish hardware acceptance.
+Root setup can provision a pinned private ARMv7 Python on eligible TVs without a
+suitable interpreter. Working system Python skips the download; compatible
+loader/libc, root/Homebrew services, Node.js 8+ and input support remain required.
+The issue #37 UK6540PTD / 05.50.70 remains unvalidated for this runtime.
+See [optional Python](OPTIONAL-PYTHON.md) and [RC scope](RELEASE-1.1.0.md).
 Older version rows below are historical hardware reports, not the current package
 list. Root has separate [acceptance and lifecycle evidence](../root-edition/RELEASE-ACCEPTANCE.md).
 

@@ -1,6 +1,7 @@
 """Computer bootstrap orchestration; only SSH is replaced by an in-memory TV."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -66,6 +67,31 @@ class SystemBootstrapTests(unittest.TestCase):
         (self.payload/'system-updater/system_updater/core.py').write_bytes(b'tampered')
         remote=Remote()
         with self.assertRaisesRegex(UserError,'integrity'):self.installer(remote).enable_system_updates()
+        self.assertFalse(remote.calls)
+
+    @unittest.skipUnless(os.name == 'posix', 'macOS/POSIX payload aliases')
+    def test_packaged_payload_root_alias_is_supported(self):
+        # PyInstaller uses a Frameworks -> Resources alias in macOS apps;
+        # one-file extraction may also use macOS /var -> /private/var.
+        framework = self.path/'Frameworks'
+        framework.mkdir()
+        alias = framework/'payload'
+        alias.symlink_to(self.payload, target_is_directory=True)
+        remote = Remote()
+        installer = operations.Installer(remote, self.store, self.profile, alias, {}, progress=lambda _: None)
+        self.assertTrue(installer.enable_system_updates()['installed'])
+        self.assertTrue(any(c[0] == 'upload' for c in remote.calls))
+
+    @unittest.skipUnless(os.name == 'posix', 'POSIX symlink tampering')
+    def test_link_inside_payload_is_rejected_before_tv_access(self):
+        target = self.payload/'system-updater/system_updater/core.py'
+        external = self.path/'external.py'
+        external.write_bytes(target.read_bytes())
+        target.unlink()
+        target.symlink_to(external)
+        remote = Remote()
+        with self.assertRaisesRegex(UserError, 'integrity'):
+            self.installer(remote).enable_system_updates()
         self.assertFalse(remote.calls)
 
     def test_unconfirmed_bootstrap_retains_receipt_and_blocks_retry(self):

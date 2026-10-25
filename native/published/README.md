@@ -1,5 +1,10 @@
 # Published Helper baseline
 
+These files preserve specific historical rollback baselines. Published v1.0.3
+uses Helper 0.6.18; the unpublished 1.1.0 candidate builds Helper 0.6.19 from
+source and needs its own exact archive/rollback approval. Selecting 0.6.19 does
+not reuse the 0.6.17 file below. See [candidate notes](../../docs/RELEASE-1.1.0.md).
+
 `com.local.nativehome_0.6.17_arm.ipk` is the exact Helper from
 [v1.0.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.0.0),
 extracted from `clean-your-tv-no-root-1.3.6.zip` after verifying the release's

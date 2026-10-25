@@ -34,6 +34,13 @@ explain unchanged components. Include Android versionCode in its row. -->
 requirements. An unchanged pinned Helper package does not ship new Helper source
 fixes. State which version bumps and package checks remain before delivery. -->
 
+## Documentation
+
+<!-- Complete the documentation pass in docs/RELEASE-FLOW.md for this candidate.
+List reviewed/updated guides and translations, command/link checks, reasons for
+unchanged guides, and remaining work or deliberate limitations. Refresh after
+scope/version changes. Release notes alone do not replace usage instructions. -->
+
 ## Validation and acceptance
 
 <!-- Record actual test/build results with links or commands and checked commits.
@@ -48,6 +55,7 @@ Do not claim hardware acceptance from automated tests or package installation. -
 - [ ] This description matches the inventory and states proposed versus committed component versions.
 - [ ] Final version matches `release-versions.json` and release notes.
 - [ ] Changed component manifests and versions agree.
+- [ ] Candidate documentation pass is complete; affected guides/translations match the release and remaining limitations are recorded above.
 - [ ] Rebuilt packages contain the intended changes; pinned baselines and delivery limitations are recorded.
 - [ ] TV acceptance evidence and untested paths are recorded in `acceptance`.
 - [ ] Complete platform builds and required tests pass for the current candidate.

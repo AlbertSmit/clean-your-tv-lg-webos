@@ -76,6 +76,31 @@ against release metadata and component manifests, link the release notes, and
 record validation of the exact frozen candidate. Until then, explicitly state
 that the PR is an unfrozen draft and which bumps have not been committed.
 
+## Update documentation for every candidate
+
+The maintainer preparing each candidate owns a documentation pass against its
+actual release inventory. Start it while collecting changes, refresh affected
+instructions when an implementation PR merges, and finish it before marking the
+release PR ready. Release notes alone do not replace updated usage instructions.
+
+- Review README, installation/update/removal guides, troubleshooting, supported
+  devices and prerequisites, and affected component documentation. Update commands,
+  download links, versions, screenshots and recovery/rollback instructions where
+  behavior changed. Remove obsolete instructions.
+- Review translated guides for the same changes. Update affected translations;
+  record any remaining gaps explicitly in the release PR.
+- Check documented commands and links against the candidate's actual CLI and
+  artifacts. Distinguish candidate-only instructions from the published stable
+  release, and retain honest hardware-tested and untested limitations.
+- Add a **Documentation** section to the release PR listing the reviewed/updated
+  files, verification performed and remaining work. If a guide needs no change,
+  record why. Resolve stale instructions before marking the PR ready; document
+  deliberate remaining limitations rather than checking an unfinished item.
+
+Repeat this pass after scope changes, reversions or version changes. The release
+template and [release checklist](RELEASE_CHECKLIST.md) make it a maintainer gate;
+CI does not establish that documentation matches product behavior.
+
 ## Freeze and validate the candidate
 
 To collect device feedback before hardware acceptance is available, first prepare

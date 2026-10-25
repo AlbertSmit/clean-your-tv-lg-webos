@@ -1,5 +1,9 @@
 # Automatic Python runtime for Root Edition
 
+Introduced in the **unpublished 1.1.0 candidate**; use its
+[test artifacts and instructions](RC-1.1.0-TESTING.md), not the stable latest
+download, to test this feature.
+
 Root Edition needs Python 3.9 or newer on the TV, including the modules and
 filesystem/process operations used by installation and recovery. The installer
 keeps a suitable existing interpreter. A working system installation does not
@@ -11,8 +15,9 @@ runtime on the computer or Android device and transfer it through the existing
 trusted SSH connection. The TV does not need Internet access for this step. The
 download is about 26.3 MB. The normalized distribution materializes internal
 archive links as independent regular files: about 119.3 MB installed and 51.5 MB
-compressed for SSH transfer in the inspected artifact. Additional staging/free-space requirements
-are checked before provisioning. Actual runtime compatibility is tested before
+compressed for SSH transfer in the inspected artifact. Initial staging requires
+**320 MiB free** on the TV; the installer checks this before provisioning.
+Actual runtime compatibility is tested before
 Root activation, not inferred from a TV model name.
 
 ## Scope and compatibility

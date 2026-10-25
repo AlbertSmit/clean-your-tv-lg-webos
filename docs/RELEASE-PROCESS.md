@@ -13,7 +13,11 @@ No tag, terminal command, draft creation or Publish click is needed.
 The four desktop builds and Android build run on trusted `release/next` pushes
 only after candidate freeze: a newer final release version, matching plan,
 nonempty acceptance evidence and release notes must exist. Ordinary PRs run
-component checks without producing platform installers. After merging the
+component checks without producing platform installers. For device feedback
+before acceptance, an explicit `test_build=true` dispatch of **cytv standalone
+builds** on `release/next` produces draft installer artifacts. It does not publish,
+sign feeds or satisfy the final release gate; see [candidate preparation](RELEASE-FLOW.md#freeze-and-validate-the-candidate).
+After merging the
 candidate into `main`, **Automatic release**:
 
 1. Finds the successful trusted build of the merge's exact second parent,

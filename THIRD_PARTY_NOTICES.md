@@ -9,6 +9,11 @@
   `native/app/vendor/ws-legacy/`. Modern TV Node continues to use ws 8.21.0.
 - webos-service: supplied by the TV runtime, not redistributed here.
 - Zig, Python and LG's webOS CLI are external build/setup prerequisites.
+- The optional Root TV runtime is CPython 3.13.17 from python-build-standalone
+  release 20261021 (`armv7-unknown-linux-gnueabi`). It is downloaded separately
+  only when required; ordinary installers do not embed the archive. Upstream
+  Python and dependency license files accompany that runtime. Pin, provenance,
+  checksum and update procedure: [optional Python](docs/OPTIONAL-PYTHON.md).
 - Outbound HTTPS services bundle the Mozilla CA store converted by curl, under MPL 2.0.
   The snapshot, source, SHA-256 and refresh instructions are recorded in
   `docs/TLS-TRUST.md`; each service ships `ca-LICENSE.txt` alongside `ca-bundle.crt`.

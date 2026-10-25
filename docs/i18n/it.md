@@ -4,7 +4,9 @@ No-root e Root sono opzioni equivalenti per diverse configurazioni della TV. Sce
 
 ## Requisiti
 
-Questa guida tratta installazione, utilizzo e ripristino. La scelta della lingua e l’app desktop per macOS/Linux sono incluse in [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). I vecchi download della v0.9.0 non contengono l’app grafica. Consulta la [guida d’installazione per entrambe le edizioni](../INSTALL.md).
+Questa guida descrive la candidata **1.1.0, non ancora pubblicata**. Per l’uso stabile scarica [v1.0.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest); i collegamenti `releases/latest/download` distribuiscono ancora quella versione. Per provare la candidata usa gli [artefatti della compilazione Actions](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948) dal commit `acf1acc`, con le stesse versioni di prodotto delle successive modifiche alla documentazione. Non sono una release stabile né un’autorizzazione alla pubblicazione. Consulta le [note della candidata](../RELEASE-1.1.0.md) e la [guida d’installazione](../INSTALL.md).
+
+Versioni della candidata: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater e Root Updater **0.2.0**, Android **0.2.0-preview** (codice **9**), supervisore System Updater **1.0.0**, protocollo **1**.
 
 Accendi il televisore e collegalo alla stessa rete locale affidabile del computer. Dopo l’installazione il computer può restare spento. La compatibilità dipende da modello, firmware e telecomando; Root ha ancora verifiche hardware da completare.
 
@@ -13,6 +15,20 @@ Accendi il televisore e collegalo alla stessa rete locale affidabile del compute
 Il Helper No-root aggiornato richiede Node.js 0.12.2 o successivo sulla TV. Il programma di installazione verifica questo requisito prima di installare. I pacchetti già pubblicati non acquisiscono automaticamente questa compatibilità; accesso al telecomando, standby e avvio a freddo richiedono prove su ogni modello.
 
 - **Root:** serve un accesso SSH root già disponibile. L’installer non ottiene i privilegi root. Non attivare Developer Mode su una configurazione già dotata di root. Mantieni disponibili accesso root e servizi di ripristino.
+
+## Python opzionale per Root
+
+Root richiede Python 3.9+ sulla TV. L’installer verifica realmente moduli e operazioni necessari, inclusi `json`, `fcntl`, blocchi, file e sottoprocessi: il solo numero di versione non basta. Se l’interprete esistente è adatto, non scarica un altro Python. Altrimenti, durante la configurazione può scaricare sul computer o su Android CPython **3.13.17 per ARMv7 soft-float**, fissato per URL, dimensione e SHA-256, e trasferirlo con la connessione SSH già verificata. I pacchetti ordinari desktop/Android non contengono questo archivio; per questa fase la TV non deve accedere a Internet.
+
+Il download opzionale è circa **26,3 MB**, il trasferimento SSH normalizzato **51,5 MB**, i file installati **119,3 MB**; la preparazione richiede **320 MiB** liberi sulla TV. La compatibilità del loader e delle librerie viene verificata prima dell’attivazione. I file risiedono in slot privati sotto `/var/lib/clean-your-tv-python/`: Python di sistema, libc e PATH globale non vengono modificati. Restano necessari root, servizi webOS compatibili e Node.js **8+** per Root/System Updater; il Helper No-root richiede Node.js **10+**.
+
+Per preparare una cache verificata su un computer con Internet, senza cercare né contattare una TV:
+
+```sh
+./cytv --prepare-python-runtime --data-dir /percorso/cache-privata
+```
+
+Riusa la stessa `--data-dir` durante l’installazione. Per trasferire la cache, crea una cartella privata dedicata: non condividere dati contenenti chiavi SSH o profili. `status`, `doctor`, `restore` e `uninstall` non scaricano automaticamente Python. Conserva gli slot ancora usati da Root, dagli updater o dal ripristino, anche dopo la rimozione delle app. Dettagli: [runtime opzionale](../OPTIONAL-PYTHON.md).
 
 ## Installazione e lingua
 
@@ -56,24 +72,32 @@ Dopo un’interruzione, esegui prima `status` e conserva i registri. `restore` r
 
 ## Aggiornamenti e rimozione
 
-Conserva pacchetti funzionanti e copie private delle impostazioni. Ferma No-root Helper prima di sostituire i pacchetti; aggiorna dal computer senza disinstallare prima, perché potresti perdere preferenze. L’installazione Root combinata di cytv include gli aggiornamenti compatibili in Impostazioni → Aggiornamenti software; l’installazione manuale ha limiti diversi. Non installare una singola IPK sopra un ambiente Root attivo. Usa la procedura esplicita di reinstallazione cytv. Rimuovere l’app desktop non rimuove le app TV.
+Dopo la connessione, cytv mostra versione installata → inclusa e distingue prima installazione, reinstallazione e downgrade. Controlla il riepilogo prima della conferma; `--yes` non rende sicuro un passaggio incompatibile. Conserva pacchetti funzionanti e copie private delle impostazioni. Per gli aggiornamenti dal computer ferma No-root Helper prima di sostituire i pacchetti; non disinstallare prima. Non sovrascrivere un ambiente Root attivo con una sola IPK: usa il percorso previsto da cytv. Rimuovere l’app desktop non rimuove le app TV.
 
-Documentazione tecnica in inglese: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [No-root](../INSTALL.md), [installazione manuale](../MANUAL_INSTALL.md), [ripristino](../RECOVERY.md), [edizioni](../EDITIONS.md).
+La candidata aggiunge **Aggiorna tutto** in Impostazioni → Aggiornamenti software. Il System Updater indipendente verifica un insieme firmato per l’edizione: Home, Helper e Home Updater per No-root su TV con root; Root Home, Root Updater e runtime di controllo/ripristino per Root. L’installazione dalla TV richiede **root, Homebrew Channel**, Python compatibile, Node.js 8+ e servizi webOS funzionanti. Su TV senza root usa il computer.
 
-Dopo la connessione, cytv legge le versioni sulla TV e mostra la versione attuale → inclusa per Home e Home Helper (No-root), oppure Root e Root Updater. Controlla e conferma prima di installare. Prima installazione, reinstallazione e passaggio a una versione precedente sono indicati separatamente; `--yes` salta la conferma ma mostra le versioni.
+Per una prima installazione usa l’installer completo della candidata, che prepara Home e l’Updater di ripristino dell’edizione. Questa versione di transizione non è offerta dal feed stabile.
 
-Aggiornamenti software mostra i dettagli solo della versione installata o più recente. Apri Ripristino per vedere la versione salvata da ripristinare o il motivo per cui non è disponibile; Indietro torna agli aggiornamenti.
+Se Root è già installato e Root Updater è ancora presente, una reinstallazione generica può essere rifiutata intenzionalmente. Prima esegui `status` e la diagnostica, poi verifica la transazione e lo stato di ripristino nell’Updater esistente. Risolvi le operazioni attive o incerte tramite il relativo percorso di ripristino precedente; la transizione dell’infrastruttura va valutata sullo stato reale della TV. Non cancellare il diario né aggirare il blocco con `--yes`, una IPK isolata o un vecchio OTA. L’OTA della sola app non installa la nuova infrastruttura. Segui il [primo controllo della candidata](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv).
 
-No-root verifica l’ABI della shell TV e accetta un kernel a 64 bit con ambiente ARM32 confermato. Se la verifica fallisce, allega il JSON diagnostico generato; non condividere chiavi o passphrase.
+Solo dopo aver verificato una configurazione compatibile con Home `systemUpdateProtocol = 1` e l’Updater di ripristino appropriato, abilita il supervisore dal computer. Nell’installer scegli l’opzione per abilitare gli aggiornamenti di tutti i componenti TV; per Root, con connessione SSH root salvata:
 
-Gli aggiornamenti di Home richiedono conferma prima dell’installazione; poi l’avvio viene verificato automaticamente. Il controllo dello stato mantiene il pulsante selezionato con il telecomando.
+```sh
+./cytv --language it enable-system-updates --edition root --host TV_ADDRESS
+```
 
-In Root e No-root, l’avvio viene confermato automaticamente dopo l’installazione; non devi confermare che tutto funzioni. Il ripristino rimane disponibile dopo la conferma, senza limiti di tempo, fino al prossimo aggiornamento. Ripristina la versione precedente di Home e le impostazioni salvate prima dell’aggiornamento; le modifiche successive possono andare perse. Prima di avviarlo viene mostrato un avviso. Aggiornare e ripristinare No-root dalla TV richiede ancora root e Homebrew Channel; altrimenti usa il programma di installazione sul computer.
+Per No-root su TV con root, prepara prima Home/Helper/Home Updater dal computer e usa il procedimento con alias SSH root in [Aggiornamenti](../UPDATES.md#one-time-computer-preparation). Il supervisore salva una base di ripristino verificata dei componenti realmente installati. Un vecchio aggiornamento OTA della sola app non installa il nuovo runtime Python, il supervisore o l’infrastruttura degli updater. Dopo la preparazione usa il percorso comune: gli installer precedenti in conflitto vengono rifiutati.
 
-La schermata di aggiornamento separa versioni, stato e novità leggibili. Su/Giù scorre le note; Sinistra/Destra sceglie le azioni fisse in basso. Dopo i controlli automatici di avvio, Root ripristina il controllo Home se era attivo; No-root conserva lo stato del Helper separato. Le preferenze disattivate e la disattivazione esplicita o di emergenza restano disattivate.
+L’installazione richiede conferma, poi verifica automaticamente l’avvio. Le impostazioni e il profilo vengono conservati; un arresto esplicito o di emergenza del controllo Home non viene annullato. La schermata mantiene il fuoco del telecomando: Su/Giù scorre le note, Sinistra/Destra sceglie le azioni. Un punto arancione indica una nuova versione, anche quando richiede il computer. Apri Ripristino dall’Updater per conoscere lo stato e la versione precedente disponibile. Il ripristino del sistema torna all’intero insieme precedente e al profilo salvato; le modifiche successive alle impostazioni possono andare perse. La verifica automatica dell’avvio non elimina il ripristino, che resta disponibile fino alla transazione successiva.
 
-Aprendo le impostazioni Home, gli aggiornamenti vengono cercati in background. Un punto arancione su Aggiornamenti software indica una versione più recente, anche quando richiede l’installazione dal computer. Le impostazioni restano utilizzabili durante la verifica.
+Dopo un’interruzione esegui `status`, conserva il diario e i dati di ripristino. Un risultato ambiguo blocca nuove installazioni e ripristini; leggere una versione non dimostra che l’installer abbia terminato. Non cancellare diari, blocchi o slot Python per forzare un tentativo. Conserva il rapporto `doctor --report`: distingue i requisiti Root falliti e registra codici numerici SSH senza credenziali o output grezzo. Controllalo comunque prima di condividerlo.
 
-No-root: apri Impostazioni Home → Modalità sviluppatore per rinnovo automatico, verifica della sessione e diagnostica. La schermata principale mantiene visibili un breve stato e gli errori di rinnovo. Indietro torna alle impostazioni Home. Entrambe le edizioni raggruppano Lingua, Aggiornamenti software e Impostazioni TV nella stessa riga; la freccia apre ogni voce.
+## Verifiche hardware e limiti
 
-All’apertura, Home Helper mostra il suo scopo e stato. L’avvio di un Helper arrestato richiede conferma. Home Updater e Root Updater spiegano il ripristino; gli aggiornamenti normali sono nelle impostazioni di Home. Il ripristino è proposto solo se esiste una versione salvata e richiede conferma prima di sostituire Home e le sue impostazioni.
+**LG UK6540PTD, firmware 05.50.70, ARM32** (issue #37) aveva Python 2.7.12 e nessun Python 3 disponibile. Il nuovo runtime non è ancora stato verificato su quella TV. I test automatici e l’avvio ARM32 con QEMU non provano compatibilità di loader/libc, API webOS, telecomando, avvio a freddo o rollback. Le precedenti prove di aggiornamento Home su **LG OLED55C3RLA / 43.21.71** riguardano i vecchi pacchetti, non questa candidata. Restano da verificare l’intero aggiornamento, le interruzioni di alimentazione, il rilascio degli input del Helper **0.6.19** e il ripristino di runtime/updater; l’approvazione del Helper 0.6.18 non copre il nuovo archivio.
+
+No-root controlla l’ABI della shell e accetta un kernel a 64 bit solo con ambiente ARM32 verificato. Un nome di modello o `armv7l` non garantiscono compatibilità. Mantieni i limiti hardware della versione effettivamente provata.
+
+No-root: Impostazioni Home → Modalità sviluppatore raccoglie rinnovo Beta, verifica sessione e diagnostica. Controlla sempre il timer ufficiale. Home Helper mostra il proprio stato e richiede conferma per riprendere dopo un arresto.
+
+Documentazione tecnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [installazione manuale](../MANUAL_INSTALL.md), [ripristino](../RECOVERY.md), [edizioni](../EDITIONS.md), [aggiornamenti](../UPDATES.md).

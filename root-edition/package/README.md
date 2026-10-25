@@ -3,7 +3,7 @@
 Build on the host with Python 3; the output directory must not exist:
 
 ```sh
-python3 root-edition/build.py --version 0.1.6 --output /absolute/path/to/new-candidate
+python3 root-edition/build.py --version 0.2.0 --output /absolute/path/to/new-candidate
 ```
 
 The bundle contains an isolated `com.cleanyourtv.root.preview` IPK, its public-source file hashes, the recovery runtime, and host/device drivers. `bundle.json` covers every distributed support/runtime file. `SHA256SUMS` covers the IPK. No TV connection occurs during build. This candidate still requires hardware validation.
@@ -18,7 +18,10 @@ python3 /path/to/candidate/setup.py restore --ssh television
 python3 /path/to/candidate/setup.py uninstall --ssh television
 ```
 
-`--identity /path/to/key` is optional. The scripts require strict host-key checking and batch authentication. Device operations require root, the webOS Luna tool, and the developer-app directory. Installation does not select this app as Home. Trial uses the runtime's bounded recovery flow. Persistent activation is available
+`--identity /path/to/key` is optional. The scripts require strict host-key checking and batch authentication. Device operations require root, suitable Python 3.9+, TV Node.js 8+, Homebrew services,
+the webOS Luna tool, the developer-app directory and supported ARM32 remote input.
+Manual drivers do not provision Python; cytv can supply the optional pinned ARMv7
+runtime on eligible TVs. Retain its verified binding for recovery/removal. Installation does not select this app as Home. Trial uses the runtime's bounded recovery flow. Persistent activation is available
 through `setup.py enable` or **Change Home** in Home settings after the checks
 pass. For normal setup, use [manual installation](../../docs/MANUAL_INSTALL.md),
 including the independent updater step, or [cytv](../../docs/INSTALL.md).

@@ -5,7 +5,10 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-The v0.10.5 distribution includes **Root Edition 0.1.6**. Settings updates and
+The unreleased **1.1.0 RC** includes **Root Edition 0.2.0** and **Root Updater 0.2.0**.
+The latest published download remains **1.0.3 stable**. [RC test artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
+are from product commit `acf1acc`; later documentation edits do not change them.
+New candidate hardware acceptance remains pending. Settings updates and
 independent update recovery were introduced in 0.1.1; that earlier hardware
 record does not certify the current binary.
 Evidence is scoped to **LG OLED55C3RLA / firmware 43.21.71**. Other models and
@@ -60,7 +63,8 @@ The public bundle contains no personal app list. Installation can copy validated
 profile data from an existing Home installation without modifying it. It does not
 migrate arbitrary browser storage. Root excludes the ordinary Home updater and
 Developer Mode renewal UI. Its own **Settings → Software updates** uses an
-independent Root Updater with saved profiles and one-attempt rollback. Startup
+independent System Updater supervisor after explicit computer bootstrap, with
+signed whole-edition release sets, saved profiles and bounded rollback. Startup
 health confirmation is automatic. Rollback remains available after confirmation,
 without a time limit, until the next update replaces the saved transaction. It
 restores the previous package and pre-update settings; the rollback dialog warns
@@ -70,8 +74,8 @@ path. Explicit or emergency off during the update wins; disabled preferences,
 failsafe and uncertain activation stay off. The runtime and independent updater
 must be migrated together from the computer for this behavior. See
 [Root updates and one-time setup](UPDATES.md) and the
-[isolated update/rollback validation](../docs/development/ROOT-UPDATES-TV-VALIDATION.md). Recovery/updater infrastructure upgrades remain
-computer-assisted.
+[isolated update/rollback validation](../docs/development/ROOT-UPDATES-TV-VALIDATION.md). The RC can update compatible Root recovery infrastructure as part of the signed
+set; first supervisor/runtime bootstrap and legacy migrations remain computer-assisted.
 
 Early boot black screens, faster boot artwork, system-library patches and
 removing system advertisements are **not** delivered by this edition. Long Home

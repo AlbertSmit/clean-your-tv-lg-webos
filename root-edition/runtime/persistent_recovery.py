@@ -205,7 +205,8 @@ class Coordinator:
                     except (OSError,ValueError): time.sleep(.1)
                 self._healthy(expected)
                 intent, effect = self.event(expected,'ready')
-                d.sam_transport().call('luna://com.webos.applicationManager/launch', {'id':d.CANDIDATE})
+                # bootd presents the retained Home before protection is ready.
+                # Reopening it now would steal focus from an app the user chose.
                 return dict(intent=intent,effect=effect,trial=result,persistent=True)
             except Exception:
                 current = self.store.read()

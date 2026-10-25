@@ -4,9 +4,10 @@ Choose a complete user guide for installation, everyday controls, recovery,
 updates and removal. Technical/developer references remain in English and are
 linked at the end of each guide.
 
-Language selection and the macOS/Linux desktop application described here are included
-in v0.10.3 and later downloads. Existing v0.9.0 downloads
-do not contain the new desktop app. Follow the availability notes in your guide.
+These ten guides describe the **unpublished 1.1.0 candidate** and distinguish it
+from the published v1.0.3 downloads. Use the candidate's Actions artifacts for
+testing; `releases/latest` still serves stable. See the
+[candidate test guide](RC-1.1.0-TESTING.md) and [release notes](RELEASE-1.1.0.md).
 
 The Android preview also supports all ten languages below. It follows the phone language on first launch (English fallback); tap the current language code at the top right to choose and save another language.
 

@@ -119,3 +119,9 @@ Próximo candidato (#51): tras un rechazo de paquete por la TV, el informe JSON 
 Próximo candidato (#59): si no se puede comprobar el estado de Helper, **Iniciar Helper** sigue disponible con confirmación. Abrir el icono no reinicia Helper ni desactiva una parada de emergencia. Los ajustes de Home requieren que responda el control.
 
 Próximo candidato (#55): Root valida la migración antes de instalar. Una instalación interrumpida antes del aprovisionamiento puede eliminarse sin una instantánea LS2 que nunca se creó; conserva un comprobante para el archivado y la reinstalación normales de cytv. La ausencia posterior de instantáneas o los datos contradictorios siguen bloqueando la limpieza. Requiere el nuevo controlador; el fallo de inicio del servicio de recuperación en OLED Flex sigue sin resolverse.
+
+## Bloqueo de firmware LG en el próximo candidato
+
+Solo Root: Ajustes de Home → Actualizaciones de firmware de LG cambia el ajuste existente de Homebrew Channel. Incluye actualizaciones de seguridad del firmware; Clean Your TV se actualiza por separado. Ambos cambios requieren reiniciar realmente el TV; el modo de espera no basta. El interruptor muestra el ajuste guardado, no un bloqueo activo verificado. Algunos TV buscan actualizaciones antes del bloqueo; los avisos pueden persistir y puede ser necesario bloquear en el router. Homebrew conserva el ajuste al eliminar CYTV o volver a una versión anterior. Si no está disponible o confirmado, revisa Homebrew y actualiza el estado. Faltan pruebas en TV real.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)

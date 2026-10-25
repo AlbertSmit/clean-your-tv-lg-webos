@@ -14,6 +14,12 @@ See [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md). Earlier [0.1.1](R
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
 [Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)
 
+**Next candidate only:** Home settings → LG firmware updates controls Homebrew
+Channel's existing firmware-blocking preference. Changes need a real TV restart;
+the saved switch is not proof of active blocking. This also blocks firmware
+security updates, and Homebrew retains the preference after CYTV removal.
+See [operation, limitations and pending TV acceptance](../docs/LG-FIRMWARE-UPDATES.md).
+
 ## What works on the tested setup
 
 - Short **Home** selects our launcher through system routing, without the old

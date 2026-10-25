@@ -74,7 +74,7 @@
       refreshMode().then(function () { message.textContent = t(error); });
     });
   }
-  var order = [3, 1, 5, 4, 0, 2];
+  var order = [3, 1, 5, 4, 0, 6, 2];
   function focus(index) {
     selected = index;
     if (!buttons[selected].disabled) buttons[selected].focus();
@@ -96,6 +96,12 @@
     if (index === 2) return close();
     if (index === 5) { if (window.HomeI18n) window.HomeI18n.openLanguagePicker(); return; }
     if (index === 3) return changeMode();
+    if (index === 6) {
+      if (!window.RootFirmware) return;
+      panel.hidden = true;
+      window.RootFirmware.open(request, function () { panel.hidden = false; focus(6); });
+      return;
+    }
     if (index === 4) {
       if (!window.RootUpdates) { message.textContent = t('Software updates require the one-time computer setup.'); return; }
       panel.hidden = true;
@@ -125,15 +131,16 @@
     var homeActions = document.createElement('div'); homeActions.className = 'renewal-actions home-routing-actions'; home.appendChild(homeActions);
     var more = document.createElement('section'); more.className = 'settings-section'; card.appendChild(more);
     var links = document.createElement('div'); links.className = 'renewal-actions settings-links'; more.appendChild(links);
+    var firmware = document.createElement('div'); firmware.className = 'renewal-actions settings-firmware'; more.appendChild(firmware);
     var footer = document.createElement('div'); footer.className = 'settings-footer'; card.appendChild(footer);
     text(footer, 'p', 'Hold Back for 1.2 seconds to open LG Home.');
     var back = document.createElement('div'); back.className = 'renewal-actions'; footer.appendChild(back);
     buttons = [];
     order.forEach(function (i) {
-      var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates','Language'];
+      var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates','Language','LG firmware updates'];
       var b = document.createElement('button'); b.textContent = t(labels[i]);
       if (i === 3) { b.className = 'home-routing-switch'; b.setAttribute('role','switch'); b.setAttribute('aria-checked','false'); }
-      var target = i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back;
+      var target = i === 6 ? firmware : i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back;
       if (i === 1) {
         b.className = 'home-visit-button';
         b.setAttribute('aria-describedby', 'rootHomeVisitHint');

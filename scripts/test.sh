@@ -51,6 +51,8 @@ node root-edition/ui/test-localization.cjs
 node root-edition/ui/test-updater-localization.cjs
 node root-edition/ui/test-exit.cjs
 node root-edition/ui/test-settings.cjs
+node root-edition/ui/test-firmware.cjs
+node root-edition/ui/test-firmware-control.cjs
 node root-edition/ui/test-persistent.cjs
 node root-edition/ui/test-profile.cjs
 node root-edition/ui/test-updates.cjs

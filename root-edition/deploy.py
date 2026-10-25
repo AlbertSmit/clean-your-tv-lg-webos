@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 from observed_install import install as observed_install, OutcomeUnknown
+from python_binding import command as python_command, install_launcher
 
 APP = 'com.cleanyourtv.root.preview'
 STATE = Path('/var/lib/clean-your-tv-root')
@@ -19,7 +20,7 @@ RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'devic
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
                  'boot_gate.py', 'shutdown_state.py', 'persistent_health.py', 'persistent_lease.py', 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
-SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py')
+SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py', 'python_binding.py')
 
 
 def require_device():
@@ -117,7 +118,7 @@ def command(args):
 
 
 def runtime(mode, run=command):
-    return run(['/usr/bin/python3', str(STATE / 'runtime/cli.py'), mode])
+    return run([python_command(STATE), str(STATE / 'runtime/cli.py'), mode])
 
 
 def restore(run=command):
@@ -158,6 +159,21 @@ def migrate_packaged_home():
     write_stage('personalization-complete', manifest='personalization.json')
 
 
+def write_binding(path, data, mode=0o600):
+    temporary = path.with_name(path.name+'.binding-tmp')
+    fd = os.open(temporary, os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW, mode)
+    try:
+        with os.fdopen(fd,'wb') as stream:
+            os.fchmod(stream.fileno(),mode)
+            stream.write(data);stream.flush();os.fsync(stream.fileno())
+        os.replace(temporary,path)
+        directory=os.open(path.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:os.fsync(directory)
+        finally:os.close(directory)
+    finally:
+        if os.path.lexists(temporary): temporary.unlink()
+
+
 def install(bundle, run=command, observe=observed_install, migrate=False):
     if sys.version_info < (3, 9):
         raise RuntimeError('Root requires TV Python 3.9+')
@@ -173,6 +189,7 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
     for name in RUNTIME_FILES:
         target = STATE / 'runtime' / name
         target.write_bytes(checked_file(Path(bundle).resolve(), 'runtime/' + name)); target.chmod(0o600)
+    install_launcher(STATE, write_binding)
     package = str(Path(bundle).resolve() / manifest['package'])
     observe(APP, package, timeout=120,
             on_ready=lambda: write_stage('install-submitting', package=package),
@@ -185,7 +202,7 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
         migrate_packaged_home()
     for step in ('apply', 'refresh', 'finalize'):
         write_stage('provision-' + step + '-starting')
-        run(['/usr/bin/python3', str(STATE / 'provision.py'), step])
+        run([python_command(STATE), str(STATE / 'provision.py'), step])
         write_stage('provision-' + step + '-complete')
     write_stage('installed-recovery-only')
     return {'returnValue': True, 'installed': APP, 'home_changed': False}
@@ -222,7 +239,7 @@ def uninstall(run=command):
     restore(run)
     write_stage('uninstall-restored')
     for step in ('rollback', 'refresh'):
-        run(['/usr/bin/python3', str(STATE / 'provision.py'), step])
+        run([python_command(STATE), str(STATE / 'provision.py'), step])
         write_stage('uninstall-' + step + '-complete')
     # Removal needs a terminal subscribed result, never just request acceptance.
     from observed_install import remove
@@ -253,7 +270,7 @@ def main():
     elif args.command == 'confirm':
         import re
         if not args.transaction or not re.fullmatch(r'[0-9a-f-]{36}',args.transaction): parser.error('confirm requires --transaction')
-        result = command(['/usr/bin/python3',str(STATE/'runtime/cli.py'),'confirm',args.transaction])
+        result = command([python_command(STATE),str(STATE/'runtime/cli.py'),'confirm',args.transaction])
     else: result = runtime(args.command)
     print(json.dumps(result), flush=True)
 

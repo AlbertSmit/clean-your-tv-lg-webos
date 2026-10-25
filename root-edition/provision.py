@@ -10,6 +10,7 @@ import stat
 import select
 import time
 import subprocess
+from python_binding import verify_binding
 
 NAME = 'com.cleanyourtv.root.preview.service'
 SERVICE = Path('/media/developer/apps/usr/palm/services') / NAME
@@ -109,7 +110,9 @@ def manifest():
     callback = PRIVATE_SERVICE/'boot-recover.sh'
     if b'/var/lib/clean-your-tv-root/runtime/cli.py boot' not in secure(callback):
         raise ValueError('Unexpected boot callback')
-    paths = [RUNNER] + [PRIVATE_SERVICE/name for name in PRIVATE_FILES] + sorted(RUNTIME.glob('*.py'))
+    verify_binding(STATE)
+    binding = [STATE/name for name in ('python_binding.py','python-launcher','python-runtime.json') if os.path.lexists(STATE/name)]
+    paths = binding + [RUNNER] + [PRIVATE_SERVICE/name for name in PRIVATE_FILES] + sorted(RUNTIME.glob('*.py'))
     if RUNTIME/'cli.py' not in paths: raise ValueError('Missing runtime')
     return {'version':1,'mode':'recovery-only','boot_callback':str(callback),
             'files':{str(path):sha(secure(path)) for path in paths}}

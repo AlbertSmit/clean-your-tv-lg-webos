@@ -89,3 +89,27 @@ jobs:
       - name: Verify real webOS-style file ownership
         if: runner.os == 'Linux' && needs.scope.outputs.tv == 'true'
         run: sudo "$(command -v node)" native/prototype/test-state-permissions-linux.cjs
+  optional-python:
+    needs: scope
+    if: needs.scope.outputs.installer == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: build/python-runtime-cache
+          key: root-python-4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea
+      - name: Install ARM user emulation and EABI sysroot
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user libc6-armel-cross
+      - name: Execute the pinned ARM32 Python and native module smoke tests
+        run: python scripts/test-python-runtime.py
+      - name: Verify shell provisioning boundaries as root
+        run: sudo "$(command -v python)" -m unittest tests.cytv.test_python_runtime

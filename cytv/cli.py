@@ -55,6 +55,7 @@ def parser():
     result.add_argument('--yes', action='store_true', help=i18n.translate('Accept install/remove summary; does not accept SSH trust'))
     result.add_argument('--migrate-home', action='store_true', help=i18n.translate('Root install: explicitly import existing Home packaged/profile data'))
     result.add_argument('--check-payload', action='store_true', help=i18n.translate('Verify embedded release assets without contacting a TV'))
+    result.add_argument('--prepare-python-runtime', action='store_true', help=i18n.translate('Download and verify the optional TV Python for offline setup'))
     result.add_argument('--report', action='store_true', help=i18n.translate('doctor: save an issue-ready diagnostic report without private connection data'))
     return result
 
@@ -151,6 +152,13 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
     remote = None
     store, profile, phase, tv_info = state.Store(args.data_dir), None, 'select-tv', {}
     try:
+        if args.prepare_python_runtime:
+            phase = 'prepare-python-runtime'
+            from .python_runtime import prime_cache
+            archive = prime_cache(store.root / 'python-cache', write)
+            write.heading('Python runtime ready for offline setup')
+            write.raw('  ' + str(archive))
+            return 0
         if args.check_payload:
             manifest = package.verify_payload(Path(payload_root) if payload_root is not None else payload_dir())
             write(f"Embedded payload verified: {len(manifest['files'])} public files; no TV contacted.")

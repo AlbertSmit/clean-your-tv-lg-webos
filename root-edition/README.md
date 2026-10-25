@@ -47,6 +47,11 @@ and Node.js 8+ on the TV, Homebrew services and the supported ARM32 Magic Remote
 are required. Installation checks fail closed for unexpected state. A doctor
 report alone does not establish compatibility.
 
+The computer/Android installer can provision a private, verified ARMv7 Python
+when system Python is missing or incompatible. Working system installations do
+not download this component. See [automatic Python runtime](../docs/OPTIONAL-PYTHON.md)
+for delivery, retained recovery dependencies and unverified older-TV limitations.
+
 The installer does not root your TV, change Developer Mode or flash firmware.
 See the [upstream rooting overview](https://www.webosbrew.org/rooting/) separately.
 Do not install Developer Mode over an existing root setup for this guide.

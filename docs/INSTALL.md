@@ -42,6 +42,11 @@ needs Python 3.9+, Node.js 8+, luna-send, Homebrew services and a supported ARM3
 input interface. Investigate a changed SSH host key rather than bypassing the
 check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-access).
 
+If the TV has no suitable Python 3, Root setup can automatically download a
+separate verified ARMv7 runtime on your computer/Android device and transfer it
+over SSH. TVs with a suitable system Python skip this download. See
+[optional Python delivery and compatibility limits](OPTIONAL-PYTHON.md).
+
 ## 3. Download and start cytv
 
 Download the matching package from the

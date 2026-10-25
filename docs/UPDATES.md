@@ -21,13 +21,28 @@ requirements still apply. See [optional Python](OPTIONAL-PYTHON.md).
 
 ### One-time computer preparation
 
+First inspect the existing TV. Keep it on the same trusted network, select the
+saved connection in cytv and run Status, then diagnostics. For a saved Root
+connection, the console equivalents are:
+
+```sh
+./cytv --language en status
+./cytv --language en doctor --report
+```
+
+Review failed requirements and pending transactions before changing packages.
+SSH success does not establish Root readiness. Retain the diagnostic JSON and
+resolve active or uncertain updates through the installed updater's matching
+recovery flow. Do not delete journals or use `--yes` to bypass a retained Root
+Updater's reinstall block; a transition must match the actual installed state.
+
 Install the transition Home release containing the new shared update interface
 **before** provisioning the supervisor. A Root transition through the existing
 Home-only update screen requires an explicitly prepared compatible signed release;
 use only a published compatible transition for that installed updater. Fresh Root setups use the
 complete installer. Existing Root installations with a retained Root Updater must
 first inspect its transaction and recovery status: generic reinstallation is
-deliberately refused. Follow the [existing-TV checkpoint](UPDATES.md#one-time-computer-preparation)
+deliberately refused. Complete the existing-TV checks above
 and review the infrastructure transition; do not delete updater state to bypass it.
 Ordinary edition users can use the
 computer installer to update Home/Helper and install Home Updater. Then use a

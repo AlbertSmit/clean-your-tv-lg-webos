@@ -22,10 +22,10 @@ function harness(options = {}) {
   const context = {window,document,Promise,Error,JSON,PalmServiceBridge:function(){ this.cancel=()=>{}; this.call=(uri,raw)=>{ const method=uri.split('/').pop(),payload=JSON.parse(raw); calls.push({uri,method,payload}); let result = method==='check'?offer:state;
     if (method==='install') state=result={id:'tx',edition:offer.edition,release:'v1.3.0',phase:'downloading',components:[]};
     if (method==='rollback') state=result={id:'tx',phase:'rolling-back'};
-    this.onservicecallback(JSON.stringify(options.unavailable?{returnValue:false,errorText:'Service does not exist'}:(options.failure || method==='check' && options.checkFailure)?{returnValue:false,errorText:options.failure || options.checkFailure}:{returnValue:true,result})); }; },setTimeout(fn,ms){ const id=++nextTimer; timers.set(id,{fn,ms}); return id; },clearTimeout(id){timers.delete(id);}};
+    this.onservicecallback(JSON.stringify(options.unavailable?{returnValue:false,errorText:'Service does not exist'}:(options.failure || method==='status' && options.statusFailure || method==='check' && options.checkFailure)?{returnValue:false,errorText:options.failure || options.statusFailure || options.checkFailure}:{returnValue:true,result})); }; },setTimeout(fn,ms){ const id=++nextTimer; timers.set(id,{fn,ms}); return id; },clearTimeout(id){timers.delete(id);}};
   context.HomeI18n=i18n; if(options.locale)vm.runInNewContext(fs.readFileSync('launcher/catalogs.js','utf8'),context);
   vm.runInNewContext(fs.readFileSync('launcher/system-updates.js','utf8'),context);
-  return {window,document,ids,calls,timers,offer, get confirmation(){return confirmation;},get captures(){return captures;},set state(value){state=value;},key(code){for(const fn of events.keydown||[])fn({keyCode:code,preventDefault(){},stopImmediatePropagation(){}});},async poll(){const timer=[...timers.values()].find(t=>t.ms===1500); assert(timer,'durable state must be polled'); timers.clear(); timer.fn(); await settle();}};
+  return {window,document,ids,calls,timers,offer,translated,set checkFailure(value){options.checkFailure=value;},set statusFailure(value){options.statusFailure=value;}, get confirmation(){return confirmation;},get captures(){return captures;},set state(value){state=value;},key(code){for(const fn of events.keydown||[])fn({keyCode:code,preventDefault(){},stopImmediatePropagation(){}});},async poll(){const timer=[...timers.values()].find(t=>t.ms===1500); assert(timer,'durable state must be polled'); timers.clear(); timer.fn(); await settle();}};
 }
 async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
 (async()=>{
@@ -57,5 +57,46 @@ async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
   const failure=harness({failure:'Journal is unreadable'}); let unsafeFallback=0; await failure.window.SystemUpdates.open({edition:'root',fallback(){unsafeFallback++;}}); assert.equal(unsafeFallback,0,'unreadable supervisor cannot activate competing legacy updater');
   const missingCache=harness({failure:'Baseline not found'}); let cacheFallback=0; await missingCache.window.SystemUpdates.open({edition:'root',fallback(){cacheFallback++;}}); assert.equal(cacheFallback,0,'missing data is not evidence that the service is absent');
   const badCheck=harness({checkFailure:'Unknown service in candidate metadata'}); let checkFallback=0; await badCheck.window.SystemUpdates.open({edition:'root',fallback(){checkFallback++;}}); assert.equal(checkFallback,0,'an available supervisor must never fall through to a competing legacy installer');
+  const retained=harness({checkFailure:'Update information could not be verified. Nothing was installed.'});
+  await retained.window.SystemUpdates.open({edition:'root'}); const checkMessage=retained.ids.systemUpdateStatus.textContent;
+  await retained.poll(); assert.equal(retained.ids.systemUpdateStatus.textContent,checkMessage,'a successful status poll must preserve a failed update check');
+  retained.ids.systemUpdateCheck.click(); await settle(); assert.equal(retained.ids.systemUpdateStatus.textContent,checkMessage,'a failed explicit retry must retain the failure');
+  retained.statusFailure='Status unavailable'; await retained.poll(); retained.statusFailure=null; await retained.poll();
+  assert.equal(retained.ids.systemUpdateStatus.textContent,checkMessage,'status recovery must not clear the check failure');
+  retained.checkFailure=null; retained.ids.systemUpdateCheck.click(); await settle(); assert(!retained.ids.systemUpdateStatus.textContent.includes('could not be verified'),'a successful explicit check clears its failure');
+  retained.checkFailure='Update information could not be verified. Nothing was installed.'; retained.ids.systemUpdateCheck.click(); await settle();
+  assert(retained.ids.systemUpdateInstall.disabled,'a failed check must disable a previously cached offer'); await retained.poll(); assert(retained.ids.systemUpdateInstall.disabled);
+  retained.ids.systemUpdateRecovery.click(); await settle(); assert(retained.ids.systemUpdateStatus.textContent.includes('No previous update is saved for rollback yet.'));
+  const statusOnly=harness({statusFailure:'Status unavailable'}); await statusOnly.window.SystemUpdates.open({edition:'root'}); assert(statusOnly.ids.systemUpdateStatus.textContent.includes('Status unavailable'));
+  statusOnly.statusFailure=null; await statusOnly.poll(); assert(!statusOnly.ids.systemUpdateStatus.textContent.includes('Status unavailable'),'successful status refresh clears a status failure');
+  const emptyRecovery=harness({checkFailure:'Network failure'}); await emptyRecovery.window.SystemUpdates.open({edition:'root',recovery:true});
+  assert(!emptyRecovery.calls.some(call=>call.method==='check'),'recovery open must rely on local status without checking the network');
+  assert(emptyRecovery.ids.systemUpdateStatus.textContent.includes('No previous update is saved for rollback yet.'),'null recovery status needs an explanation');
+  assert(emptyRecovery.ids.systemUpdateRollback.disabled); assert.equal(emptyRecovery.ids.systemUpdateRecovery.textContent,'Refresh status');
+  emptyRecovery.ids.systemUpdateRecovery.click(); await settle(); await emptyRecovery.poll(); assert(!emptyRecovery.calls.some(call=>call.method==='check'));
+  emptyRecovery.ids.systemUpdateRecovery.focus(); emptyRecovery.key(39); assert.equal(emptyRecovery.document.activeElement,emptyRecovery.ids.systemUpdateBack); emptyRecovery.key(37); assert.equal(emptyRecovery.document.activeElement,emptyRecovery.ids.systemUpdateRecovery);
+  const progress=harness({checkFailure:'CalledProcessError: private policy command'}); progress.state={id:'tx',phase:'installing'};
+  await progress.window.SystemUpdates.open({edition:'root'});
+  assert(progress.ids.systemUpdateStatus.textContent.startsWith('Update state: installing.'),'a failed offer check must not hide durable installation progress');
+  assert(progress.ids.systemUpdateStatus.textContent.includes('Update information could not be verified.'),'the check failure remains visible beside transaction progress');
+  assert(!progress.ids.systemUpdateStatus.textContent.includes('Nothing was installed'),'a failed check cannot make claims about an existing transaction');
+  progress.state={id:'tx',phase:'complete'}; await progress.poll();
+  assert(progress.ids.systemUpdateStatus.textContent.startsWith('Update complete.'),'completion must replace progress even when the check failure remains');
+  assert(progress.ids.systemUpdateStatus.textContent.includes('Update information could not be verified.'));
+  assert(!progress.ids.systemUpdateStatus.textContent.includes('Nothing was installed'));
+  const newMessages=['No previous update is saved for rollback yet.','Update information is not available yet. Try again later.','Could not connect to check for updates. Check your connection and try again.','Update information could not be verified. Nothing was installed.','Could not connect to the update server. Nothing was installed.','Update information is not available yet. Nothing was installed.','Update information could not be verified.'];
+  for (const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']) {
+    for(const reason of ['feed-unavailable','connection-error']) {
+      const installed=harness({locale,canInstall:false,reason}); installed.offer.release=null; installed.offer.notes=''; installed.offer.components=[{name:'root',installed:'2.3.4',version:null}];
+      await installed.window.SystemUpdates.open({edition:'root'});
+      assert(installed.ids.systemUpdateVersions.textContent.includes('2.3.4'));
+      assert(!/undefined|null|→/.test(installed.ids.systemUpdateVersions.textContent),'installed-only rows must not render a missing available version');
+      assert(installed.ids.systemUpdateInstall.disabled); assert(!installed.ids.systemUpdateStatus.textContent.includes(reason),'failure reasons need friendly localized messages');
+      for(const source of newMessages) assert(installed.translated[locale][source],locale+' must translate '+source);
+      assert(installed.ids.systemUpdateStatus.textContent.includes(installed.translated[locale][newMessages[reason==='feed-unavailable'?1:2]]),'the unavailable reason must explain what the user can do');
+      assert(!installed.ids.systemUpdateStatus.textContent.includes(installed.translated[locale]['All components are up to date.']),'a missing candidate cannot claim installed components are current');
+      if(locale!=='en') for(const source of newMessages) assert.notEqual(installed.translated[locale][source],source);
+    }
+  }
   console.log('PASS shared system UI editions, confirmation/capture, durable polling, recovery, absence fallback and remote navigation');
 })().catch(error=>{console.error(error);process.exitCode=1;});

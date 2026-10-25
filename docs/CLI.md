@@ -71,6 +71,18 @@ keeps recovery data. Non-interactive installation stops with instructions to
 use the interactive installer or `cytv uninstall` for the same saved TV/profile.
 If recovery fails, attach the new diagnostic report for the `uninstall` phase.
 
+Next-candidate desktop behavior (not the published v1.2.0 installer): successful
+status, doctor or restore checks with an unfinished No-root removal offer
+**Recover and reinstall** for the same saved connection. This uses the existing
+interactive install/removal flow and preserves its separate default-No recovery
+confirmation. Desktop report delivery uses a dedicated report event rather than
+recognizing a filename in translated log text. Failure reports retain the failed
+action, phase, traceback locations and allowlisted error metadata; the window
+offers **Save diagnostic report…** without another doctor run. CLI and Android
+still receive the existing report path through their normal output adapters.
+No new TV endpoint, permission, persistent recovery state or automatic retry is
+introduced. Issue #65's original device failure remains under investigation.
+
 Developer Mode key failures include a safe `connection` object in diagnostic
 JSON: `protocol: developer-key` and an allowlisted `reason_code`:
 `key-server-unavailable`, `response-redirect`, `response-size`, `response-format`

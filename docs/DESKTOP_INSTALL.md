@@ -132,6 +132,29 @@ save the diagnostic report instead of deleting recovery files.
 The start page also offers status, diagnostics, return to LG Home and uninstall.
 Existing console commands remain available in the separately distributed CLI.
 
+### Next candidate: guided No-root recovery and reinstallation
+
+This section describes the next candidate, not the published v1.2.0 downloads.
+If a No-root removal remains unfinished after **Check TV status**, connection
+diagnostics or **Return to LG Home**, click **Recover and reinstall**. The wizard
+keeps the same TV, edition and SSH port, even when several connections are saved.
+It reconnects, checks the current state and asks you to finish removal with a
+separate, default-No confirmation. It restores LG Home, verifies removal, then
+shows the bundled versions for review before installing. **Set up my TV** also
+offers this recovery when it finds an unfinished removal. Returning to LG Home
+alone does not complete removal.
+
+If any step fails, **Save diagnostic report…** is the primary action. Save that
+attempt's report with the normal file dialog and attach it to your issue; no
+terminal or later `doctor` run is needed. Cancelling the file dialog or choosing
+an unwritable destination keeps the original report available. If report creation
+failed, the window says so; include the visible error instead. Unknown outcomes
+still stop the process, with no automatic retry or deletion of recovery evidence.
+
+This improves the desktop recovery journey for issue #65. It does not establish
+the cause or resolution of the original OLED77G55LW / firmware 43.21.71 failure;
+the requested reporter diagnostics and physical-TV acceptance are still needed.
+
 ## Remove the project from a rooted TV
 
 Choose **Uninstall Clean Your TV** with the saved **Root** connection. The wizard

@@ -65,7 +65,7 @@ def suggest_issue(write, store, action, profile, phase, error, tv_info=None):
     try:
         path = create_report(store, action, profile, phase, error, tv_info)
         write.heading('Attach this diagnostic report')
-        write.raw('  ' + str(path.resolve()))
+        write.report(path)
     except (OSError, ValueError):
         write.error('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
     write('')

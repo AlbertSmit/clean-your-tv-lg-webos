@@ -107,3 +107,5 @@ Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy
 Następny kandydat (#51): po odrzuceniu pakietu przez TV raport JSON zachowuje tylko kategorię operacji, ograniczone liczbowe kody błędu/statusu, dozwolony stan pakietu i wynik logiczny. Pomija surowy tekst błędu TV, ścieżki i identyfikatory aplikacji. Sprawdź raport przed udostępnieniem; nie ma automatycznej ponownej próby, a naprawa instalacji na UN70006LA nie jest jeszcze potwierdzona.
 
 Następny kandydat (#59): jeśli nie można sprawdzić stanu Helper, **Uruchom Helper** pozostaje dostępne z potwierdzeniem. Otwarcie kafelka nie uruchamia ponownie Helper ani nie znosi zatrzymania awaryjnego. Ustawienia Home wymagają odpowiedzi sterowania.
+
+Następny kandydat (#55): Root sprawdza dane migracji przed instalacją. Instalację przerwaną przed konfiguracją usług można usunąć bez nigdy nieutworzonej migawki LS2; zachowuje zweryfikowany zapis dla zwykłej archiwizacji i ponownej instalacji cytv. Brak migawki na późniejszym etapie lub sprzeczne dowody nadal blokują czyszczenie. Wymagany jest nowy sterownik; problem startu usługi odzyskiwania na OLED Flex pozostaje nierozwiązany.

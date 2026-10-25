@@ -72,6 +72,11 @@ class RootRemovalRecoveryTests(unittest.TestCase):
                 self.assertTrue(path.is_symlink())
                 path.unlink()
 
+    def test_lost_terminal_keeps_never_provisioned_proof_for_archive(self):
+        self.journal('remove-submitting', provisioning_not_started=True)
+        self.reconcile(self.driver,'resume')
+        self.assertIs(json.loads((self.driver.STATE/'deploy.json').read_text())['provisioning_not_started'],True)
+
     def test_observed_terminal_finishes_empty_metadata_cleanup_only_with_matching_evidence(self):
         package = self.driver.installed_paths()[1]
         package.mkdir(parents=True)

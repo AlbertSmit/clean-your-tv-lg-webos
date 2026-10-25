@@ -113,3 +113,5 @@ If Root shows `Denied methods call status` immediately after supervisor bootstra
 Next candidate (#51): after a TV package rejection, the diagnostic JSON retains only the operation category, bounded numeric error/status codes, an allowlisted package state and a boolean result. It excludes raw TV error text, paths and app IDs. Review the report before sharing; installation is not automatically retried, and the UN70006LA installation failure is not yet confirmed fixed.
 
 Next candidate (#59): if Helper status cannot be checked, **Start Helper** remains available with confirmation. Opening the tile does not restart Helper or clear an emergency stop. Home button settings require a responding controller.
+
+Next candidate (#55): Root validates migration data before installing. Interrupted cleanup before provisioning can remove the package without a nonexistent LS2 snapshot, retaining a verified receipt for the normal cytv archive/reinstall flow. Later missing snapshots or conflicting evidence still stop cleanup. These changes require the new driver; the OLED Flex recovery-service startup failure remains unresolved.

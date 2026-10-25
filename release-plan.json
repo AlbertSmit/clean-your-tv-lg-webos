@@ -1,7 +1,15 @@
 {
   "schema": 1,
   "version": null,
-  "changes": [],
+  "changes": [
+    {
+      "pr": 66,
+      "issues": [
+        65
+      ],
+      "summary": "Guide desktop recovery and save failed-attempt diagnostics"
+    }
+  ],
   "excluded": [],
   "acceptance": ""
 }

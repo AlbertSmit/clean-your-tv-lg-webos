@@ -1,9 +1,33 @@
+import re
+
+
 class UserError(RuntimeError):
     """An installer-owned message which contains no remote data or credentials."""
 
 
 class TVRejected(UserError):
     """A definite negative TV reply, distinct from an unknown connection outcome."""
+    def __init__(self, message, reply=None, uri=None):
+        super().__init__(message)
+        reply = reply if isinstance(reply, dict) else {}
+        details = reply.get('details')
+        details = details if isinstance(details, dict) else {}
+        def number(value):
+            if isinstance(value, str) and re.fullmatch(r'-?[0-9]{1,10}', value):
+                value = int(value)
+            return value if type(value) is int and -(2**31) <= value < 2**31 else None
+        status = details.get('state')
+        status = status.lower() if isinstance(status, str) else 'unknown'
+        self.luna = {
+            'operation': {'com.webos.appInstallService/dev/install':'package-install',
+                          'com.webos.appInstallService/dev/remove':'package-remove',
+                          'com.webos.appInstallService/status':'package-status'}.get(uri, 'luna-call'),
+            'error_code': number(reply.get('errorCode')),
+            'details_error_code': number(details.get('errorCode')),
+            'status_value': number(reply.get('statusValue')),
+            'state': status if status in ('installing','installed','removing','removed','success','failed','error') else 'unknown',
+            'return_value': reply.get('returnValue') if type(reply.get('returnValue')) is bool else None,
+        }
 
 
 class ExistingRoot(UserError):

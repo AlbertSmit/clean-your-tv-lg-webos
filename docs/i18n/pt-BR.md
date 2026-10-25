@@ -104,4 +104,6 @@ Documentação técnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [in
 
 Se Root mostrar `Denied methods call status` logo após preparar o supervisor, feche e reabra Home Root uma vez e verifique as atualizações novamente. Se persistir, guarde o diagnóstico e o estado de recuperação.
 
+Próximo candidato (#51): após a TV rejeitar um pacote, o relatório JSON preserva apenas a categoria da operação, códigos numéricos limitados, um estado de pacote permitido e um resultado booleano. Exclui o texto bruto do erro da TV, caminhos e IDs de aplicativos. Revise antes de compartilhar; não há nova tentativa automática e a falha de instalação no UN70006LA ainda não foi confirmada como corrigida.
+
 Próximo candidato (#59): se o estado do Helper não puder ser verificado, **Iniciar Helper** continua disponível com confirmação. Abrir o bloco não reinicia o Helper nem cancela uma parada de emergência. Os ajustes de Home exigem que o controle responda.

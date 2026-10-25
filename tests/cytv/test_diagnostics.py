@@ -8,6 +8,55 @@ from cytv import cli, diagnostics, state
 
 
 class DiagnosticTests(unittest.TestCase):
+    def test_package_rejection_preserves_safe_metadata_from_luna_to_report(self):
+        from cytv.transport import SSH
+        from cytv.errors import TVRejected
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as tmp:
+            ssh=object.__new__(SSH);ssh.root=False
+            channel=SimpleNamespace(close=lambda:None)
+            ssh.channel=lambda command:channel
+            ssh.chunks=lambda connection,timeout:[json.dumps({
+                'returnValue':False,'errorCode':-1,'errorText':'PRIVATE-KEY 192.0.2.55',
+                'statusValue':30,'details':{'errorCode':'-17','state':'FAILED',
+                'ipkFile':'/private/staging','packageId':'private.app'}}).encode()]
+            with self.assertRaises(TVRejected) as caught:
+                ssh.luna('com.webos.appInstallService/dev/install',{},terminal='installed')
+            path=diagnostics.create_report(state.Store(tmp),'install',None,'install-helper',caught.exception)
+            self.assertEqual(json.loads(path.read_text())['luna'],{
+                'operation':'package-install','error_code':-1,'details_error_code':-17,
+                'status_value':30,'state':'failed','return_value':False})
+            for secret in ('PRIVATE-KEY','192.0.2.55','/private/staging','private.app'):
+                self.assertNotIn(secret,path.read_text())
+                self.assertNotIn(secret,str(caught.exception))
+
+    def test_luna_rejection_metadata_rejects_non_numeric_codes_and_unknown_states(self):
+        from cytv.transport import terminal_reply
+        from cytv.errors import TVRejected
+        with tempfile.TemporaryDirectory() as tmp:
+            for code in (True, 1.5, 2**40, '-999999999999', 'PRIVATE-CODE', {'key':'PRIVATE'}):
+                with self.subTest(code=code):
+                    with self.assertRaises(TVRejected) as caught:
+                        terminal_reply({'returnValue':False,'errorCode':code,'statusValue':code,
+                            'details':{'state':'PRIVATE-STATE','errorCode':code}},uri='PRIVATE-URI')
+                    path=diagnostics.create_report(state.Store(tmp),'install',None,'install-helper',caught.exception)
+                    value=json.loads(path.read_text())['luna']
+                    self.assertEqual(value,{'operation':'luna-call','error_code':None,
+                        'details_error_code':None,'status_value':None,'state':'unknown','return_value':False})
+                    self.assertNotIn('PRIVATE',path.read_text())
+
+    def test_failed_package_state_without_error_code_still_exports_reason(self):
+        from cytv.transport import terminal_reply
+        from cytv.errors import TVRejected
+        with self.assertRaises(TVRejected) as caught:
+            terminal_reply({'details':{'state':'FAILED'}},'removed',uri='com.webos.appInstallService/dev/remove')
+        with tempfile.TemporaryDirectory() as tmp:
+            path=diagnostics.create_report(state.Store(tmp),'remove',None,'remove-home',caught.exception)
+            value=json.loads(path.read_text())['luna']
+            self.assertEqual(value['operation'],'package-remove')
+            self.assertEqual(value['state'],'failed')
+            self.assertIsNone(value['return_value'])
+
     def test_developer_key_reason_is_allowlisted_without_credentials_or_exception_text(self):
         from cytv.errors import DeveloperKeyError
         with tempfile.TemporaryDirectory() as tmp:

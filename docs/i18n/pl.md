@@ -104,4 +104,6 @@ Dokumentacja techniczna: [aplikacja komputerowa](../DESKTOP_INSTALL.md), [CLI](.
 
 Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy, zamknij i ponownie otwórz Home Root jeden raz, a następnie sprawdź aktualizacje. Jeśli błąd pozostaje, zachowaj diagnostykę i dane odzyskiwania.
 
+Następny kandydat (#51): po odrzuceniu pakietu przez TV raport JSON zachowuje tylko kategorię operacji, ograniczone liczbowe kody błędu/statusu, dozwolony stan pakietu i wynik logiczny. Pomija surowy tekst błędu TV, ścieżki i identyfikatory aplikacji. Sprawdź raport przed udostępnieniem; nie ma automatycznej ponownej próby, a naprawa instalacji na UN70006LA nie jest jeszcze potwierdzona.
+
 Następny kandydat (#59): jeśli nie można sprawdzić stanu Helper, **Uruchom Helper** pozostaje dostępne z potwierdzeniem. Otwarcie kafelka nie uruchamia ponownie Helper ani nie znosi zatrzymania awaryjnego. Ustawienia Home wymagają odpowiedzi sterowania.

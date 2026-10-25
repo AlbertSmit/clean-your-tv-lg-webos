@@ -114,4 +114,6 @@ Zeigt Root direkt nach der Supervisor-Einrichtung `Denied methods call status`, 
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
 
+Nächster Kandidat (#51): Nach einer Paket-Ablehnung durch den TV enthält der Diagnosebericht nur die Vorgangskategorie, begrenzte numerische Fehler-/Statuscodes, einen freigegebenen Paketstatus und ein boolesches Ergebnis. Roher TV-Fehlertext, Pfade und App-IDs bleiben ausgeschlossen. Vor dem Teilen prüfen; keine automatische Wiederholung. Der Installationsfehler auf UN70006LA ist noch nicht als behoben bestätigt.
+
 Nächster Kandidat (#59): Wenn der Helper-Status nicht geprüft werden kann, bleibt **Helper starten** mit Bestätigung verfügbar. Das Öffnen der Kachel startet Helper nicht neu und hebt keinen Notstopp auf. Die Home-Tasteneinstellungen benötigen eine antwortende Steuerung.

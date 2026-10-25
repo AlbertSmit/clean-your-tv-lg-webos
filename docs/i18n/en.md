@@ -110,4 +110,6 @@ Opening Home Helper shows its purpose and current state. Starting a stopped Help
 
 If Root shows `Denied methods call status` immediately after supervisor bootstrap, close and reopen Home Root once, then check updates again. If it persists, retain diagnostics and recovery state.
 
+Next candidate (#51): after a TV package rejection, the diagnostic JSON retains only the operation category, bounded numeric error/status codes, an allowlisted package state and a boolean result. It excludes raw TV error text, paths and app IDs. Review the report before sharing; installation is not automatically retried, and the UN70006LA installation failure is not yet confirmed fixed.
+
 Next candidate (#59): if Helper status cannot be checked, **Start Helper** remains available with confirmation. Opening the tile does not restart Helper or clear an emergency stop. Home button settings require a responding controller.

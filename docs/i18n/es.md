@@ -114,4 +114,6 @@ Si Root muestra `Denied methods call status` justo después de preparar el super
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
 
+Próximo candidato (#51): tras un rechazo de paquete por la TV, el informe JSON conserva solo la categoría de operación, códigos numéricos limitados, un estado de paquete permitido y un resultado booleano. Excluye el texto de error original, rutas e identificadores de aplicaciones. Revisa el informe antes de compartirlo; no hay reintento automático y no se ha confirmado que el fallo de instalación en UN70006LA esté resuelto.
+
 Próximo candidato (#59): si no se puede comprobar el estado de Helper, **Iniciar Helper** sigue disponible con confirmación. Abrir el icono no reinicia Helper ni desactiva una parada de emergencia. Los ajustes de Home requieren que responda el control.

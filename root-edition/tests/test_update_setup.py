@@ -33,9 +33,18 @@ class SetupTests(unittest.TestCase):
             data = read_ar((out/'root-updater.ipk').read_bytes())['data.tar.gz']
             with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
                 prefix = 'usr/palm/applications/com.cleanyourtv.root.updater/'
+                version = json.loads((ROOT.parent/'release-versions.json').read_text())['updater']
+                self.assertEqual(json.loads(archive.extractfile(prefix+'appinfo.json').read())['version'], version)
+                self.assertEqual(json.loads(archive.extractfile('usr/palm/packages/com.cleanyourtv.root.updater/packageinfo.json').read())['version'], version)
+                self.assertEqual(json.loads(archive.extractfile('usr/palm/services/com.cleanyourtv.root.updater.service/package.json').read())['version'], version)
+                self.assertTrue(archive.extractfile(prefix+'system-updates.js').read())
                 html = archive.extractfile(prefix+'index.html').read().decode()
+                self.assertLess(html.index('system-updates.js'), html.index('root-updates.js'))
                 self.assertLess(html.index('release-notes.js'), html.index('root-updates.js'))
                 self.assertEqual(archive.extractfile(prefix+'release-notes.js').read(), (ROOT.parent/'launcher/release-notes.js').read_bytes())
+            control = read_ar((out/'root-updater.ipk').read_bytes())['control.tar.gz']
+            with tarfile.open(fileobj=io.BytesIO(control), mode='r:gz') as archive:
+                self.assertIn('Version: '+version+'\n', archive.extractfile('control').read().decode())
             self.assertFalse(any('state/' in name or 'private' in name for name in manifest['files']))
             (out/'updater/core.py').write_text('changed')
             with self.assertRaises(ValueError):verify_bundle(out)

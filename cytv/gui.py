@@ -22,6 +22,7 @@ MAINTENANCE_ACTIONS = (
     ('Return to LG Home', 'restore'),
     ('Uninstall Clean Your TV', 'uninstall'),
     ('Home button diagnostics', 'home-diagnostics'),
+    ('Enable updates for all TV components (root required)', 'enable-system-updates'),
 )
 
 

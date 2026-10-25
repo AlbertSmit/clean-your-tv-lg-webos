@@ -20,7 +20,7 @@ class UpdateUiPackageTests(unittest.TestCase):
             for name in ('tv_web_build.py', 'compile-tv-web.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
-            for name in ('renewal-panel.css', 'i18n.js', 'i18n.css', 'catalogs.js', 'user-data.js'):
+            for name in ('system-updates.js', 'release-notes.js', 'renewal-panel.css', 'i18n.js', 'i18n.css', 'catalogs.js', 'user-data.js'):
                 shutil.copy(ROOT/'launcher'/name, root/'launcher'/name)
             for name in ('service.js', 'permissions.js', 'services.json', 'release-public.pem'):
                 (root/'updater-service'/name).write_text('fixture')
@@ -34,6 +34,8 @@ class UpdateUiPackageTests(unittest.TestCase):
                                     env=dict(os.environ, ARES_PACKAGE=str(packager), NODE_PATH=str(ROOT/'node_modules')), capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
             stylesheet = (root/'build/updater-app/renewal-panel.css').read_text()
+            self.assertTrue((root/'build/updater-app/system-updates.js').is_file())
+            self.assertTrue((root/'build/updater-app/release-notes.js').is_file())
             self.assertIn('#renewalPanel', stylesheet)
             self.assertNotRegex(stylesheet, r'\binset\s*:')
             self.assertTrue((root/'build/updater-app/compat-polyfills.js').is_file())

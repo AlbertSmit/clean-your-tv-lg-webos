@@ -47,10 +47,11 @@ jobs:
           python-version: '3.12'
       - name: Check signing and package regressions
         run: |
+          node tests/system_updates/signing.cjs
           node tests/updates/sign-release-feeds.cjs
           node tests/updates/release-feed.cjs
           python -m unittest discover -s tests/setup -p test_release_feeds.py
-      - name: Generate and sign both feeds from exact release bundles
+      - name: Generate and sign compatible system and legacy feeds from exact release bundles
         env:
           GH_TOKEN: ${{ github.token }}
           UPDATE_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATE_SIGNING_PRIVATE_KEY }}

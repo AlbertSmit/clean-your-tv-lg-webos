@@ -23,6 +23,14 @@ function call(method, payload = {}, service = 'com.cleanyourtv.root.preview.serv
   });
 }
 (async () => {
+  const supervisor='com.cleanyourtv.system.updater.service';
+  assert.equal((await call('restoreProfile',{edition:'root'},supervisor)).result,null);
+  assert.equal((await call('status',{},supervisor)).result,null);
+  const previewOffer=await call('check',{edition:'root'},supervisor);
+  assert.equal(previewOffer.returnValue,true);
+  assert.equal(previewOffer.result.canInstall,false);
+  assert(previewOffer.result.components.some(component=>component.name==='root-infrastructure'));
+  assert.equal((await call('install',{edition:'root'},supervisor)).returnValue,false);
   let reply = await call('status');
   assert.equal(reply.result.result.intent.phase, 'disabled');
   await call('enable');

@@ -32,3 +32,9 @@ users can replace the dynamically linked libraries with compatible builds.
 ## Noto language fonts
 
 Noto Sans, Noto Sans Devanagari and Noto Sans KR from the Google Fonts repository (https://github.com/google/fonts), distributed under the SIL Open Font License 1.1. Static regular subsets for Latin, Cyrillic, Devanagari and Hangul are bundled locally in `launcher/fonts/`; original copyright and license texts are included as `NotoSans-OFL.txt`, `NotoSansDevanagari-OFL.txt`, and `NotoSansKR-OFL.txt`.
+
+
+The independent System Updater bundles Mozilla CA root certificates from the
+curl CA Extract bundle. The certificate data and MPL 2.0 license are distributed
+as `updater-service/ca-bundle.crt` and `updater-service/ca-LICENSE.txt`, and copied
+into the supervisor bootstrap bundle.

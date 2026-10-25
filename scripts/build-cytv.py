@@ -22,7 +22,8 @@ def tracked_files(prefix):
     # Do not include arbitrary untracked files or local profile data.
     required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js'],
                 'renewal-service': ['renewal-service/home-control.js'],
-                'launcher': ['launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
+                'updater-service': ['updater-service/ca-bundle.crt','updater-service/ca-LICENSE.txt'],
+                'launcher': ['launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
                              'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],
@@ -59,6 +60,10 @@ def verify_release_versions(payload, versions):
     from cytv import __version__
     if __version__ != versions['cytv']:
         raise ValueError('cytv version does not match release metadata')
+    if (payload/'updater.ipk').exists():
+        files=package.data_files((payload/'updater.ipk').read_bytes())
+        for name in ('usr/palm/applications/com.cleanyourtv.updater/appinfo.json','usr/palm/services/com.cleanyourtv.updater.service/package.json'):
+            if json.loads(files[name])['version']!=versions['updater']:raise ValueError('No-root Updater version mismatch')
     root = payload / 'root'
     bundle = json.loads((root / 'bundle.json').read_text())
     if json.loads((root / 'release.json').read_text())['version'] != versions['root']:
@@ -94,6 +99,20 @@ def helper_baseline(version):
     if hashlib.sha256(data).hexdigest() != expected:
         raise ValueError('Published Helper baseline hash mismatch')
     return data
+
+
+def stage_updater(payload):
+    app=tracked_files('updater-app')
+    versions=json.loads((ROOT/'release-versions.json').read_text())
+    if json.loads(app['appinfo.json'])['version']!=versions['updater']:raise ValueError('No-root Updater version mismatch')
+    for name in ('renewal-panel.css','i18n.js','catalogs.js','i18n.css','system-updates.js','release-notes.js'):
+        app[name]=(ROOT/'launcher'/name).read_bytes()
+    app['root-locales.js']=(ROOT/'root-edition/ui/root-locales.js').read_bytes()
+    for path in (ROOT/'launcher/fonts').glob('NotoSans*'):
+        if path.is_file():app['fonts/'+path.name]=path.read_bytes()
+    service={n:b for n,b in tracked_files('updater-service').items() if not n.startswith('state/')}
+    service['user-data.js']=(ROOT/'launcher/user-data.js').read_bytes()
+    (payload/'updater.ipk').write_bytes(pack_app(app,service))
 
 
 def build_payload():
@@ -137,6 +156,8 @@ def build_payload():
     stage_brand_assets(payload)
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
+    stage_updater(payload)
+    subprocess.run([sys.executable,'system-updater/build.py','--output',str(payload/'system-updater')],cwd=ROOT,check=True)
     (payload / 'LICENSE').write_bytes((ROOT / 'LICENSE').read_bytes())
     (payload / 'THIRD_PARTY_NOTICES.md').write_bytes((ROOT / 'THIRD_PARTY_NOTICES.md').read_bytes())
     shutil.copytree(ROOT / 'cytv/licenses', payload / 'licenses/Qt', dirs_exist_ok=True)

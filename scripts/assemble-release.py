@@ -202,17 +202,10 @@ def assemble(artifacts, output, versions, commit, build_commit=None):
             path = payload / package.safe_name(name); path.parent.mkdir(parents=True, exist_ok=True); path.write_bytes(raw)
         package.verify_payload(payload)
         builder['verify_release_versions'](payload, versions)
-        app = builder['tracked_files']('updater-app')
-        if json.loads(app['appinfo.json'])['version'] != versions['updater']: raise ValueError('No-root Updater version mismatch')
-        for name in ('renewal-panel.css', 'i18n.js', 'catalogs.js', 'i18n.css'):
-            app[name] = (ROOT / 'launcher' / name).read_bytes()
-        app['root-locales.js'] = (ROOT / 'root-edition/ui/root-locales.js').read_bytes()
-        for path in (ROOT / 'launcher/fonts').glob('NotoSans*'):
-            if path.is_file(): app['fonts/' + path.name] = path.read_bytes()
-        service = {n: b for n, b in builder['tracked_files']('updater-service').items() if not n.startswith('state/')}
-        service['user-data.js'] = (ROOT / 'launcher/user-data.js').read_bytes()
-        updater = builder['pack_app'](app, service)
+        updater = (payload / 'updater.ipk').read_bytes()
+        system_builder = runpy.run_path(str(ROOT / 'system-updater/build.py'))
         note = 'docs/RELEASE-' + versions['release'] + '.md'
+        system_builder['prepare_release'](payload, output, 'v'+versions['release'], (ROOT / note).read_text()[:3800])
         with zipfile.ZipFile(output / ('clean-your-tv-no-root-' + versions['home'] + '.zip'), 'w', zipfile.ZIP_DEFLATED) as archive:
             archive.write(payload / 'launcher.ipk', 'com.gathin.tvhome_' + versions['home'] + '_all.ipk')
             archive.write(payload / 'helper.ipk', 'com.local.nativehome_' + versions['helper'] + '_arm.ipk')
@@ -225,6 +218,10 @@ def assemble(artifacts, output, versions, commit, build_commit=None):
         (staging / 'build').mkdir()
         shutil.copytree(payload / 'root', staging / 'build/root-candidate')
         shutil.copytree(payload / 'root-updater', staging / 'build/root-updater')
+        shutil.copytree(payload / 'system-updater', staging / 'build/system-updater')
+        with zipfile.ZipFile(output / ('clean-your-tv-no-root-' + versions['home'] + '.zip'),'a',zipfile.ZIP_DEFLATED) as archive:
+            for path in sorted((payload/'system-updater').rglob('*')):
+                if path.is_file():archive.write(path,'system-updater/'+path.relative_to(payload/'system-updater').as_posix())
         with tarfile.open(output / (staging.name + '.tar.gz'), 'w:gz') as archive: archive.add(staging, arcname=staging.name)
     shutil.copyfile(ROOT / note, output / 'RELEASE-NOTES.md')
     build_run = os.environ.get('SOURCE_BUILD_RUN', os.environ.get('GITHUB_RUN_ID', ''))

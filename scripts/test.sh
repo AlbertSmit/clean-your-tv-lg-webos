@@ -57,6 +57,8 @@ for file in root-edition/updater/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 for test in tests/updates/*.cjs; do node "$test"; done
+for test in tests/system_updates/*.cjs; do node "$test"; done
+python3 -m unittest discover -s tests/system_updates
 for file in updater-service/*.js updater-app/*.js; do node --check "$file"; done
 cmp launcher/user-data.js updater-service/user-data.js
 fi

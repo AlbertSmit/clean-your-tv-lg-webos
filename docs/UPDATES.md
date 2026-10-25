@@ -174,3 +174,77 @@ from the exact release bundles, signed, uploaded and checked before publication.
 non-publishing test run. The read-only Release update feed workflow also checks
 public release edits. Never carry an older Home feed forward when the release's
 Home version has changed.
+
+
+## Updating every component from the TV
+
+The independent System Updater adds **Update all** to Software updates. It uses
+one signed release set for the installed edition:
+
+- No-root edition on a rooted TV: Home, Home Helper and Home Updater.
+- Root edition: Root Home, Root Updater and the Home routing/recovery runtime.
+
+Unrooted TVs continue using the computer installer. Root, TV Python 3.9+,
+Node.js 8+ and working webOS installer services are required for this supervisor.
+The supervisor is a small fixed bootstrap outside these packages; its pinned
+verification key and destination allowlist cannot be replaced by release data.
+
+### One-time computer preparation
+
+Install the transition Home release containing the new shared update interface
+**before** provisioning the supervisor. Root users can install that Home release
+through the existing Home-only update screen. Ordinary edition users can use the
+computer installer to update Home/Helper and install Home Updater. Then use a
+release containing the System Updater bundle.
+In the desktop installer, choose **Enable updates for all TV components (root
+required)**. The equivalent command, using a saved root SSH connection, is:
+
+```sh
+cytv enable-system-updates --edition root --host TV_ADDRESS
+```
+
+This maintenance action provisions the independent service without reinstalling
+Home or changing its routing. It snapshots the actual installed app, service and
+package files into verified rollback IPKs, including personalized inventory.
+The setup checks `systemUpdateProtocol = 1` in the installed Home metadata before
+capturing a baseline; older Home interfaces are refused without mutation.
+Existing runtime/updater files are cached separately. Mutable settings and
+credentials are excluded from the package archives.
+
+For a rooted TV running the ordinary No-root edition, use an existing OpenSSH
+host alias that logs in as root. Install the matching Home/Helper/Home Updater
+transition release using the computer first, then run the packaged setup:
+
+```sh
+python3 system-updater/setup-system-updater.py --bundle system-updater \
+  --edition no-root --ssh TV_ROOT_ALIAS --apply
+```
+
+The script prints the permission plan without `--apply`. Both editions require
+an already installed edition-specific recovery Updater. After provisioning, use the shared system update screen for all subsequent
+compatible releases. Updating through a legacy Home-only installer would
+invalidate the captured baseline and is disabled while the supervisor is installed. A retained or partial supervisor setup is refused;
+do not delete its state or rerun installation after an uncertain result.
+
+### Installation and recovery
+
+All candidate packages and the previous release are verified and cached before
+replacement. Settings/profile backups and the transaction journal live outside
+all replaced packages. The worker continues if Home or an Updater app closes.
+Root Home routing returns to LG during installation. Helper settings and emergency
+stop markers are preserved; explicit or emergency off is never cleared to resume
+Home control. Startup health is tied to the transaction and installed version,
+and checks the restored launcher grid before completion.
+
+Open either edition's Updater to inspect **Recovery**. Rollback restores the
+complete previous component set and its saved profile; settings edited after the
+update are lost. An ambiguous installer result blocks rollback and reinstallation.
+Version readback alone never proves that installation ended. Boot reconciliation
+never resubmits an uncertain external installer call. Keep the TV powered on and
+retain the journal for diagnosis.
+
+Local tests cover signed policy, package inspection, durable interruption,
+profile restoration, UI navigation, bootstrap packaging and release signing.
+This new multi-component update path still requires acceptance tests on a real
+TV, including power loss, Helper input release and runtime/Updater rollback.
+No release feed or TV installation is changed by building or running local tests.

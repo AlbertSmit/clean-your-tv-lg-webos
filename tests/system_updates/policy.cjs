@@ -1,0 +1,9 @@
+'use strict';
+const assert=require('assert'),crypto=require('crypto');
+let policy;try{policy=require('../../system-updater/policy');}catch(e){assert.fail('independent system update policy is missing');}
+const base='https://github.com/Razdva122/clean-your-tv-lg-webos/releases/download/v1.2.3/';
+function manifest(edition='no-root'){return {schema:1,edition,release:'v1.2.3',supervisor:1,notes:'Signed',components:(edition==='root'?[['root','com.cleanyourtv.root.preview'],['root-updater','com.cleanyourtv.root.updater'],['root-infrastructure',null]]:[['home','com.gathin.tvhome'],['helper','com.local.nativehome'],['updater','com.cleanyourtv.updater']]).map(([name,application])=>Object.assign({name,version:'1.2.3',kind:application?'ipk':'infrastructure',url:base+name+(application?'.ipk':'.tar.gz'),sha256:'a'.repeat(64),size:22},application?{application}:{}))};}
+assert.equal(policy.validate(manifest()).components.length,3);assert.equal(policy.validate(manifest('root')).edition,'root');
+for(const change of [m=>m.components[0].application='org.foreign',m=>m.components[0].url=base+'../evil.ipk',m=>m.components[0].url=base+'evil.ipk?q=x',m=>m.components.pop(),m=>m.components.push(m.components[0]),m=>m.components[0].command='reboot',m=>m.release='v9.9.9',m=>m.supervisor=2,m=>m.components[0].size=1e12]){const m=manifest();change(m);assert.throws(()=>policy.validate(m));}
+const {privateKey,publicKey}=crypto.generateKeyPairSync('rsa',{modulusLength:2048});const raw=Buffer.from(JSON.stringify(manifest()));const envelope={payload:raw.toString('base64'),signature:crypto.sign('RSA-SHA256',raw,privateKey).toString('base64')};assert.equal(policy.verify(envelope,publicKey).release,'v1.2.3');envelope.payload=Buffer.from(JSON.stringify(manifest('root'))).toString('base64');assert.throws(()=>policy.verify(envelope,publicKey),/signature/);
+console.log('System update policy tests passed');

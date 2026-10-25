@@ -40,12 +40,25 @@
     if (!Number.isInteger(value.config.columns) || value.config.columns < 1 || value.config.columns > 8) throw Error('Invalid columns');
     ids(value.config.dockApps); ids(value.config.hiddenApps);
     if (value.config.liveTvApp !== undefined) text(value.config.liveTvApp, 256, true);
-    fields(value.settings, [], ['tvhome.order', 'tvhome.language']);
+    fields(value.settings, [], ['tvhome.order', 'tvhome.language', 'tvhome.layout']);
     if (value.settings['tvhome.language'] !== undefined && ['auto','en','de','es','pt-BR','fr','it','ko','hi','pl','ru'].indexOf(value.settings['tvhome.language']) < 0) throw Error('Invalid language preference');
     if (value.settings['tvhome.order'] !== undefined) {
       text(value.settings['tvhome.order'], LIMIT, true);
       var order = JSON.parse(value.settings['tvhome.order']);
       fields(order, ['dock', 'ids']); text(order.dock, 65536, true); ids(order.ids);
+    }
+    if (value.settings['tvhome.layout'] !== undefined) {
+      text(value.settings['tvhome.layout'], LIMIT, true);
+      var layout = JSON.parse(value.settings['tvhome.layout']);
+      fields(layout, ['version', 'ids', 'hidden', 'catalog']);
+      if (layout.version !== 1 || !Array.isArray(layout.catalog) || layout.catalog.length > 200) throw Error('Invalid profile fields');
+      ids(layout.ids); ids(layout.hidden);
+      var seen = [];
+      layout.catalog.forEach(function (app) {
+        fields(app, ['id', 'title', 'icon'], ['iconColor']); text(app.id); text(app.title); text(app.icon, 256 * 1024, true);
+        if (app.iconColor !== undefined) text(app.iconColor, 256, true);
+        if (seen.indexOf(app.id) >= 0) throw Error('Duplicate inventory ID'); seen.push(app.id);
+      });
     }
     return JSON.parse(JSON.stringify(value));
   }

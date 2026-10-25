@@ -8,6 +8,17 @@ from cytv import cli, diagnostics, state
 
 
 class DiagnosticTests(unittest.TestCase):
+    def test_developer_key_reason_is_allowlisted_without_credentials_or_exception_text(self):
+        from cytv.errors import DeveloperKeyError
+        with tempfile.TemporaryDirectory() as tmp:
+            for reason in ('response-format', 'key-unlock', 'PRIVATE-REASON'):
+                error = DeveloperKeyError('PRIVATE-MESSAGE', reason)
+                path = diagnostics.create_report(state.Store(tmp), 'install', None, 'ssh-connect', error)
+                report = json.loads(path.read_text())
+                self.assertEqual(report['connection'], {'protocol': 'developer-key',
+                    'reason_code': reason if reason != 'PRIVATE-REASON' else 'unknown'})
+                self.assertNotIn('PRIVATE-', path.read_text())
+
     def setUp(self):
         from cytv import i18n
         i18n.set_language('en')

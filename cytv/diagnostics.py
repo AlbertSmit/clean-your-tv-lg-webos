@@ -11,7 +11,7 @@ import uuid
 from . import __version__
 from .state import private_write
 from .terminal import console
-from .errors import TVConnectionError, UserError
+from .errors import TVConnectionError, DeveloperKeyError, UserError
 
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
 KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
@@ -34,6 +34,8 @@ def create_report(store, action, profile, phase, error=None, tv_info=None):
     }
     if isinstance(error, TVConnectionError):
         report['connection'] = {'protocol': 'ssap', 'close_code': error.close_code, 'reason_code': error.reason_code}
+    if isinstance(error, DeveloperKeyError):
+        report['connection'] = {'protocol': 'developer-key', 'reason_code': error.reason_code}
     for name, allowed in (('kernel_arch', KERNEL_ARCHES),
                           ('userland_abi', ('arm32', 'arm64', 'other', 'unknown'))):
         if tv_info and name in tv_info:

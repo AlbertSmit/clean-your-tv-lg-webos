@@ -256,6 +256,20 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     phase = 'inspect-installation'
                     write('Checking the previous installation on the TV…')
                     existing = installer.status()
+                    pending = store.pending(profile)
+                    if profile['edition'] == 'no-root' and pending and pending.get('action') == 'uninstall':
+                        write.heading('Unfinished removal')
+                        write('Finish removing Clean Your TV before installing again. LG Home will be restored and remaining Clean Your TV packages removed.')
+                        if args.non_interactive:
+                            raise UserError('Open cytv interactively to finish the previous removal, or run cytv uninstall for this TV, then retry installation.')
+                        if not prompts.confirm('Finish removal before installing again?', ask, write):
+                            write('Recovery data kept. Installation has not restarted.')
+                            return 0
+                        phase = 'uninstall'
+                        installer.uninstall()
+                        phase = 'inspect-installation'
+                        if store.pending(profile):
+                            raise UserError('The previous operation could not be safely resolved. Recovery data was kept. Save the diagnostic report; installation has not restarted.')
                     if existing.get('can_resume_root_setup') is True:
                         if args.non_interactive:
                             raise UserError('Root setup is ready to finish. Open cytv interactively to confirm Home activation.')

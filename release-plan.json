@@ -15,6 +15,13 @@
         55
       ],
       "summary": "Validate Root migration early and recover pre-provision removal"
+    },
+    {
+      "pr": 62,
+      "issues": [
+        51
+      ],
+      "summary": "Retain safe Luna rejection metadata in installer diagnostics"
     }
   ],
   "excluded": [],

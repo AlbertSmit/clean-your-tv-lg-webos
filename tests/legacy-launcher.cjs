@@ -135,6 +135,11 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
         await page.locator('#tiles .add-app').dispatchEvent('click');
         await page.evaluate(() => inventoryRequests[inventoryRequests.length - 1].onservicecallback(JSON.stringify({returnValue:false})));
         await page.locator('#appPicker [data-app-id="airplay"]').click();
+        // Closing the picker exposes grid tiles under the pointer. Park it
+        // outside the grid before selecting the app for remote-control tests.
+        await page.mouse.move(0, 0);
+        await page.locator('#tiles [data-app-id="airplay"]').dispatchEvent('mouseover');
+        assert.equal(await page.locator('#tiles .focused').getAttribute('data-app-id'), 'airplay');
         await page.clock.install();
         await page.evaluate(() => { window.launches = []; window.airplayMode = 'success'; });
         await page.keyboard.press('Enter');

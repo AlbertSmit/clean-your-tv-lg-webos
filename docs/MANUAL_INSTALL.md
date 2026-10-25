@@ -1,6 +1,6 @@
 # Manual installation of No-root and Root without cytv
 
-**1.1.0 RC is unreleased.** The [latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) and its `/latest/download/` links currently deliver **1.0.3 stable**. For explicit RC testing, use [Actions run 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from product commit `acf1acc`; later documentation edits do not change those artifacts. RC versions are cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Physical-TV acceptance remains pending; see [release notes](RELEASE-1.1.0.md).
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -11,8 +11,7 @@ The addresses and names below are examples; replace them with your own.
 
 Root has separate hardware validation. The main hardware
 checks used an LG OLED55C3RLA with firmware 43.21.71; they do not establish
-compatibility with other models. Final-artifact cold-power, quick-standby and
-failsafe checks remain open: [validation scope](../root-edition/RELEASE-ACCEPTANCE.md).
+compatibility with other models. The current Root 0.2.0 check passed standby/wake and everyday controls. True cold boot and complete signed upgrade/rollback remain untested: [validation scope](../root-edition/RELEASE-ACCEPTANCE.md).
 
 ## 1. Choose a path and prepare the tools
 
@@ -169,7 +168,7 @@ bash scripts/test.sh
 
 These dependencies support the shared installer's tests; `cytv` itself is not
 run. The tests also require `cc`. The build produces `dist/SHA256SUMS`,
-`dist/com.local.nativehome_0.6.19_arm.ipk` and the Home IPK. The 1.1.0 RC
+`dist/com.local.nativehome_0.6.19_arm.ipk` and the Home IPK. The 1.1.0
 source uses Home **1.4.0**, Helper **0.6.19** and Root **0.2.0**, as recorded
 in [`release-versions.json`](../release-versions.json). For another source revision,
 check the Home manifest and use the matching generated package filenames:

@@ -4,9 +4,9 @@ No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니�
 
 ## 설치 전 준비
 
-이 안내서는 **아직 게시되지 않은 1.1.0 출시 후보**를 설명합니다. 안정 버전은 [v1.0.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest)이며 `releases/latest/download` 링크도 아직 해당 버전을 제공합니다. 후보를 시험하려면 `acf1acc` 커밋의 [Actions 빌드 산출물](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)을 사용하세요. 이후 문서 수정에서도 제품 버전은 같습니다. 이 산출물은 정식 출시나 게시 승인을 의미하지 않습니다. [후보 릴리스 안내](../RELEASE-1.1.0.md)와 [설치 안내](../INSTALL.md)를 확인하세요.
+이 안내서는 **[v1.1.0 안정 버전](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**을 설명합니다. `releases/latest/download` 링크는 게시된 안정 버전을 제공합니다. [설치 안내](../INSTALL.md)와 [릴리스 안내](../RELEASE-1.1.0.md)를 확인하세요.
 
-후보 버전: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater 및 Root Updater **0.2.0**, Android **0.2.0-preview**(버전 코드 **9**), System Updater 감독 서비스 **1.0.0**, 프로토콜 **1**.
+릴리스 구성: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater 및 Root Updater **0.2.0**, Android **0.2.0-preview**(버전 코드 **9**), System Updater 감독 서비스 **1.0.0**, 프로토콜 **1**.
 
 TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연결하세요. 설치 후에는 컴퓨터를 꺼도 됩니다. 호환성은 모델, 펌웨어, 리모컨에 따라 다릅니다. Root는 실제 기기 검증이 남아 있습니다.
 
@@ -78,7 +78,7 @@ No-root는 LG 앱 목록에서 **Home Helper**를 열어 재개하세요. Home�
 
 새로 설치할 때는 후보의 전체 설치 프로그램으로 Home과 해당 에디션의 복구 Updater를 준비하세요. 이 전환 버전은 안정 버전 업데이트 피드에서 제공되지 않습니다.
 
-Root가 이미 설치되어 있고 Root Updater가 남아 있으면 일반 재설치가 의도적으로 차단될 수 있습니다. 먼저 `status`와 진단을 실행한 뒤 기존 Updater의 트랜잭션과 복구 상태를 확인하세요. 진행 중이거나 결과가 불확실한 작업은 해당 기존 버전의 복구 절차로 해결해야 합니다. 새 기반 구조로 전환하는 과정은 TV의 실제 설치 상태에 따라 검토해야 합니다. 기록을 삭제하거나 `--yes`, 개별 IPK, 기존 OTA로 차단을 우회하지 마세요. 앱만 바꾸는 OTA는 새 기반 구조를 설치하지 않습니다. [후보의 첫 번째 확인 단계](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv)를 따르세요.
+Root가 이미 설치되어 있고 Root Updater가 남아 있으면 일반 재설치가 의도적으로 차단될 수 있습니다. 먼저 `status`와 진단을 실행한 뒤 기존 Updater의 트랜잭션과 복구 상태를 확인하세요. 진행 중이거나 결과가 불확실한 작업은 해당 기존 버전의 복구 절차로 해결해야 합니다. 새 기반 구조로 전환하는 과정은 TV의 실제 설치 상태에 따라 검토해야 합니다. 기록을 삭제하거나 `--yes`, 개별 IPK, 기존 OTA로 차단을 우회하지 마세요. 앱만 바꾸는 OTA는 새 기반 구조를 설치하지 않습니다. [기존 TV 확인 단계](../UPDATES.md#one-time-computer-preparation)를 따르세요.
 
 Home `systemUpdateProtocol = 1`과 해당 복구 Updater가 있는 호환 구성을 확인한 뒤에만 컴퓨터에서 감독 서비스를 활성화하세요. 설치 프로그램에서 모든 TV 구성 요소의 업데이트를 활성화하는 항목을 선택하세요. 저장된 root SSH 연결을 사용하는 Root 명령은 다음과 같습니다.
 
@@ -94,10 +94,12 @@ root TV의 No-root는 컴퓨터에서 Home/Helper/Home Updater를 먼저 준비�
 
 ## 하드웨어 검증 범위
 
-이슈 #37의 **LG UK6540PTD / 펌웨어 05.50.70 / ARM32**에는 Python 2.7.12만 있고 Python 3가 없었습니다. 새 런타임은 이 TV에서 아직 검증되지 않았습니다. 자동 테스트와 QEMU의 ARM32 실행은 TV 로더/libc, webOS API, 리모컨, 완전 전원 차단 후 부팅이나 롤백을 검증하지 않습니다. **LG OLED55C3RLA / 43.21.71**의 기존 Home 업데이트 검증은 당시 패키지에 한정되며 이번 후보에 적용되지 않습니다. 전체 업데이트, 정전, Helper **0.6.19**의 입력 해제와 런타임/Updater 롤백을 실제 TV에서 확인해야 합니다. Helper 0.6.18 승인은 새 패키지를 포함하지 않습니다.
+OLED55C3RLA / 펌웨어 43.21.71 / webOS 11.2.0에서 Root 0.2.0, Root Updater 0.2.0, 감독 서비스 1.0.0을 확인했습니다 (`d344d92`, 제품 내용은 `4b66951`과 동일). 리모컨, Home 세 번 및 재개, Emby를 70초간 열어 둔 대기/깨우기, 버전 메뉴와 피드 사용 불가 안내가 통과했습니다. 실제 전원 차단 후 부팅, TV의 Helper 0.6.19, UK6540PTD, 전체 서명 시스템 업데이트/롤백은 시험하지 않았습니다. 안정 버전은 이 제한된 근거로 게시되며 다른 모델은 검증되지 않았습니다.
 
 No-root는 TV 셸 ABI를 검사하며 ARM32 사용자 환경이 확인된 경우에만 64비트 커널을 허용합니다. 모델명이나 `armv7l`만으로 호환성을 보장할 수 없습니다. 이전 검증은 해당 기기와 패키지 범위에 한정됩니다.
 
 No-root: Home 설정 → 개발자 모드에서 베타 자동 갱신, 세션 확인, 진단을 엽니다. 공식 타이머를 계속 확인하세요. Home Helper는 상태를 표시하며 중지 후 다시 시작할 때 확인을 요청합니다.
 
 영문 기술 안내: [데스크톱](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [수동 설치](../MANUAL_INSTALL.md), [복구](../RECOVERY.md), [에디션](../EDITIONS.md), [업데이트](../UPDATES.md).
+
+감독 서비스 설정 직후 Root에 `Denied methods call status`가 표시되면 Home Root를 한 번 닫고 다시 연 뒤 업데이트를 확인하세요. 계속되면 진단과 복구 상태를 보관하세요.

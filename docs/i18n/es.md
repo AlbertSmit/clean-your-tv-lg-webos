@@ -4,9 +4,11 @@ No-root y Root son opciones equivalentes para distintas configuraciones del tele
 
 ## Requisitos
 
-Esta guía cubre instalación, uso y recuperación. La última descarga publicada es [v1.0.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.0.3). **v1.1.0 es una versión candidata aún no publicada**: los instaladores de prueba son [artefactos de GitHub Actions](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), compilados desde `acf1acc`; los cambios posteriores en la documentación no modifican esos archivos. El candidato no está en `releases/latest` ni en el canal estable de actualizaciones. Consulta la [guía de instalación](../INSTALL.md) y las [notas del candidato](../RELEASE-1.1.0.md).
+Esta guía describe **[v1.1.0 estable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Los enlaces `releases/latest/download` entregan la versión estable publicada. Consulta [instalación](../INSTALL.md) y [notas de la versión](../RELEASE-1.1.0.md).
 
-El candidato incluye cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater y Root Updater **0.2.0**, Android **0.2.0-preview** (código de versión **9**) y el supervisor System Updater **1.0.0** (protocolo **1**). Son las versiones del candidato, no las de la descarga publicada v1.0.3.
+La versión incluye cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater y Root Updater **0.2.0**, Android **0.2.0-preview** (código de versión **9**) y el supervisor System Updater **1.0.0** (protocolo **1**). Estos son los componentes de v1.1.0.
+
+Root 0.2.0, Root Updater 0.2.0 y supervisor 1.0.0 se comprobaron en OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0 (`d344d92`, contenido idéntico a `4b66951`). Pasaron los controles, triple Home y reanudación, reposo/reactivación con Emby abierto durante 70 segundos, menús de versiones y aviso claro de canal no disponible. No se probaron el arranque en frío real, Helper 0.6.19 en TV, UK6540PTD ni actualización/restauración completa del sistema firmada. La publicación estable acepta estas pruebas limitadas; otros modelos no están validados.
 
 Enciende el televisor y conecta ambos equipos a la misma red local de confianza. Después, el ordenador puede estar apagado. La compatibilidad depende del modelo, firmware y mando; Root tiene pruebas físicas pendientes.
 
@@ -16,11 +18,11 @@ El Helper No-root actualizado requiere Node.js 0.12.2 o posterior en el TV. El i
 
 - **Root:** necesitas acceso SSH root previo. El instalador no obtiene root. No actives Developer Mode sobre una instalación ya rooteada. Conserva el acceso root y los servicios de recuperación.
 
-## Python opcional para Root en v1.1.0 RC
+## Python opcional para Root en v1.1.0
 
 Root necesita Python **3.9+** funcional en el televisor. El instalador comprueba los módulos necesarios (entre ellos `json` y `fcntl`), los bloqueos, las operaciones con archivos y los subprocesos; el número de versión no basta. Si ya hay un intérprete adecuado, no se descarga otro. En caso contrario, la configuración descarga **CPython 3.13.17 para ARMv7 soft-float** verificado en el ordenador o dispositivo Android y lo transfiere por SSH de confianza; el televisor no necesita Internet. El archivo opcional no viene incluido en los instaladores habituales: unos **26.3 MB** de descarga, **51.5 MB** de transferencia SSH normalizada y **119.3 MB** instalados; se requieren **320 MiB** libres para la preparación inicial. Este entorno privado no sustituye Python del sistema, libc ni el PATH global.
 
-Siguen siendo necesarios un cargador y bibliotecas compatibles. Se mantienen los requisitos de root SSH, Node.js **8+**, `luna-send` y los directorios de aplicaciones y servicios de webOS; No-root Helper necesita Node.js **10+**. El LG UK6540PTD / firmware 05.50.70 / ARM32 del issue #37 (Python 2.7.12 sin Python 3) **no ha superado la validación física** con este entorno. Las pruebas QEMU no validan el televisor, el arranque en frío, el mando ni la restauración. Los resultados físicos anteriores se limitan a los modelos, firmware y archivos documentados.
+Siguen siendo necesarios un cargador y bibliotecas compatibles. Se mantienen los requisitos de root SSH, Node.js **8+**, `luna-send` y los directorios de aplicaciones y servicios de webOS; No-root Helper necesita Node.js **0.12.2+**. El LG UK6540PTD / firmware 05.50.70 / ARM32 del issue #37 (Python 2.7.12 sin Python 3) **no ha superado la validación física** con este entorno. Las pruebas QEMU no validan el televisor, el arranque en frío, el mando ni la restauración. Los resultados físicos anteriores se limitan a los modelos, firmware y archivos documentados.
 
 Para preparar una caché verificada en un ordenador con Internet **sin contactar con un televisor**:
 
@@ -74,9 +76,9 @@ Tras una interrupción, ejecuta primero `status` y conserva los registros. `rest
 
 Guarda paquetes funcionales y copias privadas de ajustes. Para sustituir paquetes No-root desde el ordenador, detén Helper primero y actualiza sin desinstalar, ya que podrías perder ajustes. Eliminar la aplicación del ordenador no elimina las aplicaciones del televisor. No sustituyas un entorno Root activo con una IPK suelta; usa el proceso explícito de recuperación o reinstalación de cytv.
 
-En v1.1.0 RC, **Actualizar todo** en Ajustes de Home → Actualizaciones de software usa un conjunto firmado: Home, Helper y Home Updater para No-root en un televisor con root; Root Home, Root Updater y el entorno de control de Home y recuperación para Root. Requiere root, Homebrew Channel, servicios de instalación webOS funcionales, Python 3.9+ y Node.js 8+. Un televisor sin root sigue usando el instalador del ordenador.
+En v1.1.0, **Actualizar todo** en Ajustes de Home → Actualizaciones de software usa un conjunto firmado: Home, Helper y Home Updater para No-root en un televisor con root; Root Home, Root Updater y el entorno de control de Home y recuperación para Root. Requiere root, Homebrew Channel, servicios de instalación webOS funcionales, Python 3.9+ y Node.js 8+. Un televisor sin root sigue usando el instalador del ordenador.
 
-Para una instalación nueva, usa el instalador completo del candidato para instalar la versión de transición de Home y el actualizador de recuperación de la edición correspondiente. **Una instalación Root existente con Root Updater conservado puede bloquear deliberadamente una reinstalación genérica.** Revisa primero `status`, Recuperación y la transacción existente mediante el proceso de recuperación correspondiente a la instalación antigua; consulta la [comprobación del televisor ya instalado](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv). No borres registros ni omitas esta comprobación. El canal estable no ofrece la transición al candidato, y una actualización OTA antigua de solo Home no instala la nueva infraestructura.
+Para una instalación nueva, usa el instalador completo estable para instalar la versión de transición de Home y el actualizador de recuperación de la edición correspondiente. **Una instalación Root existente con Root Updater conservado puede bloquear deliberadamente una reinstalación genérica.** Revisa primero `status`, Recuperación y la transacción existente mediante el proceso de recuperación correspondiente a la instalación antigua; consulta la [comprobación del televisor ya instalado](../UPDATES.md#one-time-computer-preparation). No borres registros ni omitas esta comprobación. Una actualización OTA antigua de solo Home no instala la nueva infraestructura.
 
 Activa las **actualizaciones de todos los componentes del TV** en el instalador de escritorio solo cuando los componentes instalados y el estado de recuperación estén preparados. Para una conexión SSH root guardada y la edición Root:
 
@@ -107,3 +109,7 @@ Al abrir los ajustes de Home se buscan actualizaciones en segundo plano. Un punt
 No-root: abre Ajustes de Home → Modo de desarrollador para la renovación automática, la comprobación de sesión y el diagnóstico. La pantalla principal mantiene visibles el estado resumido y los errores de renovación. Atrás vuelve a los ajustes de Home. Ambas ediciones agrupan Idioma, Actualizaciones de software y Ajustes del TV en la misma fila; la flecha abre cada opción.
 
 Al abrir Home Helper se muestran su función y estado. Iniciar un Helper detenido requiere confirmación. Home Updater y Root Updater explican la recuperación; las actualizaciones normales están en los ajustes de Home. La restauración solo se ofrece si hay una versión guardada y requiere confirmación antes de reemplazar Home y sus ajustes.
+
+Si Root muestra `Denied methods call status` justo después de preparar el supervisor, cierra y abre Home Root una vez y vuelve a comprobar las actualizaciones. Si persiste, conserva el diagnóstico y los datos de recuperación.
+
+[1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)

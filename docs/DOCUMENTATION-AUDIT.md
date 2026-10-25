@@ -138,3 +138,11 @@ Node 0.12.2 executes the packaged Helper controller, status/listApps and WSS
 regression. Independent implementation review/rereview found no actionable
 issues. No LG 49UJ750V input-grab, standby, cold-boot or new rollback acceptance
 is claimed. CLI interfaces and unrelated Root/recovery instructions are unchanged.
+
+## Stable publication documentation pass — 2026-10-25
+
+Updated README, all ten localized guides, current installation/maintenance/update references, Root documentation and Android download guidance for v1.1.0 stable. Current downloads point to the final release; the RC testing guide is marked superseded and its old Actions run remains historical. Earlier audit entries, specifications and hardware records retain their original scope.
+
+Added the one-time Home Root GUI restart after supervisor bootstrap when `Denied methods call status` appears. Current C3 evidence and untested paths are recorded in [1.1.0 acceptance](RELEASE-1.1.0-ACCEPTANCE.md); stable publication does not validate every model, Helper 0.6.19 hardware behavior or complete signed system upgrade/rollback.
+
+Verification: checked the documentation diff for whitespace errors, confirmed all ten guides name v1.1.0 stable and contain no obsolete Actions run or Node 10+ Helper requirement, checked changed Markdown relative file links, and scanned current user guides for stale unpublished-release/download instructions. Historical RC/build/audit references remain explicit history. The full local test suite passed in the coordinating publication task; no product source changed in this documentation pass.

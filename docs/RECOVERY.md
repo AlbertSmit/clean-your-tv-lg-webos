@@ -1,6 +1,6 @@
 # No-root controls and recovery
 
-## Interrupted setup or removal in 1.1.0 RC
+## Interrupted setup or removal in 1.1.0
 
 Run `cytv status` with the same saved TV/profile before retrying. The installer
 can offer to finish a previous No-root removal through the retained verified

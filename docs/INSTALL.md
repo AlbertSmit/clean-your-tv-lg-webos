@@ -1,6 +1,6 @@
 # Install Clean Your TV — No-root and Root
 
-**1.1.0 RC is unreleased.** The [latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) and its `/latest/download/` links currently deliver **1.0.3 stable**. For explicit RC testing, use [Actions run 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from product commit `acf1acc`; later documentation edits do not change those artifacts. RC versions are cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Physical-TV acceptance remains pending; see [release notes](RELEASE-1.1.0.md).
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -25,7 +25,7 @@ control and No-root Helper together. See [edition comparison](EDITIONS.md).
 Hardware evidence is scoped to documented builds, principally
 **LG OLED55C3RLA / firmware 43.21.71**. Installation success does not establish
 compatibility with another TV. Read [compatibility](COMPATIBILITY.md) and
-[Root acceptance and remaining checks](../root-edition/RELEASE-ACCEPTANCE.md).
+[1.1.0 hardware acceptance and remaining checks](RELEASE-1.1.0-ACCEPTANCE.md).
 
 ## 2. Prepare your TV and computer
 
@@ -65,7 +65,7 @@ Download the matching package from the
 
 For Windows, use File Explorer **Extract All** and keep the complete folder.
 Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
-Android 0.2.0-preview RC requirements, APK installation and limitations are covered
+Android 0.2.0-preview requirements, APK installation and limitations are covered
 in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
 The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
 for the Linux graphical app.
@@ -188,3 +188,7 @@ Without one, setup stops before pairing or changing the TV. The compiler must
 run in your actual Termux/container environment; CPU architecture alone does not
 prove Android compatibility. Node.js, Python and CLI requirements still apply.
 End-to-end Termux and C5/webOS 26 compatibility remain unverified.
+
+## Root GUI after supervisor setup
+
+If Root immediately shows `Denied methods call status` after supervisor bootstrap, close and reopen the **Home Root** app once to restart its GUI, then check Software updates again. If the error persists, retain diagnostics and inspect status; do not delete supervisor or recovery state.

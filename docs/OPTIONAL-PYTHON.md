@@ -1,8 +1,6 @@
 # Automatic Python runtime for Root Edition
 
-Introduced in the **unpublished 1.1.0 candidate**; use its
-[test artifacts and instructions](RC-1.1.0-TESTING.md), not the stable latest
-download, to test this feature.
+Available in [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0); download the complete installer for your platform.
 
 Root Edition needs Python 3.9 or newer on the TV, including the modules and
 filesystem/process operations used by installation and recovery. The installer
@@ -33,7 +31,7 @@ The binary depends on a compatible ARM EABI Linux loader and system libraries.
 install Python 2 compatibility, or make every older webOS API compatible.
 LG UK6540PTD / firmware 05.50.70 from issue #37 is the motivating case, not a
 hardware-validated model for this feature. No boot, rollback or remote-input
-acceptance is claimed until the actual candidate has been tested on the TV.
+acceptance is claimed for that model until the actual runtime has been tested on the TV.
 
 ## Installation and recovery
 

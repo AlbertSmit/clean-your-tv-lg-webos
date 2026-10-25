@@ -4,10 +4,7 @@ Choose a complete user guide for installation, everyday controls, recovery,
 updates and removal. Technical/developer references remain in English and are
 linked at the end of each guide.
 
-These ten guides describe the **unpublished 1.1.0 candidate** and distinguish it
-from the published v1.0.3 downloads. Use the candidate's Actions artifacts for
-testing; `releases/latest` still serves stable. See the
-[candidate test guide](RC-1.1.0-TESTING.md) and [release notes](RELEASE-1.1.0.md).
+These ten guides describe **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Latest-download links follow the published release. Hardware evidence and outstanding tests remain scoped to the recorded devices and components; see [compatibility](COMPATIBILITY.md) and [release notes](RELEASE-1.1.0.md).
 
 The Android preview also supports all ten languages below. It follows the phone language on first launch (English fallback); tap the current language code at the top right to choose and save another language.
 

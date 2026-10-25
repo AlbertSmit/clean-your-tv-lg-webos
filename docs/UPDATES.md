@@ -1,10 +1,6 @@
-# Updates and recovery — 1.1.0 candidate
+# Updates and recovery — 1.1.0
 
-**1.1.0 is unpublished.** The stable `releases/latest` feeds still describe the
-published release. Candidate installers come from Actions; see
-[candidate testing](RC-1.1.0-TESTING.md). Checking the stable feed cannot test a
-future signed 1.1.0 offer. Keep legacy recovery available until the transition
-and the new supervisor have both been verified.
+Use [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
 
 ## Updating every component from the TV
 
@@ -25,13 +21,28 @@ requirements still apply. See [optional Python](OPTIONAL-PYTHON.md).
 
 ### One-time computer preparation
 
+First inspect the existing TV. Keep it on the same trusted network, select the
+saved connection in cytv and run Status, then diagnostics. For a saved Root
+connection, the console equivalents are:
+
+```sh
+./cytv --language en status
+./cytv --language en doctor --report
+```
+
+Review failed requirements and pending transactions before changing packages.
+SSH success does not establish Root readiness. Retain the diagnostic JSON and
+resolve active or uncertain updates through the installed updater's matching
+recovery flow. Do not delete journals or use `--yes` to bypass a retained Root
+Updater's reinstall block; a transition must match the actual installed state.
+
 Install the transition Home release containing the new shared update interface
 **before** provisioning the supervisor. A Root transition through the existing
 Home-only update screen requires an explicitly prepared compatible signed release;
-the unpublished RC is absent from the stable feed. Fresh Root setups use the
+use only a published compatible transition for that installed updater. Fresh Root setups use the
 complete installer. Existing Root installations with a retained Root Updater must
 first inspect its transaction and recovery status: generic reinstallation is
-deliberately refused. Follow the [existing-TV checkpoint](RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv)
+deliberately refused. Complete the existing-TV checks above
 and review the infrastructure transition; do not delete updater state to bypass it.
 Ordinary edition users can use the
 computer installer to update Home/Helper and install Home Updater. Then use a
@@ -53,6 +64,8 @@ pinned bootstrap inventory (including certificates absent in older Root Updater
 installations) are recorded explicitly. Rollback removes such newly introduced
 files only when their bytes match the verified candidate. Mutable settings and
 credentials are excluded from the package archives.
+
+If Root immediately shows `Denied methods call status` after supervisor bootstrap, close and reopen the **Home Root** app once to restart its GUI, then check Software updates again. If the error persists, retain diagnostics and inspect status; do not delete supervisor or recovery state.
 
 For a rooted TV running the ordinary No-root edition, use an existing OpenSSH
 host alias that logs in as root. Install the matching Home/Helper/Home Updater

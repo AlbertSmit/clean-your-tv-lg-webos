@@ -1,8 +1,8 @@
 # Update, disable, rollback and uninstall
 
-## Whole-edition updates in 1.1.0 RC
+## Whole-edition updates in 1.1.0
 
-The unreleased candidate adds signed complete edition release sets through an
+The stable release adds signed complete edition release sets through an
 independent System Updater supervisor. On-TV updates need existing root/Homebrew
 services, TV Node.js 8+, suitable Python and an explicit computer bootstrap with
 `cytv enable-system-updates --edition root` for Root, or the manual supervisor

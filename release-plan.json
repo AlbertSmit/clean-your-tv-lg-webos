@@ -62,6 +62,18 @@
       "pr": 49,
       "issues": [],
       "summary": "Accept macOS packaged payload root aliases during System Updater setup while retaining interior symlink rejection and file hash validation"
+    },
+    {
+      "pr": 50,
+      "issues": [],
+      "summary": "Keep user app focus when Root boot recovery becomes ready"
+    },
+    {
+      "pr": 52,
+      "issues": [
+        47
+      ],
+      "summary": "Compile Helper app/service for TV Node 0.12.2 with Babel and local polyfills, compatible WebSocket clients and guarded error logging; issue #47 original-TV input/standby/cold-boot acceptance pending"
     }
   ],
   "excluded": [],

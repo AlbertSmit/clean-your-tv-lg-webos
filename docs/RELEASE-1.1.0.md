@@ -49,7 +49,7 @@ artifacts still need validation before merging into main or publishing.
   release scope/notification provenance.
 
 Related implementation/preparation PRs: #36, #38, #39, #40, #42, #43, #44, #45,
-#46, #48, #49 and #50; the Helper Node 0.12 correction relates to issue #47.
+#46, #48, #49, #50 and #52; the Helper Node 0.12 correction relates to issue #47.
 Integrated PRs are recorded in release-plan.json. Issue #37 remains open for
 UK6540PTD device feedback; issue #24's original unfinished removal is not claimed
 resolved by its separate Android receipt fix.
@@ -80,8 +80,9 @@ validation; the retained 0.6.18 approval does not authorize this new package.
 [Five-platform test build 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
 passed at `acf1acccb0ec0802c993f94a39080859dcda9591`. Follow the
 [candidate testing guide](RC-1.1.0-TESTING.md), including existing Root/Updater
-inspection before reinstallation. Subsequent documentation changes do not alter
-those installer bytes; final frozen-head builds are still required. The
+inspection before reinstallation. Those installer bytes predate the product
+fixes in #49, #50 and #52; rebuild the desktop/Android installers and affected TV
+packages for current candidate feedback. Final frozen-head builds are still required. The
 [documentation audit](DOCUMENTATION-AUDIT.md) records current guide/translation
 coverage separately from historical device evidence.
 

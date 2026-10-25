@@ -10,7 +10,8 @@ artifacts still need validation before merging into main or publishing.
 | Home | 1.3.8 | 1.4.0 |
 | Home Helper | 0.6.18 | 0.6.19 |
 | Root Edition | 0.1.12 | 0.2.0 |
-| Home / Root Updater release-managed version | 0.1.6 | 0.2.0 |
+| Home Updater | 0.1.6 | 0.2.0 |
+| Root Updater | 0.1.1 | 0.2.0 |
 | Android installer | 0.1.7-preview / code 8 | 0.2.0-preview / code 9 |
 | New fixed System Updater supervisor | Not shipped | 1.0.0 / protocol 1 |
 

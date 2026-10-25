@@ -824,7 +824,6 @@
       e.classList.remove("focused");
     });
     focusZone = "none";
-    animateTiles();
     focusTile(focusedTile);
   }
   document.addEventListener("keyup", function (event) {

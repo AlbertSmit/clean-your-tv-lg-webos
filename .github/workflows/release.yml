@@ -17,6 +17,8 @@ on:
 permissions:
   contents: read
   actions: read
+  pull-requests: read
+  issues: read
 concurrency:
   group: automatic-release
   cancel-in-progress: false
@@ -48,6 +50,7 @@ jobs:
         with:
           ref: ${{ steps.source.outputs.commit }}
           path: release-source
+          fetch-depth: 0
           persist-credentials: false
       - id: plan
         name: Plan a new version or skip an already published release
@@ -75,6 +78,8 @@ jobs:
     permissions:
       contents: write
       actions: read
+      pull-requests: read
+      issues: read
     timeout-minutes: 20
     env:
       RELEASE_SOURCE_ROOT: ${{ github.workspace }}/release-source
@@ -88,6 +93,7 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.commit }}
           path: release-source
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -109,6 +115,11 @@ jobs:
         env:
           SOURCE_BUILD_RUN: ${{ needs.plan.outputs.build_run }}
         run: python release-tools/scripts/assemble-release.py --artifacts "$RUNNER_TEMP/release-builds" --output "$RUNNER_TEMP/release-assets"
+      - name: Bind release inventory to the exact source and refresh checksums
+        if: hashFiles('release-source/release-plan.json') != '' || inputs.validate_only != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python release-tools/scripts/release-flow.py inventory --source-root release-source --output "$RUNNER_TEMP/release-assets/RELEASE-INVENTORY.json"
       - name: Create or resume the draft from the exact build commit
         if: inputs.validate_only != true
         env:
@@ -133,6 +144,8 @@ jobs:
     if: needs.plan.outputs.release == 'true' && inputs.validate_only != true
     permissions:
       contents: write
+      pull-requests: write
+      issues: write
     uses: ./.github/workflows/publish-release.yml
     with:
       tag: ${{ needs.plan.outputs.tag }}

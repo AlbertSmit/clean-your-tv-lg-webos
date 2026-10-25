@@ -24,6 +24,23 @@ class BuildAssetsTests(unittest.TestCase):
         self.assertIn('release-notes.js', list(build['tracked_files']('launcher')))
         self.assertIn('app-inventory.js', list(build['tracked_files']('native/service')))
 
+    def test_helper_service_bundles_permissions_module_inside_its_sandbox(self):
+        import json
+        from cytv import package
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        permissions = (root / 'native/app/state-permissions.js').read_bytes()
+        app = {'appinfo.json': json.dumps({'id': 'com.local.nativehome',
+                                         'version': '0.6.18', 'type': 'native'}).encode(),
+               'state-permissions.js': permissions}
+        service = {'services.json': (root / 'native/service/services.json').read_bytes(),
+                   'service.js': (root / 'native/service/service.js').read_bytes()}
+        files = package.data_files(build['pack_app'](app, service, helper=True, architecture='arm'))
+        prefix = 'usr/palm/services/com.local.nativehome.service/'
+        self.assertEqual(files[prefix + 'state-permissions.js'], permissions)
+        self.assertIn(b"require('./state-permissions')", files[prefix + 'service.js'])
+        self.assertNotIn('state-permissions.js', service, 'Do not mutate the source mapping')
+
     def test_release_metadata_rejects_old_embedded_versions(self):
         import json
         import tempfile

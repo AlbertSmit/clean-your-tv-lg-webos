@@ -6,6 +6,7 @@ function controller({automatic=true,blocked=false}={}){
  const timers=new Map(),files=new Map(),calls=[],logs=[];
  const dir='/media/developer/apps/usr/palm/applications/com.local.nativehome/state/';
  if(blocked)files.set(dir+'blocked','stopped');
+ files.set(dir+'apps.json','["com.example.video"]');
  function schedule(fn,ms,repeat){const id=++seq;timers.set(id,{fn,at:now+ms,repeat});return id;}
  function advance(ms){const end=now+ms;while(true){let found;for(const entry of timers)if(entry[1].at<=end&&(!found||entry[1].at<found[1].at))found=entry;if(!found)break;const [id,t]=found;now=t.at;if(t.repeat)t.at+=t.repeat;else timers.delete(id);t.fn();}now=end;}
  const fakefs={existsSync:p=>files.has(p),writeFileSync:(p,s)=>files.set(p,s),renameSync:(a,b)=>{files.set(b,files.get(a));files.delete(a);},chmodSync(){},unlinkSync:p=>files.delete(p),appendFileSync:(p,s)=>logs.push(JSON.parse(s)),readFileSync(p){if(files.has(p))return files.get(p);const e=Error('missing');e.code='ENOENT';throw e;}};
@@ -86,4 +87,19 @@ test('failed launch replies retain bounded recovery',()=>{
 });
 test('disabled Home routing never arms recovery on resume',()=>{
  const c=controller();c.rpc('setHomeControl',false);c.resume();c.fg(LG);c.advance(20000);assert.equal(c.homeCalls().length,1);
+});
+
+test('app exit retries a late LG takeover with the same bounded recovery',()=>{
+ const c=controller();c.fg('com.example.video');c.fg(LG);
+ assert.equal(c.homeCalls().length,2);c.calls[1].reply();c.fg(HOME);c.fg(LG);
+ c.advance(4800);assert.equal(c.homeCalls().length,2);
+ c.advance(400);assert.equal(c.homeCalls().length,3);
+ c.calls[2].reply();c.advance(5200);assert.equal(c.homeCalls().length,4);
+ c.calls[3].reply();c.advance(40000);assert.equal(c.homeCalls().length,4);
+});
+test('new Back input cancels app-exit recovery so an intentional LG visit stays open',()=>{
+ const c=controller();c.fg('com.example.video');c.fg(LG);c.calls[1].reply();c.fg(HOME);
+ c.worker().stdout.emit('data',Buffer.from('BACK_DOWN\n'));c.advance(800);c.fg(LG);
+ c.worker().stdout.emit('data',Buffer.from('BACK_UP\n'));c.advance(12000);
+ assert.equal(c.homeCalls().length,2);
 });

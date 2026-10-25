@@ -1,5 +1,6 @@
 """Both updater subprocess paths preserve the selected Python binding."""
 import importlib
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -8,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'root-edition'))
 
 class UpdaterBindingTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'posix', 'TV updater requires fcntl')
     def test_root_updater_worker_keeps_actual_interpreter(self):
         cli=importlib.import_module('updater.cli')
         selected='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'

@@ -1,5 +1,6 @@
 """Interpreter selection at the SSH orchestration boundary."""
 import json
+import os
 import unittest
 from unittest.mock import patch
 from cytv.operations import Installer, ROOT_STATE
@@ -72,6 +73,7 @@ class SelectionTests(unittest.TestCase):
             installer.preflight(install=True)
         select.assert_called_once_with(provision=True)
 
+    @unittest.skipUnless(os.name == 'posix', 'TV validator fixture requires POSIX paths and shell')
     def test_modified_retained_interpreter_never_executes_before_hash_check(self):
         import hashlib
         import shutil

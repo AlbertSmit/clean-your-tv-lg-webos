@@ -1,5 +1,6 @@
 """Run the actual Root requirement probes in a local shell, without a TV."""
 import json
+import os
 import shutil
 from pathlib import Path
 import shlex
@@ -77,6 +78,7 @@ class RootPreflightTests(unittest.TestCase):
 
         return Remote()
 
+    @unittest.skipUnless(os.name == 'posix', 'TV shell probes require POSIX Python with fcntl')
     def test_each_missing_requirement_is_named_and_all_checks_are_reported(self):
         for failed in REQUIREMENTS:
             with self.subTest(failed=failed), tempfile.TemporaryDirectory() as tmp:
@@ -91,6 +93,7 @@ class RootPreflightTests(unittest.TestCase):
                     expected.update({'python-json': 'fail', 'python-fcntl': 'fail', 'python-version': 'fail'})
                 self.assertEqual(info['root_requirements'], expected)
 
+    @unittest.skipUnless(os.name == 'posix', 'TV shell probes require POSIX Python with fcntl')
     def test_successful_checks_are_preserved(self):
         with tempfile.TemporaryDirectory() as tmp:
             info = {}
@@ -98,6 +101,7 @@ class RootPreflightTests(unittest.TestCase):
                       tv_info=info).preflight()
             self.assertEqual(info['root_requirements'], dict.fromkeys(REQUIREMENTS, 'pass'))
 
+    @unittest.skipUnless(os.name == 'posix', 'TV shell probes require POSIX Python with fcntl')
     def test_cli_report_identifies_requirements_without_private_remote_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

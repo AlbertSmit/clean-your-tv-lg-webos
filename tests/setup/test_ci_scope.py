@@ -10,6 +10,28 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class CIScope(unittest.TestCase):
+    def test_manual_draft_build_produces_installers_without_claiming_acceptance(self):
+        spec = importlib.util.spec_from_file_location('ci_scope', ROOT/'scripts/ci-scope.py')
+        scope = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(scope)
+        plan = {'version': '1.1.0', 'acceptance': ''}
+        event = {'inputs': {'test_build': 'true'}}
+        self.assertTrue(scope.build_installers(event, 'workflow_dispatch',
+            'refs/heads/release/next', plan, '1.1.0', '1.0.3', True))
+        self.assertFalse(scope.is_candidate(plan, '1.1.0', '1.0.3'))
+        for kind, ref, inputs, version, notes in (
+            ('push', 'refs/heads/release/next', event, '1.1.0', True),
+            ('pull_request', 'refs/heads/release/next', event, '1.1.0', True),
+            ('workflow_dispatch', 'refs/heads/main', event, '1.1.0', True),
+            ('workflow_dispatch', 'refs/heads/feature', event, '1.1.0', True),
+            ('workflow_dispatch', 'refs/heads/release/next', {}, '1.1.0', True),
+            ('workflow_dispatch', 'refs/heads/release/next', {'inputs': {'test_build': 'false'}}, '1.1.0', True),
+            ('workflow_dispatch', 'refs/heads/release/next', event, '1.0.3', True),
+            ('workflow_dispatch', 'refs/heads/release/next', event, '1.1.0', False),
+        ):
+            with self.subTest(kind=kind, ref=ref, inputs=inputs, version=version, notes=notes):
+                self.assertFalse(scope.build_installers(inputs, kind, ref, plan, version, '1.0.3', notes))
+
     def test_event_diff_handles_documentation_renames_and_full_release_tests(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

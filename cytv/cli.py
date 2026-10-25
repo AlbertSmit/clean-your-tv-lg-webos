@@ -270,6 +270,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     if profile['edition'] == 'no-root' and pending and pending.get('action') == 'uninstall':
                         write.heading('Unfinished removal')
                         write('Finish removing Clean Your TV before installing again. LG Home will be restored and remaining Clean Your TV packages removed.')
+                        write('After removal is verified, setup continues with the bundled versions.')
                         if args.non_interactive:
                             raise UserError('Open cytv interactively to finish the previous removal, or run cytv uninstall for this TV, then retry installation.')
                         if not prompts.confirm('Finish removal before installing again?', ask, write):
@@ -395,16 +396,14 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 if not prompts.confirm('Ready to record? Continue and wait for the Home prompt.', ask, write, default=True):
                     return 0
                 report = diagnostics.collect_home_report(remote, store, profile, write)
-                write.heading('Diagnostic report')
-                write.raw('  ' + str(report.resolve()))
+                write.report(report)
             elif args.command == 'doctor':
                 phase = 'doctor'
                 installer.preflight()
                 write('Connection and basic requirements passed. This does not certify hardware compatibility.')
                 write.raw(json.dumps(installer.status(), indent=2))
                 if args.report:
-                    write.heading('Diagnostic report')
-                    write.raw('  ' + str(diagnostics.create_report(store, args.command, profile, 'doctor-complete', tv_info=tv_info)))
+                    write.report(diagnostics.create_report(store, args.command, profile, 'doctor-complete', tv_info=tv_info))
             else:
                 phase = args.command
                 result = installer.uninstall(full_project=True) if args.command == 'uninstall' else getattr(installer, args.command)()
@@ -418,6 +417,10 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write('Return to the start screen, choose Set up my TV and confirm reinstallation. In the console, run cytv install.')
                 else:
                     write.raw(json.dumps(result, indent=2))
+            if args.command in ('status', 'doctor', 'restore') and profile['edition'] == 'no-root':
+                pending = store.pending(profile)
+                if pending and pending.get('action') == 'uninstall':
+                    write.recovery(profile)
         return 0
     except (EOFError, KeyboardInterrupt, StopIteration):
         write('Cancelled. Installation has not started.' if args.command == 'install' and phase in ('pair-tv', 'read-inventory', 'prepare-payload', 'select-tv', 'select-edition', 'inspect-tv', 'ssh-connect', 'inspect-installation')

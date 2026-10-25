@@ -440,7 +440,12 @@ print('CYTV_UPDATER_VERIFIED')
         can_resume = False
         if pending and pending.get('action') == 'enable-system-updates':
             report = self.system_updater_cleanup('status')
-            if report.get('present') is True and report.get('bootstrap_complete') is True and report.get('disabled') is False:
+            if report.get('present') is False:
+                # The root helper also proves no owned bootstrap process can
+                # still create state or submit an installer operation.
+                self.store.finish(self.profile)
+                reconciled = 'system-updater-not-started'
+            elif report.get('present') is True and report.get('bootstrap_complete') is True and report.get('disabled') is False:
                 self.store.finish(self.profile)
                 reconciled = 'system-updater-bootstrap-verified'
             return {'device': {'system_updater': report}, 'pending': self.store.pending(self.profile),

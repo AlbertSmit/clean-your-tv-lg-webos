@@ -48,8 +48,11 @@ def processes(code,proc=Path('/proc')):
         if not args:continue
         executable=Path(args[0]).name
         worker=False;match=False
-        if executable in ('python3','python3.9','python3.10','python3.11','python3.12','python3.13','python3.14') and len(args)>=3 and args[1]==str(code/'run-system-updater.py'):
-            match=True;worker=args[2]=='worker'
+        if executable in ('python3','python3.9','python3.10','python3.11','python3.12','python3.13','python3.14') and len(args)>=3:
+            if args[1]==str(code/'run-system-updater.py'):
+                match=True;worker=args[2]=='worker'
+            elif re.fullmatch(r'/tmp/cytv-system-updater-[0-9a-f]{32}/(?:(?:system-updater|bundle)/)?setup-system-updater\.py',args[1]) and '--device' in args[2:] and '--apply' in args[2:]:
+                match=True;worker=True
         if executable in ('sh','bash','dash') and len(args)>=2 and args[1]==str(code.parent/'run-service'):match=True
         if executable in ('node','nodejs'):
             match=(len(args)>=2 and args[1]==str(code/'system_updater/policy.js')) or (str(code) in args and '/usr/palm/services/jsservicelauncher/bootstrap-node.js' in args)
@@ -104,7 +107,9 @@ def operate(action,state=STATE,base=Path('/var/luna-service2-dev'),hook=Path('/v
     paths.update(hook=hook,manifest=base/'manifests.d'/(APP+'.json'),app_role=base/'roles.d'/(APP+'.app.json'),app_client=base/'client-permissions.d'/(APP+'.app.json'))
     package_paths=[installed/kind/name for kind,name in (('applications',APP),('services',SERVICE),('packages',APP))]
     if not os.path.lexists(state):
-        if any(os.path.lexists(p) for p in [*paths.values(),*package_paths]) or processes(state/'code',proc):raise ValueError('Supervisor artifacts exist without ownership state')
+        active=processes(state/'code',proc)
+        if any(p[2] for p in active):raise ValueError('Supervisor bootstrap or worker is active; retry status after it exits')
+        if any(os.path.lexists(p) for p in [*paths.values(),*package_paths]) or active:raise ValueError('Supervisor artifacts exist without ownership state')
         return {'present':False}
     directory(state);locks=[]
     def locked(create=False):

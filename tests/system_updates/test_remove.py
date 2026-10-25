@@ -131,3 +131,25 @@ class RemovalTests(unittest.TestCase):
             namespace['operate']('disable',**args);self.assertEqual(api.read_text(),'original')
             api.unlink()
             self.assertTrue(namespace['operate']('archive',**args)['removed'])
+
+    def test_absent_status_refuses_exact_device_bootstrap_until_it_exits(self):
+        for middle in ('','system-updater/','bundle/'):
+            with self.subTest(middle=middle),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp).resolve();state=root/'state';base=root/'bus';base.mkdir();installed=root/'apps';installed.mkdir();proc=root/'proc';proc.mkdir()
+                args=dict(state=state,base=base,hook=root/'boot',installed=installed,proc=proc)
+                process=proc/'321';process.mkdir()
+                script='/tmp/cytv-system-updater-'+'a'*32+'/'+middle+'setup-system-updater.py'
+                argv=['/usr/bin/python3',script,'--bundle','/tmp/bundle','--edition','root','--device','--apply']
+                (process/'cmdline').write_bytes(b'\0'.join(a.encode() for a in argv)+b'\0');(process/'stat').write_text('321 (python) '+ ' '.join(['0']*19+['9876']))
+                self.assertEqual(namespace['processes'](state/'code',proc),[(321,'9876',True)])
+                with self.assertRaisesRegex(ValueError,'bootstrap|worker'):namespace['operate']('status',**args)
+                (process/'cmdline').unlink();(process/'stat').unlink();process.rmdir()
+                self.assertEqual(namespace['operate']('status',**args),{'present':False})
+
+    def test_unrelated_or_preview_bootstrap_arguments_are_not_owned_workers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();proc=root/'proc';proc.mkdir();code=root/'state/code'
+            for pid,script,flags in ((201,'/tmp/cytv-system-updater-'+'a'*31+'/setup-system-updater.py',['--device','--apply']), (202,'/tmp/cytv-system-updater-'+'a'*32+'/other.py',['--device','--apply']), (203,'/tmp/cytv-system-updater-'+'a'*32+'/setup-system-updater.py',['--device'])):
+                process=proc/str(pid);process.mkdir();argv=['/usr/bin/python3',script]+flags
+                (process/'cmdline').write_bytes(b'\0'.join(a.encode() for a in argv)+b'\0');(process/'stat').write_text(str(pid)+' (python) '+ ' '.join(['0']*19+['1234']))
+            self.assertEqual(namespace['processes'](code,proc),[])

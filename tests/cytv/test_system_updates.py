@@ -86,3 +86,12 @@ class SystemBootstrapTests(unittest.TestCase):
                 self.assertEqual(result['reconciled'],'system-updater-bootstrap-verified' if complete else None)
                 self.assertEqual(self.store.pending(self.profile) is None,complete)
                 if not complete:self.store.finish(self.profile)
+
+    def test_verified_not_started_bootstrap_releases_local_receipt(self):
+        from unittest.mock import MagicMock
+        self.store.begin(self.profile,'enable-system-updates',stage='setup')
+        inst=self.installer(Remote())
+        inst.system_updater_cleanup=MagicMock(return_value={'present':False})
+        result=inst.status()
+        self.assertEqual(result['reconciled'],'system-updater-not-started')
+        self.assertIsNone(self.store.pending(self.profile))

@@ -22,6 +22,11 @@
         51
       ],
       "summary": "Retain safe Luna rejection metadata in installer diagnostics"
+    },
+    {
+      "pr": 63,
+      "issues": [],
+      "summary": "Add Root control for LG firmware update blocking"
     }
   ],
   "excluded": [],

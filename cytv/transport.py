@@ -43,13 +43,13 @@ class JsonReplies:
         return result
 
 
-def terminal_reply(reply, terminal=None):
+def terminal_reply(reply, terminal=None, uri=None):
     details = reply.get('details', {})
     if not isinstance(details, dict) or reply.get('returnValue') is False or 'errorCode' in reply or 'errorCode' in details:
-        raise TVRejected('TV rejected the operation. Run cytv doctor; no automatic retry was attempted.')
+        raise TVRejected('TV rejected the operation. Run cytv doctor; no automatic retry was attempted.', reply, uri)
     status = str(details.get('state', '')).lower()
     if 'fail' in status or 'error' in status:
-        raise TVRejected('TV package operation failed. Run cytv status before retrying.')
+        raise TVRejected('TV package operation failed. Run cytv status before retrying.', reply, uri)
     if terminal:
         return status in (terminal, 'success')
     return reply.get('returnValue') is True
@@ -379,7 +379,7 @@ class SSH:
             # On the tested TV luna-send exits before replying if stdin receives EOF.
             for chunk in self.chunks(channel, timeout):
                 for reply in parser.feed(chunk):
-                    if terminal_reply(reply, terminal):
+                    if terminal_reply(reply, terminal, uri):
                         return reply
             raise UserError('TV command ended without a confirmed result. Run cytv status.')
         finally:

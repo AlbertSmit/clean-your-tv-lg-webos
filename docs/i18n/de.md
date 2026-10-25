@@ -4,9 +4,9 @@ No-root und Root sind gleichwertige Optionen für unterschiedliche TV-Konfigurat
 
 ## Voraussetzungen
 
-Diese Anleitung beschreibt **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Die Links `releases/latest/download` liefern die veröffentlichte stabile Version. Siehe [Installation](../INSTALL.md) und [Versionshinweise](../RELEASE-1.1.0.md).
+Diese Anleitung beschreibt **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Die Links `releases/latest/download` liefern die veröffentlichte stabile Version. Siehe [Installation](../INSTALL.md) und [Versionshinweise](../RELEASE-1.2.0.md).
 
-Die Version enthält cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater und Root Updater **0.2.0**, Android **0.2.0-preview** (Versionscode **9**) und System-Updater-Supervisor **1.0.0** (Protokoll **1**). Dies sind die Komponenten von v1.1.0.
+Die Version enthält cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater und Root Updater **0.2.1**, Android **0.2.1-preview** (Versionscode **10**) und System-Updater-Supervisor **1.0.0** (Protokoll **1**). Dies sind die Komponenten von v1.2.0.
 
 Root 0.2.0, Root Updater 0.2.0 und Supervisor 1.0.0 wurden auf OLED55C3RLA / Firmware 43.21.71 / webOS 11.2.0 geprüft (`d344d92`, Produktinhalt identisch mit `4b66951`). Fernbedienung, dreifaches Home mit Wiederaufnahme, Standby/Aufwachen mit 70 Sekunden geöffnetem Emby, Versionsmenüs und verständliche Meldung bei nicht verfügbarem Feed bestanden. Echter Kaltstart, Helper 0.6.19 am TV, UK6540PTD und vollständiges signiertes Systemupdate/Rollback sind ungetestet. Die stabile Veröffentlichung akzeptiert diese begrenzten Nachweise; andere Modelle sind nicht validiert.
 
@@ -113,3 +113,15 @@ Home Helper zeigt beim Öffnen seinen Zweck und Status. Der Start eines gestoppt
 Zeigt Root direkt nach der Supervisor-Einrichtung `Denied methods call status`, Home Root einmal schließen und erneut öffnen, dann Updates prüfen. Bei anhaltendem Fehler Diagnose und Wiederherstellungsdaten aufbewahren.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+1.2.0 (#51): Nach einer Paket-Ablehnung durch den TV enthält der Diagnosebericht nur die Vorgangskategorie, begrenzte numerische Fehler-/Statuscodes, einen freigegebenen Paketstatus und ein boolesches Ergebnis. Roher TV-Fehlertext, Pfade und App-IDs bleiben ausgeschlossen. Vor dem Teilen prüfen; keine automatische Wiederholung. Der Installationsfehler auf UN70006LA ist noch nicht als behoben bestätigt.
+
+1.2.0 (#59): Wenn der Helper-Status nicht geprüft werden kann, bleibt **Helper starten** mit Bestätigung verfügbar. Das Öffnen der Kachel startet Helper nicht neu und hebt keinen Notstopp auf. Die Home-Tasteneinstellungen benötigen eine antwortende Steuerung.
+
+1.2.0 (#55): Root prüft die Migrationsdaten vor der Installation. Eine vor der Provisionierung unterbrochene Installation kann ohne einen noch nicht erstellten LS2-Snapshot entfernt werden; ein geprüfter Beleg bleibt für die normale cytv-Archivierung und Neuinstallation erhalten. Später fehlende Snapshots oder widersprüchliche Daten stoppen die Bereinigung weiterhin. Dies erfordert den neuen Treiber; der Startfehler des Recovery-Dienstes auf OLED Flex bleibt ungelöst.
+
+## LG-Firmware-Sperre in 1.2.0
+
+Nur Root: Home-Einstellungen → LG-Firmware-Updates ändert die vorhandene Homebrew-Channel-Einstellung. Dies betrifft auch Firmware-Sicherheitsupdates; Clean Your TV wird separat aktualisiert. Beide Richtungen erfordern einen echten TV-Neustart; Standby reicht nicht aus. Der Schalter zeigt die gespeicherte Einstellung, keine geprüfte aktive Sperre. Manche TVs prüfen vor Beginn der Sperre; Hinweise können bleiben und eine Router-Sperre kann nötig sein. Homebrew behält die Einstellung nach Entfernung oder Rollback von CYTV. Bei fehlender Verfügbarkeit oder Bestätigung Homebrew prüfen und Status aktualisieren. Den Umfang der TV-Prüfung beschreibt der Abnahmebericht.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

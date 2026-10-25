@@ -4,9 +4,9 @@ No-root e Root são opções equivalentes para diferentes configurações da TV.
 
 ## Requisitos
 
-Este guia descreve **[v1.1.0 estável](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Os links `releases/latest/download` entregam a versão estável publicada. Veja [instalação](../INSTALL.md) e [notas da versão](../RELEASE-1.1.0.md).
+Este guia descreve **[v1.2.0 estável](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Os links `releases/latest/download` entregam a versão estável publicada. Veja [instalação](../INSTALL.md) e [notas da versão](../RELEASE-1.2.0.md).
 
-Versões da publicação: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater e Root Updater **0.2.0**, Android **0.2.0-preview** (código **9**), supervisor System Updater **1.0.0**, protocolo **1**.
+Versões da publicação: cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root **0.3.0**, Home Updater e Root Updater **0.2.1**, Android **0.2.1-preview** (código **10**), supervisor System Updater **1.0.0**, protocolo **1**.
 
 Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois, o computador pode ficar desligado. A compatibilidade depende do modelo, firmware e controle remoto; Root ainda tem testes em hardware pendentes.
 
@@ -103,3 +103,15 @@ No-root: Configurações Home → Modo de desenvolvedor reúne renovação Beta,
 Documentação técnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [instalação manual](../MANUAL_INSTALL.md), [recuperação](../RECOVERY.md), [edições](../EDITIONS.md), [atualizações](../UPDATES.md).
 
 Se Root mostrar `Denied methods call status` logo após preparar o supervisor, feche e reabra Home Root uma vez e verifique as atualizações novamente. Se persistir, guarde o diagnóstico e o estado de recuperação.
+
+1.2.0 (#51): após a TV rejeitar um pacote, o relatório JSON preserva apenas a categoria da operação, códigos numéricos limitados, um estado de pacote permitido e um resultado booleano. Exclui o texto bruto do erro da TV, caminhos e IDs de aplicativos. Revise antes de compartilhar; não há nova tentativa automática e a falha de instalação no UN70006LA ainda não foi confirmada como corrigida.
+
+1.2.0 (#59): se o estado do Helper não puder ser verificado, **Iniciar Helper** continua disponível com confirmação. Abrir o bloco não reinicia o Helper nem cancela uma parada de emergência. Os ajustes de Home exigem que o controle responda.
+
+1.2.0 (#55): o Root valida a migração antes de instalar. Uma instalação interrompida antes do provisionamento pode ser removida sem um snapshot LS2 que nunca foi criado; um registro verificado é preservado para o arquivamento e a reinstalação normais do cytv. Snapshots ausentes em etapas posteriores ou evidências conflitantes ainda bloqueiam a limpeza. Exige o novo driver; a falha ao iniciar o serviço de recuperação no OLED Flex continua sem solução.
+
+## Bloqueio de firmware LG no 1.2.0
+
+Somente Root: Configurações do Home → Atualizações de firmware da LG altera a configuração existente do Homebrew Channel. Inclui atualizações de segurança do firmware; as do Clean Your TV são separadas. Ambas as alterações exigem reiniciar a TV de verdade; o modo de espera não basta. O botão mostra a configuração salva, não um bloqueio ativo verificado. Algumas TVs verificam antes do bloqueio; os avisos podem continuar e pode ser necessário bloquear no roteador. O Homebrew mantém a configuração após remover ou reverter o CYTV. Se indisponível ou não confirmado, verifique o Homebrew e atualize o status. Veja o alcance dos testes no registro de aceitação.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

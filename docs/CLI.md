@@ -1,6 +1,6 @@
 # cytv standalone installer
 
-**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -293,6 +293,17 @@ desktop OS/architecture, edition, action, failed phase, pending action/stage and
 stack **file/function/line locations**. It excludes exception text, source lines,
 locals, addresses, identity paths, credentials, app lists, environment and raw TV
 logs. No report is submitted automatically.
+
+Since 1.2.0 (#51): a definite Luna rejection adds a `luna` object with a fixed
+operation category (`package-install`, `package-remove`, `package-status` or
+`luna-call`), signed 32-bit numeric `error_code`, `details_error_code` and
+`status_value` fields, a boolean `return_value`, and an allowlisted package
+`state`. Missing/invalid numbers and results are `null`; unrecognized states are
+`unknown`. Decimal numeric strings are normalized to numbers. Raw TV error text,
+URIs, package IDs, paths and reply bodies are never exported. The existing
+phase (for example `install-helper`) identifies which step failed. This improves
+diagnosis without retrying a failed operation or claiming that issue #51's
+installation failure is fixed.
 
 Root diagnostics report individual requirement results as `pass`, `fail` or
 `unknown` in `tv.root_requirements`. SSH command failures can include a safe

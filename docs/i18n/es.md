@@ -4,9 +4,9 @@ No-root y Root son opciones equivalentes para distintas configuraciones del tele
 
 ## Requisitos
 
-Esta guía describe **[v1.1.0 estable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Los enlaces `releases/latest/download` entregan la versión estable publicada. Consulta [instalación](../INSTALL.md) y [notas de la versión](../RELEASE-1.1.0.md).
+Esta guía describe **[v1.2.0 estable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Los enlaces `releases/latest/download` entregan la versión estable publicada. Consulta [instalación](../INSTALL.md) y [notas de la versión](../RELEASE-1.2.0.md).
 
-La versión incluye cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater y Root Updater **0.2.0**, Android **0.2.0-preview** (código de versión **9**) y el supervisor System Updater **1.0.0** (protocolo **1**). Estos son los componentes de v1.1.0.
+La versión incluye cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater y Root Updater **0.2.1**, Android **0.2.1-preview** (código de versión **10**) y el supervisor System Updater **1.0.0** (protocolo **1**). Estos son los componentes de v1.2.0.
 
 Root 0.2.0, Root Updater 0.2.0 y supervisor 1.0.0 se comprobaron en OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0 (`d344d92`, contenido idéntico a `4b66951`). Pasaron los controles, triple Home y reanudación, reposo/reactivación con Emby abierto durante 70 segundos, menús de versiones y aviso claro de canal no disponible. No se probaron el arranque en frío real, Helper 0.6.19 en TV, UK6540PTD ni actualización/restauración completa del sistema firmada. La publicación estable acepta estas pruebas limitadas; otros modelos no están validados.
 
@@ -113,3 +113,15 @@ Al abrir Home Helper se muestran su función y estado. Iniciar un Helper detenid
 Si Root muestra `Denied methods call status` justo después de preparar el supervisor, cierra y abre Home Root una vez y vuelve a comprobar las actualizaciones. Si persiste, conserva el diagnóstico y los datos de recuperación.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+1.2.0 (#51): tras un rechazo de paquete por la TV, el informe JSON conserva solo la categoría de operación, códigos numéricos limitados, un estado de paquete permitido y un resultado booleano. Excluye el texto de error original, rutas e identificadores de aplicaciones. Revisa el informe antes de compartirlo; no hay reintento automático y no se ha confirmado que el fallo de instalación en UN70006LA esté resuelto.
+
+1.2.0 (#59): si no se puede comprobar el estado de Helper, **Iniciar Helper** sigue disponible con confirmación. Abrir el icono no reinicia Helper ni desactiva una parada de emergencia. Los ajustes de Home requieren que responda el control.
+
+1.2.0 (#55): Root valida la migración antes de instalar. Una instalación interrumpida antes del aprovisionamiento puede eliminarse sin una instantánea LS2 que nunca se creó; conserva un comprobante para el archivado y la reinstalación normales de cytv. La ausencia posterior de instantáneas o los datos contradictorios siguen bloqueando la limpieza. Requiere el nuevo controlador; el fallo de inicio del servicio de recuperación en OLED Flex sigue sin resolverse.
+
+## Bloqueo de firmware LG en 1.2.0
+
+Solo Root: Ajustes de Home → Actualizaciones de firmware de LG cambia el ajuste existente de Homebrew Channel. Incluye actualizaciones de seguridad del firmware; Clean Your TV se actualiza por separado. Ambos cambios requieren reiniciar realmente el TV; el modo de espera no basta. El interruptor muestra el ajuste guardado, no un bloqueo activo verificado. Algunos TV buscan actualizaciones antes del bloqueo; los avisos pueden persistir y puede ser necesario bloquear en el router. Homebrew conserva el ajuste al eliminar CYTV o volver a una versión anterior. Si no está disponible o confirmado, revisa Homebrew y actualiza el estado. Consulta el alcance de las pruebas en el registro de aceptación.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

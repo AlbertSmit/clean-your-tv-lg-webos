@@ -1,6 +1,6 @@
-# CYTV for Android — 0.2.0-preview RC (versionCode 9)
+# CYTV for Android — 0.2.1-preview candidate (versionCode 10)
 
-**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** includes cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root and both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.1.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
+**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** includes cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0** and both edition Updaters **0.2.1**, and Android **0.2.1-preview / code 10**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.2.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 

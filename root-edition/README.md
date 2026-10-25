@@ -5,14 +5,20 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. A computer is needed for installation and recovery tools.
 
-[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0) includes **Root Edition 0.2.0**, **Root Updater 0.2.0** and **System Updater supervisor 1.0.0**. Latest-download links follow the published release.
+[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) includes **Root Edition 0.3.0**, **Root Updater 0.2.1** and **System Updater supervisor 1.0.0**. Latest-download links follow the published release.
 
 Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
 
-See [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md). Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
+See [current acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md). Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
 
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
 [Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)
+
+**Since 1.2.0:** Home settings → LG firmware updates controls Homebrew
+Channel's existing firmware-blocking preference. Changes need a real TV restart;
+the saved switch is not proof of active blocking. This also blocks firmware
+security updates, and Homebrew retains the preference after CYTV removal.
+See [operation, limitations and TV acceptance scope](../docs/LG-FIRMWARE-UPDATES.md).
 
 ## What works on the tested setup
 

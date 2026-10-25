@@ -1,97 +1,34 @@
 {
   "schema": 1,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "changes": [
     {
-      "pr": 36,
-      "issues": [],
-      "summary": "Restore next release candidate creation and simplify workspace layout"
-    },
-    {
-      "pr": 38,
+      "pr": 60,
       "issues": [
-        37
+        59
       ],
-      "summary": "Diagnose individual Root requirements and record safe SSH command exit status; reporter failure in #37 remains under investigation"
+      "summary": "Allow confirmed Helper start when firmware denies status"
     },
     {
-      "pr": 39,
-      "issues": [],
-      "summary": "Fix webOS package installation and TV runtime compatibility"
-    },
-    {
-      "pr": 40,
-      "issues": [],
-      "summary": "Update all TV system components with independent recovery"
-    },
-    {
-      "pr": 42,
+      "pr": 61,
       "issues": [
-        24
+        55
       ],
-      "summary": "Fix Android operation receipts without hard links while preserving unresolved evidence; #24 Android comment only, original unfinished removal remains open"
+      "summary": "Validate Root migration early and recover pre-provision removal; OLED Flex recovery-service startup remains unresolved"
     },
     {
-      "pr": 43,
+      "pr": 62,
       "issues": [
-        37
+        51
       ],
-      "summary": "Automatically supply verified optional ARMv7 Python for Root setup, recovery and updater bindings without embedding runtime bytes in ordinary installers; UK6540PTD acceptance pending"
+      "summary": "Retain safe Luna rejection metadata in installer diagnostics; UN70006LA installation refusal remains unresolved"
     },
     {
-      "pr": 44,
+      "pr": 63,
       "issues": [],
-      "summary": "Prepare 1.1.0 versions and draft installers for device feedback"
-    },
-    {
-      "pr": 45,
-      "issues": [],
-      "summary": "Limit TV-only POSIX integration fixtures to compatible test hosts while retaining portable Windows installer checks"
-    },
-    {
-      "pr": 46,
-      "issues": [],
-      "summary": "Require a documentation pass for every release candidate, including affected guides, translations, commands, links and recorded verification"
-    },
-    {
-      "pr": 48,
-      "issues": [],
-      "summary": "Refresh 1.1.0 candidate guides and all ten translations, clarify legacy Root migration boundaries and provide staged macOS/TV test instructions with a dated documentation audit"
-    },
-    {
-      "pr": 49,
-      "issues": [],
-      "summary": "Accept macOS packaged payload root aliases during System Updater setup while retaining interior symlink rejection and file hash validation"
-    },
-    {
-      "pr": 50,
-      "issues": [],
-      "summary": "Keep user app focus when Root boot recovery becomes ready"
-    },
-    {
-      "pr": 52,
-      "issues": [
-        47,
-        54
-      ],
-      "summary": "Compile Helper app/service for TV Node 0.12.2+ with Babel and local polyfills, compatible WebSocket clients and guarded error logging; fixes Node 0.12 startup (#47) and Node 8.12 ws loading (#54), with original-TV acceptance pending"
-    },
-    {
-      "pr": 53,
-      "issues": [],
-      "summary": "Explain unavailable system releases and preserve recovery state on screen"
-    },
-    {
-      "pr": 56,
-      "issues": [],
-      "summary": "Preserve updater ownership while resuming System Updater removal"
-    },
-    {
-      "pr": 57,
-      "issues": [],
-      "summary": "Finalize stable 1.1.0 release evidence and documentation"
+      "summary": "Add Root control for LG firmware update blocking"
     }
   ],
   "excluded": [],
-  "acceptance": "2026-10-25: maintainer explicitly authorized stable 1.1.0 with limited hardware coverage. LG OLED55C3RLA / firmware43.21.71 / webOS SDK11.2.0 / macOS ARM64: Root0.2.0, RootUpdater0.2.0, SystemUpdater1.0.0; navigation/app/Home/Back/volume/mute/emergency exit/resume/standby-wake/menus confirmed. Product source d344d92 (merged4b66951); supervised interrupted-removal recovery and fresh installation completed. No true cold boot, physical Helper0.6.19/rollback, complete signed system upgrade/rollback, Android-device or UK6540PTD optional-Python acceptance claimed. Exact Helper transition is hash-pinned with explicit risk acceptance. See docs/RELEASE-1.1.0-ACCEPTANCE.md."
+  "acceptance": "2026-10-25: maintainer confirmed LG OLED55C3RLA / firmware 43.21.71 and reported all checks normal after Home/Back, triple-Home, standby/restart, rollback and firmware-control acceptance request; directed release. Tested installer/source revision not restated; no exact final-installer or original-reporter compatibility claim. See docs/RELEASE-1.2.0-ACCEPTANCE.md for confirmation, automated checks, verified published 1.1.0 rollback hashes and limitations. Issues #55/#51 remain partial; #59 original-device confirmation outstanding."
 }

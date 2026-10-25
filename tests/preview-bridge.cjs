@@ -31,6 +31,12 @@ function call(method, payload = {}, service = 'com.cleanyourtv.root.preview.serv
   assert.equal(previewOffer.result.canInstall,false);
   assert(previewOffer.result.components.some(component=>component.name==='root-infrastructure'));
   assert.equal((await call('install',{edition:'root'},supervisor)).returnValue,false);
+  const homebrew='org.webosbrew.hbchannel.service';
+  assert.equal((await call('getConfiguration',{},homebrew)).blockUpdates,false);
+  assert.equal((await call('setConfiguration',{blockUpdates:true},homebrew)).blockUpdates,true);
+  assert.equal((await call('getConfiguration',{},homebrew)).blockUpdates,true);
+  assert.equal((await call('setConfiguration',{blockUpdates:'false'},homebrew)).returnValue,false);
+  assert.equal((await call('setConfiguration',{blockUpdates:false,failsafe:false},homebrew)).returnValue,false);
   let reply = await call('status');
   assert.equal(reply.result.result.intent.phase, 'disabled');
   await call('enable');

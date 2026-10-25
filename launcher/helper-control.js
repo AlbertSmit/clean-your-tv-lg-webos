@@ -10,7 +10,8 @@
  function close(){generation++;panel.hidden=true;if(previous&&previous.focus)previous.focus();}
  function refresh(){var request=++generation;buttons[2].hidden=true;if(index===2)focus(0);buttons[1].disabled=true;status.textContent=t('Checking Home control…');
   rpc('luna://com.local.nativehome.service/status',{},function(r){if(request!==generation||panel.hidden)return;
-   if(!r||r.returnValue!==true||(r.running!==undefined&&typeof r.running!=='boolean')){status.textContent=t('Helper is unavailable. Reinstall the complete Home package from your computer.');return;}
+   // Some firmware denies cross-package status. Only a confirmed action may start Helper.
+   if(!r||r.returnValue!==true||(r.running!==undefined&&typeof r.running!=='boolean')){status.textContent=t('Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.');buttons[2].hidden=false;return;}
    if(r.running===false||r.blocked){status.textContent=t(r.blocked?'Helper was stopped for safety. Start it only when you are ready to use Home control again.':'Helper is stopped. Start it to use the Home button and return from apps.');buttons[2].hidden=false;return;}
    // Published Helper 0.6.17 omits running; homeStatus confirms control is responding.
    rpc('luna://com.gathin.tvhome.renewal/homeStatus',{},function(s){if(request!==generation||panel.hidden)return;

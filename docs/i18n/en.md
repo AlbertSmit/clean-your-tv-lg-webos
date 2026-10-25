@@ -4,9 +4,9 @@ No-root and Root are equal options for different TV setups. Choose No-root for L
 
 ## Before installation
 
-This guide covers **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.1.0.md).
+This guide covers **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.2.0.md).
 
-The release contains cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater and Root Updater **0.2.0**, Android **0.2.0-preview** (version code **9**) and System Updater supervisor **1.0.0** (protocol **1**). These are the v1.1.0 release components.
+The release contains cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater and Root Updater **0.2.1**, Android **0.2.1-preview** (version code **10**) and System Updater supervisor **1.0.0** (protocol **1**). These are the v1.2.0 release components.
 
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
@@ -109,3 +109,15 @@ No-root: open Home settings → Developer Mode for auto-renewal, session checks 
 Opening Home Helper shows its purpose and current state. Starting a stopped Helper requires confirmation. Home Updater and Root Updater explain recovery; regular updates are in Home settings. Restore is shown only when a saved version is available and asks for confirmation before replacing Home and its settings.
 
 If Root shows `Denied methods call status` immediately after supervisor bootstrap, close and reopen Home Root once, then check updates again. If it persists, retain diagnostics and recovery state.
+
+1.2.0 (#51): after a TV package rejection, the diagnostic JSON retains only the operation category, bounded numeric error/status codes, an allowlisted package state and a boolean result. It excludes raw TV error text, paths and app IDs. Review the report before sharing; installation is not automatically retried, and the UN70006LA installation failure is not yet confirmed fixed.
+
+1.2.0 (#59): if Helper status cannot be checked, **Start Helper** remains available with confirmation. Opening the tile does not restart Helper or clear an emergency stop. Home button settings require a responding controller.
+
+1.2.0 (#55): Root validates migration data before installing. Interrupted cleanup before provisioning can remove the package without a nonexistent LS2 snapshot, retaining a verified receipt for the normal cytv archive/reinstall flow. Later missing snapshots or conflicting evidence still stop cleanup. These changes require the new driver; the OLED Flex recovery-service startup failure remains unresolved.
+
+## LG firmware blocking in 1.2.0
+
+Root only: Home settings → LG firmware updates changes the existing Homebrew Channel preference. This includes firmware security updates; Clean Your TV updates remain separate. A real TV restart is needed in both directions; standby is not enough. The switch shows the saved preference, not verified active blocking. Some TVs check before blocking starts, so prompts may remain and router blocking may be needed. Homebrew keeps the preference after CYTV removal or rollback. If unavailable or unconfirmed, check Homebrew and refresh status. See the acceptance record for the scope of TV checks.
+
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

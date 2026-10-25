@@ -31,7 +31,8 @@ def reconcile(driver, action, busy=False):
                 return {'returnValue': False, 'reason': 'unknown'}
         return {'returnValue': True, 'ready': True}
     driver.verify_removed(evidence)
-    driver.write_stage('uninstalled-state-retained')
+    proof = {'provisioning_not_started': True} if journal.get('provisioning_not_started') is True else {}
+    driver.write_stage('uninstalled-state-retained', **proof)
     return {'returnValue': True, 'removed': driver.APP, 'state_retained': str(driver.STATE)}
 
 if __name__ == '__main__':

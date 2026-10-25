@@ -1874,3 +1874,35 @@ HomeI18n.add({
     "Restore previous system": "Восстановить предыдущую систему"
   }
 });
+HomeI18n.add({
+  "en": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again."
+  },
+  "de": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Der Helper-Status konnte auf diesem Fernseher nicht geprüft werden. Starten Sie Helper erst, wenn Sie die Home-Steuerung wieder verwenden möchten."
+  },
+  "es": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "No se pudo comprobar el estado de Helper en este televisor. Inicia Helper solo cuando quieras volver a usar el control de Home."
+  },
+  "pt-BR": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Não foi possível verificar o estado do Helper nesta TV. Inicie o Helper somente quando quiser usar o controle de Home novamente."
+  },
+  "fr": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Impossible de vérifier l’état de Helper sur ce téléviseur. Démarrez Helper uniquement lorsque vous souhaitez réutiliser le contrôle de Home."
+  },
+  "it": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Non è stato possibile verificare lo stato di Helper su questa TV. Avvia Helper solo quando vuoi usare di nuovo il controllo di Home."
+  },
+  "ko": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "이 TV에서 Helper 상태를 확인할 수 없습니다. Home 제어를 다시 사용할 준비가 되었을 때만 Helper를 시작하세요."
+  },
+  "hi": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "इस टीवी पर Helper की स्थिति की जाँच नहीं हो सकी। Home नियंत्रण फिर से इस्तेमाल करने के लिए तैयार होने पर ही Helper शुरू करें।"
+  },
+  "pl": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Nie udało się sprawdzić stanu Helper na tym telewizorze. Uruchom Helper dopiero, gdy zechcesz ponownie korzystać ze sterowania Home."
+  },
+  "ru": {
+    "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Не удалось проверить состояние Helper на этом телевизоре. Запускайте Helper, только когда будете готовы снова использовать управление Home."
+  }
+});

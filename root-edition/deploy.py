@@ -128,15 +128,23 @@ def restore(run=command):
     return reply
 
 
-def migrate_packaged_home():
+def migration_source():
     import personalize
     profile=INSTALLED/'usr/palm/services/com.cleanyourtv.updater.service/state/profile.json'
     if os.path.lexists(profile):
         files=personalize.from_profile(profile)
         source='validated updater profile; browser storage excluded'
     else:
-        files=personalize.prepare(INSTALLED / 'usr/palm/applications/com.gathin.tvhome')
+        home=INSTALLED / 'usr/palm/applications/com.gathin.tvhome'
+        if not os.path.lexists(home):
+            raise ValueError('Home migration source is unavailable; omit --migrate-packaged-home or prepare ordinary Home first')
+        files=personalize.prepare(home)
         source='packaged com.gathin.tvhome only; browser storage excluded'
+    return files,source
+
+
+def migrate_packaged_home(prepared=None):
+    files,source=migration_source() if prepared is None else prepared
     destination = INSTALLED / ('usr/palm/applications/' + APP)
     write_stage('personalization-starting')
     for name, data in files.items():
@@ -180,6 +188,8 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
     if STATE.exists() or STATE.is_symlink() or any(p.exists() or p.is_symlink() for p in installed_paths()):
         raise FileExistsError('Candidate or state already exists; inspect and recover, never retry blindly')
     manifest = verify_bundle(bundle)
+    # Validate and retain the exact migration bytes before any install mutation.
+    prepared = migration_source() if migrate else None
     STATE.mkdir(mode=0o700, parents=False)
     write_stage('prepared', package=manifest['package'])
     (STATE / 'runtime').mkdir(mode=0o700)
@@ -199,7 +209,7 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
     verify_payload(release)
     write_stage('payload-verified')
     if migrate:
-        migrate_packaged_home()
+        migrate_packaged_home(prepared)
     for step in ('apply', 'refresh', 'finalize'):
         write_stage('provision-' + step + '-starting')
         run([python_command(STATE), str(STATE / 'provision.py'), step])
@@ -232,22 +242,53 @@ def verify_removed(evidence):
 
 
 def uninstall(run=command):
+    journal = {}
     if (STATE / 'deploy.json').exists():
-        previous = json.loads(checked_file(STATE, 'deploy.json')).get('stage')
+        journal = json.loads(checked_file(STATE, 'deploy.json'))
+        previous = journal.get('stage')
         if previous in ('remove-submitting', 'remove-observed', 'uninstalled-state-retained'):
             raise OutcomeUnknown('Removal already submitted or completed; inspect retained evidence, never resubmit blindly')
+    # apply writes its snapshot before changing any LS2 registrations. Only an
+    # exact pre-apply journal can authorize removal without that snapshot.
+    early = journal.get('app') == APP and (journal.get('stage') in (
+        'payload-verified', 'personalization-starting', 'personalization-complete', 'provision-apply-starting')
+        or (journal.get('stage') in ('uninstall-restored', 'uninstall-refresh-complete')
+            and journal.get('provisioning_not_started') is True))
+    snapshot = STATE/'ls2-provision-snapshot.json'
+    if early and (snapshot.is_symlink() or (not os.path.lexists(snapshot) and any(
+            os.path.lexists(STATE/name) for name in ('recovery-provision.pending.json','recovery-provision.json')))):
+        raise ValueError('Conflicting provisioning evidence; retain state for recovery')
+    if early and not os.path.lexists(snapshot):
+        import fcntl
+        fd = os.open(STATE/'provision.lock', os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX|fcntl.LOCK_NB)
+            if os.path.lexists(snapshot):
+                raise ValueError('Provisioning changed; inspect retained state before retrying cleanup')
+            return _remove_root(run, {'provisioning_not_started':True})
+        finally:
+            os.close(fd)
+    return _remove_root(run, {})
+
+
+def _remove_root(run, proof):
     restore(run)
-    write_stage('uninstall-restored')
-    for step in ('rollback', 'refresh'):
+    if proof and any(os.path.lexists(STATE/name) for name in (
+            'ls2-provision-snapshot.json','recovery-provision.pending.json','recovery-provision.json')):
+        raise ValueError('Conflicting provisioning evidence; retain state for recovery')
+    write_stage('uninstall-restored', **proof)
+    # No overrides were installed on the pre-provision path. Package removal
+    # handles its original registrations; neither rollback nor a scan is needed.
+    for step in (() if proof else ('rollback', 'refresh')):
         run([python_command(STATE), str(STATE / 'provision.py'), step])
-        write_stage('uninstall-' + step + '-complete')
+        write_stage('uninstall-' + step + '-complete', **proof)
     # Removal needs a terminal subscribed result, never just request acceptance.
     from observed_install import remove
-    write_stage('remove-submitting')
+    write_stage('remove-submitting', **proof)
     evidence = remove(APP, timeout=120)
-    write_stage('remove-observed', evidence=evidence)
+    write_stage('remove-observed', evidence=evidence, **proof)
     verify_removed(evidence)
-    write_stage('uninstalled-state-retained')
+    write_stage('uninstalled-state-retained', **proof)
     return {'returnValue': True, 'removed': APP, 'state_retained': str(STATE)}
 
 

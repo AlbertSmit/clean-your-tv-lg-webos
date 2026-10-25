@@ -72,6 +72,12 @@
 .settings-main .home-visit-hint{margin-top:14px}
 .settings-main .settings-links{display:flex}
 .settings-main .settings-links button{width:auto;flex:1}
+.settings-firmware button{width:100%;text-align:left;margin-top:12px}
+.root-firmware .home-routing-actions{flex-wrap:wrap}
+.root-firmware .home-routing-actions .home-routing-switch{flex-basis:100%;margin:0 0 18px}
+.root-firmware .home-routing-actions>:not(:first-child){margin-left:0;margin-right:18px}
+.root-firmware .settings-status{min-height:32px}
+.root-firmware .root-settings-card{width:1120px}
 .settings-developer{margin-top:20px}
 .settings-developer button{display:flex;align-items:center;width:100%;text-align:left;background:transparent;border-color:#626a76}
 .settings-beta{font-size:19px;color:#efd49a}

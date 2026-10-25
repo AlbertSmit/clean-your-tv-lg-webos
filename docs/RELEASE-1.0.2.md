@@ -1,6 +1,6 @@
 # v1.0.2 — Home recovery and installer diagnostics
 
-Release candidate. Publication follows successful checks and signed-feed verification.
+Publication requires successful checks and signed-feed verification.
 The operator confirmed successful RC checks and authorized release on 2026-10-25.
 
 ## Components
@@ -63,8 +63,11 @@ build hosts. The older permission-only transition check remains in place.
 The approval records the operator's acceptance and its limits; any changed
 runtime, installation control or baseline stops publication.
 
-Run `PATH="$PWD/.venv-cytv/bin:$PATH" bash scripts/test.sh`, then require all five
-trusted platform builds and Linux/macOS checks on the exact finalized candidate.
+Local TV JS/C/compiler checks, 461 Root, 62 setup, 225 installer, 19 Android and
+2 preview Python tests passed, along with preview bridge and 10 release-feed tests.
+The public TV payload built and verified successfully. An independent release-code
+review found no blocking issues. Trusted builds for all five platforms and
+Linux/macOS checks must pass on the exact finalized candidate.
 Do not treat source tests as artifact or physical-TV acceptance.
 
 ## Notifications

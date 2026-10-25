@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.2 — Candidate (unpublished)
+## v1.0.2 — Home recovery and installer diagnostics
 
 - Fix Home return animation, focus, AirPlay opening and startup app refresh (#25/#26).
 - Recover Helper monitoring/startup and late LG Home takeover; add guided one-report diagnostics (#29/#31, issue #12).

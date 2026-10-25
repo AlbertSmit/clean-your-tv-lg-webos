@@ -19,6 +19,7 @@ for test in tests/i18n/*.cjs; do
 done
 node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
+node tests/tls-ca.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
 node tests/helper-entry.cjs

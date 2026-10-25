@@ -16,7 +16,7 @@ from .errors import TVConnectionError, DeveloperKeyError, UserError, TVCommandEr
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
 KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
 ROOT_REQUIREMENTS = ('root-user', 'python3', 'luna-send', 'apps-directory',
-                     'luna-services-directory', 'python-json', 'python-fcntl')
+                     'luna-services-directory', 'python-json', 'python-fcntl', 'python-version', 'node-version')
 
 
 def create_report(store, action, profile, phase, error=None, tv_info=None):

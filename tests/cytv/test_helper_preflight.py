@@ -27,6 +27,7 @@ class HelperPreflightTests(unittest.TestCase):
             (directory / 'cmdline').write_bytes(args)
         class Remote:
             def run(_, command):
+                if 'CYTV_NODE_READY' in command: return 'CYTV_NODE_READY'
                 if command == 'uname -m': return 'armv7l'
                 if command.startswith('LC_ALL=C od '):
                     return '127 69 76 70 1 1 1 0 0 0 0 0 0 0 0 0 2 0 40 0'

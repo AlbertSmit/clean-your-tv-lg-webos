@@ -12,6 +12,7 @@ import sys
 import preview
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.tv_web_build import compile_web
+from cytv.package import IPK_MTIME
 
 
 SERVICE_ID = 'com.cleanyourtv.root.preview.service'
@@ -28,6 +29,7 @@ def tgz(files, executables=()):
                     or any(part in ('', '.', '..') for part in name.split('/'))):
                 raise ValueError('Unsafe archive path: ' + repr(name))
             member = tarfile.TarInfo(name)
+            member.mtime = IPK_MTIME
             member.size = len(data)
             member.mode = 0o755 if name in executables else 0o644
             archive.addfile(member, io.BytesIO(data))

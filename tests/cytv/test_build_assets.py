@@ -5,6 +5,21 @@ import unittest
 
 
 class BuildAssetsTests(unittest.TestCase):
+    def test_https_service_assets_survive_the_public_source_filter(self):
+        import json
+        from cytv import package
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        for folder in ('renewal-service', 'updater-service'):
+            sources = build['tracked_files'](folder)
+            app = {'appinfo.json': json.dumps({'id':'com.test.home','version':'1.0.0','type':'native'}).encode()}
+            files = package.data_files(build['pack_app'](app, sources))
+            prefix = 'usr/palm/services/'+json.loads(sources['services.json'])['id']+'/'
+            bundle = files[prefix+'ca-bundle.crt']
+            self.assertIn(b'-----BEGIN CERTIFICATE-----', bundle)
+            self.assertEqual(bundle, (root/'renewal-service/ca-bundle.crt').read_bytes())
+            self.assertIn(prefix+'ca-LICENSE.txt', files)
+
     def test_installer_bundle_contains_approved_brand_masters(self):
         import tempfile
         root = Path(__file__).resolve().parents[2]

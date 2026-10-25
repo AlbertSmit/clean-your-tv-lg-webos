@@ -78,6 +78,13 @@ fi
 ares-novacom -d "$DEVICE" --getkey
 reply=$(ares-novacom -d "$DEVICE" --run 'echo CYTV_SSH_OK')
 [[ "$reply" == *CYTV_SSH_OK* ]] || { echo 'SSH connection was not confirmed.' >&2; exit 1; }
+tv_node=$(ares-novacom -d "$DEVICE" --run '/usr/bin/node -p "process.versions.node"')
+python3 - "$tv_node" <<'PY'
+import re, sys
+version = sys.argv[1].strip()
+if not re.fullmatch(r'\d+\.\d+\.\d+', version) or int(version.split('.')[0]) < 10:
+    raise SystemExit('Home Helper requires TV Node.js 10+. Installation has not started.')
+PY
 # Generated icons/directories and native executables must be readable/traversable
 # by the TV runtime after packaging. Pairing keys enforce their own private modes.
 umask 022

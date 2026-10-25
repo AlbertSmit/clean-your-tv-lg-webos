@@ -47,7 +47,7 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(parts['debian-binary'], b'2.0\n')
             with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as archive:
                 files = {m.name: archive.extractfile(m).read() for m in archive}
-                self.assertTrue(all(m.isfile() and m.mtime == 0 for m in archive))
+                self.assertTrue(all(m.isfile() and 1577836800 <= m.mtime <= 1767225600 for m in archive))
             prefix = 'usr/palm/applications/com.cleanyourtv.root.preview/'
             self.assertTrue(all(n.startswith(prefix) or n.startswith('usr/palm/services/com.cleanyourtv.root.preview.service/') or n == 'usr/palm/packages/com.cleanyourtv.root.preview/packageinfo.json' for n in files))
             self.assertEqual(json.loads(files[prefix + 'appinfo.json'])['id'], 'com.cleanyourtv.root.preview')
@@ -61,6 +61,7 @@ class BuildTests(unittest.TestCase):
             self.assertNotIn(prefix + 'native-bootstrap.js', files)
             with tarfile.open(fileobj=io.BytesIO(parts['control.tar.gz'])) as archive:
                 self.assertEqual(archive.getnames(), ['control'])
+                self.assertGreaterEqual(archive.getmember('control').mtime, 1577836800)
             release = json.loads((first / 'release.json').read_text())
             self.assertFalse(release['hardware_validated'])
             for name, digest in release['files'].items():

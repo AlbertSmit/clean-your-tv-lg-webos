@@ -1,5 +1,6 @@
 """Run the actual Root requirement probes in a local shell, without a TV."""
 import json
+import shutil
 from pathlib import Path
 import shlex
 import subprocess
@@ -14,7 +15,7 @@ from cytv.transport import SSH
 
 
 REQUIREMENTS = ('root-user', 'python3', 'luna-send', 'apps-directory',
-                'luna-services-directory', 'python-json', 'python-fcntl')
+                'luna-services-directory', 'python-json', 'python-fcntl', 'python-version', 'node-version')
 
 
 class RootPreflightTests(unittest.TestCase):
@@ -38,7 +39,7 @@ class RootPreflightTests(unittest.TestCase):
 
     def remote(self, root, failed=()):
         paths = {name: root / name for name in
-                 ('python3', 'luna-send', 'apps-directory', 'luna-services-directory')}
+                 ('python3', 'luna-send', 'apps-directory', 'luna-services-directory', 'node')}
         for name, path in paths.items():
             if name in failed:
                 continue
@@ -50,11 +51,18 @@ class RootPreflightTests(unittest.TestCase):
                     for module in ('json', 'fcntl'):
                         if 'python-' + module in failed:
                             script += 'case "$*" in *' + module + '*) echo PRIVATE-IMPORT-ERROR >&2; exit 1;; esac\n'
+                    if 'python-version' in failed:
+                        script += 'case "$*" in *version_info*) exec ' + shlex.quote(sys.executable) + ' -c ' + shlex.quote('import sys; sys.version_info=(3,8,10); exec(sys.argv[1])') + ' "$2";; esac\n'
                     script += 'exec ' + shlex.quote(sys.executable) + ' "$@"\n'
+                if name == 'node':
+                    if 'node-version' in failed:
+                        script += 'exec ' + shlex.quote(shutil.which('node')) + ' -e ' + shlex.quote("Object.defineProperty(process.versions,'node',{value:'0.12.0'});") + '"$2"\n'
+                    else:
+                        script += 'exec ' + shlex.quote(shutil.which('node')) + ' "$@"\n'
                 path.write_text(script)
                 path.chmod(0o700)
         replacements = dict(zip(('/usr/bin/python3', '/usr/bin/luna-send',
-                                 '/media/developer/apps', '/var/luna-service2-dev'), paths.values()))
+                                 '/media/developer/apps', '/var/luna-service2-dev', '/usr/bin/node'), paths.values()))
 
         class Remote:
             def run(self, command):
@@ -80,7 +88,7 @@ class RootPreflightTests(unittest.TestCase):
                 expected = dict.fromkeys(REQUIREMENTS, 'pass')
                 expected[failed] = 'fail'
                 if failed == 'python3':
-                    expected.update({'python-json': 'fail', 'python-fcntl': 'fail'})
+                    expected.update({'python-json': 'fail', 'python-fcntl': 'fail', 'python-version': 'fail'})
                 self.assertEqual(info['root_requirements'], expected)
 
     def test_successful_checks_are_preserved(self):

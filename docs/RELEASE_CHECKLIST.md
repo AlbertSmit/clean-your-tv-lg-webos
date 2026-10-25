@@ -1,5 +1,11 @@
 # Release checks
 
+- Complete the [candidate documentation pass](RELEASE-FLOW.md#update-documentation-for-every-candidate)
+  before marking the release PR ready; repeat after scope or version changes.
+- Update affected usage, installation, update/removal, troubleshooting and
+  recovery guides, including translations, commands, links and versions.
+- Record reviewed/updated files, checks and remaining documentation limitations
+  in the release PR. Release notes alone do not complete this check.
 - Run scripts/test.sh and scripts/build.sh.
 - Build from a clean inventory; inspect package contents for credentials and state.
 - Preserve licenses and upstream attribution.

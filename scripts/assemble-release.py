@@ -137,9 +137,10 @@ def verify_android_package(path, report, versions, commit):
     expected = {'schema': 1, 'source_commit': commit, 'versions': versions,
                 'android_version_name': versions['android'], 'android_version_code': versions['android_version_code'],
                 'package': 'com.cleanyourtv.android', 'abi': 'arm64-v8a', 'min_sdk': 24, 'target_sdk': 35,
+                'debuggable': False,
                 'signer_sha256': (ROOT / 'android/preview-certificate.sha256').read_text().strip(),
                 'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest()}
-    if metadata != expected:
+    if metadata != expected or metadata.get('debuggable') is not False:
         raise ValueError('Android APK provenance, version, signer or hash mismatch')
     with zipfile.ZipFile(path) as archive:
         if json.loads(archive.read('assets/cytv-build.json')) != {'schema': 1, 'source_commit': commit, 'versions': versions}:

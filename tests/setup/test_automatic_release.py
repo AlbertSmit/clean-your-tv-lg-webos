@@ -91,14 +91,18 @@ class AutomaticRelease(unittest.TestCase):
             metadata = {'schema': 1, 'source_commit': SHA, 'versions': versions,
                         'android_version_name': versions['android'], 'android_version_code': 4,
                         'package': 'com.cleanyourtv.android', 'abi': 'arm64-v8a', 'min_sdk': 24, 'target_sdk': 35,
+                        'debuggable': False,
                         'signer_sha256': (ROOT / 'android/preview-certificate.sha256').read_text().strip(),
                         'sha256': hashlib.sha256(apk.read_bytes()).hexdigest()}
             report.write_text(json.dumps(metadata))
             self.assertGreater(release.verify_android_package(apk, report, versions, SHA), 0)
-            for key, value in [('source_commit', 'b'*40), ('sha256', '0'*64), ('signer_sha256', '0'*64), ('android_version_code', 3), ('abi', 'x86_64')]:
+            for key, value in [('source_commit', 'b'*40), ('sha256', '0'*64), ('signer_sha256', '0'*64), ('android_version_code', 3), ('abi', 'x86_64'), ('debuggable', True), ('debuggable', 0), ('debuggable', None)]:
                 report.write_text(json.dumps({**metadata, key: value}))
                 with self.subTest(key=key), self.assertRaises(ValueError):
                     release.verify_android_package(apk, report, versions, SHA)
+            report.write_text(json.dumps({key: value for key, value in metadata.items() if key != 'debuggable'}))
+            with self.assertRaises(ValueError):
+                release.verify_android_package(apk, report, versions, SHA)
 
     def test_windows_desktop_rejects_console_binary_and_stale_package(self):
         self.assertTrue(hasattr(release, 'verify_windows_desktop'), 'Windows GUI release verification is missing')

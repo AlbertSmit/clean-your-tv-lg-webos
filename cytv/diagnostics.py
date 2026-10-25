@@ -11,10 +11,12 @@ import uuid
 from . import __version__
 from .state import private_write
 from .terminal import console
-from .errors import TVConnectionError, DeveloperKeyError, UserError
+from .errors import TVConnectionError, DeveloperKeyError, UserError, TVCommandError
 
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
 KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
+ROOT_REQUIREMENTS = ('root-user', 'python3', 'luna-send', 'apps-directory',
+                     'luna-services-directory', 'python-json', 'python-fcntl')
 
 
 def create_report(store, action, profile, phase, error=None, tv_info=None):
@@ -36,6 +38,13 @@ def create_report(store, action, profile, phase, error=None, tv_info=None):
         report['connection'] = {'protocol': 'ssap', 'close_code': error.close_code, 'reason_code': error.reason_code}
     if isinstance(error, DeveloperKeyError):
         report['connection'] = {'protocol': 'developer-key', 'reason_code': error.reason_code}
+    if isinstance(error, TVCommandError):
+        report['ssh_command'] = {'exit_status': error.exit_status}
+    if tv_info and isinstance(tv_info.get('root_requirements'), dict):
+        checks = tv_info['root_requirements']
+        report['tv']['root_requirements'] = {
+            name: checks[name] if checks[name] in ('pass', 'fail', 'unknown') else 'unknown'
+            for name in ROOT_REQUIREMENTS if name in checks}
     for name, allowed in (('kernel_arch', KERNEL_ARCHES),
                           ('userland_abi', ('arm32', 'arm64', 'other', 'unknown'))):
         if tv_info and name in tv_info:

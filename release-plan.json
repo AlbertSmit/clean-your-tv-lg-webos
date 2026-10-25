@@ -16,6 +16,13 @@
       "pr": 29,
       "issues": [],
       "summary": "Fix Helper startup, monitoring recovery, and late LG Home takeover"
+    },
+    {
+      "pr": 31,
+      "issues": [
+        12
+      ],
+      "summary": "Add guided Home Helper diagnostics and single-report export"
     }
   ],
   "excluded": [],

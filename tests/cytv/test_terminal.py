@@ -1,9 +1,30 @@
 import unittest
+import io
+from unittest.mock import patch
 
 from cytv.terminal import Console
 
 
 class TerminalTests(unittest.TestCase):
+    def test_argument_errors_use_red_stderr(self):
+        from cytv.cli import LanguageParser
+        output = io.StringIO()
+        with patch('cytv.cli.sys.stderr', output), patch('cytv.cli.supports_ansi', return_value=True), \
+             patch.dict('os.environ', {}, clear=True), self.assertRaises(SystemExit):
+            LanguageParser(prog='cytv').parse_args(['--unknown'])
+        self.assertIn('\x1b[31m', output.getvalue())
+
+    def test_errors_are_red_only_when_color_is_supported(self):
+        for color in (True, False):
+            lines = []
+            ui = Console(lines.append, width=42, interactive=color, color=color)
+            ui.error('Could not complete this step', heading=True)
+            ui.error('Failure details <not markup>')
+            output = '\n'.join(lines)
+            self.assertIn('Failure details', output)
+            self.assertEqual('\x1b[31m' in output, color)
+            self.assertEqual('\x1b[31m' in lines[-1], color)
+
     def test_plain_output_has_hierarchy_and_wraps_to_small_terminal(self):
         lines = []
         ui = Console(lines.append, width=42, interactive=False)

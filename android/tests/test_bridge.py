@@ -9,6 +9,18 @@ SOURCE = Path(__file__).resolve().parents[1] / 'app/src/main/python/android_brid
 
 
 class BridgeTests(unittest.TestCase):
+    def test_cli_errors_reach_android_as_error_events(self):
+        module = self.module()
+        class Native:
+            def __init__(self): self.events = []
+            def emit(self, raw): self.events.append(json.loads(raw))
+        native = Native()
+        console = module.AndroidConsole(module.Callbacks(native))
+        console.error('Could not complete this step', heading=True)
+        console.error('Failure details')
+        self.assertEqual([event['kind'] for event in native.events], ['error', 'error'])
+        self.assertEqual(native.events[-1]['text'], 'Failure details')
+
     def module(self):
         self.assertTrue(SOURCE.exists(), 'Android Python adapter is not implemented')
         spec = importlib.util.spec_from_file_location('android_bridge', SOURCE)

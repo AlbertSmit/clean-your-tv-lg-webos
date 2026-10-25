@@ -499,6 +499,8 @@ class CLITests(unittest.TestCase):
 
     def test_saved_profile_is_reused_for_read_only_status(self):
         class Remote:
+            def run(self, command):
+                return 'CYTV_HELPER_IDLE'
             def luna(self, *args, **kwargs):
                 return {'returnValue': True, 'apps': [{'id': 'com.gathin.tvhome', 'version': '1.2.2'}]}
             def close(self):

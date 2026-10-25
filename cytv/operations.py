@@ -90,13 +90,47 @@ class Installer:
                 raise UserError('Root Home routing is present. Restore it with cytv --edition root restore first.')
             if not install:
                 return
-            helper = self.remote.run(
-                'if [ -e ' + HELPER_STATE + '/controller.pid ] || [ -L ' + HELPER_STATE + '/controller.pid ]; then printf CYTV_HELPER_ACTIVE; exit 0; fi; '
-                'for p in /proc/[0-9]*/cmdline; do [ -r "$p" ] || continue; '
-                'if tr "\\000" "\\n" < "$p" 2>/dev/null | grep -Fx ' + shlex.quote(BASE + '/applications/' + HELPER + '/relay') + ' >/dev/null; '
-                'then printf CYTV_HELPER_ACTIVE; break; fi; done')
-            if helper.strip():
-                raise UserError('Home Helper is active or its state is uncertain. Press Home three times within two seconds (older Helper: hold Home for two seconds) to stop it, then rerun installation.')
+            helper = self.helper_state()
+            if helper == 'running':
+                raise UserError('Home Helper is running. Installation has not started; installed versions are unchanged. Press Home three times within two seconds (older Helper: hold Home for two seconds) to stop it, then rerun installation.')
+            if helper == 'uncertain':
+                raise UserError('Home Helper state could not be verified. Installation has not started; installed versions are unchanged. Run Check TV status and save a diagnostic report before retrying. Do not delete Helper state files.')
+            if helper == 'stale':
+                self.progress('A stale Helper PID file was found; no Helper process is running. Continuing installation without deleting state files.')
+
+    def helper_state(self):
+        # Read only: a stale PID is harmless once no controller/worker is found.
+        # A symlink, unreadable process or failed probe must never permit replacement.
+        script = r'''
+cytv_state=CYTV_HELPER_IDLE
+if [ ! -d /proc/ ] || [ ! -r /proc/ ] || [ ! -x /proc/ ]; then printf CYTV_HELPER_UNCERTAIN; exit 0; fi
+for cytv_tool in cat tr grep; do command -v "$cytv_tool" >/dev/null 2>&1 || { printf CYTV_HELPER_UNCERTAIN; exit 0; }; done
+if [ -L "HELPER_STATE/controller.pid" ]; then printf CYTV_HELPER_UNCERTAIN; exit 0; fi
+if [ -e "HELPER_STATE/controller.pid" ]; then
+    cytv_pid=$(cat "HELPER_STATE/controller.pid" 2>/dev/null) || { printf CYTV_HELPER_UNCERTAIN; exit 0; }
+    case "$cytv_pid" in ''|0*|*[!0-9]*) printf CYTV_HELPER_UNCERTAIN; exit 0;; esac
+    if [ -d "/proc/$cytv_pid" ] && [ ! -r "/proc/$cytv_pid/cmdline" ]; then
+        printf CYTV_HELPER_UNCERTAIN; exit 0
+    fi
+    cytv_state=CYTV_HELPER_STALE
+fi
+for cytv_file in /proc/[0-9]*/cmdline; do
+    [ -e "$cytv_file" ] || continue
+    if [ ! -r "$cytv_file" ]; then cytv_state=CYTV_HELPER_UNCERTAIN; continue; fi
+    cytv_args=$(tr '\000' '\n' < "$cytv_file" 2>/dev/null) || { cytv_state=CYTV_HELPER_UNCERTAIN; continue; }
+    if [ "$cytv_file" = "/proc/${cytv_pid:-}/cmdline" ] && [ -z "$cytv_args" ]; then cytv_state=CYTV_HELPER_UNCERTAIN; fi
+    if printf '%s\n' "$cytv_args" | grep -Fx -e 'com.local.nativehome' -e 'HELPER_ROOT/native.js' -e 'HELPER_ROOT/relay' >/dev/null 2>&1; then
+        printf CYTV_HELPER_ACTIVE; exit 0
+    else
+        cytv_match=$?
+        if [ "$cytv_match" != 1 ]; then cytv_state=CYTV_HELPER_UNCERTAIN; fi
+    fi
+done
+printf '%s' "$cytv_state"
+'''.replace('HELPER_STATE', HELPER_STATE).replace('HELPER_ROOT', BASE + '/applications/' + HELPER)
+        result = self.remote.run(script).strip()
+        return {'CYTV_HELPER_IDLE': 'stopped', 'CYTV_HELPER_STALE': 'stale',
+                'CYTV_HELPER_ACTIVE': 'running'}.get(result, 'uncertain')
 
     def install(self, inventory, ssap_key=None, migrate=False, reinstall=None):
         # All local validation precedes the durable mutation receipt.
@@ -380,7 +414,8 @@ print('CYTV_UPDATER_VERIFIED')
                 self.store.finish(self.profile)
                 reconciled = 'no-root-installation-submitted'
         else:
-            result = {'apps': [{k: app.get(k) for k in ('id', 'version')} for app in self.installed_apps() if app.get('id') in (HOME, HELPER)]}
+            result = {'apps': [{k: app.get(k) for k in ('id', 'version')} for app in self.installed_apps() if app.get('id') in (HOME, HELPER)],
+                      'helper_state': self.helper_state()}
             if pending and pending['action'] == 'install' and pending.get('expected'):
                 expected = pending['expected']
                 versions = pending.get('versions', {HOME: self.manifest.get('home_version'), HELPER: self.manifest.get('helper_version')})

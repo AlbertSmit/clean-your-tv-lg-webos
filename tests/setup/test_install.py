@@ -12,6 +12,31 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class InstallTests(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Requires a POSIX terminal')
+    def test_shell_errors_are_red_on_terminal_and_plain_when_redirected(self):
+        import pty
+        import select
+        env = dict(os.environ, TERM='xterm')
+        env.pop('NO_COLOR', None)
+        command = ['bash', str(ROOT / 'install.sh'), 'extra', 'arguments']
+        plain = subprocess.run(command, capture_output=True, env=env)
+        self.assertNotEqual(plain.returncode, 0)
+        self.assertNotIn(b'\x1b', plain.stderr)
+        master, slave = pty.openpty()
+        try:
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=slave, env=env)
+            # The bash stderr filter can flush just after its parent exits.
+            # Keep the PTY slave open until that final line has arrived.
+            self.assertTrue(select.select([master], [], [], 5)[0])
+            output = os.read(master, 4096)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b'\x1b[31m', output)
+            self.assertIn(b'Usage:', output)
+        finally:
+            os.close(master)
+            if slave is not None:
+                os.close(slave)
+
     def run_installer(self, fault='', existing=False, host='192.0.2.10',
                       external_zig=False, path_zig=False, termux=False, zig_version='0.14.1'):
         with tempfile.TemporaryDirectory(prefix='tv install ') as tmp:

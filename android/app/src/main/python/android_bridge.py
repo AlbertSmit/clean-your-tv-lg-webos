@@ -82,6 +82,10 @@ class AndroidConsole(Console):
         super().__init__(callbacks.write, interactive=False)
         self.callbacks = callbacks
 
+    def error(self, message, heading=False):
+        # Input mistakes can be corrected; the CLI exit code decides the result.
+        self.callbacks.emit(kind='error', text=i18n.translate(message), heading=heading, fatal=False)
+
     def text(self, message, bold=False):
         stages = {'Installing Home Helper…': 2, 'Installing Home…': 2,
                   'Uploading Root and recovery runtime…': 2,

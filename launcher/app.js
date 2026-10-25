@@ -47,9 +47,21 @@
     moveState = null,
     activeBridges = [];
   // Retain service bridges until their replies arrive; subscriptions stay alive.
-  function callLuna(uri, params, callback) {
+  function callLuna(uri, params, callback, timeout) {
+    var bridge, timer, done = false;
+    function finish(result) {
+      if (done) return;
+      if (!(params && params.subscribe)) {
+        done = true;
+        clearTimeout(timer);
+        var index = activeBridges.indexOf(bridge);
+        if (index >= 0) activeBridges.splice(index, 1);
+        if (timeout && bridge) try { bridge.cancel(); } catch (_) {}
+      }
+      callback && callback(result);
+    }
     try {
-      var bridge = new PalmServiceBridge();
+      bridge = new PalmServiceBridge();
       bridge.onservicecallback = function (e) {
         var i;
         try {
@@ -59,13 +71,13 @@
             returnValue: false
           };
         }
-        callback && callback(i);
-        params && params.subscribe || activeBridges.splice(activeBridges.indexOf(bridge), 1);
+        finish(i);
       };
       activeBridges.push(bridge);
+      if (timeout) timer = setTimeout(function () { finish({returnValue: false}); }, timeout);
       bridge.call(uri, JSON.stringify(params || {}));
     } catch (e) {
-      callback && callback({
+      finish({
         returnValue: false,
         errorText: String(e)
       });
@@ -202,7 +214,7 @@
         if (!result || !result.returnValue) {
           launchApp(item.app.id, item.app.title);
         }
-      });
+      }, 5000);
     } else {
       launchApp(item.app.id, item.app.title);
     }
@@ -523,7 +535,13 @@
     AppLibrary.installed(function (apps) {
       if (apps !== null) {
         library.refresh(apps);
-        rebuild(tiles[focusedTile] && tiles[focusedTile].app.id);
+        // Keep inventory updates, but let the next normal rebuild render them
+        // when a menu, edit or button hold already owns the interaction.
+        if (focusZone === 'grid' && !moveState && !pickerOpen && !undoState &&
+            !okHoldTimer && !pointerTimer && !document.hidden &&
+            !(window.RenewalPanel && window.RenewalPanel.isOpen())) {
+          rebuild(tiles[focusedTile] && tiles[focusedTile].app.id);
+        }
       }
     });
   }

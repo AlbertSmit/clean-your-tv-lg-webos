@@ -3,7 +3,8 @@
 In the maintained local workspace, use `stable/` as the only active checkout for
 all development, documentation, builds, commits and releases. This includes
 No-root, Root and the desktop/console installer. `stable` is the directory name;
-`main` is the integration branch. Switch branches within this checkout as needed.
+`release/next` is the integration branch; `main` accepts finalized release PRs only.
+Switch branches within this checkout as needed.
 The former `release-desktop/` checkout is archived under
 `archives/2026-10-24-release-desktop/` in the workspace container. Archives and the
 legacy Root checkout are for reference/recovery only; do not develop or publish
@@ -28,3 +29,10 @@ any new persistent state, permission or network endpoint in the pull request.
 Share only redacted logs. Exclude SSH/SSAP credentials, addresses, SSIDs, app
 inventories and personal screenshots. Report security issues privately to the
 repository maintainer once a reporting channel is configured; do not publish credentials.
+
+
+Target feature, fix and maintenance PRs at `release/next`. No release version is
+needed during preparation. Link related issues in the PR. At candidate freeze,
+collect the inventory, select the version and complete the release PR checks;
+see [Release integration flow](docs/RELEASE-FLOW.md). Shipping notices are posted
+automatically only after verified publication.

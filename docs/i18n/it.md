@@ -103,3 +103,5 @@ No-root: Impostazioni Home → Modalità sviluppatore raccoglie rinnovo Beta, ve
 Documentazione tecnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [installazione manuale](../MANUAL_INSTALL.md), [ripristino](../RECOVERY.md), [edizioni](../EDITIONS.md), [aggiornamenti](../UPDATES.md).
 
 Se Root mostra `Denied methods call status` subito dopo la preparazione del supervisore, chiudi e riapri Home Root una volta, poi controlla gli aggiornamenti. Se persiste, conserva diagnostica e stato di ripristino.
+
+Prossimo candidato (#59): se lo stato di Helper non può essere verificato, **Avvia Helper** resta disponibile con conferma. Aprire il riquadro non riavvia Helper e non annulla un arresto di emergenza. Le impostazioni Home richiedono che il controllo risponda.

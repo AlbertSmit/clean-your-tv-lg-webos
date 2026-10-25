@@ -109,3 +109,5 @@ No-root: open Home settings → Developer Mode for auto-renewal, session checks 
 Opening Home Helper shows its purpose and current state. Starting a stopped Helper requires confirmation. Home Updater and Root Updater explain recovery; regular updates are in Home settings. Restore is shown only when a saved version is available and asks for confirmation before replacing Home and its settings.
 
 If Root shows `Denied methods call status` immediately after supervisor bootstrap, close and reopen Home Root once, then check updates again. If it persists, retain diagnostics and recovery state.
+
+Next candidate (#59): if Helper status cannot be checked, **Start Helper** remains available with confirmation. Opening the tile does not restart Helper or clear an emergency stop. Home button settings require a responding controller.

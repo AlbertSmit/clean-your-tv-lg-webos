@@ -113,3 +113,5 @@ Home Helper zeigt beim Öffnen seinen Zweck und Status. Der Start eines gestoppt
 Zeigt Root direkt nach der Supervisor-Einrichtung `Denied methods call status`, Home Root einmal schließen und erneut öffnen, dann Updates prüfen. Bei anhaltendem Fehler Diagnose und Wiederherstellungsdaten aufbewahren.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+Nächster Kandidat (#59): Wenn der Helper-Status nicht geprüft werden kann, bleibt **Helper starten** mit Bestätigung verfügbar. Das Öffnen der Kachel startet Helper nicht neu und hebt keinen Notstopp auf. Die Home-Tasteneinstellungen benötigen eine antwortende Steuerung.

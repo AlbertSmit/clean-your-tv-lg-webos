@@ -103,3 +103,5 @@ No-root: Configurações Home → Modo de desenvolvedor reúne renovação Beta,
 Documentação técnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [instalação manual](../MANUAL_INSTALL.md), [recuperação](../RECOVERY.md), [edições](../EDITIONS.md), [atualizações](../UPDATES.md).
 
 Se Root mostrar `Denied methods call status` logo após preparar o supervisor, feche e reabra Home Root uma vez e verifique as atualizações novamente. Se persistir, guarde o diagnóstico e o estado de recuperação.
+
+Próximo candidato (#59): se o estado do Helper não puder ser verificado, **Iniciar Helper** continua disponível com confirmação. Abrir o bloco não reinicia o Helper nem cancela uma parada de emergência. Os ajustes de Home exigem que o controle responda.

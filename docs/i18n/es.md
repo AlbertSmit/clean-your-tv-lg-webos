@@ -113,3 +113,5 @@ Al abrir Home Helper se muestran su función y estado. Iniciar un Helper detenid
 Si Root muestra `Denied methods call status` justo después de preparar el supervisor, cierra y abre Home Root una vez y vuelve a comprobar las actualizaciones. Si persiste, conserva el diagnóstico y los datos de recuperación.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+Próximo candidato (#59): si no se puede comprobar el estado de Helper, **Iniciar Helper** sigue disponible con confirmación. Abrir el icono no reinicia Helper ni desactiva una parada de emergencia. Los ajustes de Home requieren que responda el control.

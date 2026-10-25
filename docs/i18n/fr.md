@@ -113,3 +113,5 @@ No-root : ouvrez Réglages de Home → Mode développeur pour le renouvellement 
 Si Root affiche `Denied methods call status` juste après la préparation du superviseur, fermez puis rouvrez Home Root une fois et vérifiez les mises à jour. Si l’erreur persiste, conservez le diagnostic et les données de récupération.
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
+
+Prochain candidat (#59) : si l’état de Helper ne peut pas être vérifié, **Démarrer Helper** reste disponible avec confirmation. Ouvrir la tuile ne redémarre pas Helper et ne lève pas un arrêt d’urgence. Les réglages Home nécessitent un contrôle qui répond.

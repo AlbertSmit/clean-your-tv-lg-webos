@@ -103,3 +103,5 @@ No-root: Home 설정 → 개발자 모드에서 베타 자동 갱신, 세션 확
 영문 기술 안내: [데스크톱](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [수동 설치](../MANUAL_INSTALL.md), [복구](../RECOVERY.md), [에디션](../EDITIONS.md), [업데이트](../UPDATES.md).
 
 감독 서비스 설정 직후 Root에 `Denied methods call status`가 표시되면 Home Root를 한 번 닫고 다시 연 뒤 업데이트를 확인하세요. 계속되면 진단과 복구 상태를 보관하세요.
+
+다음 후보 버전 (#59): Helper 상태를 확인할 수 없어도 확인 후 **Helper 시작**을 선택할 수 있습니다. 타일을 여는 것만으로 Helper가 다시 시작되거나 비상 정지가 해제되지는 않습니다. Home 설정을 사용하려면 제어가 응답해야 합니다.

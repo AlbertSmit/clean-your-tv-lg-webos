@@ -37,6 +37,17 @@ class WindowsDesktopPackageTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == 'nt', 'Debian package tree requires POSIX symlinks and permissions')
 class DesktopPackageTests(unittest.TestCase):
+    def test_frozen_cli_adapter_preserves_terminal_error_color(self):
+        from cytv.terminal import Console
+        with patch('sys.argv', ['cytv-desktop', '--check-payload']), \
+             patch('cytv.terminal.supports_ansi', return_value=True), \
+             patch.dict(os.environ, {}, clear=True), patch('cytv.cli.main', return_value=0) as main, \
+             self.assertRaises(SystemExit):
+            runpy.run_module('cytv.desktop_entry', run_name='__main__')
+        console = main.call_args.kwargs['write']
+        self.assertIsInstance(console, Console)
+        self.assertTrue(console.color)
+
     def test_installed_launcher_uses_packaged_executable_without_terminal(self):
         root = Path(__file__).resolve().parents[2]
         packaging = runpy.run_path(str(root / 'scripts/desktop_packaging.py'))

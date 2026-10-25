@@ -56,7 +56,7 @@ def suggest_issue(write, store, action, profile, phase, error, tv_info=None):
         write.heading('Attach this diagnostic report')
         write.raw('  ' + str(path.resolve()))
     except (OSError, ValueError):
-        write('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
+        write.error('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
     write('')
     write('Include your steps, expected/actual result and TV model/firmware.')
     write('Review the report. Do not attach keys or your profile folder.')

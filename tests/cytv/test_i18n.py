@@ -108,7 +108,7 @@ class LanguageTests(unittest.TestCase):
                 if not isinstance(node, ast.Call) or not node.args:
                     continue
                 name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ''
-                if name not in ('write', 'progress', 'heading', 'text', 'confirm', 'UserError', 'ExistingRoot', 'TVNotReady'):
+                if name not in ('write', 'progress', 'heading', 'error', 'text', 'confirm', 'UserError', 'ExistingRoot', 'TVNotReady'):
                     continue
                 arg = node.args[0]
                 if not isinstance(arg, ast.Constant) or not isinstance(arg.value, str) or len(arg.value) < 9:

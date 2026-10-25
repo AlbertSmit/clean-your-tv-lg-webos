@@ -55,6 +55,9 @@ class DesktopConsole(Console):
     def heading(self, title):
         self.emit('heading', title)
 
+    def error(self, message, heading=False):
+        self.emit('error-heading' if heading else 'error', message)
+
     def step(self, number, title, clear=True):
         self.options = []
         self.emit('step', (number, title, clear))

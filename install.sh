@@ -2,6 +2,12 @@
 # Build and install locally; only pairing approvals require user interaction.
 set +x
 set -euo pipefail
+# Keep redirected logs plain; highlight all installer/tool stderr on a terminal.
+if [[ -t 2 && "${TERM:-}" != dumb && -z "${NO_COLOR+x}" ]]; then
+  exec 2> >(while IFS= read -r cytv_error_line || [[ -n "$cytv_error_line" ]]; do
+    printf '\033[31m%s\033[0m\n' "$cytv_error_line" >&2
+  done)
+fi
 cd "$(dirname "$0")"
 if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
   echo 'Usage: ./install.sh [TV IPv4 address]'

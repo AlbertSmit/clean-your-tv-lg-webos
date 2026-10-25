@@ -8,7 +8,7 @@ import sys
 from . import __version__, package, state, i18n
 from .errors import UserError, TVNotReady, ExistingRoot
 from .operations import Installer
-from .terminal import Console
+from .terminal import Console, supports_ansi
 from . import diagnostics, discovery, inspect_tv, prompts
 
 
@@ -32,7 +32,9 @@ class LanguageParser(argparse.ArgumentParser):
             message = argument + ': ' + i18n.translate(detail)
         else:
             message = i18n.translate(message)
-        self.exit(2, self.prog + ': ' + i18n.translate('error:') + ' ' + message + '\n')
+        Console(lambda text: self._print_message(text + '\n', sys.stderr),
+                interactive=supports_ansi(sys.stderr)).error(self.prog + ': ' + i18n.translate('error:') + ' ' + message)
+        self.exit(2)
 
 
 def parser():
@@ -137,8 +139,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         i18n.configure(language_args.language, language_args.data_dir)
     except OSError:
         i18n.set_language(language_args.language or 'auto')
-        write(i18n.translate('Could not save language preference'))
-        write(i18n.translate('Check write access to the application data folder and try again.'))
+        (write if isinstance(write, Console) else Console(write)).error('Could not save language preference', heading=True)
+        (write if isinstance(write, Console) else Console(write)).error('Check write access to the application data folder and try again.')
         return 2
     args = parser().parse_args(argv)
     if args.version:
@@ -410,8 +412,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
               else 'Cancelled. If an installation was submitted, run cytv status before retrying.')
         return 130
     except UserError as exc:
-        write.heading('Could not complete this step')
-        write(str(exc))
+        write.error('Could not complete this step', heading=True)
+        write.error(str(exc))
         if phase in ('pair-tv', 'read-inventory'):
             write('Installation has not started. No TV packages were changed by this attempt.')
         if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
@@ -419,14 +421,14 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         diagnostics.suggest_issue(write, store, args.command, profile, phase, exc, tv_info)
         return 2
     except Exception as exc:
-        write.heading('Could not complete this step')
+        write.error('Could not complete this step', heading=True)
         kind = type(exc).__name__
         hints = {
             'BadHostKeyException': 'TV identity changed since the last trusted connection. cytv stopped before sign-in. If you reset the TV or changed SSH, verify that change through your existing trusted setup before connecting again.',
             'AuthenticationException': 'SSH authentication failed. Check your key/password; for No-root check Developer Mode and Key Server.',
             'ModuleNotFoundError': 'Source dependencies are missing. Install cytv/requirements.txt or use a built cytv executable.',
         }
-        write('Could not read the TV applications. Keep the TV on and accept its pairing request. Installation has not started.'
+        write.error('Could not read the TV applications. Keep the TV on and accept its pairing request. Installation has not started.'
               if phase in ('pair-tv', 'read-inventory') and kind != 'ModuleNotFoundError' else hints.get(kind, 'Operation could not be confirmed. Check TV connectivity and run cytv status or cytv doctor. Retain local and TV recovery state; do not retry blindly.'))
         if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
             write('Keep the TV on and choose Remove again. The app checks its state before continuing.')

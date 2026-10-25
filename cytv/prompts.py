@@ -45,7 +45,7 @@ def tv_address(ask, write, search=None):
                 found = search()
             except OSError:
                 found = []
-                write('! Allow Local Network access for cytv or your terminal.')
+                write.error('! Allow Local Network access for cytv or your terminal.')
             if found:
                 write.heading('Found TVs — choose yours')
                 for index, tv in enumerate(found, 1):
@@ -64,12 +64,12 @@ def tv_address(ask, write, search=None):
                             return found[int(choice) - 1]['host']
                         scan = False
                         break
-                    write(f'Enter a number from 0 to {len(found)}, r to search again, or q to quit.')
+                    write.error(f'Enter a number from 0 to {len(found)}, r to search again, or q to quit.')
                 if scan:
                     continue
             else:
                 write('')
-                write('! No LG webOS TV found. Retry, or enter its IP below.')
+                write.error('! No LG webOS TV found. Retry, or enter its IP below.')
                 write('Check VPN and Local Network/firewall access if needed.')
             scan = False
         address_help(write)
@@ -89,17 +89,18 @@ def tv_address(ask, write, search=None):
             try:
                 return state.target(value, 'no-root')['host']
             except ValueError:
-                write('Enter the TV address, for example 192.168.1.50. Type ? for help finding it.')
+                write.error('Enter the TV address, for example 192.168.1.50. Type ? for help finding it.')
 
 
 def number(ask, write, prompt, minimum, maximum, default=None):
+    write = console(write)
     while True:
         value = answer(ask, prompt)
         if not value and default is not None:
             return default
         if value.isdecimal() and minimum <= int(value) <= maximum:
             return int(value)
-        write(f'Enter a number from {minimum} to {maximum}, or q to quit.')
+        write.error(f'Enter a number from {minimum} to {maximum}, or q to quit.')
 
 
 def confirm(prompt, ask, write, default=False):
@@ -114,7 +115,7 @@ def confirm(prompt, ask, write, default=False):
             return True
         if value in ('', 'n', 'no', 'нет', 'н'):
             return False
-        write('Type y for yes, n for no, or q to quit. Enter chooses ' + ('yes.' if default else 'no.'))
+        write.error('Type y for yes, n for no, or q to quit. Enter chooses ' + ('yes.' if default else 'no.'))
 
 
 def wait_for_tv(ask, write):
@@ -125,7 +126,7 @@ def wait_for_tv(ask, write):
     while True:
         if answer(ask, 'TV ready? Press Enter: ').lower() in ('', 'y', 'yes', 'r', 'retry', 'да'):
             return
-        write('Press Enter once the TV is on, or q to quit.')
+        write.error('Press Enter once the TV is on, or q to quit.')
 
 
 def trust_tv(host, port, fingerprint, ask, write):
@@ -149,7 +150,7 @@ def trust_tv(host, port, fingerprint, ask, write):
             return True
         if choice in ('n', 'no', 'нет', 'н'):
             return False
-        write('Press Enter to connect, n to cancel, or ? for connection details.')
+        write.error('Press Enter to connect, n to cancel, or ? for connection details.')
 
 
 def root_credentials(ask, write):
@@ -186,4 +187,4 @@ def identity_path(ask, write):
                 pass
         if path.is_file():
             return str(path.resolve())
-        write('That file was not found. Drag the private key file here, paste its path, or press Enter to skip.')
+        write.error('That file was not found. Drag the private key file here, paste its path, or press Enter to skip.')

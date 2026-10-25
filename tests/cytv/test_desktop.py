@@ -6,6 +6,15 @@ from cytv.desktop import DesktopConsole, Prompt, Channel
 
 
 class DesktopTests(unittest.TestCase):
+    def test_error_events_are_distinct_from_progress(self):
+        events = []
+        console = DesktopConsole(lambda *event: events.append(event))
+        console.error('Could not complete this step', heading=True)
+        console.error('Failure details')
+        console('Normal progress')
+        self.assertEqual(events, [('error-heading', 'Could not complete this step'),
+                                  ('error', 'Failure details'), ('text', 'Normal progress')])
+
     def test_semantic_output_keeps_long_diagnostic_path_intact(self):
         events = []
         console = DesktopConsole(lambda *event: events.append(event))

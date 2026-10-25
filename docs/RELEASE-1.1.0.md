@@ -55,7 +55,7 @@ Download the final packages from the [1.1.0 release](https://github.com/Razdva12
   of the downstream Root Updater registration (#56).
 
 Related implementation/preparation PRs: #36, #38, #39, #40, #42, #43, #44, #45,
-#46, #48, #49, #50, #52, #53 and #56; the Helper runtime correction relates to issues #47 and #54.
+#46, #48, #49, #50, #52, #53, #56 and #57; the Helper runtime correction relates to issues #47 and #54.
 Integrated PRs are recorded in release-plan.json. Issue #37 remains open for
 UK6540PTD device feedback; issue #24's original unfinished removal is not claimed
 resolved by its separate Android receipt fix.

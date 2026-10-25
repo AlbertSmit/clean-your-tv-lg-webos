@@ -85,6 +85,11 @@
       "pr": 56,
       "issues": [],
       "summary": "Preserve updater ownership while resuming System Updater removal"
+    },
+    {
+      "pr": 57,
+      "issues": [],
+      "summary": "Finalize stable 1.1.0 release evidence and documentation"
     }
   ],
   "excluded": [],

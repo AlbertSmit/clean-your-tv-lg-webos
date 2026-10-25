@@ -87,9 +87,17 @@ class RemovalTests(unittest.TestCase):
                 if case=='cache':next((state/'cache').iterdir()).write_bytes(b'bad')
                 if case=='bootstrap':(state/'bootstrap.json').write_text('{"phase":"submitting-supervisor"}')
                 if case=='symlink':args['hook'].unlink();args['hook'].symlink_to(state/'bootstrap.json')
-                before={str(p):p.read_bytes() for p in Path(tmp).rglob('*') if p.is_file()}
+                before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
                 with self.assertRaises((ValueError,OSError)):namespace['operate']('disable',**args)
-                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).rglob('*') if p.is_file()})
+                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
+
+    def test_unknown_supervisor_removal_journal_never_mutates(self):
+        for raw in ('null','[]','{}','{"phase":"disabled","archive":"bad","extra":1}'):
+            with self.subTest(raw=raw),tempfile.TemporaryDirectory() as tmp:
+                args=self.fixture(Path(tmp).resolve());(args['state']/'cytv-removal.json').write_text(raw)
+                before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
+                with self.assertRaises(ValueError):namespace['operate']('disable',**args)
+                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
 
     def test_locked_worker_and_exact_running_worker_block_status(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -137,6 +145,83 @@ class RemovalTests(unittest.TestCase):
                 else:
                     namespace['operate']('disable',**args);self.assertEqual(api.read_text(),original)
                     self.assertTrue(namespace['operate']('disable',**args)['disabled'])
+
+    def test_completed_disable_preserves_later_owned_legacy_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve());api=args['base']/'api-permissions.d/com.cleanyourtv.updater.permissions.json'
+            api.write_text('disabled')
+            (args['state']/'legacy-lockdown.json').write_text(json.dumps({'schema':1,'files':{str(api):{'original':'original','disabled':'disabled','mode':0o600}}}))
+            namespace['operate']('disable',**args)
+            api.write_text('disabled')
+            before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
+            namespace['operate']('disable',**args)
+            self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
+
+    def root_removal_fixture(self,args):
+        root=args['state'].parent/'root-updater';root.mkdir();saved=root/'removed-registration';saved.mkdir()
+        app='com.cleanyourtv.root.updater';service=app+'.service';base=args['base']
+        paths={key:base/folder/(service+suffix) for key,folder,suffix in (('service','services.d','.service'),('role','roles.d','.service.json'),('client','client-permissions.d','.service.json'),('api','api-permissions.d','.api.json'))}
+        api=paths['api'];original=json.dumps({'ui':[service+'/status',service+'/install']});disabled=json.dumps({'ui':[service+'/status']})
+        registration={'files':{str(path):{'original':None,'installed':original if key=='api' else key} for key,path in paths.items()}}
+        before=json.dumps(registration);registration['files'][str(api)]['installed']=disabled;after=json.dumps(registration)
+        (root/'registration.json').write_text(before)
+        for key in paths:(saved/key).write_text(disabled if key=='api' else key)
+        (saved/'hook').write_text('#!/bin/sh\n/usr/bin/python3 '+str(root/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n')
+        manifest={'id':app,'version':'1.0.0','serviceFiles':[str(paths['service'])],'apiPermissionFiles':[str(api)],'roleFiles':[str(paths['role']),str(base/'roles.d'/(app+'.app.json'))],'clientPermissionFiles':[str(paths['client']),str(base/'client-permissions.d'/(app+'.app.json'))]}
+        (saved/'manifest').write_text(json.dumps(manifest))
+        (root/'cytv-removal.json').write_text(json.dumps({'phase':'disabled','archive':str(root)+'.archive-'+'b'*32}))
+        legacy={str(api):{'original':original,'disabled':disabled,'mode':0o600},str(root/'registration.json'):{'original':before,'disabled':after,'mode':0o600}}
+        (args['state']/'legacy-lockdown.json').write_text(json.dumps({'schema':1,'files':legacy}))
+        return root,api,after
+
+    def test_repeat_disable_reconciles_only_exact_owned_root_removal(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve());namespace['operate']('disable',**args)
+            root,api,after=self.root_removal_fixture(args)
+            before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
+            with patch.dict(namespace,ROOT_UPDATER=root):
+                namespace['operate']('status',**args)
+                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
+                namespace['operate']('disable',**args)
+                before[str(root/'registration.json')]=after.encode()
+                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
+                namespace['operate']('disable',**args)
+                self.assertEqual((root/'registration.json').read_text(),after);self.assertFalse(api.exists())
+
+    def test_repeat_disable_preserves_root_removal_after_initial_restore(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve());namespace['operate']('disable',**args)
+            root,api,_=self.root_removal_fixture(args)
+            legacy=json.loads((args['state']/'legacy-lockdown.json').read_text())['files']
+            (root/'removed-registration/api').write_text(legacy[str(api)]['original'])
+            before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
+            with patch.dict(namespace,ROOT_UPDATER=root):namespace['operate']('disable',**args)
+            self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
+
+    def test_root_reconciliation_conflicts_are_read_only(self):
+        from unittest.mock import patch
+        for case in ('journal','archive','saved-api','saved-service','snapshot','foreign-inventory','link','live-api','unknown-journal'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as tmp:
+                args=self.fixture(Path(tmp).resolve());namespace['operate']('disable',**args)
+                root,api,after=self.root_removal_fixture(args)
+                if case=='journal':(root/'cytv-removal.json').write_text('{"phase":"disabling"}')
+                if case=='unknown-journal':(root/'cytv-removal.json').write_text(json.dumps({'phase':'disabled','archive':str(root)+'.archive-'+'b'*32,'extra':True}))
+                if case=='archive':Path(str(root)+'.archive-'+'b'*32).mkdir()
+                if case=='saved-api':(root/'removed-registration/api').write_text('foreign')
+                if case=='saved-service':(root/'removed-registration/service').write_text('foreign')
+                if case=='live-api':api.write_text('foreign')
+                if case=='link':raw=(root/'removed-registration/api').read_bytes();(root/'api-copy').write_bytes(raw);(root/'removed-registration/api').unlink();(root/'removed-registration/api').symlink_to(root/'api-copy')
+                if case in ('snapshot','foreign-inventory'):
+                    legacy=json.loads((args['state']/'legacy-lockdown.json').read_text());entry=legacy['files'][str(root/'registration.json')];value=json.loads(entry['disabled'])
+                    if case=='snapshot':value['files'][str(args['base']/'services.d/com.cleanyourtv.root.updater.service.service')]['installed']='other'
+                    else:value['files']['/foreign']={'installed':'foreign','original':None}
+                    entry['disabled']=json.dumps(value);(args['state']/'legacy-lockdown.json').write_text(json.dumps(legacy))
+                before={str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()}
+                with patch.dict(namespace,ROOT_UPDATER=root):
+                    with self.assertRaises((ValueError,OSError)):namespace['operate']('disable',**args)
+                self.assertEqual(before,{str(p):p.read_bytes() for p in Path(tmp).resolve().rglob('*') if p.is_file()})
 
     def test_archive_allows_owned_legacy_cleanup_after_confirmed_restore(self):
         with tempfile.TemporaryDirectory() as tmp:

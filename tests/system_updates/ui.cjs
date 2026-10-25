@@ -84,7 +84,7 @@ async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
   assert(progress.ids.systemUpdateStatus.textContent.startsWith('Update complete.'),'completion must replace progress even when the check failure remains');
   assert(progress.ids.systemUpdateStatus.textContent.includes('Update information could not be verified.'));
   assert(!progress.ids.systemUpdateStatus.textContent.includes('Nothing was installed'));
-  const newMessages=['No previous update is saved for rollback yet.','Update information is not available yet. Try again later.','Could not connect to check for updates. Check your connection and try again.','Update information could not be verified. Nothing was installed.','Could not connect to the update server. Nothing was installed.','Update information is not available yet. Nothing was installed.','Update information could not be verified.'];
+  const newMessages=['No previous update is saved for rollback yet.','Update information is not available yet. Try again later.','Could not connect to check for updates. Check your connection and try again.','Update information could not be verified. Nothing was installed.','Could not connect to the update server. Nothing was installed.','Update information is not available yet. Nothing was installed.','Update information could not be verified.','System updater removal is in progress. Continue removal from the computer.'];
   for (const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']) {
     for(const reason of ['feed-unavailable','connection-error']) {
       const installed=harness({locale,canInstall:false,reason}); installed.offer.release=null; installed.offer.notes=''; installed.offer.components=[{name:'root',installed:'2.3.4',version:null}];

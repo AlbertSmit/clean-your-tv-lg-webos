@@ -52,12 +52,21 @@ class Installer:
 
     def preflight(self, install=False):
         if self.profile['edition'] == 'root':
-            command = ('test "$(id -u)" = 0 && test -x /usr/bin/python3 && '
-                       'test -x /usr/bin/luna-send && test -d /media/developer/apps && '
-                       'test -d /var/luna-service2-dev && /usr/bin/python3 -c "import json,fcntl" && '
-                       'printf CYTV_ROOT_READY')
-            if self.remote.run(command).strip() != 'CYTV_ROOT_READY':
-                raise UserError('Root requires a root SSH login, Python 3, Homebrew services and webOS TV.')
+            probes = ('test "$(id -u)" = 0', 'test -x /usr/bin/python3',
+                      'test -x /usr/bin/luna-send', 'test -d /media/developer/apps',
+                      'test -d /var/luna-service2-dev',
+                      '/usr/bin/python3 -c "import json"', '/usr/bin/python3 -c "import fcntl"')
+            checks = dict.fromkeys(diagnostics.ROOT_REQUIREMENTS, 'unknown')
+            self.tv_info['root_requirements'] = checks
+            for name, probe in zip(diagnostics.ROOT_REQUIREMENTS, probes):
+                command = ('if ( ' + probe + ' ) >/dev/null 2>&1; then printf CYTV_ROOT_READY; '
+                           'else printf CYTV_ROOT_MISSING; fi')
+                reply = self.remote.run(command).strip()
+                checks[name] = {'CYTV_ROOT_READY': 'pass', 'CYTV_ROOT_MISSING': 'fail'}.get(reply, 'unknown')
+            failed = [name for name, result in checks.items() if result != 'pass']
+            if failed:
+                raise UserError('Root requirements failed or could not be verified: {requirements}. Check the diagnostic report.'.format(
+                    requirements=', '.join(failed)))
             if install:
                 paths = [ROOT_STATE, BASE + '/applications/' + package.ROOT_APP,
                          BASE + '/services/' + package.ROOT_APP + '.service', BASE + '/packages/' + package.ROOT_APP]

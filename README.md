@@ -56,7 +56,7 @@ These downloads do not establish physical-TV compatibility.
 One wizard installs either edition. Root activates and opens Home immediately,
 without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.0.2.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.0.3.md)
 
 ## Choose your edition
 
@@ -220,9 +220,9 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v1.0.2 distribution contains cytv **0.2.16**, Home **1.3.8**, Helper
-**0.6.18**, Root **0.1.11** and No-root Updater **0.1.6**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-1.0.2.md)
+The v1.0.3 distribution contains cytv **0.2.16**, Home **1.3.8**, Helper
+**0.6.18**, Root **0.1.12** and No-root Updater **0.1.6**. Source versions are
+recorded in `release-versions.json`; [release notes](docs/RELEASE-1.0.3.md)
 explain packaging and remaining checks.
 
 Hardware records describe particular artifacts. Earlier C3/C4 reports do not

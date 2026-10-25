@@ -70,7 +70,7 @@ def validate_plan(plan, *, branch, same_repo, final, version: str,
 
 
 def api(path, *, method='GET', data=None, pages=False):
-    args = ['gh', 'api', '--method', method, 'repos/' + REPO + '/' + path]
+    args = ['gh', 'api', '--method', method, 'repos/' + REPO + ('/' + path if path else '')]
     if pages:
         args += ['--paginate', '--slurp']
     if data is not None:

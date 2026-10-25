@@ -30,6 +30,11 @@ class ReleaseFlow(unittest.TestCase):
                             version='1.0.2', previous_version='1.0.1',
                             merged_prs=self.prs, commits={'a' * 40}, notes='Release notes')
 
+    def test_repository_api_path_has_no_trailing_slash(self):
+        with patch.object(self.flow.subprocess, 'check_output', return_value=b'{}') as call:
+            self.flow.api('')
+            self.assertEqual(call.call_args.args[0][-1], 'repos/' + self.flow.REPO)
+
     def test_candidate_build_requires_every_platform_job_to_succeed(self):
         self.assertTrue(hasattr(self.flow, 'validate_build_jobs'), 'Complete candidate job validation is required')
         jobs = [{'name': name, 'conclusion': 'success'} for name in self.flow.BUILD_JOBS]

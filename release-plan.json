@@ -6,6 +6,13 @@
       "pr": 36,
       "issues": [],
       "summary": "Restore next release candidate creation and simplify workspace layout"
+    },
+    {
+      "pr": 38,
+      "issues": [
+        37
+      ],
+      "summary": "Diagnose individual Root requirements and record safe SSH command exit status; reporter failure in #37 remains under investigation"
     }
   ],
   "excluded": [],

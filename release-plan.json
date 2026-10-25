@@ -1,7 +1,18 @@
 {
   "schema": 1,
   "version": null,
-  "changes": [],
+  "changes": [
+    {
+      "pr": 25,
+      "issues": [],
+      "summary": "Fix tile animation stutter when returning to Home"
+    },
+    {
+      "pr": 26,
+      "issues": [],
+      "summary": "Fix launcher focus, AirPlay opening and safe startup app refresh"
+    }
+  ],
   "excluded": [],
   "acceptance": ""
 }

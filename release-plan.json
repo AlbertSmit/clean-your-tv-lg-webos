@@ -30,6 +30,13 @@
         24
       ],
       "summary": "Fix Android operation receipts without hard links while preserving unresolved evidence; #24 Android comment only, original unfinished removal remains open"
+    },
+    {
+      "pr": 43,
+      "issues": [
+        37
+      ],
+      "summary": "Automatically supply verified optional ARMv7 Python for Root setup, recovery and updater bindings without embedding runtime bytes in ordinary installers; UK6540PTD acceptance pending"
     }
   ],
   "excluded": [],

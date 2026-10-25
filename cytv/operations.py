@@ -19,6 +19,8 @@ HELPER_STATE = BASE + '/applications/' + HELPER + '/state'
 ROOT_STATE = '/var/lib/clean-your-tv-root'
 UPDATER_STATE = '/var/lib/clean-your-tv-root-updater'
 UPDATER_APP = 'com.cleanyourtv.root.updater'
+SYSTEM_UPDATER_APP = 'com.cleanyourtv.system.updater'
+SYSTEM_UPDATER_STATE = '/var/lib/clean-your-tv-system-updater'
 
 
 def root_updater_paths():
@@ -36,6 +38,48 @@ class Installer:
         self.payload, self.manifest, self.progress = Path(payload), manifest, progress
         self.helper_retry = lambda: False
         self.tv_info = tv_info if tv_info is not None else {}
+
+    def enable_system_updates(self):
+        """Provision the independent supervisor without replacing the active edition."""
+        if self.store.pending(self.profile):
+            raise UserError('Previous operation is unresolved. Run cytv status; retain recovery state before retrying.')
+        bundle = self.payload / 'system-updater'
+        try:
+            metadata = json.loads((bundle / 'bundle.json').read_text())
+            files = metadata['files']
+            if (metadata.get('schema') != 1 or metadata.get('supervisor') != 1
+                    or not isinstance(files, dict)
+                    or not {'setup-system-updater.py', 'system-updater.ipk'} <= files.keys()):
+                raise ValueError('Invalid bootstrap inventory')
+            for name, digest in files.items():
+                path = bundle / package.safe_name(name)
+                if (any(p.is_symlink() for p in (path, *path.parents))
+                        or hashlib.sha256(path.read_bytes()).hexdigest() != digest):
+                    raise ValueError('Bootstrap integrity mismatch')
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            raise UserError('System updater bundle integrity could not be verified. Use a complete installer build.') from error
+        probe = ('if test "$(id -u)" = 0 && test -x /usr/bin/luna-send && '
+                 '/usr/bin/python3 -c "import sys,json,fcntl; sys.exit(0 if sys.version_info >= (3,9) else 1)" && '
+                 '/usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 8 ? 0 : 1)\'; '
+                 'then printf CYTV_SYSTEM_ROOT_READY; fi')
+        if self.remote.run(probe).strip() != 'CYTV_SYSTEM_ROOT_READY':
+            raise UserError('On-TV system updates require root SSH access, TV Python 3.9+ and Node.js 8+. Unrooted TVs use the computer installer.')
+        self.store.begin(self.profile, 'enable-system-updates', stage='upload')
+        stage = '/tmp/cytv-system-updater-' + uuid.uuid4().hex
+        self.remote.run('umask 077; mkdir ' + stage)
+        for directory in sorted({str(Path(name).parent) for name in files} - {'.'}):
+            self.remote.run('mkdir -p ' + shlex.quote(stage + '/' + directory))
+        for name in [*files, 'bundle.json']:
+            self.remote.upload(stage + '/' + package.safe_name(name), (bundle / name).read_bytes(), mode=0o600)
+        self.store.checkpoint(self.profile, stage='setup')
+        self.progress('Preparing updates for every TV component…')
+        reply = json.loads(self.remote.run(shlex.join([
+            '/usr/bin/python3', stage + '/setup-system-updater.py', '--bundle', stage,
+            '--edition', self.profile['edition'], '--device', '--apply']), timeout=360))
+        if not isinstance(reply, dict) or reply.get('installed') is not True:
+            raise UserError('System updater setup was not confirmed. Keep recovery state and run cytv status.')
+        self.store.finish(self.profile)
+        return reply
 
     def root_action(self, action, bundle=None, migrate=False):
         driver = (bundle or ROOT_STATE) + '/deploy.py'
@@ -394,6 +438,18 @@ print('CYTV_UPDATER_VERIFIED')
         pending = self.store.pending(self.profile)
         reconciled = None
         can_resume = False
+        if pending and pending.get('action') == 'enable-system-updates':
+            report = self.system_updater_cleanup('status')
+            if report.get('present') is False:
+                # The root helper also proves no owned bootstrap process can
+                # still create state or submit an installer operation.
+                self.store.finish(self.profile)
+                reconciled = 'system-updater-not-started'
+            elif report.get('present') is True and report.get('bootstrap_complete') is True and report.get('disabled') is False:
+                self.store.finish(self.profile)
+                reconciled = 'system-updater-bootstrap-verified'
+            return {'device': {'system_updater': report}, 'pending': self.store.pending(self.profile),
+                    'reconciled': reconciled, 'can_resume_root_setup': False}
         if self.profile['edition'] == 'root':
             raw = self.remote.run('if [ -f ' + ROOT_STATE + '/deploy.json ]; then cat ' + ROOT_STATE + '/deploy.json; '
                                   'elif [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf \'{"stage":"incomplete-state"}\'; '
@@ -656,6 +712,16 @@ print('CYTV_ROOT_FILES_OK')
             raise UserError('LG Home launch was requested, but input restoration removal is unconfirmed. Keep recovery state and run cytv doctor before uninstalling.')
         return {'restored': True, 'pending': self.store.pending(self.profile)}
 
+    def system_updater_cleanup(self, action, archive=None):
+        from .system_updater_remove import COMMAND
+        args = ['/usr/bin/python3', '-c', COMMAND, action]
+        if archive is not None:
+            args.append(archive)
+        reply = json.loads(self.remote.run(shlex.join(args), timeout=60))
+        if not isinstance(reply, dict):
+            raise UserError('Updater permissions removal could not be verified.')
+        return reply
+
     def root_updater_cleanup(self, action, archive):
         from .root_updater_remove import COMMAND
         reply = json.loads(self.remote.run(shlex.join(['/usr/bin/python3', '-c', COMMAND, action, archive]), timeout=60))
@@ -676,8 +742,9 @@ print('CYTV_ROOT_FILES_OK')
     def verify_project_removed(self):
         script = """import os
 from pathlib import Path
-apps=('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater','com.cleanyourtv.updater','com.gathin.tvhome','com.local.nativehome')
+apps=('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater','com.cleanyourtv.updater','com.gathin.tvhome','com.local.nativehome','com.cleanyourtv.system.updater')
 paths=['/var/lib/webosbrew/init.d/50-clean-your-tv-root','/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
+       '/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater',
        '/var/luna-service2/manifests.d/com.cleanyourtv.root.preview.recovery.json',
        '/var/webos-profile/override/clean-your-tv-root.json']
 if any(os.path.lexists(p) for p in paths): raise ValueError('Project startup or routing remains')
@@ -716,6 +783,9 @@ print('CYTV_PROJECT_REMOVED')
             raise UserError('TV installer is not idle. Removal has not restarted.')
         apps = {app['id'] for app in self.installed_apps()}
         legacy = 'com.cleanyourtv.updater'
+        system_needed = SYSTEM_UPDATER_APP in apps or bool(pending and pending.get('system_updater_archive'))
+        if system_needed:
+            self.system_updater_cleanup('status', pending.get('system_updater_archive') if pending else None)
         if legacy in apps:
             reply = self.remote.luna(legacy + '.service/status', {}, app_id=HOME)
             result = reply.get('result')
@@ -729,6 +799,12 @@ print('CYTV_PROJECT_REMOVED')
                              updater_archive=UPDATER_STATE + '.archive-' + uuid.uuid4().hex, removals={})
         pending = self.store.pending(self.profile)
         archive = pending['updater_archive']
+        system_archive = None
+        if system_needed:
+            system_archive = pending.get('system_updater_archive') or SYSTEM_UPDATER_STATE + '.archive-' + uuid.uuid4().hex
+            self.store.checkpoint(self.profile, system_updater_archive=system_archive)
+            if self.system_updater_cleanup('disable', system_archive).get('disabled') is not True:
+                raise UserError('Updater permissions removal could not be verified.')
         recovering_root = pending.get('root_submitted') is True
         if recovering_root:
             self.progress('Checking the previous removal on the TV…')
@@ -750,7 +826,7 @@ print('CYTV_PROJECT_REMOVED')
             legacy_installer.restore_device()
         self.cleanup_legacy_permissions()
         removals = dict(self.store.pending(self.profile).get('removals', {}))
-        for app in (UPDATER_APP, legacy, HELPER, HOME):
+        for app in (UPDATER_APP, legacy, HELPER, HOME, SYSTEM_UPDATER_APP):
             previous = removals.get(app)
             if app in apps:
                 if previous is not None:
@@ -767,13 +843,18 @@ print('CYTV_PROJECT_REMOVED')
             self.verify_absent(app)
             removals[app] = 'done'
             self.store.checkpoint(self.profile, removals=removals)
-        if any(app['id'] in (package.ROOT_APP, UPDATER_APP, legacy, HELPER, HOME) for app in self.installed_apps()):
+        if any(app['id'] in (package.ROOT_APP, UPDATER_APP, legacy, HELPER, HOME, SYSTEM_UPDATER_APP) for app in self.installed_apps()):
             raise UserError('Project applications remain. Removal is not complete.')
         self.cleanup_updater_app_permissions()
         self.progress('Verifying removal and preserving recovery records…')
         final = self.root_updater_cleanup('finalize', archive)
         if final.get('removed') is not True:
             raise UserError('Root Updater cleanup is incomplete. Recovery data was kept.')
+        system_final = None
+        if system_needed:
+            system_final = self.system_updater_cleanup('archive', system_archive)
+            if system_final.get('removed') is not True:
+                raise UserError('Project startup or service registrations remain. Removal is not complete.')
         self.verify_project_removed()
         retained = self.remote.run('if [ -e ' + ROOT_STATE + ' ] || [ -L ' + ROOT_STATE + ' ]; then printf CYTV_ROOT_RETAINED; fi').strip()
         if retained:
@@ -786,7 +867,8 @@ print('CYTV_PROJECT_REMOVED')
                 time.sleep(min(1, remaining))
         self.store.finish(self.profile)
         return {'removed': True, 'applications_services_startup_removed': True,
-                'recovery_retained': ROOT_STATE, 'updater_archive': final.get('archive')}
+                'recovery_retained': ROOT_STATE, 'updater_archive': final.get('archive'),
+                'system_updater_archive': system_final.get('archive') if system_final else None}
 
     def uninstall(self, full_project=False):
         if full_project and self.profile['edition'] == 'root':

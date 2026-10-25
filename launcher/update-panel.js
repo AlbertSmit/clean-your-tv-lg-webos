@@ -41,7 +41,8 @@
  document.addEventListener('keydown',function(e){if(panel.classList.contains('hidden'))return;if([9,37,38,39,40,13,461,27].indexOf(e.keyCode)<0)return;
   e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===38||e.keyCode===40){window.HomeReleaseNotes.scroll(reading,e.keyCode===38?-1:1);return;}if(e.keyCode===461||e.keyCode===27)close();else if(e.keyCode===13){if(!e.repeat)buttons[index].click();}else {var direction=e.keyCode===37||e.keyCode===38||(e.keyCode===9&&e.shiftKey)?-1:1;focus(index+direction,direction);}
  },true);
- window.HomeUpdates={open:function(options){previous=document.activeElement;onClose=options&&options.onClose||null;panel.classList.remove('hidden');checkNow();focus(0);},rpc:rpc};
+ function legacyOpen(options){previous=document.activeElement;onClose=options&&options.onClose||null;panel.classList.remove('hidden');checkNow();focus(0);}
+ window.HomeUpdates={open:function(options){if(window.SystemUpdates){panel.classList.add('hidden');var value={edition:"no-root",onClose:options&&options.onClose,fallback:function(){legacyOpen(options);}};return window.SystemUpdates.open(value);}return legacyOpen(options);},rpc:rpc};
 }());
 
 });

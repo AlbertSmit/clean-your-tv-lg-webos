@@ -210,7 +210,7 @@
       focus(selected + (event.keyCode === 37 || event.keyCode === 38 || (event.keyCode === 9 && event.shiftKey) ? -1 : 1));
     }, true);
   }
-  function open(options) {
+  function legacyOpen(options) {
     options = options || {}; if (!panel) build();
     if (panel.hidden) previous = document.activeElement;
     onClose = options.onClose || null;
@@ -219,7 +219,13 @@
     recovery = options.recovery === true; recoveryParent = false; settleUntil = 0; selected = 0; errorText = options.error || ''; panel.hidden = false; render();
     if (!options.error) refresh(!recovery);
   }
-  window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden; }};
+  function open(options) {
+    if (!window.SystemUpdates) return legacyOpen(options);
+    options = options || {};
+    if (panel) { panel.hidden = true; clearTimeout(timer); }
+    return window.SystemUpdates.open({edition:'root',onClose:options.onClose,standalone:options.standalone,recovery:options.recovery,error:options.error,fallback:function () { legacyOpen(options); }});
+  }
+  window.RootUpdates = {rpc:rpc, open:open, isOpen:function () { return !!panel && !panel.hidden || !!(window.SystemUpdates && window.SystemUpdates.isOpen()); }};
 }());
 
 });

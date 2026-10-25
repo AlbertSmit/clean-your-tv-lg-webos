@@ -82,7 +82,8 @@ class GuiTests(unittest.TestCase):
                 ('doctor', 'Check connection and create a diagnostic report'),
                 ('restore', 'Return to LG Home'),
                 ('uninstall', 'Uninstall Clean Your TV'),
-                ('home-diagnostics', 'Home button diagnostics')]):
+                ('home-diagnostics', 'Home button diagnostics'),
+                ('enable-system-updates', 'Enable updates for all TV components (root required)')]):
             with self.subTest(command=command):
                 calls = []
                 def runner(argv, **kwargs):

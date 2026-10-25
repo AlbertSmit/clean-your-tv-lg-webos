@@ -171,6 +171,37 @@ def prepare_manifests(tag, build, packages, prior_build, prior_packages, rollbac
     return {'root': root, 'home': home, 'previous': previous}, files
 
 
+def verify_system_assets(manifests,build,files):
+    expected={'root':{'root','root-updater','root-infrastructure'},'no-root':{'home','helper','updater'}}
+    apps={**APPS,'updater':'com.cleanyourtv.updater','root-updater':'com.cleanyourtv.root.updater'}
+    if set(manifests)!=set(expected):raise ValueError('Both system release sets required')
+    for edition,names in expected.items():
+        manifest=manifests[edition]
+        if manifest.get('edition')!=edition or manifest.get('release')!=build['tag'] or manifest.get('schema')!=1 or manifest.get('supervisor')!=1 or {c['name'] for c in manifest['components']}!=names or len(manifest['components'])!=len(names):raise ValueError('Invalid system release set')
+        for item in manifest['components']:
+            filename=item['url'].rsplit('/',1)[1]
+            if item['url']!=URL+build['tag']+'/'+filename or not re.fullmatch(r'[A-Za-z0-9._-]+',filename):raise ValueError('Invalid system release asset')
+            raw=files[filename]
+            if digest(raw)!=item['sha256'] or len(raw)!=item['size']:raise ValueError('System release asset hash mismatch')
+            key={'root-infrastructure':'root','root-updater':'updater'}.get(item['name'],item['name'])
+            if not isinstance(build['versions'].get(key),str) or item['version']!=build['versions'][key]:raise ValueError('System component version mismatch')
+            if item['name']!='root-infrastructure':
+                app=apps[item['name']]
+                if item.get('application')!=app or item.get('kind')!='ipk':raise ValueError('System component identity mismatch')
+                info=json.loads(data_files(raw)['usr/palm/applications/'+app+'/appinfo.json'])
+                if info.get('id')!=app or info.get('version')!=item['version']:raise ValueError('System package version mismatch')
+            else:
+                if item.get('kind')!='infrastructure':raise ValueError('Invalid system infrastructure')
+                with tarfile.open(fileobj=io.BytesIO(raw),mode='r:gz') as archive:
+                    seen=set()
+                    for member in archive:
+                        safe_name(member.name)
+                        if not member.isfile() or not member.name.startswith(('runtime/','updater/','service/')) or member.name in seen or member.size>32*1024*1024:raise ValueError('Invalid system infrastructure inventory')
+                        seen.add(member.name)
+                    if not seen:raise ValueError('Empty system infrastructure')
+    return manifests
+
+
 def gh(*args):
     return subprocess.check_output(['gh', *args], stderr=subprocess.PIPE)
 
@@ -254,12 +285,23 @@ def main():
         approval_path = ROOT / 'native/helper-rollback-compatibility.json'
         compatibility = json.loads(approval_path.read_text()) if approval_path.exists() else None
         manifests, files = prepare_manifests(args.tag, build, packages, prior_build, prior_packages, rollback, meta.get('body'), compatibility)
+        system = json.loads(download(meta, 'system-manifests.json', tmp / 'current'))
+        system_files = {}
+        (tmp / 'system-assets').mkdir()
+        for manifest in system.values():
+            for item in manifest['components']:
+                name = item['url'].rsplit('/', 1)[1]
+                if name not in system_files:
+                    system_files[name] = download(meta, name, tmp / 'system-assets')
+        manifests['system'] = verify_system_assets(system, build, system_files)
+        files.update(system_files)
         manifest_file = tmp / 'manifests.json'; manifest_file.write_text(json.dumps(manifests))
         for name, raw in files.items(): (output / name).write_bytes(raw)
         subprocess.run(['node', str(ROOT / 'scripts/sign-release-feeds.cjs'), str(manifest_file), str(output)], check=True)
     build['feed_signing'] = {'workflow_run': os.environ.get('GITHUB_RUN_ID'), 'workflow_commit': os.environ.get('GITHUB_SHA')}
-    build['automatic_update_feeds'] = 'Both feeds generated and signed by GitHub Actions from exact release bundles; versions, signatures, packages and rollback verified before publication.'
+    build['automatic_update_feeds'] = 'Legacy and both edition system feeds generated and signed by GitHub Actions from exact release bundles; versions, signatures, packages and rollback verified before publication.'
     root, home, prior = manifests['root'], manifests['home'], manifests['previous']
+    build['system_ota'] = {edition: {'release': args.tag, 'components': manifest['components'], 'feed_sha256': digest((output / ('system-update-'+edition+'.json')).read_bytes())} for edition, manifest in manifests['system'].items()}
     build['root_ota'] = {'version': root['version'], 'release': args.tag, 'ipk': Path(root['url']).name, 'sha256': root['sha256'], 'feed_sha256': digest((output / 'root-update.json').read_bytes())}
     build['no_root_ota'] = {'version': home['home'], 'helper': home['helper'], 'sha256': home['sha256'], 'previous_version': prior['home'], 'previous_sha256': prior['sha256']}
     (output / 'BUILD-INFO.json').write_text(json.dumps(build, indent=2) + '\n')

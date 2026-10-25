@@ -10,7 +10,7 @@ from cytv.terminal import Console
 
 def arguments(config, directory, identity=''):
     action = config.get('action', 'install')
-    if action not in ('install', 'status', 'doctor', 'restore'):
+    if action not in ('install', 'status', 'doctor', 'home-diagnostics', 'restore'):
         raise ValueError('Unsupported Android operation')
     profile = state.target(config.get('host', ''), config.get('edition', ''), config.get('port'))
     language = config.get('language', 'ru')
@@ -25,8 +25,9 @@ def arguments(config, directory, identity=''):
 
 
 class Callbacks:
-    def __init__(self, native, identity=''):
+    def __init__(self, native, identity='', directory=None):
         self.native = native
+        self.directory = Path(directory).resolve() if directory else None
         self.identity = identity
         self.context = []
 
@@ -35,6 +36,10 @@ class Callbacks:
 
     def write(self, message):
         message = str(message)
+        if self.directory and message.strip().endswith('.json'):
+            path = Path(message.strip())
+            if path.is_file() and path.resolve().parent == self.directory / 'reports' and re.fullmatch(r'diagnostic-[a-f0-9]{12}\.json', path.name):
+                self.emit(kind='report-ready', name=path.name)
         self.context.append(message)
         self.context = self.context[-60:]
         self.emit(kind='log', text=message)
@@ -90,7 +95,7 @@ class AndroidConsole(Console):
 
 
 def run(config_json, directory, payload, identity, native):
-    callbacks = Callbacks(native, identity)
+    callbacks = Callbacks(native, identity, directory)
     try:
         config = json.loads(config_json)
         args = arguments(config, directory, identity)

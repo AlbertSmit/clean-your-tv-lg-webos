@@ -25,6 +25,22 @@ class BridgeTests(unittest.TestCase):
             with self.subTest(request=request), self.assertRaises(ValueError):
                 module.arguments(request, '/private/profiles')
 
+    def test_diagnostics_command_and_report_export_event(self):
+        module = self.module()
+        self.assertEqual(module.arguments({'host':'192.168.1.2','edition':'no-root','action':'home-diagnostics'}, '/private/profiles')[0], 'home-diagnostics')
+        class Native:
+            def __init__(self): self.events=[]
+            def emit(self, raw): self.events.append(json.loads(raw))
+        with tempfile.TemporaryDirectory() as tmp:
+            native=Native();reports=Path(tmp)/'reports';reports.mkdir()
+            report=reports/'diagnostic-123456abcdef.json';report.write_text('{}')
+            callbacks=module.Callbacks(native,directory=tmp)
+            callbacks.write('  '+str(report))
+            self.assertEqual(native.events[0],{'kind':'report-ready','name':report.name})
+            native.events.clear();other=Path(tmp)/'private.json';other.write_text('{}')
+            callbacks.write(str(other))
+            self.assertFalse(any(e['kind']=='report-ready' for e in native.events))
+
     def test_edition_defaults_and_identity_path(self):
         module = self.module()
         args = module.arguments({'host': '192.168.1.2', 'edition': 'no-root'}, '/private/profiles')

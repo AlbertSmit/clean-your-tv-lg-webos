@@ -40,7 +40,7 @@ def parser():
     result._positionals.title = i18n.translate('positional arguments')
     result._optionals.title = i18n.translate('options')
     result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
-    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'restore', 'uninstall'))
+    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall'))
     result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
     result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
     result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
@@ -358,6 +358,17 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 else:
                     write('Packages installed; Home Helper launch requested. Check short Home, arrows/OK, Back, volume, standby and cold boot.')
                     write('Emergency exit: three short Home presses within two seconds. Keep Developer Mode active. The computer can now be switched off.')
+            elif args.command == 'home-diagnostics':
+                phase = 'home-diagnostics'
+                if args.non_interactive:
+                    raise UserError('Open Home button diagnostics in the installer to record a Home press.')
+                write.heading('Home button diagnostics')
+                write('Open an app on the TV. Recording lasts one minute and saves one report with application IDs and timing.')
+                if not prompts.confirm('Ready to record? Continue and wait for the Home prompt.', ask, write, default=True):
+                    return 0
+                report = diagnostics.collect_home_report(remote, store, profile, write)
+                write.heading('Diagnostic report')
+                write.raw('  ' + str(report.resolve()))
             elif args.command == 'doctor':
                 phase = 'doctor'
                 installer.preflight()

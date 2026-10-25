@@ -32,6 +32,13 @@
         24
       ],
       "summary": "Improve key diagnostics and guide unfinished No-root removal recovery"
+    },
+    {
+      "pr": 33,
+      "issues": [
+        21
+      ],
+      "summary": "Verify Helper state and highlight installer failures"
     }
   ],
   "excluded": [],

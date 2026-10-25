@@ -96,18 +96,19 @@ class Store:
 
     def begin(self, profile, action, **values):
         path = self.device_dir(profile) / 'operation.json'
-        fd, temporary = tempfile.mkstemp(prefix='.operation-', dir=path.parent)
+        data = json.dumps({'action': action, 'stage': 'pending', **values}).encode('utf-8')
         try:
-            with os.fdopen(fd, 'w', encoding='utf-8') as stream:
-                json.dump({'action': action, 'stage': 'pending', **values}, stream)
-                stream.flush()
-                os.fsync(stream.fileno())
-            os.link(temporary, path)  # Exclusive atomic publication, including on Windows NTFS.
-            sync_directory(path.parent)
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         except FileExistsError:
             raise UserError('Previous operation is unresolved. Run cytv status or cytv restore; do not retry installation.') from None
-        finally:
-            os.unlink(temporary)
+        # Android forbids hard links. Exclusive creation never replaces evidence;
+        # interrupted writes remain as blocking receipts, even if empty/corrupt.
+        # Callers must wait for both syncs before mutating the TV.
+        with os.fdopen(fd, 'wb') as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        sync_directory(path.parent)
 
     def finish(self, profile):
         path = self.device_dir(profile) / 'operation.json'

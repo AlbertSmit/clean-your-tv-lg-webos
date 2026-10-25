@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import stat
+import types
 import tarfile
 import tempfile
 import unittest
@@ -203,6 +205,60 @@ class RuntimeTests(unittest.TestCase):
             parent.chmod(0o777)
             with self.assertRaises(UserError): runtime.prime_cache(parent/'cache', self.messages.append)
         parent.chmod(0o700)
+
+    def android_cache_fixture(self, alias=False):
+        anchor = '/data/user/0/com.cleanyourtv.android/files'
+        cache = anchor+'/profiles/python-cache'
+        def directory(uid, mode=0o755, gid=None):
+            return types.SimpleNamespace(st_mode=stat.S_IFDIR | mode, st_uid=uid,
+                                         st_gid=uid if gid is None else gid)
+        records = {'/': directory(0), '/data': directory(1000, 0o771),
+                   '/data/user': directory(1000, 0o711), '/data/user/0': directory(1000, 0o711)}
+        for prefix in ('/data/user/0', '/data/data'):
+            records[prefix+'/com.cleanyourtv.android'] = directory(10123, 0o700)
+            records[prefix+'/com.cleanyourtv.android/files'] = directory(10123, 0o771)
+            records[prefix+'/com.cleanyourtv.android/files/profiles'] = directory(10123, 0o700)
+            records[prefix+'/com.cleanyourtv.android/files/profiles/python-cache'] = directory(10123, 0o700)
+        if alias:
+            records['/data/data'] = directory(1000, 0o771)
+            records['/data/user/0'] = types.SimpleNamespace(st_mode=stat.S_IFLNK | 0o777, st_uid=0, st_gid=0)
+        application = types.SimpleNamespace(getPackageName=lambda: 'com.cleanyourtv.android',
+                                           getFilesDir=lambda: types.SimpleNamespace(getAbsolutePath=lambda: anchor))
+        java = types.SimpleNamespace(jclass=lambda name: types.SimpleNamespace(
+            getPlatform=lambda: types.SimpleNamespace(getApplication=lambda: application)))
+        return cache, records, java
+
+    @unittest.skipUnless(os.name == 'posix', 'Android is POSIX')
+    def test_android_cache_uses_private_application_anchor_with_system_ancestors(self):
+        for alias in (False, True):
+            with self.subTest(alias=alias):
+                cache, records, java = self.android_cache_fixture(alias)
+                with patch.dict(os.sys.modules, {'java': java}), patch.object(runtime.os, 'getuid', return_value=10123), patch.object(runtime.os, 'getgid', return_value=10123), patch.object(Path, 'lstat', lambda path: records[str(path)]), patch.object(Path, 'readlink', return_value=Path('/data/data')):
+                    result = runtime._cache_directory(cache)
+                self.assertEqual(str(result), cache.replace('/data/user/0', '/data/data') if alias else cache)
+
+    @unittest.skipUnless(os.name == 'posix', 'Android is POSIX')
+    def test_android_anchor_does_not_allow_foreign_writable_or_indirect_app_paths(self):
+        for bad in ('foreign-package', 'public-package', 'symlink-files', 'writable-profiles', 'foreign-platform', 'unsafe-alias', 'wrong-application', 'wrong-context-path', 'untrusted-files-group'):
+            with self.subTest(bad=bad):
+                cache, records, java = self.android_cache_fixture(alias=bad == 'unsafe-alias')
+                package = '/data/user/0/com.cleanyourtv.android'
+                if bad == 'foreign-package': records[package].st_uid = 10124
+                elif bad == 'public-package': records[package].st_mode |= 0o077
+                elif bad == 'symlink-files': records[package+'/files'].st_mode = stat.S_IFLNK | 0o777
+                elif bad == 'writable-profiles': records[package+'/files/profiles'].st_mode |= 0o022
+                elif bad == 'foreign-platform': records['/data'].st_uid = 10124
+                elif bad == 'untrusted-files-group': records[package+'/files'].st_gid = 10124
+                elif bad == 'wrong-application': java.jclass('').getPlatform().getApplication().getPackageName = lambda: 'other.application'
+                elif bad == 'wrong-context-path': java.jclass('').getPlatform().getApplication().getFilesDir = lambda: types.SimpleNamespace(getAbsolutePath=lambda: '/data/user/0/other.application/files')
+                with patch.dict(os.sys.modules, {'java': java}), patch.object(runtime.os, 'getuid', return_value=10123), patch.object(runtime.os, 'getgid', return_value=10123), patch.object(Path, 'lstat', lambda path: records[str(path)]), patch.object(Path, 'readlink', return_value=Path('/data/foreign')):
+                    with self.assertRaises(UserError): runtime._cache_directory(cache)
+
+    @unittest.skipUnless(os.name == 'posix', 'Android is POSIX')
+    def test_android_context_does_not_weaken_external_data_directory(self):
+        cache, records, java = self.android_cache_fixture()
+        with patch.dict(os.sys.modules, {'java': java}), patch.object(runtime.os, 'getuid', return_value=10123), patch.object(runtime.os, 'getgid', return_value=10123), patch.object(Path, 'lstat', lambda path: records[str(path)]):
+            with self.assertRaises(UserError): runtime._cache_directory('/data/external/python-cache')
 
     def test_download_size_hash_and_final_url_fail_without_publishing_cache(self):
         raw = archive(GOOD)

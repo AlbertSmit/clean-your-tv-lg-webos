@@ -108,9 +108,66 @@ def _verified_bytes(path):
     return data
 
 
+def _android_cache_anchor(cache):
+    """Use Chaquopy's app context only for CYTV's fixed private files tree."""
+    pattern = r'(/data/(?:data|user/[0-9]+)/com\.cleanyourtv\.android/files)'
+    matched = re.fullmatch(pattern + r'/(.+)', str(cache))
+    if not _HOST_POSIX or not matched or os.getuid() < 10000: return None
+    try:
+        from java import jclass
+    except ImportError:
+        return None
+    try:
+        application = jclass('com.chaquo.python.Python').getPlatform().getApplication()
+        if str(application.getPackageName()) != 'com.cleanyourtv.android': raise UserError(CACHE_ERROR)
+        context_anchor = Path(str(application.getFilesDir().getAbsolutePath()))
+        if not re.fullmatch(pattern, str(context_anchor)): raise UserError(CACHE_ERROR)
+    except Exception:
+        raise UserError(CACHE_ERROR) from None
+
+    def platform_anchor(anchor):
+        prefix = anchor.parent.parent
+        canonical = anchor
+        for directory in reversed((prefix, *prefix.parents)):
+            info = directory.lstat()
+            if stat.S_ISLNK(info.st_mode):
+                # The sole allowed platform alias is verified before rewriting.
+                if (str(directory) != '/data/user/0' or info.st_uid != 0
+                        or str(directory.readlink()) != '/data/data'):
+                    raise UserError(CACHE_ERROR)
+                canonical = Path('/data/data/com.cleanyourtv.android/files')
+                info = Path('/data/data').lstat()
+            if (not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0, 1000)
+                    or info.st_gid not in (0, 1000) or info.st_mode & 0o002):
+                raise UserError(CACHE_ERROR)
+        return canonical
+
+    requested_anchor = Path(matched.group(1))
+    anchor = platform_anchor(requested_anchor)
+    if anchor != platform_anchor(context_anchor): raise UserError(CACHE_ERROR)
+    package = anchor.parent.lstat()
+    files = anchor.lstat()
+    if (not stat.S_ISDIR(package.st_mode) or package.st_uid != os.getuid() or package.st_mode & 0o077
+            or not stat.S_ISDIR(files.st_mode) or files.st_uid != os.getuid() or files.st_mode & 0o002
+            or (files.st_mode & 0o020 and files.st_gid != os.getgid())):
+        raise UserError(CACHE_ERROR)
+    relative = cache.relative_to(requested_anchor)
+    if '..' in relative.parts: raise UserError(CACHE_ERROR)
+    return anchor/relative, anchor
+
+
 def _cache_directory(cache_dir):
     cache = Path(cache_dir).absolute()
-    for directory in reversed((cache, *cache.parents)):
+    android_anchor = _android_cache_anchor(cache)
+    if android_anchor:
+        cache, anchor = android_anchor
+        directories, directory = [], cache
+        while directory != anchor:
+            directories.append(directory)
+            directory = directory.parent
+    else:
+        directories = (cache, *cache.parents)
+    for directory in reversed(directories):
         try: info = directory.lstat()
         except FileNotFoundError:
             try: directory.mkdir(mode=0o700)

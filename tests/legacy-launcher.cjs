@@ -37,10 +37,22 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
             delete Object.assign;
           }
           window.launches = [];
+          window.inventoryRequests = [];
+          window.airplayMode = 'success';
           window.PalmServiceBridge = function () {
             this.cancel = function () {};
             this.call = function (uri, raw) {
               const params = JSON.parse(raw);
+              if (uri.endsWith('/listApps')) {
+                window.inventoryRequests.push(this);
+                return;
+              }
+              if (uri === 'luna://airplay.service/showAirplayPage') {
+                window.airplayRequest = this;
+                if (window.airplayMode === 'silent') return;
+                setTimeout(() => this.onservicecallback(JSON.stringify({returnValue: window.airplayMode === 'success'})), 0);
+                return;
+              }
               if (uri.endsWith('/launch')) window.launches.push(params.id);
               setTimeout(() => this.onservicecallback(JSON.stringify({returnValue: uri.endsWith('/launch')})), 0);
             };
@@ -112,6 +124,76 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
         }), [0, 0, 1920, 1080]);
         await page.keyboard.press('Escape');
         assert.deepEqual(errors, [], 'navigation and dialogs must not raise compatibility errors');
+        // A late startup inventory reply must not take navigation away from Inputs.
+        await page.locator('#btnInputs').click();
+        await page.evaluate(() => inventoryRequests[0].onservicecallback(JSON.stringify({
+          returnValue: true, apps: [{id: 'test.0', title: 'Updated title'}, {id: 'airplay', title: 'AirPlay'}]
+        })));
+        assert.equal(await page.locator('#tiles .focused').count(), 0, 'late inventory must preserve Inputs focus');
+        await page.keyboard.press('Escape');
+        assert(await page.locator('#inputsPanel').evaluate(el => el.classList.contains('hidden')), 'Back still closes Inputs after inventory refresh');
+        await page.locator('#tiles .add-app').dispatchEvent('click');
+        await page.evaluate(() => inventoryRequests[inventoryRequests.length - 1].onservicecallback(JSON.stringify({returnValue:false})));
+        await page.locator('#appPicker [data-app-id="airplay"]').click();
+        // Closing the picker exposes grid tiles under the pointer. Park it
+        // outside the grid before selecting the app for remote-control tests.
+        await page.mouse.move(0, 0);
+        await page.locator('#tiles [data-app-id="airplay"]').dispatchEvent('mouseover');
+        assert.equal(await page.locator('#tiles .focused').getAttribute('data-app-id'), 'airplay');
+        await page.clock.install();
+        await page.evaluate(() => { window.launches = []; window.airplayMode = 'success'; });
+        await page.keyboard.press('Enter');
+        await page.clock.runFor(1);
+        await page.clock.fastForward(10000);
+        assert.deepEqual(await page.evaluate(() => launches), [], 'successful AirPlay page must not launch the app again');
+        await page.evaluate(() => { window.airplayMode = 'error'; });
+        await page.keyboard.press('Enter');
+        await page.clock.runFor(1);
+        await page.clock.fastForward(10000);
+        assert.deepEqual(await page.evaluate(() => launches), ['airplay'], 'explicit AirPlay failure uses normal launch');
+        await page.evaluate(() => { window.launches = []; window.airplayMode = 'silent'; });
+        await page.keyboard.press('Enter');
+        await page.clock.fastForward(10000);
+        assert.deepEqual(await page.evaluate(() => launches), ['airplay'], 'silent AirPlay service must fall back within ten seconds');
+        await page.evaluate(() => airplayRequest.onservicecallback(JSON.stringify({returnValue:false})));
+        assert.deepEqual(await page.evaluate(() => launches), ['airplay'], 'late AirPlay error must not launch twice');
+        const restored = await page.evaluate(() => {
+          let removed = 0;
+          const remove = DOMTokenList.prototype.remove;
+          DOMTokenList.prototype.remove = function () {
+            if (Array.prototype.indexOf.call(arguments, 'shown') >= 0) removed++;
+            return remove.apply(this, arguments);
+          };
+          const focused = document.querySelector('#tiles .focused').dataset.appId;
+          document.dispatchEvent(new Event('webOSRelaunch'));
+          document.dispatchEvent(new Event('visibilitychange'));
+          DOMTokenList.prototype.remove = remove;
+          return {removed, focused, after: document.querySelector('#tiles .focused').dataset.appId};
+        });
+        assert.equal(restored.removed, 0, 'returning Home must not restart tile entrance animation');
+        assert.equal(restored.after, restored.focused, 'returning Home preserves the selected app');
+        for (const interaction of ['hold', 'editing']) {
+          await page.reload();
+          await page.clock.runFor(100);
+          await page.waitForFunction(() => window.RootLauncherRendered);
+          await page.locator('#tiles [data-app-id="test.0"]').hover();
+          await page.evaluate(() => { window.heldTile = document.querySelector('#tiles .focused'); });
+          await page.keyboard.down('Enter');
+          await page.clock.runFor(interaction === 'editing' ? 650 : 100);
+          await page.evaluate(() => inventoryRequests[0].onservicecallback(JSON.stringify({
+            returnValue: true, apps: [{id: 'test.0', title: 'Updated title'}]
+          })));
+          assert(await page.evaluate(() => heldTile === document.querySelector('#tiles .focused')), 'inventory must not replace the tile during ' + interaction);
+          await page.keyboard.up('Enter');
+          if (interaction === 'editing') {
+            assert.equal(await page.locator('#tiles .moving').count(), 1, 'inventory must preserve tile editing');
+            await page.keyboard.press('Escape');
+            assert.equal(await page.locator('#tiles .moving').count(), 0, 'tile editing remains cancellable');
+          } else {
+            assert.deepEqual(await page.evaluate(() => launches), ['test.0'], 'releasing OK still launches the selected app');
+          }
+        }
+        assert.deepEqual(errors, [], 'late replies and return events must not raise errors');
         console.log('PASS', profile, 'visible cards, icons, scroll, launch, Inputs and full-screen dialogs');
       } catch (error) {
         failed = true;

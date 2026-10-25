@@ -59,6 +59,24 @@ real-TV acceptance; automated tests do not establish hardware compatibility.
 
 ## Installation wizard
 
+If a previous No-root removal is unfinished, installation offers to finish it
+before continuing. This is a separate, default-No confirmation, including with
+`--yes`. It restores LG Home and resumes the existing verified package-removal
+flow; it does not delete the operation journal to bypass recovery. Declining
+keeps recovery data. Non-interactive installation stops with instructions to
+use the interactive installer or `cytv uninstall` for the same saved TV/profile.
+If recovery fails, attach the new diagnostic report for the `uninstall` phase.
+
+Developer Mode key failures include a safe `connection` object in diagnostic
+JSON: `protocol: developer-key` and an allowlisted `reason_code`:
+`key-server-unavailable`, `response-redirect`, `response-size`, `response-format`
+or `key-unlock`. Reports never contain the response, private key, passphrase or
+remote exception text. `key-unlock` does not prove an incorrect passphrase: a
+damaged or unsupported key can fail in the same parser. Enter the current
+six-character Developer Mode passphrase exactly, including letter case; if the
+failure persists, compare key retrieval with LG's official CLI. Do not attach
+private keys or passphrases to an issue.
+
 After connecting, cytv reads the installed TV versions and shows current → bundled version for Home and Home Helper (No-root), or Root and Root Updater. Review and confirm before installation. First installs, reinstalls and downgrades are labeled separately; `--yes` skips confirmation but still prints the versions.
 
 The wizard separates steps with headings, whitespace and numbered options.

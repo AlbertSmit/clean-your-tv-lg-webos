@@ -17,6 +17,62 @@ class RejectedAuthTransport:
 
 
 class TransportTests(unittest.TestCase):
+    def test_developer_key_diagnostics_distinguish_response_from_unlock_failure(self):
+        import paramiko
+        from cytv.transport import developer_key
+        from cytv.errors import UserError
+        key = paramiko.RSAKey.generate(2048)
+        encrypted = io.StringIO()
+        key.write_private_key(encrypted, password='Ab1234')
+        cases = [('response-format', b'<html>PRIVATE-RESPONSE</html>', 'Ab1234'),
+                 ('response-format', b'\xff', 'Ab1234'),
+                 ('response-size', b'x' * 65537, 'Ab1234'),
+                 ('key-unlock', encrypted.getvalue().encode(), 'WRONG-SECRET')]
+        for reason, data, password in cases:
+            with self.subTest(reason=reason), patch('cytv.transport.urllib.request.build_opener') as build:
+                build.return_value.open.return_value.__enter__.return_value.read.return_value = data
+                with self.assertRaises(UserError) as caught:
+                    developer_key('mock-tv.invalid', password)
+                self.assertEqual(getattr(caught.exception, 'reason_code', None), reason)
+                self.assertNotIn('PRIVATE-RESPONSE', str(caught.exception))
+                self.assertNotIn('WRONG-SECRET', str(caught.exception))
+        with patch('cytv.transport.urllib.request.build_opener') as build:
+            build.return_value.open.return_value.__enter__.return_value.read.return_value = encrypted.getvalue().encode()
+            actual, raw = developer_key('mock-tv.invalid', 'Ab1234')
+            self.assertEqual(actual.asbytes(), key.asbytes())
+            self.assertEqual(paramiko.RSAKey.from_private_key(io.StringIO(raw.decode())).asbytes(), key.asbytes())
+
+    def test_developer_key_fetch_failure_is_safe_and_actionable(self):
+        from cytv.transport import developer_key
+        from cytv.errors import UserError
+        with patch('cytv.transport.urllib.request.build_opener') as build:
+            build.return_value.open.side_effect = OSError('PRIVATE-HOST')
+            with self.assertRaises(UserError) as caught:
+                developer_key('mock-tv.invalid', 'PRIVATE-SECRET')
+            self.assertEqual(getattr(caught.exception, 'reason_code', None), 'key-server-unavailable')
+            self.assertNotIn('PRIVATE-', str(caught.exception))
+
+    def test_developer_key_redirect_is_rejected_without_following_location(self):
+        from cytv.errors import DeveloperKeyError
+        from cytv.transport import NoRedirect
+        with self.assertRaises(DeveloperKeyError) as caught:
+            NoRedirect().redirect_request(None, None, 302, 'PRIVATE-MESSAGE', {}, 'http://private.invalid')
+        self.assertEqual(caught.exception.reason_code, 'response-redirect')
+        self.assertNotIn('PRIVATE', str(caught.exception))
+
+    def test_developer_key_http_protocol_and_read_failures_have_safe_reason(self):
+        import http.client
+        from cytv.errors import UserError
+        from cytv.transport import developer_key
+        for error in (http.client.BadStatusLine('PRIVATE-STATUS'),
+                      http.client.IncompleteRead(b'PRIVATE-KEY')):
+            with self.subTest(error=type(error).__name__), patch('cytv.transport.urllib.request.build_opener') as build:
+                build.return_value.open.return_value.__enter__.return_value.read.side_effect = error
+                with self.assertRaises(UserError) as caught:
+                    developer_key('mock-tv.invalid', 'PRIVATE-SECRET')
+                self.assertEqual(caught.exception.reason_code, 'key-server-unavailable')
+                self.assertNotIn('PRIVATE-', str(caught.exception))
+
     def test_updater_status_uses_root_application_identity(self):
         import shlex
         commands = []

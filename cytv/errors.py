@@ -10,6 +10,15 @@ class ExistingRoot(UserError):
     """A previous Root deployment needs an explicit reinstall decision."""
 
 
+class DeveloperKeyError(UserError):
+    """A Key Server failure with a fixed reason code, never key material."""
+    def __init__(self, message, reason_code):
+        super().__init__(message)
+        self.reason_code = reason_code if reason_code in (
+            'key-server-unavailable', 'response-redirect', 'response-size',
+            'response-format', 'key-unlock') else 'unknown'
+
+
 class TVConnectionError(UserError):
     """An SSAP failure with allowlisted protocol metadata, never remote text."""
     def __init__(self, message, close_code=None, reason_code='connection-closed'):

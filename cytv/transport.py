@@ -2,6 +2,7 @@
 import base64
 import codecs
 import hashlib
+import http.client
 import io
 import json
 from pathlib import Path
@@ -10,7 +11,7 @@ import time
 import urllib.request
 
 from .state import private_write
-from .errors import UserError, TVRejected
+from .errors import UserError, TVRejected, DeveloperKeyError
 
 
 class AgentLoginFailed(UserError):
@@ -107,20 +108,29 @@ def save_host_keys(keys, path):
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, request, fp, code, msg, headers, newurl):
-        raise ValueError('TV Key Server redirected unexpectedly')
+        raise DeveloperKeyError('Key Server redirected unexpectedly. Check the TV address and Key Server.', 'response-redirect')
 
 
 def developer_key(host, passphrase):
     import paramiko
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-    with opener.open(f'http://{host}:9991/webos_rsa', timeout=10) as response:
-        data = response.read(65537)
-    if len(data) > 65536:
-        raise ValueError('Unexpected Developer Mode key size')
     try:
-        key = paramiko.RSAKey.from_private_key(io.StringIO(data.decode()), password=passphrase)
+        with opener.open(f'http://{host}:9991/webos_rsa', timeout=10) as response:
+            data = response.read(65537)
+    except (OSError, http.client.HTTPException):
+        raise DeveloperKeyError('Could not reach Key Server. Check the TV address, network and Key Server switch.', 'key-server-unavailable') from None
+    if len(data) > 65536:
+        raise DeveloperKeyError('Key Server returned an oversized response. Check the TV address and Key Server.', 'response-size')
+    try:
+        text = data.decode('utf-8')
+    except UnicodeError:
+        text = ''
+    if not any(line in text.splitlines() for line in ('-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN OPENSSH PRIVATE KEY-----')):
+        raise DeveloperKeyError('Key Server did not return a supported private key. Check the TV address and Key Server.', 'response-format')
+    try:
+        key = paramiko.RSAKey.from_private_key(io.StringIO(text), password=passphrase)
     except (ValueError, paramiko.SSHException):
-        raise UserError('Could not unlock the TV key. Check Key Server and its displayed passphrase.') from None
+        raise DeveloperKeyError('Could not unlock the TV key. Enter the current six-character passphrase exactly, including letter case. The key may also be damaged or unsupported.', 'key-unlock') from None
     result = io.StringIO()
     key.write_private_key(result)
     return key, result.getvalue().encode()

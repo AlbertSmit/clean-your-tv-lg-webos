@@ -9,6 +9,57 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_failed_inline_removal_keeps_receipt_and_reports_uninstall_phase(self):
+        from unittest.mock import MagicMock
+        from cytv.errors import UserError
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch('cytv.cli.package.verify_payload', return_value={}), \
+             patch('cytv.cli.Installer') as cls, patch('cytv.tv.SSAP') as ssap:
+            store = state.Store(tmp)
+            profile = state.target('192.0.2.10', 'no-root')
+            store.begin(profile, 'uninstall')
+            inst = cls.return_value
+            inst.status.return_value = {'can_resume_root_setup': False}
+            inst.uninstall.side_effect = UserError('Removal remains unconfirmed')
+            code, output, _ = self.run_cli(['--host', profile['host'], '--edition', 'no-root',
+                '--data-dir', tmp, '--yes'], ['y'], remote=MagicMock())
+            self.assertEqual(code, 2, output)
+            self.assertIsNotNone(store.pending(profile))
+            report = json.loads(next(Path(tmp).glob('reports/*.json')).read_text())
+            self.assertEqual(report['phase'], 'uninstall')
+            inst.version_summary.assert_not_called()
+            inst.install.assert_not_called()
+            ssap.assert_not_called()
+
+    def test_install_offers_to_finish_no_root_removal_with_explicit_consent(self):
+        from unittest.mock import MagicMock
+        for choice in ('y', 'n', 'q', 'non-interactive'):
+            with self.subTest(choice=choice), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.cli.package.verify_payload', return_value={}), \
+                 patch('cytv.cli.Installer') as cls, patch('cytv.tv.SSAP') as ssap:
+                store = state.Store(tmp)
+                profile = state.target('192.0.2.10', 'no-root')
+                store.begin(profile, 'uninstall')
+                inst = cls.return_value
+                inst.status.return_value = {'can_resume_root_setup': False}
+                inst.uninstall.side_effect = lambda: store.finish(profile)
+                inst.version_summary.return_value = []
+                flags = ['--yes', '--non-interactive'] if choice == 'non-interactive' else [] if choice == 'y' else ['--yes']
+                code, output, _ = self.run_cli(['--host', profile['host'], '--edition', 'no-root',
+                    '--data-dir', tmp] + flags,
+                    ['y', 'y', 'n'] if choice == 'y' else [] if choice == 'non-interactive' else [choice], remote=MagicMock())
+                self.assertEqual(inst.uninstall.call_count, int(choice == 'y'), output)
+                self.assertIn('Unfinished removal', output)
+                if choice == 'y':
+                    self.assertIsNone(store.pending(profile))
+                    inst.version_summary.assert_called_once()
+                else:
+                    self.assertIsNotNone(store.pending(profile))
+                    inst.version_summary.assert_not_called()
+                self.assertEqual(code, 2 if choice == 'non-interactive' else 130 if choice == 'q' else 0, output)
+                inst.install.assert_not_called()
+                ssap.assert_not_called()
+
     def test_each_maintenance_command_reaches_its_operation_without_installing(self):
         from unittest.mock import MagicMock
         for command in ('status', 'doctor', 'restore', 'uninstall'):

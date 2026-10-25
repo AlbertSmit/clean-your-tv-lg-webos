@@ -17,7 +17,7 @@ def verify():
         raise ValueError('Independent boot callback required')
     files = proof.get('files', {})
     required = {str(p) for p in root.glob('*.py')} | {str(callback)}
-    required.update(str(d.STATE/name) for name in ('python_binding.py','python-launcher','python-runtime.json') if (d.STATE/name).exists())
+    required.update(str(d.STATE/name) for name in ('python_binding.py','python_boot.js','python-launcher','python-runtime.json') if (d.STATE/name).exists())
     if not required.issubset(files):
         raise ValueError('Incomplete recovery manifest')
     import os, stat

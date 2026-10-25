@@ -11,13 +11,17 @@ CONTENT = b'#!/bin/sh\nexec /usr/bin/python3 /var/lib/clean-your-tv-root/runtime
 
 
 def managed_content():
+    return ('#!/bin/sh\nexec /bin/sh '+str(STATE/'service/boot-recover.sh')+' mark\n').encode()
+
+
+def previous_managed_content():
     return ('#!/bin/sh\nexec '+str(STATE/'python-launcher')+' /var/lib/clean-your-tv-root/runtime/boot_gate.py mark\n').encode()
 
 
 def owned(saved):
     if (saved.get('version') != 1 or saved.get('path') != str(HOOK)
             or set(saved) != {'version','path','content'}
-            or saved.get('content') not in (CONTENT.decode(),managed_content().decode())):
+            or saved.get('content') not in (CONTENT.decode(),managed_content().decode(),previous_managed_content().decode())):
         raise ValueError('Unexpected startup hook receipt')
     return saved['content'].encode()
 
@@ -35,6 +39,8 @@ def install(secure, write):
     # Existing receipts retain their interpreter identity for rollback.
     if os.path.lexists(receipt):
         content=owned(json.loads(secure(receipt)))
+        if content == previous_managed_content():
+            raise ValueError('Unvalidated managed startup hook requires recovery and reprovisioning')
         if os.path.lexists(HOOK):
             if secure(HOOK) != content or stat.S_IMODE(HOOK.stat().st_mode) != 0o700:
                 raise ValueError('Startup hook drift')

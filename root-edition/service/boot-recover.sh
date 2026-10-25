@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
-if [ -e /var/lib/clean-your-tv-root/python-launcher ] || [ -L /var/lib/clean-your-tv-root/python-launcher ] || [ -e /var/lib/clean-your-tv-root/python-runtime.json ]; then
-  exec /var/lib/clean-your-tv-root/python-launcher /var/lib/clean-your-tv-root/runtime/cli.py boot
-fi
-exec /usr/bin/python3 /var/lib/clean-your-tv-root/runtime/cli.py boot
+unset NODE_OPTIONS NODE_PATH
+[ "$#" -le 1 ] || exit 2
+case "${1-boot}" in
+  boot) exec /usr/bin/node /var/lib/clean-your-tv-root/python_boot.js /var/lib/clean-your-tv-root /var/lib/clean-your-tv-root/runtime/cli.py boot ;;
+  mark) exec /usr/bin/node /var/lib/clean-your-tv-root/python_boot.js /var/lib/clean-your-tv-root /var/lib/clean-your-tv-root/runtime/boot_gate.py mark ;;
+  *) exit 2 ;;
+esac

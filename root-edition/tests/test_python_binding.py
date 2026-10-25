@@ -128,7 +128,7 @@ class RuntimeBindingTests(unittest.TestCase):
                 # Ownership checks on host ancestors are already tested by binding tests.
                 with patch.object(hook,'trusted_hook_directory'):
                     hook.install(Path.read_bytes,write)
-                self.assertIn((str(state/'python-launcher')+' ').encode(),target.read_bytes())
+                self.assertIn((str(state/'service/boot-recover.sh')+' mark').encode(),target.read_bytes())
                 hook.remove(Path.read_bytes)
                 self.assertFalse(target.exists())
                 self.assertTrue((state/'startup-hook.json').exists())
@@ -139,24 +139,28 @@ class BootBindingTests(unittest.TestCase):
         result=subprocess.run(['node',str(ROOT/'service/test-python-binding.js')],capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
 
-    def test_boot_uses_persisted_launcher_and_never_bypasses_broken_binding(self):
+    def test_boot_and_marker_reject_launcher_before_touch_marker(self):
+        import shutil
         import subprocess
-        with tempfile.TemporaryDirectory() as tmp:
-            state=Path(tmp)
-            script=(ROOT/'service/boot-recover.sh').read_text().replace('/var/lib/clean-your-tv-root',str(state)).replace('/usr/bin/python3','/bin/echo legacy')
-            boot=state/'boot';boot.write_text(script)
-            launcher=state/'python-launcher';launcher.write_text('#!/bin/sh\nexec /bin/echo managed "$@"\n');launcher.chmod(0o700)
-            result=subprocess.run(['/bin/sh',str(boot)],capture_output=True,text=True)
-            self.assertEqual(result.returncode,0,result.stderr)
-            self.assertEqual(result.stdout,'managed '+str(state/'runtime/cli.py')+' boot\n')
-            launcher.unlink();launcher.symlink_to(state/'missing')
-            result=subprocess.run(['/bin/sh',str(boot)],capture_output=True,text=True)
-            self.assertNotEqual(result.returncode,0)
-            self.assertNotIn('legacy',result.stdout)
-            launcher.unlink()
-            result=subprocess.run(['/bin/sh',str(boot)],capture_output=True,text=True)
-            self.assertEqual(result.returncode,0,result.stderr)
-            self.assertTrue(result.stdout.startswith('legacy '))
+        for entrypoint in ('boot','mark'):
+            for fault in ('altered','missing-receipt','mismatched-receipt','symlink','writable'):
+                with self.subTest(entrypoint=entrypoint,fault=fault),tempfile.TemporaryDirectory() as tmp:
+                    state=Path(tmp).resolve(); marker=state/'executed'
+                    script=(ROOT/'service/boot-recover.sh').read_text().replace('/var/lib/clean-your-tv-root',str(state)).replace('/usr/bin/node',shutil.which('node'))
+                    boot=state/'boot';boot.write_text(script)
+                    helper=ROOT/'python_boot.js'
+                    if helper.exists(): (state/'python_boot.js').write_bytes(helper.read_bytes())
+                    launcher=state/'python-launcher'
+                    launcher.write_text('#!/bin/sh\ntouch '+str(marker)+'\n');launcher.chmod(0o700)
+                    receipt=state/'python-runtime.json';receipt.write_text('{}')
+                    if fault=='missing-receipt':receipt.unlink()
+                    if fault=='symlink':
+                        actual=state/'foreign';launcher.rename(actual);launcher.symlink_to(actual)
+                    if fault=='writable':launcher.chmod(0o777)
+                    result=subprocess.run(['/bin/sh',str(boot),entrypoint],capture_output=True,text=True)
+                    self.assertNotEqual(result.returncode,0,result.stderr)
+                    self.assertFalse(marker.exists(),'launcher ran before binding verification')
+                    self.assertIn('python-binding',result.stderr)
 
 
 class HostSelectionTests(unittest.TestCase):

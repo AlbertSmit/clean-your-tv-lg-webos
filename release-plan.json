@@ -23,6 +23,13 @@
       "pr": 40,
       "issues": [],
       "summary": "Update all TV system components with independent recovery"
+    },
+    {
+      "pr": 42,
+      "issues": [
+        24
+      ],
+      "summary": "Fix Android operation receipts without hard links while preserving unresolved evidence; #24 Android comment only, original unfinished removal remains open"
     }
   ],
   "excluded": [],

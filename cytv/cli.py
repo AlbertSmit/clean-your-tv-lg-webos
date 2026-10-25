@@ -8,7 +8,7 @@ import sys
 from . import __version__, package, state, i18n
 from .errors import UserError, TVNotReady, ExistingRoot
 from .operations import Installer
-from .terminal import Console
+from .terminal import Console, supports_ansi
 from . import diagnostics, discovery, inspect_tv, prompts
 
 
@@ -32,7 +32,9 @@ class LanguageParser(argparse.ArgumentParser):
             message = argument + ': ' + i18n.translate(detail)
         else:
             message = i18n.translate(message)
-        self.exit(2, self.prog + ': ' + i18n.translate('error:') + ' ' + message + '\n')
+        Console(lambda text: self._print_message(text + '\n', sys.stderr),
+                interactive=supports_ansi(sys.stderr)).error(self.prog + ': ' + i18n.translate('error:') + ' ' + message)
+        self.exit(2)
 
 
 def parser():
@@ -40,7 +42,7 @@ def parser():
     result._positionals.title = i18n.translate('positional arguments')
     result._optionals.title = i18n.translate('options')
     result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
-    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'restore', 'uninstall'))
+    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall'))
     result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
     result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
     result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
@@ -137,8 +139,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         i18n.configure(language_args.language, language_args.data_dir)
     except OSError:
         i18n.set_language(language_args.language or 'auto')
-        write(i18n.translate('Could not save language preference'))
-        write(i18n.translate('Check write access to the application data folder and try again.'))
+        (write if isinstance(write, Console) else Console(write)).error('Could not save language preference', heading=True)
+        (write if isinstance(write, Console) else Console(write)).error('Check write access to the application data folder and try again.')
         return 2
     args = parser().parse_args(argv)
     if args.version:
@@ -256,6 +258,20 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     phase = 'inspect-installation'
                     write('Checking the previous installation on the TV…')
                     existing = installer.status()
+                    pending = store.pending(profile)
+                    if profile['edition'] == 'no-root' and pending and pending.get('action') == 'uninstall':
+                        write.heading('Unfinished removal')
+                        write('Finish removing Clean Your TV before installing again. LG Home will be restored and remaining Clean Your TV packages removed.')
+                        if args.non_interactive:
+                            raise UserError('Open cytv interactively to finish the previous removal, or run cytv uninstall for this TV, then retry installation.')
+                        if not prompts.confirm('Finish removal before installing again?', ask, write):
+                            write('Recovery data kept. Installation has not restarted.')
+                            return 0
+                        phase = 'uninstall'
+                        installer.uninstall()
+                        phase = 'inspect-installation'
+                        if store.pending(profile):
+                            raise UserError('The previous operation could not be safely resolved. Recovery data was kept. Save the diagnostic report; installation has not restarted.')
                     if existing.get('can_resume_root_setup') is True:
                         if args.non_interactive:
                             raise UserError('Root setup is ready to finish. Open cytv interactively to confirm Home activation.')
@@ -358,6 +374,17 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 else:
                     write('Packages installed; Home Helper launch requested. Check short Home, arrows/OK, Back, volume, standby and cold boot.')
                     write('Emergency exit: three short Home presses within two seconds. Keep Developer Mode active. The computer can now be switched off.')
+            elif args.command == 'home-diagnostics':
+                phase = 'home-diagnostics'
+                if args.non_interactive:
+                    raise UserError('Open Home button diagnostics in the installer to record a Home press.')
+                write.heading('Home button diagnostics')
+                write('Open an app on the TV. Recording lasts one minute and saves one report with application IDs and timing.')
+                if not prompts.confirm('Ready to record? Continue and wait for the Home prompt.', ask, write, default=True):
+                    return 0
+                report = diagnostics.collect_home_report(remote, store, profile, write)
+                write.heading('Diagnostic report')
+                write.raw('  ' + str(report.resolve()))
             elif args.command == 'doctor':
                 phase = 'doctor'
                 installer.preflight()
@@ -385,8 +412,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
               else 'Cancelled. If an installation was submitted, run cytv status before retrying.')
         return 130
     except UserError as exc:
-        write.heading('Could not complete this step')
-        write(str(exc))
+        write.error('Could not complete this step', heading=True)
+        write.error(str(exc))
         if phase in ('pair-tv', 'read-inventory'):
             write('Installation has not started. No TV packages were changed by this attempt.')
         if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
@@ -394,14 +421,14 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
         diagnostics.suggest_issue(write, store, args.command, profile, phase, exc, tv_info)
         return 2
     except Exception as exc:
-        write.heading('Could not complete this step')
+        write.error('Could not complete this step', heading=True)
         kind = type(exc).__name__
         hints = {
             'BadHostKeyException': 'TV identity changed since the last trusted connection. cytv stopped before sign-in. If you reset the TV or changed SSH, verify that change through your existing trusted setup before connecting again.',
             'AuthenticationException': 'SSH authentication failed. Check your key/password; for No-root check Developer Mode and Key Server.',
             'ModuleNotFoundError': 'Source dependencies are missing. Install cytv/requirements.txt or use a built cytv executable.',
         }
-        write('Could not read the TV applications. Keep the TV on and accept its pairing request. Installation has not started.'
+        write.error('Could not read the TV applications. Keep the TV on and accept its pairing request. Installation has not started.'
               if phase in ('pair-tv', 'read-inventory') and kind != 'ModuleNotFoundError' else hints.get(kind, 'Operation could not be confirmed. Check TV connectivity and run cytv status or cytv doctor. Retain local and TV recovery state; do not retry blindly.'))
         if args.command == 'uninstall' and phase == 'uninstall' and profile['edition'] == 'root' and store.pending(profile):
             write('Keep the TV on and choose Remove again. The app checks its state before continuing.')

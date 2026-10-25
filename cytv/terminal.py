@@ -6,8 +6,9 @@ import textwrap
 from .i18n import translate as tr
 
 
-def supports_ansi():
-    if not sys.stdout.isatty() or os.environ.get('TERM') == 'dumb':
+def supports_ansi(stream=None):
+    stream = sys.stdout if stream is None else stream
+    if stream is None or not stream.isatty() or os.environ.get('TERM') == 'dumb':
         return False
     if os.name == 'nt':
         # Enable ANSI in classic Windows consoles as well as Windows Terminal.
@@ -16,7 +17,7 @@ def supports_ansi():
         kernel.GetStdHandle.restype = ctypes.c_void_p
         kernel.GetConsoleMode.argtypes = (ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong))
         kernel.SetConsoleMode.argtypes = (ctypes.c_void_p, ctypes.c_ulong)
-        handle, mode = kernel.GetStdHandle(-11), ctypes.c_ulong()
+        handle, mode = kernel.GetStdHandle(-12 if stream is sys.stderr else -11), ctypes.c_ulong()
         if not kernel.GetConsoleMode(handle, ctypes.byref(mode)):
             return False
         return bool(kernel.SetConsoleMode(handle, mode.value | 4))
@@ -45,6 +46,14 @@ class Console:
 
     def bold(self, text):
         return '\x1b[1m' + text + '\x1b[0m' if self.color else text
+
+    def error(self, message, heading=False):
+        if heading:
+            self.raw('')
+        for line in tr(message).split('\n'):
+            rendered = textwrap.fill(line, width=self.width, initial_indent='  ', subsequent_indent='  ',
+                                     break_long_words=False, break_on_hyphens=False)
+            self.raw('\x1b[31m' + rendered + '\x1b[0m' if self.color else rendered)
 
     def heading(self, title):
         self.raw('')

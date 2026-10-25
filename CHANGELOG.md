@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.2 — Home recovery and installer diagnostics
+
+- Fix Home return animation, focus, AirPlay opening and startup app refresh (#25/#26).
+- Recover Helper monitoring/startup and late LG Home takeover; add guided one-report diagnostics (#29/#31, issue #12).
+- Improve Key Server diagnostics, unfinished removal recovery, Helper process preflight and visible installer errors (#32/#33, issues #21–24).
+- Candidate components: cytv 0.2.16, Home 1.3.8, Helper 0.6.18, Android 0.1.7-preview (code 8); Root and updater unchanged.
+- Operator accepted the candidate; pin the exact new Helper archive and Home rollback before signing. See docs/RELEASE-1.0.2.md.
+
 ## v1.0.0 — Stable distribution
 
 - Ship the existing No-root and Root features as a stable, model-scoped distribution; retain documented firmware and recovery limitations.

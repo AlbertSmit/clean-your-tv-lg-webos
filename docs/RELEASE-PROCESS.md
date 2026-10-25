@@ -10,16 +10,20 @@ Choose the version at candidate freeze, not when creating the preparation branch
 the matching application/service manifests and add `docs/RELEASE-X.Y.Z.md`.
 No tag, terminal command, draft creation or Publish click is needed.
 
-The existing four-platform build runs automatically. After its successful
-completion, **Automatic release**:
+The four desktop builds and Android build run on trusted `release/next` pushes
+only after candidate freeze: a newer final release version, matching plan,
+nonempty acceptance evidence and release notes must exist. Ordinary PRs run
+component checks without producing platform installers. After merging the
+candidate into `main`, **Automatic release**:
 
-1. Checks that the source is a successful `main` build from this repository and
-   that the requested release has not already been published.
+1. Finds the successful trusted build of the merge's exact second parent,
+   requires all five platform jobs to succeed, verifies that the candidate and
+   merge have identical Git trees, and checks that the release is unpublished.
 2. Runs the full test suite on Linux and macOS against that exact commit.
 3. Downloads only that build's artifacts, checks payload versions and hashes in
    all seven installer files, and creates the public No-root ZIP and Root TAR
    bundles, release notes, `BUILD-INFO.json` and checksums.
-4. Creates/resumes a draft targeting the exact build commit and uploads the
+4. Creates/resumes a draft targeting the exact `main` merge commit and uploads the
    prepared assets. A draft/tag for another commit stops the workflow.
 5. Calls the protected signing workflow directly: it creates both feeds and
    rollback assets, signs them, uploads them, verifies every referenced package,
@@ -33,11 +37,15 @@ signing never advance a new release to latest. Retrying the failed workflow can
 resume a draft for the same commit. Publication rechecks the draft immediately
 before upload. A newer published version blocks older release attempts.
 
-For pipeline maintenance, **Automatic release** also accepts a successful build
-run ID and `validate_only=true`. Build provenance is validated before checking
-out its source. Packaging tools and the tested release source are checked out
-separately, so a packaging fix can reuse verified build artifacts. This rebuilds/verifies the
+For pipeline maintenance, **Automatic release** also accepts a successful candidate
+build run ID (or finds it automatically) and `validate_only=true`, running from
+the corresponding `main` merge. Historical successful `main` builds are also
+accepted when their SHA matches exactly. Packaging tools and the tested release
+source are checked out separately. This assembles/verifies the
 complete release asset set without creating a draft, signing or publishing.
+Platform installers are reused; `BUILD-INFO.json` records both the merge's
+`source_commit` and the candidate's `build_source_commit`. Android provenance
+continues to require its original candidate SHA and signer.
 The signing workflow's separate `publish=false` mode validates production
 signatures without changing release assets. These modes are for testing the
 pipeline; normal releases need neither manual invocation.
@@ -77,7 +85,17 @@ A wrong/missing key, absent bundle, version regression, incompatible rollback,
 changed package without a component-version bump, or mismatched provenance
 stops the workflow. A Helper version change needs a compatible, tested rollback
 baseline; the automation stops rather than publish an unusable No-root offer.
-A permission-only Helper transition can be approved in
+An operator-tested runtime transition can be approved in
+`native/helper-rollback-compatibility.json` by pinning the exact new Helper
+archive (`candidate_archive_sha256`), previous Helper package, published Home
+rollback and a nonempty acceptance record. The new archive hash includes every
+uncompressed archive byte and metadata field; gzip headers are excluded for
+portability between build hosts. A changed payload, installation control or
+rollback baseline stops publication. Acceptance must state its actual hardware
+scope and any missing device/artifact details. This is a specific reviewed
+transition, not permission for arbitrary Helper changes.
+
+A permission-only Helper transition can alternatively be approved in
 `native/helper-rollback-compatibility.json`: it pins both Helper versions, the
 previous Helper package, the exact previous Home rollback and the reviewed
 permission-module hash. Preparation requires unchanged input executables and

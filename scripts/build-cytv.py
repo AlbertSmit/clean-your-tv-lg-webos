@@ -47,6 +47,8 @@ def pack_app(appfiles, servicefiles, architecture='all', helper=False):
         'id': app, 'version': version, 'app': app, 'services': [service]}).encode()
     executables = set()
     if helper:
+        # The service sandbox cannot import modules from the app directory.
+        files['usr/palm/services/' + service + '/state-permissions.js'] = appfiles['state-permissions.js']
         executables = {'usr/palm/applications/' + app + '/' + n for n in ('detach', 'relay', 'resume')}
         files['usr/palm/applications/' + app + '/state/.keep'] = b''
         files['usr/palm/services/' + service + '/state/.keep'] = b''

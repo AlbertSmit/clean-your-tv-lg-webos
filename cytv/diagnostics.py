@@ -4,12 +4,14 @@ import json
 from pathlib import Path
 import platform
 import traceback
+import time
+import re
 import uuid
 
 from . import __version__
 from .state import private_write
 from .terminal import console
-from .errors import TVConnectionError
+from .errors import TVConnectionError, DeveloperKeyError, UserError
 
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
 KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
@@ -32,6 +34,8 @@ def create_report(store, action, profile, phase, error=None, tv_info=None):
     }
     if isinstance(error, TVConnectionError):
         report['connection'] = {'protocol': 'ssap', 'close_code': error.close_code, 'reason_code': error.reason_code}
+    if isinstance(error, DeveloperKeyError):
+        report['connection'] = {'protocol': 'developer-key', 'reason_code': error.reason_code}
     for name, allowed in (('kernel_arch', KERNEL_ARCHES),
                           ('userland_abi', ('arm32', 'arm64', 'other', 'unknown'))):
         if tv_info and name in tv_info:
@@ -52,7 +56,77 @@ def suggest_issue(write, store, action, profile, phase, error, tv_info=None):
         write.heading('Attach this diagnostic report')
         write.raw('  ' + str(path.resolve()))
     except (OSError, ValueError):
-        write('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
+        write.error('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
     write('')
     write('Include your steps, expected/actual result and TV model/firmware.')
     write('Review the report. Do not attach keys or your profile folder.')
+
+
+def collect_home_report(remote, store, profile, write):
+    """One bounded observation window, exported without raw logs or credentials."""
+    if profile['edition'] != 'no-root':
+        raise UserError('Home Helper diagnostics is available for No-root installations.')
+    session = uuid.uuid4().hex
+    directory = '/media/developer/apps/usr/palm/applications/com.local.nativehome/state'
+    def command(name):
+        remote.upload(directory + '/control.json',
+                      json.dumps({'cmd': name, 'nonce': session}).encode(), mode=0o640)
+    records = []
+    triggers = {'started', 'sample', 'home', 'launch-request', 'launch-result',
+                'launch-timeout', 'foreground', 'monitor', 'monitor-reset', 'expired', 'stopped'}
+    monitors = {'starting', 'reset', 'screen-watch-connected', 'screen-watch-unavailable',
+                'screen-watch-error', 'screen-watch-disconnected'}
+    started = complete = announced = False
+    beginning = time.monotonic()
+    try:
+        command('diagnostics-start')
+        while True:
+            raw = remote.run('tail -c 262144 ' + directory + '/controller.log')
+            records = []
+            for line in raw.splitlines():
+                try:
+                    item = json.loads(line)
+                except ValueError:
+                    continue
+                if not isinstance(item, dict) or item.get('event') != 'home-diagnostic' or item.get('session') != session or not isinstance(item.get('trigger'), str) or item['trigger'] not in triggers:
+                    continue
+                clean = {'trigger': item['trigger']}
+                for name in ('time', 'homeSequence', 'sinceHomeMs', 'foregroundAgeMs', 'launchSequence', 'durationMs'):
+                    value = item.get(name)
+                    if value is None or type(value) is int and 0 <= value <= 10**15:
+                        clean[name] = value
+                for name in ('ready', 'enabled', 'launching', 'visitingLG', 'returnValue'):
+                    if type(item.get(name)) is bool:
+                        clean[name] = item[name]
+                for name in ('foreground', 'id'):
+                    value = item.get(name)
+                    if value is None or isinstance(value, str) and re.fullmatch(r'[a-zA-Z0-9_.-]{0,256}', value):
+                        clean[name] = value
+                if isinstance(item.get('monitor'), str) and item['monitor'] in monitors:
+                    clean['monitor'] = item['monitor']
+                if item.get('monitorReason') in (None, 'state-permissions', 'missing-pairing-key', 'pairing-required'):
+                    clean['monitorReason'] = item.get('monitorReason')
+                clean['foregroundSource'] = 'subscription-cache'
+                records.append(clean)
+            started = started or any(r['trigger'] == 'started' for r in records)
+            complete = any(r['trigger'] == 'expired' for r in records)
+            elapsed = time.monotonic() - beginning
+            if not started and elapsed >= 5:
+                raise UserError('Helper did not start diagnostics. Update to a release containing diagnostics and start Helper in Home settings, then try again.')
+            if complete or elapsed >= 70:
+                break
+            if started and not announced:
+                announced = True
+                write('Press Home once on the TV remote. Leave the remote untouched while the report is collected.')
+            time.sleep(2)
+    finally:
+        try:
+            command('diagnostics-stop')
+        except Exception:
+            pass  # The Helper also expires its own window after 60 seconds.
+    path = create_report(store, 'home-diagnostics', profile, 'home-diagnostics-complete')
+    report = json.loads(path.read_text())
+    report['helper_diagnostics'] = {'schema': 1, 'complete': complete, 'records': records}
+    report['privacy'] = 'Contains observed application IDs, routing state and timing. No addresses, keys, app inventory or raw TV logs are collected.'
+    private_write(path, json.dumps(report, indent=2).encode())
+    return path

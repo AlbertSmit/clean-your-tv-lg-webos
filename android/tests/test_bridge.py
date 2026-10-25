@@ -9,6 +9,18 @@ SOURCE = Path(__file__).resolve().parents[1] / 'app/src/main/python/android_brid
 
 
 class BridgeTests(unittest.TestCase):
+    def test_cli_errors_reach_android_as_error_events(self):
+        module = self.module()
+        class Native:
+            def __init__(self): self.events = []
+            def emit(self, raw): self.events.append(json.loads(raw))
+        native = Native()
+        console = module.AndroidConsole(module.Callbacks(native))
+        console.error('Could not complete this step', heading=True)
+        console.error('Failure details')
+        self.assertEqual([event['kind'] for event in native.events], ['error', 'error'])
+        self.assertEqual(native.events[-1]['text'], 'Failure details')
+
     def module(self):
         self.assertTrue(SOURCE.exists(), 'Android Python adapter is not implemented')
         spec = importlib.util.spec_from_file_location('android_bridge', SOURCE)
@@ -24,6 +36,22 @@ class BridgeTests(unittest.TestCase):
                         {'host': '192.168.1.2', 'edition': 'root', 'port': 0}):
             with self.subTest(request=request), self.assertRaises(ValueError):
                 module.arguments(request, '/private/profiles')
+
+    def test_diagnostics_command_and_report_export_event(self):
+        module = self.module()
+        self.assertEqual(module.arguments({'host':'192.168.1.2','edition':'no-root','action':'home-diagnostics'}, '/private/profiles')[0], 'home-diagnostics')
+        class Native:
+            def __init__(self): self.events=[]
+            def emit(self, raw): self.events.append(json.loads(raw))
+        with tempfile.TemporaryDirectory() as tmp:
+            native=Native();reports=Path(tmp)/'reports';reports.mkdir()
+            report=reports/'diagnostic-123456abcdef.json';report.write_text('{}')
+            callbacks=module.Callbacks(native,directory=tmp)
+            callbacks.write('  '+str(report))
+            self.assertEqual(native.events[0],{'kind':'report-ready','name':report.name})
+            native.events.clear();other=Path(tmp)/'private.json';other.write_text('{}')
+            callbacks.write(str(other))
+            self.assertFalse(any(e['kind']=='report-ready' for e in native.events))
 
     def test_edition_defaults_and_identity_path(self):
         module = self.module()

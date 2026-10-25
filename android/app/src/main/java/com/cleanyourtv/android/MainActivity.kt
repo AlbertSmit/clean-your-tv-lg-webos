@@ -119,12 +119,22 @@ class MainActivity : Activity() {
                 for (key in arrayOf("host", "edition", "port", "language", "action", "useImportedKey")) {
                     if (raw.has(key)) clean.put(key, raw.get(key))
                 }
-                require(clean.optString("action") in arrayOf("install", "status", "doctor", "restore"))
+                require(clean.optString("action") in arrayOf("install", "status", "doctor", "home-diagnostics", "restore"))
                 ui.post {
                     val intent = Intent(this@MainActivity, InstallerService::class.java).putExtra("config", clean.toString())
                     if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent) else startService(intent)
                 }
             } catch (_: Exception) { ui.post { emit("{\"kind\":\"error\",\"text\":\"Invalid request\"}") } }
+        }
+        @JavascriptInterface fun saveReport() {
+            if (!Operation.active) ui.post {
+                val report = diagnosticReport() ?: return@post
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_TITLE, report.name)
+                }, 9)
+            }
         }
         @JavascriptInterface fun answer(json: String) {
             val answer = JSONObject(json)
@@ -140,8 +150,33 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun diagnosticReport(): File? {
+        val events = JSONArray(Operation.snapshot())
+        for (i in events.length() - 1 downTo 0) {
+            val event = JSONObject(events.getString(i))
+            if (event.optString("kind") != "report-ready") continue
+            val name = event.optString("name")
+            if (!Regex("diagnostic-[a-f0-9]{12}\\.json").matches(name)) return null
+            val directory = File(filesDir, "profiles/reports").canonicalFile
+            val report = File(directory, name).canonicalFile
+            return report.takeIf { it.parentFile == directory && it.isFile && it.length() <= 1048576 }
+        }
+        return null
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 9) {
+            if (resultCode != RESULT_OK) return
+            try {
+                val report = diagnosticReport() ?: return
+                val uri = data?.data ?: return
+                contentResolver.openOutputStream(uri)?.use { output -> report.inputStream().use { it.copyTo(output) } }
+                    ?: throw IllegalStateException("No output stream")
+                emit("{\"kind\":\"report-saved\"}")
+            } catch (_: Exception) { emit("{\"kind\":\"report-error\"}") }
+            return
+        }
         if (requestCode != 8 || resultCode != RESULT_OK || Operation.active) return
         try {
             val uri = data?.data ?: return

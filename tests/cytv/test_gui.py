@@ -17,6 +17,22 @@ except ImportError:
 
 @unittest.skipUnless(HAS_QT, 'Desktop build dependencies are optional for CLI tests')
 class GuiTests(unittest.TestCase):
+    def test_error_text_is_red_and_escaped_without_coloring_progress(self):
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.content.clear()
+        w.receive('text', 'Normal progress')
+        w.receive('error-heading', 'Could not complete this step')
+        w.receive('error', 'Failure <details>')
+        markup = w.content.toHtml().lower()
+        self.assertIn('#ff6b6b', markup)
+        self.assertIn('failure &lt;details&gt;', markup)
+        self.assertIn('Normal progress', w.content.toPlainText())
+        w.receive('done', 2)
+        self.assertEqual(w.title.property('state'), 'error')
+        w.home()
+        self.assertEqual(w.title.property('state'), '')
+
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
@@ -65,7 +81,8 @@ class GuiTests(unittest.TestCase):
                 ('status', 'Check TV status'),
                 ('doctor', 'Check connection and create a diagnostic report'),
                 ('restore', 'Return to LG Home'),
-                ('uninstall', 'Uninstall Clean Your TV')]):
+                ('uninstall', 'Uninstall Clean Your TV'),
+                ('home-diagnostics', 'Home button diagnostics')]):
             with self.subTest(command=command):
                 calls = []
                 def runner(argv, **kwargs):
@@ -141,7 +158,7 @@ class GuiTests(unittest.TestCase):
         w = Wizard()
         old_index = w.language.currentIndex()
         old_title = w.title.text()
-        with patch('cytv.state.private_write', side_effect=OSError('read only')), patch('cytv.gui.QMessageBox.warning'):
+        with patch('cytv.state.private_write', side_effect=OSError('read only')), patch.object(w, 'error_dialog'):
             w.language.setCurrentIndex(list(i18n.LANGUAGES).index('ru'))
         self.assertEqual(w.language.currentIndex(), old_index)
         self.assertEqual(i18n.language_choice(), 'auto')

@@ -21,6 +21,7 @@ MAINTENANCE_ACTIONS = (
     ('Check connection and create a diagnostic report', 'doctor'),
     ('Return to LG Home', 'restore'),
     ('Uninstall Clean Your TV', 'uninstall'),
+    ('Home button diagnostics', 'home-diagnostics'),
 )
 
 
@@ -174,7 +175,7 @@ class Wizard(QMainWindow):
             self.language.blockSignals(True)
             self.language.setCurrentIndex(list(i18n.LANGUAGES).index(previous))
             self.language.blockSignals(False)
-            QMessageBox.warning(self, tr('Could not save language preference'), tr('Check write access to the application data folder and try again.'))
+            self.error_dialog('Could not save language preference', 'Check write access to the application data folder and try again.')
             return
         self.language.setAccessibleName(tr('Language'))
         self.language.setItemText(0, tr('Auto'))
@@ -217,6 +218,17 @@ class Wizard(QMainWindow):
                 label.style().polish(label)
             row.update()
 
+    def set_error_state(self, failed):
+        for widget in (self.title, self.badge):
+            widget.setProperty('state', 'error' if failed else '')
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
+
+    def error_dialog(self, title, message):
+        dialog = QMessageBox(QMessageBox.Icon.Warning, tr(title), tr(message), parent=self)
+        dialog.setStyleSheet('QLabel { color: #ff6b6b; }')
+        dialog.exec()
+
     def home(self):
         self.clear_form()
         self.preview.show()
@@ -224,6 +236,7 @@ class Wizard(QMainWindow):
         self.steps.show()
         self.progress.hide()
         self.update_steps()
+        self.set_error_state(False)
         self.badge.setText(tr('Before you begin'))
         self.rail_title.setText(tr('Set up my TV'))
         self.rail_note.setText(tr('Keep your TV on and watch for a pairing request.'))
@@ -262,6 +275,7 @@ class Wizard(QMainWindow):
         if self.running:
             return
         self.running = True
+        self.set_error_state(False)
         self.command = command
         self.operation_title = next((label for label, key in MAINTENANCE_ACTIONS if key == command), 'Set up my TV')
         self.preview.hide()
@@ -290,8 +304,8 @@ class Wizard(QMainWindow):
             except Exception:
                 # Startup/storage errors outside cli.main's handler must stay visible,
                 # without exposing exception text that could contain credentials.
-                self.events.event.emit('heading', 'Could not start this operation')
-                self.events.event.emit('text', 'Check that your user account can write to its application data folder. You can report this problem using Open an issue below.')
+                self.events.event.emit('error-heading', 'Could not start this operation')
+                self.events.event.emit('error', 'Check that your user account can write to its application data folder. You can report this problem using Open an issue below.')
                 code = 1
             self.events.event.emit('done', code)
         self.worker = threading.Thread(target=work, name='cytv-install', daemon=False)
@@ -312,18 +326,21 @@ class Wizard(QMainWindow):
                 self.badge.setText(tr('Maintenance action'))
             if clear:
                 self.content.clear()
-        elif kind in ('text', 'heading'):
+        elif kind in ('text', 'heading', 'error', 'error-heading'):
             text = tr(value)
             if kind == 'text' and text.endswith('.json') and 'diagnostic-' in text:
                 path = Path(text.strip())
                 if path.is_file():
                     self.report = path
-            tag = 'h3' if kind == 'heading' else 'p'
-            self.content.append(f'<{tag}>' + html.escape(text).replace('\n', '<br>') + f'</{tag}>')
+            tag = 'h3' if kind in ('heading', 'error-heading') else 'p'
+            color = '#ff6b6b' if kind.startswith('error') else '#f3ede3' if kind == 'heading' else '#c0b5a5'
+            style = f' style="color: {color}"'
+            self.content.append(f'<{tag}{style}>' + html.escape(text).replace('\n', '<br>') + f'</{tag}>')
         elif kind == 'prompt':
             self.show_prompt(value)
         elif kind == 'done':
             self.running = False
+            self.set_error_state(value not in (0, 130))
             self.language.setEnabled(True)
             self.pending = None
             self.progress.hide()
@@ -435,7 +452,7 @@ class Wizard(QMainWindow):
                 if Path(filename).resolve() != self.report.resolve():
                     shutil.copyfile(self.report, filename)
             except OSError:
-                QMessageBox.warning(self, tr('Could not save report'), tr('Choose another folder and try again.'))
+                self.error_dialog('Could not save report', 'Choose another folder and try again.')
 
     def closeEvent(self, event):
         if self.running:

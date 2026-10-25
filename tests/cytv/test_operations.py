@@ -61,6 +61,21 @@ class Remote:
 
 
 class OperationTests(unittest.TestCase):
+    def test_pending_no_root_removal_resumes_after_restore_interruption(self):
+        installer = self.installer(Remote())
+        self.store.begin(installer.profile, 'uninstall')
+        self.assertIsNotNone(installer.status()['pending'])
+        original = installer.remote.luna
+        def luna(uri, payload, **kwargs):
+            if uri == 'com.webos.appInstallService/status':
+                return {'returnValue': True, 'status': {'apps': []}}
+            return original(uri, payload, **kwargs)
+        installer.remote.luna = luna
+        installer.uninstall()
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertTrue(any(call[0] == 'luna' and call[1].endswith('/launch')
+                            and call[2]['id'] == 'com.webos.app.home' for call in installer.remote.calls))
+
     def test_version_review_distinguishes_update_reinstall_downgrade_and_missing(self):
         for current, expected in [('1.2.1', '1.2.1 → 1.2.2 (Update)'),
                                   ('1.2.2', '1.2.2 → 1.2.2 (Reinstall)'),

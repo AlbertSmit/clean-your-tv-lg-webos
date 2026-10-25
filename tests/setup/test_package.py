@@ -51,6 +51,7 @@ class PackageTests(unittest.TestCase):
                 (path/'appinfo.json').write_text(json.dumps({
                     'id': 'com.local.nativehome' if directory == 'native/app' else 'com.gathin.tvhome',
                     'version': '9.8.7'}))
+            shutil.copy(ROOT/'native/app/state-permissions.js', root/'native/app/state-permissions.js')
             (root/'native/app/vendor').mkdir()
             (root/'bin').mkdir()
             zig = root/'bin/zig'
@@ -65,6 +66,7 @@ app = json.loads((Path(sys.argv[1])/'appinfo.json').read_text())
 helper = app['id'] == 'com.local.nativehome'
 files = {'usr/palm/applications/'+app['id']+'/state/.keep': b''}
 if helper:
+    assert (Path(sys.argv[2])/'state-permissions.js').read_bytes() == (Path(sys.argv[1])/'state-permissions.js').read_bytes()
     files['usr/palm/services/com.local.nativehome.service/state/.keep'] = b''
 arch = 'arm' if helper else 'all'
 (Path('dist')/(app['id']+'_'+app['version']+'_'+arch+'.ipk')).write_bytes(

@@ -15,13 +15,38 @@ var Service=require('/usr/lib/node_modules/webos-service');
 var service=new Service('com.local.nativehome');
 service.activityManager.create('native-home-controller',function(){});
 if(!automatic){try{fs.unlinkSync(data+'/blocked');}catch(e){if(e.code!=='ENOENT')throw e;}}
-var lastForeground=null,shouldResumeLaunch=require('./resume-policy');
+var lastForeground=null,lastForegroundAt=null,monitor='starting',monitorReason=null,shouldResumeLaunch=require('./resume-policy');
 var child,ready=false,stopping=false,lastAck=monotonic(),buffer='',lastCommand='',launching=false,resumePendingUntil=0;
 var resumeGuardUntil=0,resumeRetries=0,lgHomeSince=null,lastLaunchSettledAt=0;
+// Opt-in, bounded observation only; never changes routing or starts another watcher.
+var diagnosticUntil=0,diagnosticNext=0,homeSequence=0,lastHomeAt=null,launchSequence=0,diagnosticSession=null;
+function diagnostic(trigger,details){
+ if(!diagnosticUntil)return;
+ var now=monotonic();
+ if(now>=diagnosticUntil&&trigger!=='expired'){diagnostic('expired');diagnosticUntil=0;return;}
+ log(Object.assign({event:'home-diagnostic',session:diagnosticSession,trigger:trigger,homeSequence:homeSequence,
+  sinceHomeMs:lastHomeAt===null?null:Math.round(now-lastHomeAt),
+  foreground:lastForeground,foregroundSource:'subscription-cache',
+  foregroundAgeMs:lastForegroundAt===null?null:Math.round(now-lastForegroundAt),
+  monitor:monitor,monitorReason:monitorReason,ready:ready,enabled:homeControl?homeControl.enabled():null,
+  launching:launching,visitingLG:!!visitingLG},details||{}));
+}
+function diagnosticCommand(cmd,nonce){
+ if(cmd==='diagnostics-start'){
+  diagnosticSession=typeof nonce==='string'&&/^[a-f0-9]{32}$/.test(nonce)?nonce:null;
+  diagnosticUntil=monotonic()+60000;diagnosticNext=monotonic()+1000;
+  homeSequence=0;lastHomeAt=null;diagnostic('started',{durationMs:60000});
+ }
+ if(cmd==='diagnostics-stop'){diagnostic('stopped');diagnosticUntil=0;}
+}
+function screenLog(x){
+ if(x.event.indexOf('screen-watch-')===0){monitor=x.event;monitorReason=x.reason||null;}
+ log(x);diagnostic('monitor');
+}
 function cancelResume(){resumePendingUntil=0;resumeGuardUntil=0;lgHomeSince=null;}
-log({event:'start',pid:process.pid,uid:process.getuid(),automatic:automatic});
+log({event:'start',pid:process.pid,uid:process.getuid(),automatic:automatic,diagnosticsSchema:1});
 fs.writeFileSync(data+'/control.json','{}',{mode:432});fs.chmodSync(data+'/control.json',432);
-function launch(id,done){var settled=false;var deadline=setTimeout(function(){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();log({event:'launch-timeout',id:id});if(done)done(false);},3000);service.call('luna://com.webos.applicationManager/launch',{id:id},function(m){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();clearTimeout(deadline);log({event:'launch',id:id,result:m.payload});if(done)done(m.payload&&m.payload.returnValue===true);});}
+function launch(id,done){var request=++launchSequence;diagnostic('launch-request',{launchSequence:request,id:id});var settled=false;var deadline=setTimeout(function(){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();log({event:'launch-timeout',id:id});diagnostic('launch-timeout',{launchSequence:request,id:id});if(done)done(false);},3000);service.call('luna://com.webos.applicationManager/launch',{id:id},function(m){if(settled)return;settled=true;lastLaunchSettledAt=monotonic();clearTimeout(deadline);log({event:'launch',id:id,result:m.payload});diagnostic('launch-result',{launchSequence:request,id:id,returnValue:!!(m.payload&&m.payload.returnValue===true)});if(done)done(m.payload&&m.payload.returnValue===true);});}
 var visitingLG=false,suppressReturnUntil=0;
 function visitLG(done){
  if(visitingLG){if(done)done(false);return;}
@@ -68,10 +93,10 @@ function finish(code,signal){if(stopping)return;stopping=true;if(screenWatch)scr
  if(ready){var c=cp.spawn(root+'/relay',['cleanup'],{stdio:'ignore'});c.on('exit',function(n){log({event:'cleanup',code:n});cleaned();});}else cleaned();
 }
 function start(){lastAck=monotonic();child=cp.spawn(root+'/relay',[],{stdio:['pipe','pipe','pipe']});log({event:'worker-start',pid:child.pid});child.stderr.on('data',function(b){log({stderr:String(b)});});child.on('error',function(e){log({error:String(e)});finish(1);});child.on('exit',finish);
- child.stdout.on('data',function(b){buffer+=b;var i;while((i=buffer.indexOf('\n'))>=0){var line=buffer.slice(0,i);buffer=buffer.slice(i+1);if(line==='P'){lastAck=monotonic();continue;}log({event:'worker',message:line});if(line==='BACK_DOWN')screenPolicy.back(true,monotonic());if(line==='BACK_UP')screenPolicy.back(false,monotonic());if(line==='HOME')screenPolicy.clearBack();if(line==='READY'){ready=true;lastAck=monotonic();child.stdin.write(homeControl.enabled()?'E':'D');}if(line==='LGHOME'&&!stopping)visitLG();if(line==='HOME'&&homeControl.enabled()&&!visitingLG&&!stopping&&!launching){suppressReturnUntil=0;launching=true;launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)child.stdin.end();});}}});
+ child.stdout.on('data',function(b){buffer+=b;var i;while((i=buffer.indexOf('\n'))>=0){var line=buffer.slice(0,i);buffer=buffer.slice(i+1);if(line==='P'){lastAck=monotonic();continue;}log({event:'worker',message:line});if(line==='BACK_DOWN'){cancelResume();screenPolicy.back(true,monotonic());}if(line==='BACK_UP')screenPolicy.back(false,monotonic());if(line==='HOME'){screenPolicy.clearBack();homeSequence++;lastHomeAt=monotonic();diagnostic('home');}if(line==='READY'){ready=true;lastAck=monotonic();child.stdin.write(homeControl.enabled()?'E':'D');}if(line==='LGHOME'&&!stopping)visitLG();if(line==='HOME'&&homeControl.enabled()&&!visitingLG&&!stopping&&!launching){suppressReturnUntil=0;launching=true;launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)child.stdin.end();});}}});
  child.stdin.on('error',function(){});
 }
-var timer=setInterval(function(){if(stopping)return;readHomeRequest();try{var raw=fs.readFileSync(data+'/control.json','utf8');if(raw!==lastCommand){lastCommand=raw;var command=JSON.parse(raw);if(command.cmd==='startup-status')service.call('luna://com.local.nativehome.service/status',{},function(r){log({event:'startup-status',result:r.payload});});if(command.cmd==='stop'&&child)child.stdin.write('Q');if(command.cmd==='stall-worker'&&child)child.stdin.write('S');if(command.cmd==='stall-controller'){cp.spawn(root+'/resume',[String(process.pid)],{stdio:'ignore'});log({event:'simulate-controller-stall'});process.kill(process.pid,'SIGSTOP');}}}catch(e){}
+var timer=setInterval(function(){if(stopping)return;readHomeRequest();try{var raw=fs.readFileSync(data+'/control.json','utf8');if(raw!==lastCommand){lastCommand=raw;var command=JSON.parse(raw);diagnosticCommand(command.cmd,command.nonce);if(command.cmd==='startup-status')service.call('luna://com.local.nativehome.service/status',{},function(r){log({event:'startup-status',result:r.payload});});if(command.cmd==='stop'&&child)child.stdin.write('Q');if(command.cmd==='stall-worker'&&child)child.stdin.write('S');if(command.cmd==='stall-controller'){cp.spawn(root+'/resume',[String(process.pid)],{stdio:'ignore'});log({event:'simulate-controller-stall'});process.kill(process.pid,'SIGSTOP');}}}catch(e){}
  if(resumePendingUntil&&ready&&!launching&&!visitingLG&&homeControl.enabled()){
   var resumeDue=resumePendingUntil;resumePendingUntil=0;
   if(!shouldResumeLaunch(lastForeground)){log({event:'resume-already-foreground'});}
@@ -80,6 +105,7 @@ var timer=setInterval(function(){if(stopping)return;readHomeRequest();try{var ra
  // A successful Luna reply only acknowledges the request. LG Home can win
  // later, including while a launch is in flight, so check the current level.
  var now=monotonic();
+ if(diagnosticUntil&&now>=diagnosticNext){diagnostic('sample');diagnosticNext=now+1000;}
  if(resumeGuardUntil&&now>=resumeGuardUntil)cancelResume();
  if(resumeGuardUntil&&resumeRetries<2&&ready&&!launching&&!visitingLG&&homeControl.enabled()&&
     lastForeground==='com.webos.app.home'&&lgHomeSince!==null&&now-lgHomeSince>=1500&&now-lastLaunchSettledAt>=5000){
@@ -105,16 +131,17 @@ service.call('luna://com.local.nativehome.service/status',{},function(m){
 var powerPolicy=require('./power-policy')();
 var watchedApps=[];try{watchedApps=JSON.parse(fs.readFileSync(data+'/apps.json','utf8'));if(!Array.isArray(watchedApps))watchedApps=[];}catch(e){}
 var screenPolicy=require('./screen-policy')(watchedApps);
-var screenWatch=require('./screen-watch')(data,log,function(id){
+var screenWatch=require('./screen-watch')(data,screenLog,function(id){
  if(id==='com.webos.app.home'){if(lgHomeSince===null)lgHomeSince=monotonic();}
  else {lgHomeSince=null;if(id&&id!=='com.webos.app.cpcover'&&id!=='com.gathin.tvhome')cancelResume();}
- lastForeground=id;log({event:'foreground',id:id});
+ lastForeground=id;lastForegroundAt=monotonic();log({event:'foreground',id:id});diagnostic('foreground');
  var exited=screenPolicy.next(id,monotonic());
  if(exited&&homeControl.enabled()&&!visitingLG&&monotonic()>suppressReturnUntil&&ready&&!stopping&&!launching){
+  resumeGuardUntil=monotonic()+30000;resumeRetries=0;
   launching=true;log({event:'return-after-exit'});
   launch('com.gathin.tvhome',function(ok){launching=false;if(!ok)log({event:'return-after-exit-failed'});});
  }
-},function(){lastForeground=null;lgHomeSince=null;screenPolicy.reset();},function(p){
+},function(){lastForeground=null;lastForegroundAt=null;monitor='reset';monitorReason=null;lgHomeSince=null;screenPolicy.reset();diagnostic('monitor-reset');},function(p){
  log({event:'power',state:p.state,processing:p.processing,onOff:p.onOff});
  if(p.onOff==='off'||p.state==='Active Standby'||p.state==='Suspend')cancelResume();
  if(powerPolicy.next(p)&&homeControl.enabled()&&!visitingLG&&!stopping){

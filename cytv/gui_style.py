@@ -23,10 +23,11 @@ QFrame#step[state="current"] QLabel { color: #fff8eb; }
 QFrame#step[state="current"] QLabel#stepNumber { background: #51483e; border-color: #b49c7e; }
 QFrame#step[state="complete"] QLabel { color: #b9d4c5; }
 QFrame#step[state="complete"] QLabel#stepNumber { border-color: #94b8a5; }
-QFrame#step[state="error"] QLabel { color: #edb7a7; }
-QFrame#step[state="error"] QLabel#stepNumber { border-color: #edb7a7; }
+QFrame#step[state="error"] QLabel { color: #ff6b6b; }
+QFrame#step[state="error"] QLabel#stepNumber { border-color: #ff6b6b; }
 QLabel#badge { color: #d6c5ae; font-size: 14px; background: #302c27; border-radius: 11px; padding: 5px 12px; }
 QLabel#title { font-size: 30px; font-weight: 700; color: #f3ede3; }
+QLabel#title[state="error"], QLabel#badge[state="error"] { color: #ff6b6b; }
 QLabel#subtitle { color: #c0b5a5; font-size: 15px; }
 QTextBrowser { background: transparent; color: #c0b5a5; border: none; padding: 0; selection-background-color: #51483e; }
 QWidget#form { background: #272521; border-radius: 12px; }

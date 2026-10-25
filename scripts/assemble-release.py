@@ -44,13 +44,45 @@ def plan_release(versions, commit, releases, validate_only=False):
     return True
 
 
-def validate_build_run(run, commit):
+def validate_build_run(run, commit, root=ROOT):
     if (not re.fullmatch('[a-f0-9]{40}', commit) or run['conclusion'] != 'success' or run['status'] != 'completed' or
-        run['head_sha'] != commit or run['head_branch'] != 'main' or
+        run['head_branch'] not in ('main', 'release/next') or
         run['event'] not in ('push', 'workflow_dispatch') or
         run['path'] != '.github/workflows/cytv.yml' or
         run['head_repository']['full_name'] != 'Razdva122/clean-your-tv-lg-webos'):
         raise ValueError('Release requires successful trusted main builds from the exact source commit')
+    if run['head_branch'] == 'main':
+        if run['head_sha'] != commit:
+            raise ValueError('Release requires successful trusted main builds from the exact source commit')
+        return  # Historical builds remain usable for manual validation/retries.
+    def revision(ref):
+        return subprocess.check_output(['git', 'rev-parse', ref], cwd=root, text=True).strip()
+    try:
+        if revision(commit + '^2') != run['head_sha']:
+            raise ValueError('Candidate must be the exact second parent of the release merge')
+        if revision(commit + '^{tree}') != revision(run['head_sha'] + '^{tree}'):
+            raise ValueError('Release merge tree differs from the built candidate tree')
+    except subprocess.CalledProcessError as error:
+        raise ValueError('Release source must be a merge of the built candidate') from error
+
+
+def github(path):
+    return json.loads(subprocess.check_output(['gh', 'api', 'repos/Razdva122/clean-your-tv-lg-webos/' + path]))
+
+
+def resolve_build_source(commit, build_run=None):
+    if build_run:
+        run = github('actions/runs/' + str(build_run))
+    else:
+        candidate = subprocess.check_output(['git', 'rev-parse', commit + '^2'], cwd=ROOT, text=True).strip()
+        runs = github('actions/workflows/cytv.yml/runs?branch=release%2Fnext&event=push&status=success&head_sha=' + candidate + '&per_page=100')['workflow_runs']
+        if not runs:
+            raise ValueError('No successful build exists for the exact release candidate')
+        run = max(runs, key=lambda item: item['id'])
+    validate_build_run(run, commit)
+    flow = runpy.run_path(str(Path(__file__).with_name('release-flow.py')))
+    flow['validate_build_jobs'](github('actions/runs/' + str(run['id']) + '/jobs?filter=latest&per_page=100')['jobs'])
+    return run
 
 
 def verify_embedded(data, versions):
@@ -115,7 +147,7 @@ def verify_android_package(path, report, versions, commit):
         return verify_embedded(lambda name: archive.read('assets/payload/' + name), versions)
 
 
-def assemble(artifacts, output, versions, commit):
+def assemble(artifacts, output, versions, commit, build_commit=None):
     from PyInstaller.archive.readers import CArchiveReader
     builder = runpy.run_path(str(ROOT / 'scripts/build-cytv.py'))
     output.mkdir(parents=True, exist_ok=False)
@@ -154,7 +186,7 @@ def assemble(artifacts, output, versions, commit):
     checks.append({'asset': windows_gui, 'payload_files_verified': count})
     print('Verified', windows_gui, ':', count, 'payload hashes and component versions; x64 GUI subsystem')
     android = 'cytv-android-arm64.apk'
-    count = verify_android_package(output / android, output / 'cytv-android-arm64.build.json', versions, commit)
+    count = verify_android_package(output / android, output / 'cytv-android-arm64.build.json', versions, build_commit or commit)
     checks.append({'asset': android, 'payload_files_verified': count})
     print('Verified', android, ':', count, 'payload hashes and component versions; signed ARM64 preview')
     parts = package.read_ar((output / 'cytv-linux-x64.deb').read_bytes())
@@ -196,7 +228,7 @@ def assemble(artifacts, output, versions, commit):
         with tarfile.open(output / (staging.name + '.tar.gz'), 'w:gz') as archive: archive.add(staging, arcname=staging.name)
     shutil.copyfile(ROOT / note, output / 'RELEASE-NOTES.md')
     build_run = os.environ.get('SOURCE_BUILD_RUN', os.environ.get('GITHUB_RUN_ID', ''))
-    info = {'tag': 'v' + versions['release'], 'source_commit': commit, 'versions': versions,
+    info = {'tag': 'v' + versions['release'], 'source_commit': commit, 'build_source_commit': build_commit or commit, 'versions': versions,
             'release_date': datetime.now(timezone.utc).date().isoformat(),
             'ci_build_run': {'id': build_run, 'url': os.environ.get('GITHUB_SERVER_URL', 'https://github.com') + '/' + os.environ.get('GITHUB_REPOSITORY', 'Razdva122/clean-your-tv-lg-webos') + '/actions/runs/' + build_run, 'conclusion': 'success'},
             'ci_test_run': {'id': os.environ.get('GITHUB_RUN_ID'), 'conclusion': 'success'},
@@ -213,15 +245,17 @@ def main():
     parser.add_argument('--build-source', action='store_true')
     parser.add_argument('--validate-only', action='store_true')
     parser.add_argument('--build-run', type=int)
+    parser.add_argument('--source-commit', help='Exact main merge commit to publish')
+    parser.add_argument('--build-commit', help='Verified candidate commit that produced the artifacts')
     parser.add_argument('--require-unpublished', action='store_true')
     parser.add_argument('--artifacts', type=Path)
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     if args.build_source:
-        if not args.build_run: parser.error('--build-run is required')
-        run = json.loads(subprocess.check_output(['gh', 'api', 'repos/Razdva122/clean-your-tv-lg-webos/actions/runs/' + str(args.build_run)]))
-        validate_build_run(run, run['head_sha'])
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as output: output.write('commit=' + run['head_sha'] + '\n')
+        if not args.source_commit: parser.error('--source-commit is required')
+        run = resolve_build_source(args.source_commit, args.build_run)
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            output.write('commit=' + args.source_commit + '\nbuild_commit=' + run['head_sha'] + '\nbuild_run=' + str(run['id']) + '\n')
         return
     versions = json.loads((ROOT / 'release-versions.json').read_text())
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
@@ -241,14 +275,19 @@ def main():
                 if tagged['sha'] != commit: raise ValueError('Existing release tag targets a different commit')
         note = ROOT / ('docs/RELEASE-' + versions['release'] + '.md')
         if planned and not note.is_file(): raise ValueError('Release notes file is required')
-        result = 'release=' + str(planned).lower() + '\ntag=v' + versions['release'] + '\ncommit=' + commit + '\nbuild_run=' + str(args.build_run) + '\n'
+        result = 'release=' + str(planned).lower() + '\ntag=v' + versions['release'] + '\ncommit=' + commit + '\nbuild_commit=' + run['head_sha'] + '\nbuild_run=' + str(args.build_run) + '\n'
         if os.environ.get('GITHUB_OUTPUT'):
             with open(os.environ['GITHUB_OUTPUT'], 'a') as output: output.write(result)
         print(result, end='')
     else:
         if not args.artifacts or not args.output: parser.error('--artifacts and --output are required')
         if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip(): raise ValueError('Release source checkout must be clean')
-        assemble(args.artifacts, args.output, versions, commit)
+        if args.build_commit and args.build_commit != commit:
+            # Recheck the binding immediately before consuming candidate artifacts.
+            validate_build_run({'conclusion': 'success', 'status': 'completed', 'head_sha': args.build_commit,
+                                'head_branch': 'release/next', 'event': 'push', 'path': '.github/workflows/cytv.yml',
+                                'head_repository': {'full_name': 'Razdva122/clean-your-tv-lg-webos'}}, commit)
+        assemble(args.artifacts, args.output, versions, commit, args.build_commit)
 
 
 if __name__ == '__main__':

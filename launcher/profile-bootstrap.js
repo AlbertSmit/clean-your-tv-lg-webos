@@ -1,19 +1,27 @@
 (window.HomeI18n?HomeI18n.ready:function(callback){callback();})(function(){
 (function(){
  'use strict';
- var booted=false,profileError=false,restoreMarker='tvhome.rollback.restored.v1';
+ var booted=false,profileError=false,systemRestore=null,restoreMarker='tvhome.rollback.restored.v1';
  function rpc(method,payload,cb,service){var b,done=false;var timer=setTimeout(function(){finish(null);},2000);
   function finish(r,ok){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r,ok===true);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?(r.result===undefined?r.state:r.result):null,r.returnValue===true);}catch(_){finish(null);}};b.call((service||'luna://com.cleanyourtv.updater.service/')+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
  }
  function boot(){if(booted)return;booted=true;var s=document.createElement('script');s.src='app.js';s.onload=function(){
   // A populated rendered grid is a startup signal, not proof of every TV feature.
-  if(!document.querySelector('#tiles .item[data-app-id]'))return;
+  if(!systemRestore&&!document.querySelector('#tiles .item[data-app-id]'))return;
   var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
   manifest.onload=function(){try{
    if(manifest.status!==0&&manifest.status!==200)return;
    var info=JSON.parse(manifest.responseText);
-   if(info.id==='com.gathin.tvhome'&&typeof info.version==='string'&&/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(info.version))rpc('healthy',{version:info.version},function(){});
+   if(info.id==='com.gathin.tvhome'&&typeof info.version==='string'&&/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(info.version)){
+    if(systemRestore){
+     if(info.version!==systemRestore.version||!window.AppLibrary||window.RootLauncherRendered!==true)return;
+     var expected=window.AppLibrary.create(localStorage,window.TV_APPS.apps,window.CONFIG).visible().map(function(a){return a.id;}).sort();
+     var actual=Array.prototype.map.call(document.querySelectorAll('#tiles .item[data-app-id]'),function(el){return el.getAttribute('data-app-id');}).sort();
+     if(JSON.stringify(expected)!==JSON.stringify(actual))return;
+     window.SystemUpdates.rpc('healthy',{edition:'no-root',transaction:systemRestore.transaction,version:info.version}).catch(function(){});
+    }else rpc('healthy',{version:info.version},function(){});
+   }
   }catch(_){} };manifest.onerror=manifest.ontimeout=function(){};manifest.send();
  };document.body.appendChild(s);}
  function use(s,restore,identity){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();['tvhome.order','tvhome.layout','tvhome.language'].forEach(function(key){if(s.settings[key]===undefined)localStorage.removeItem(key);});HomeData.apply(localStorage,s);if(identity)localStorage.setItem(restoreMarker,identity);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
@@ -38,6 +46,7 @@
    },'luna://com.gathin.tvhome.renewal/');
   }next();
  }};
+ function legacy(){
  var saved;try{saved=HomeData.load(localStorage);}catch(_){profileError=true;boot();return;}
  // Personalized packages render immediately; generic upgrades may restore from
  // the independent updater's backup before constructing the tile grid.
@@ -56,6 +65,24 @@
   }
   finish(!saved);
  });
+ }
+ function systemError(error){profileError=true;window.SystemUpdates.open({edition:'no-root',recovery:true,error:error.message});}
+ if(window.SystemUpdates){
+  window.SystemUpdates.rpc('restoreProfile',{edition:'no-root'}).then(function(restored){
+   if(!restored){legacy();return;}
+   if(!restored.transaction||!restored.version||!restored.profile)throw Error('Invalid system update backup');
+   var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
+   manifest.onload=function(){try{
+    var info=JSON.parse(manifest.responseText);
+    if((manifest.status!==0&&manifest.status!==200)||info.id!=='com.gathin.tvhome'||info.version!==restored.version)throw Error('Backup version does not match installed Home');
+    var identity='system:'+restored.transaction+':'+restored.version+':'+(['verifying-rollback','rolled-back'].indexOf(restored.phase)>=0?'rollback':'install');
+    var saved=null;try{saved=HomeData.load(localStorage);}catch(_){}
+    var already=saved&&localStorage.getItem(restoreMarker)===identity;
+    use(already?saved:restored.profile,!already,identity);systemRestore=restored;window.RootLauncherRendered=false;boot();
+   }catch(error){systemError(error);}};
+   manifest.onerror=manifest.ontimeout=function(){systemError(Error('Installed Home version unavailable'));};manifest.send();
+  }).catch(function(error){if(error.unavailable===true)legacy();else systemError(error);});
+ }else legacy();
 }());
 
 });

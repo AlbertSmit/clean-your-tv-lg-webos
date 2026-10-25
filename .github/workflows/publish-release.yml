@@ -47,16 +47,18 @@ jobs:
           python-version: '3.12'
       - name: Check signing and package regressions
         run: |
+          node tests/system_updates/signing.cjs
           node tests/updates/sign-release-feeds.cjs
           node tests/updates/release-feed.cjs
           python -m unittest discover -s tests/setup -p test_release_feeds.py
-      - name: Generate and sign both feeds from exact release bundles
+      - name: Generate and sign compatible system and legacy feeds from exact release bundles
         env:
           GH_TOKEN: ${{ github.token }}
           UPDATE_SIGNING_PRIVATE_KEY: ${{ secrets.UPDATE_SIGNING_PRIVATE_KEY }}
           RELEASE_TAG: ${{ inputs.tag }}
         run: python scripts/prepare-release.py "$RELEASE_TAG" "$RUNNER_TEMP/signed-release"
       - name: Upload, verify and publish
+        id: publication
         if: inputs.publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -73,8 +75,14 @@ jobs:
           name: signed-release-feeds
           path: ${{ runner.temp }}/signed-release/
           if-no-files-found: error
-      - name: Notify shipped pull requests and issues after verified publication
+      - name: Start the next cycle and open its draft after verified publication
         if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python scripts/release-flow.py start-cycle --tag "$RELEASE_TAG"
+      - name: Notify shipped pull requests and issues after verified publication
+        if: inputs.publish && !cancelled() && steps.publication.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}

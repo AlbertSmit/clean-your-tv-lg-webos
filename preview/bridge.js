@@ -19,7 +19,17 @@
     var bridge = this, payload = JSON.parse(raw || '{}');
     bridge.timer = setTimeout(function () {
       var result = {returnValue: false, errorText: 'Unavailable in browser preview'};
-      if (uri === 'luna://com.webos.applicationManager/launch') {
+      if (uri.indexOf('luna://com.cleanyourtv.system.updater.service/') === 0) {
+        var systemMethod = uri.split('/').pop();
+        if (systemMethod === 'restoreProfile' || systemMethod === 'status') result = {returnValue:true,result:null};
+        else if (systemMethod === 'check') {
+          var rootEdition = payload.edition === 'root';
+          var names = rootEdition ? ['root','root-updater','root-infrastructure'] : ['home','helper','updater'];
+          result = {returnValue:true,result:{edition:payload.edition,release:'v1.0.3',canInstall:false,
+            reason:'Browser preview: no real updates are checked or installed.',notes:'Browser preview: no real updates are checked or installed.',
+            components:names.map(function (name) { var version = name === 'home' ? '1.3.8' : name === 'helper' ? '0.6.18' : name === 'updater' || name === 'root-updater' ? '0.1.6' : window.ROOT_VERSION || '0.0.1'; return {name:name,installed:version,version:version}; })}};
+        }
+      } else if (uri === 'luna://com.webos.applicationManager/launch') {
         if (payload.id !== 'com.local.nativehome') {
           var app = (window.TV_APPS.apps || []).filter(function (a) { return a.id === payload.id; })[0];
           message(app ? app.title : payload.id === 'com.webos.app.firstuse-overlay' ? 'Network settings' : payload.id === 'com.palm.app.settings' ? 'TV settings' : payload.id);

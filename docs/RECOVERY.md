@@ -1,5 +1,16 @@
 # No-root controls and recovery
 
+## Interrupted setup or removal in 1.1.0
+
+Run `cytv status` with the same saved TV/profile before retrying. The installer
+can offer to finish a previous No-root removal through the retained verified
+flow with a separate default-No confirmation, including with `--yes`.
+An uncertain removal is not resubmitted automatically. Keep receipts and save
+`cytv doctor --report` diagnostics when verification cannot establish a safe step.
+Status, restore and removal never download new Python; Root recovery uses its
+verified interpreter binding and retains referenced managed runtime slots.
+See [CLI interrupted operations](CLI.md#interrupted-operations).
+
 For either edition installed with cytv, use its **Check TV status**, restore and
 diagnostics actions first; see [CLI recovery](CLI.md#interrupted-operations). Root
 routing recovery uses the [Root controls and restore commands](../root-edition/ROLLOUT.md#controls-and-recovery).

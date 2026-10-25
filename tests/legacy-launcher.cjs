@@ -43,6 +43,12 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
             this.cancel = function () {};
             this.call = function (uri, raw) {
               const params = JSON.parse(raw);
+              // Model the actual LS2 missing-service envelope. A generic failed
+              // operation must not activate a competing legacy installer.
+              if (uri.indexOf('luna://com.cleanyourtv.system.updater.service/') === 0) {
+                setTimeout(() => this.onservicecallback(JSON.stringify({returnValue:false,errorCode:-1,errorText:'Service does not exist: com.cleanyourtv.system.updater.service'})), 0);
+                return;
+              }
               if (uri.endsWith('/listApps')) {
                 window.inventoryRequests.push(this);
                 return;

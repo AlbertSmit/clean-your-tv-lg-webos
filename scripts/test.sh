@@ -11,6 +11,7 @@ has() { [[ "$selected" == *" $1 "* ]]; }
 if has tv; then
 npm run test:compat
 npm run lint:compat
+node tests/helper-compat.cjs
 for test in tests/apps/*.cjs; do
   if [[ "$test" != *"/ui.cjs" ]]; then node "$test"; fi
 done
@@ -19,6 +20,7 @@ for test in tests/i18n/*.cjs; do
 done
 node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
+node tests/tls-ca.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
 node tests/helper-entry.cjs
@@ -43,6 +45,7 @@ for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.
 
 node root-edition/service/test-handlers.js
 node root-edition/service/test-persistent.js
+node root-edition/service/test-python-binding.js
 node root-edition/ui/test-catalogs.cjs
 node root-edition/ui/test-localization.cjs
 node root-edition/ui/test-updater-localization.cjs
@@ -57,6 +60,8 @@ for file in root-edition/updater/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
 for test in tests/updates/*.cjs; do node "$test"; done
+for test in tests/system_updates/*.cjs; do node "$test"; done
+python3 -m unittest discover -s tests/system_updates
 for file in updater-service/*.js updater-app/*.js; do node --check "$file"; done
 cmp launcher/user-data.js updater-service/user-data.js
 fi

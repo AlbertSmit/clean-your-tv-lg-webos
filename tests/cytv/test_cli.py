@@ -9,6 +9,20 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_system_update_bootstrap_is_a_separate_maintenance_action(self):
+        from unittest.mock import MagicMock
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch('cytv.cli.Installer') as cls, \
+                patch('cytv.cli.package.verify_payload', return_value={'files': {'system-updater/bundle.json': 'hash'}}), \
+                patch('cytv.tv.SSAP') as ssap:
+            cls.return_value.enable_system_updates.return_value = {'installed': True}
+            code, output, _ = self.run_cli(['enable-system-updates', '--host', '192.0.2.10',
+                '--edition', 'root', '--data-dir', tmp, '--yes'], [], remote=MagicMock())
+            self.assertEqual(code, 0, output)
+            cls.return_value.enable_system_updates.assert_called_once_with()
+            cls.return_value.install.assert_not_called()
+            ssap.assert_not_called()
+
     def test_failed_inline_removal_keeps_receipt_and_reports_uninstall_phase(self):
         from unittest.mock import MagicMock
         from cytv.errors import UserError
@@ -160,6 +174,7 @@ class CLITests(unittest.TestCase):
             def __init__(self): self.calls = []
             def run(self, command, **kwargs):
                 self.calls.append(command)
+                if 'CYTV_PYTHON_BOUND' in command:return ''
                 if 'CYTV_ROOT_READY' in command: return 'CYTV_ROOT_READY'
                 if 'CYTV_EXISTING_ROOT' in command: return 'CYTV_EXISTING_ROOT'
                 if 'deploy.json' in command: return '{"stage":"installed-recovery-only"}'

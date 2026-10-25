@@ -42,7 +42,7 @@ def parser():
     result._positionals.title = i18n.translate('positional arguments')
     result._optionals.title = i18n.translate('options')
     result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
-    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall'))
+    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall', 'enable-system-updates'))
     result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
     result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
     result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
@@ -55,6 +55,7 @@ def parser():
     result.add_argument('--yes', action='store_true', help=i18n.translate('Accept install/remove summary; does not accept SSH trust'))
     result.add_argument('--migrate-home', action='store_true', help=i18n.translate('Root install: explicitly import existing Home packaged/profile data'))
     result.add_argument('--check-payload', action='store_true', help=i18n.translate('Verify embedded release assets without contacting a TV'))
+    result.add_argument('--prepare-python-runtime', action='store_true', help=i18n.translate('Download and verify the optional TV Python for offline setup'))
     result.add_argument('--report', action='store_true', help=i18n.translate('doctor: save an issue-ready diagnostic report without private connection data'))
     return result
 
@@ -151,6 +152,13 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
     remote = None
     store, profile, phase, tv_info = state.Store(args.data_dir), None, 'select-tv', {}
     try:
+        if args.prepare_python_runtime:
+            phase = 'prepare-python-runtime'
+            from .python_runtime import prime_cache
+            archive = prime_cache(store.root / 'python-cache', write)
+            write.heading('Python runtime ready for offline setup')
+            write.raw('  ' + str(archive))
+            return 0
         if args.check_payload:
             manifest = package.verify_payload(Path(payload_root) if payload_root is not None else payload_dir())
             write(f"Embedded payload verified: {len(manifest['files'])} public files; no TV contacted.")
@@ -199,11 +207,11 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             if profile['edition'] == 'root':
                 write('Root will stop the old Home Helper, turn on Home control and open Clean Your TV Home.')
             write('Check controls on the TV after installation.')
-        if args.command in ('install', 'uninstall', 'restore') and not args.yes:
+        if args.command in ('install', 'uninstall', 'restore', 'enable-system-updates') and not args.yes:
             if args.command == 'uninstall' and profile['edition'] == 'root':
                 write('This removes Root, Root Updater, their services and startup hooks, plus any installed No-root Home, Helper and Updater.')
                 write('Recovery records are retained for diagnostics. Other TV apps stay installed.')
-            verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home'}[args.command]
+            verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home', 'enable-system-updates': 'Prepare updates for all system components on this rooted TV'}[args.command]
             if args.command == 'uninstall' and profile['edition'] == 'root':
                 pending = store.pending(profile)
                 if pending and pending.get('action') == 'uninstall' and pending.get('full_project') is True:
@@ -212,7 +220,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('Cancelled. No TV changes were made.')
                 return 0
         payload, manifest = Path(payload_root) if payload_root is not None else payload_dir(), {}
-        if args.command == 'install':
+        if args.command in ('install', 'enable-system-updates'):
             try:
                 manifest = package.verify_payload(payload)
             except FileNotFoundError:
@@ -374,6 +382,10 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 else:
                     write('Packages installed; Home Helper launch requested. Check short Home, arrows/OK, Back, volume, standby and cold boot.')
                     write('Emergency exit: three short Home presses within two seconds. Keep Developer Mode active. The computer can now be switched off.')
+            elif args.command == 'enable-system-updates':
+                phase = 'enable-system-updates'
+                result = installer.enable_system_updates()
+                write('System updates are ready. Open Home Settings → Software updates on the TV.')
             elif args.command == 'home-diagnostics':
                 phase = 'home-diagnostics'
                 if args.non_interactive:

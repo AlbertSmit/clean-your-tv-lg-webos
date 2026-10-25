@@ -29,6 +29,12 @@ cp native/app/*.js native/app/*.json native/app/*.png build/native-app/
 cp -R native/app/vendor build/native-app/
 cp native/service/*.js native/service/*.json build/native-service/
 cp native/app/state-permissions.js build/native-service/
+python3 -m scripts.helper_build --input build/native-app --output build/native-app-compat
+python3 -m scripts.helper_build --input build/native-service --output build/native-service-compat
+rm -rf build/native-app build/native-service
+mv build/native-app-compat build/native-app
+mv build/native-service-compat build/native-service
+mkdir -p build/native-app/state build/native-service/state
 touch build/native-app/state/.keep build/native-service/state/.keep
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/app/detach.c -o build/native-app/detach
 "$ZIG" cc -target arm-linux-musleabi -Os -static -s native/prototype/relay.c native/prototype/filter.c -o build/native-app/relay

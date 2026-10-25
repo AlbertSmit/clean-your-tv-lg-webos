@@ -1,6 +1,12 @@
 name: cytv standalone builds
 on:
   workflow_dispatch:
+    inputs:
+      test_build:
+        description: 'Build draft installers for device feedback; does not finalize or publish a release'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [release/next]
 permissions:
@@ -13,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       candidate: ${{ steps.scope.outputs.candidate }}
+      installers: ${{ steps.scope.outputs.installers }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,7 +31,7 @@ jobs:
         run: python scripts/ci-scope.py
   android:
     needs: scope
-    if: needs.scope.outputs.candidate == 'true'
+    if: needs.scope.outputs.installers == 'true'
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
@@ -83,7 +90,7 @@ jobs:
           if-no-files-found: error
   build:
     needs: scope
-    if: needs.scope.outputs.candidate == 'true'
+    if: needs.scope.outputs.installers == 'true'
     strategy:
       fail-fast: false
       matrix:

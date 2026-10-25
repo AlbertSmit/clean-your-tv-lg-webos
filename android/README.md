@@ -1,10 +1,13 @@
-# CYTV for Android — 0.1.5 preview
+# CYTV for Android — 0.2.0-preview RC (versionCode 9)
+
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** includes cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root and both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.1.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 
 The interface uses the approved B1 house mark in its original colours, with quiet warm charcoal surfaces and muted controls. Orange is confined to the identity rather than large button/background fills.
 
-A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
+A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. The optional TV Python runtime archive is a separate
+verified on-demand download, rather than part of the APK. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
 
 ## Install and connect
 
@@ -14,13 +17,23 @@ A self-contained Android installer for the existing No-root and Root editions of
 4. No-root: enable **Dev Mode Status** and **Key Server** in the TV's Developer Mode app. Enter its passphrase when CYTV asks. Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.
 5. Review the SSH fingerprint before trusting the TV. Review the actual installed/package versions before confirming installation. Accept the remote-control pairing prompt on the TV if shown.
 6. Keep the TV on. The foreground service continues while the Activity is in the background; keep Android's CYTV notification available. Do not force-stop the app or change networks during installation.
-7. Check Home, arrows/OK, Back, volume and standby/wake on the TV. Root requires existing compatible root, Python 3 and Homebrew services on the TV. CYTV does not root or flash the TV.
+7. Check Home, arrows/OK, Back, volume and standby/wake on the TV. Root requires existing compatible root, Python 3.9+, Node.js 8+, Homebrew services
+   and supported ARM32 remote input on the TV. Eligible missing Python can be supplied
+   as a pinned private ARMv7 runtime downloaded on the phone and transferred via SSH;
+   a compatible TV loader/libc is still required. Working system Python skips this download.
+   See [runtime limits](../docs/OPTIONAL-PYTHON.md). CYTV does not root or flash the TV.
 
-This is a **debug-signed preview**, not a public production release. End-to-end installation from a physical phone to a physical TV still needs validation for **both editions**. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Future compatible launcher updates use the existing TV/desktop workflows.
+This is a **debug-signed preview**, not a public production release. End-to-end installation from a physical phone to a physical TV still needs validation for **both editions**. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Compatible whole-edition TV updates require separate computer-assisted System
+Updater bootstrap with root/Homebrew services. Unrooted TVs use the installer.
+The APK does not expose that bootstrap action; see [updates](../root-edition/UPDATES.md).
 
 ## Recovery and private data
 
-Use **Status and recovery** from the start screen. The selected action stays visible while you choose the TV connection method; status and restore show their own progress without installation steps. The Android notification describes an ongoing TV operation. After an interrupted operation, check status before reinstalling. CYTV retains the existing durable operation receipts and never automatically repeats installation after process death. Activity recreation replays the current operation and pending question. Pending questions time out after ten minutes; the foreground wake lock is bounded to 25 minutes. OS process/service termination can still interrupt networking; retained receipts remain authoritative.
+Use **Status and recovery** from the start screen. The selected action stays visible while you choose the TV connection method; status and restore show their own progress without installation steps. The Android notification describes an ongoing TV operation. After an interrupted operation, check status before reinstalling. CYTV retains the existing durable operation receipts and never automatically repeats installation after process death. Activity recreation replays the current operation and pending question. Pending questions time out after ten minutes; the foreground wake lock is bounded to 25 minutes. OS process/service termination can still interrupt networking; retained receipts remain authoritative. An unfinished No-root removal is resumed
+only through its existing verified flow and a separate confirmation; unknown removal
+outcomes stay blocked. The preview has no uninstall action, so use desktop/CLI
+with the retained connection and evidence when removal is required. Status and
+restore do not download a new Python. Referenced runtime slots remain for recovery.
 
 Three short Home presses within two seconds request the existing TV emergency exit. Older No-root Helper versions through 0.6.13 instead use holding Home for two seconds. Root cold-power behavior and model compatibility retain the limitations documented by the TV project.
 
@@ -28,7 +41,7 @@ Profiles, imported keys and pairing data live in the app-private directory. Andr
 
 ## Build
 
-Use the maintained `stable/` checkout. Requires JDK 17, Python 3.12, Android SDK platform 35/build-tools 35.0.0/platform-tools and accepted SDK licenses. Gradle 8.13 is pinned by the wrapper; Android Gradle Plugin 8.9.2 and Chaquopy 17.1.0 are pinned in the build.
+Run builds from the maintained project root. Requires JDK 17, Python 3.12, Android SDK platform 35/build-tools 35.0.0/platform-tools and accepted SDK licenses. Gradle 8.13 is pinned by the wrapper; Android Gradle Plugin 8.9.2 and Chaquopy 17.1.0 are pinned in the build.
 
 From the repository root, prepare a public TV payload using the existing build flow (or use an already built, hash-verified `build/cytv/payload`):
 

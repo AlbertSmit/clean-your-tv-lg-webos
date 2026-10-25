@@ -8,7 +8,7 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| Status | Home 1.3.6 + Helper 0.6.17 | Root 0.1.10, based on scoped evidence on OLED55C3RLA / 43.21.71 |
+| 1.1.0 stable | Home 1.4.0 + Helper 0.6.19; current Helper TV acceptance pending | Root 0.2.0; scoped C3 controls and standby/wake checks passed |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |
@@ -19,14 +19,12 @@ upgrade or remove your ordinary launcher.
 | Normal exit | Turn Change Home off, or use the emergency gesture | Turn Change Home off; Open LG Home only visits once |
 | Startup evidence | Standby and cold boot on tested setup | Software reboot, quick standby and failsafe have scoped evidence; cold-power testing deferred |
 | Developer Mode | Session must remain active; auto-renewal is opt-in Beta | Not used by Root installer; do not install Developer Mode over root |
-| Updates | Computer-assisted on unrooted TVs; the separate Home Updater requires root ([details](UPDATES.md)) | Settings updates with separate Root Updater, saved profile and rollback; isolated C3 validation, one-time host setup required ([guide](../root-edition/UPDATES.md)) |
+| Updates | Computer-assisted on unrooted TVs; the separate Home Updater requires root ([details](UPDATES.md)) | Signed whole-edition updates with independent supervisor, saved profile and rollback; one-time root/Homebrew computer bootstrap required ([guide](../root-edition/UPDATES.md)) |
 | Early black screen | Known limitation | Not solved |
 
 ## Get started
 
-Component versions above match the v1.0.0 distribution. For the current source
-versions, use [`release-versions.json`](../release-versions.json); hardware evidence
-remains specific to the artifacts and scenarios recorded in the compatibility guides.
+Download [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0). Current component versions are recorded in [`release-versions.json`](../release-versions.json); hardware evidence remains specific to the artifacts and scenarios recorded in [compatibility](COMPATIBILITY.md).
 
 - **Without cytv:** [Manual installation of No-root and Root](MANUAL_INSTALL.md), including requirements for each edition and recovery commands.
 
@@ -38,4 +36,4 @@ The Root hardware evidence is from **LG OLED55C3RLA, firmware 43.21.71** with a
 Magic Remote. Other hardware is unvalidated. Keep your working installation and
 private backups; never publish credentials, pairing data or device inventories.
 
-See [release scope and known limitations](../root-edition/ROOT-0.1.1.md), including the unresolved intermittent emergency-gesture observation.
+The current C3 check passed triple-Home emergency exit and explicit resume. True cold boot and a complete signed system upgrade/rollback remain untested. See [current hardware scope](COMPATIBILITY.md#current-110-hardware-evidence); [earlier Root release observations](../root-edition/ROOT-0.1.1.md) retain their original scope.

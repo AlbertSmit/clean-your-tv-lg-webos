@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
-  var data = window.RootProfileData, failed = false, booted = false;
+  var data = window.RootProfileData, failed = false, booted = false, systemRestore = false;
   var marker = 'tvhome.root.restored.v1';
   function recovery(error) {
     failed = true;
@@ -27,11 +27,11 @@
       xhr.onerror = xhr.ontimeout = function () { reject(Error('Could not read packaged icon')); }; xhr.send();
     });
   }
-  window.RootProfile = {capture:function () {
+  window.RootProfile = {capture:function (options) {
     if (failed) return Promise.reject(Error('Stored profile is unreadable. Open Recovery.'));
     return Promise.resolve().then(function () {
       var snapshot = {schema:1, inventory:JSON.parse(JSON.stringify(window.TV_APPS)), config:JSON.parse(JSON.stringify(window.CONFIG)), settings:{}};
-      ['tvhome.order', 'tvhome.language'].forEach(function (key) { var value = localStorage.getItem(key); if (value !== null) snapshot.settings[key] = value; });
+      (options && options.system ? ['tvhome.order', 'tvhome.language', 'tvhome.layout'] : ['tvhome.order', 'tvhome.language']).forEach(function (key) { var value = localStorage.getItem(key); if (value !== null) snapshot.settings[key] = value; });
       return Promise.all(snapshot.inventory.apps.map(function (app) { return icon(app.icon).then(function (embedded) { app.icon = embedded; }); })).then(function () { return save(snapshot); });
     });
   }};
@@ -48,6 +48,10 @@
         var actual = Array.prototype.map.call(document.querySelectorAll('#tiles .item[data-app-id]'), function (el) { return el.getAttribute('data-app-id'); }).sort();
         if (JSON.stringify(expected) !== JSON.stringify(actual)) throw Error('Restored launcher tiles do not match the saved profile');
         var health = {transaction:restored.transaction, version:window.ROOT_VERSION};
+        if (systemRestore) {
+          window.SystemUpdates.rpc('healthy', {edition:'root', transaction:health.transaction, version:health.version}).catch(recovery);
+          return;
+        }
         window.RootUpdates.rpc('ready', health).then(function () {
           if (restored.phase === 'verifying') return window.RootUpdates.rpc('confirm', health);
         }).catch(recovery);
@@ -57,10 +61,20 @@
   }
   var saved = null, localError = null;
   try { var raw = localStorage.getItem(data.key); if (raw !== null) saved = data.validate(JSON.parse(raw)); } catch (error) { localError = error; }
-  window.RootUpdates.rpc('restoreProfile', {}).then(function (restored) {
+  function restore() {
+    if (!window.SystemUpdates) return window.RootUpdates.rpc('restoreProfile', {});
+    return window.SystemUpdates.rpc('restoreProfile', {edition:'root'}).then(function (value) {
+      if (value) { systemRestore = true; return value; }
+      return window.RootUpdates.rpc('restoreProfile', {});
+    }, function (error) {
+      if (error.unavailable === true) return window.RootUpdates.rpc('restoreProfile', {});
+      throw error;
+    });
+  }
+  restore().then(function (restored) {
     if (restored) {
       if (!restored.transaction || restored.version !== window.ROOT_VERSION) throw Error('Backup version does not match this Root package');
-      var identity = restored.transaction + ':' + restored.version;
+      var identity = (systemRestore ? 'system:' : '') + restored.transaction + ':' + restored.version + (systemRestore ? ':' + (['verifying-rollback','rolled-back'].indexOf(restored.phase) >= 0 ? 'rollback' : 'install') : '');
       var profile = data.validate(restored.profile);
       var alreadyRestored = saved && !localError && (restored.phase === 'aborted' || localStorage.getItem(marker) === identity);
       if (alreadyRestored) profile = saved;
@@ -69,7 +83,12 @@
         save(profile);
         if (profile.settings['tvhome.order'] === undefined) localStorage.removeItem('tvhome.order');
         else localStorage.setItem('tvhome.order', profile.settings['tvhome.order']);
-        if (profile.settings['tvhome.language'] !== undefined) localStorage.setItem('tvhome.language', profile.settings['tvhome.language']);
+        if (systemRestore) {
+          if (profile.settings['tvhome.layout'] === undefined) localStorage.removeItem('tvhome.layout');
+          else localStorage.setItem('tvhome.layout', profile.settings['tvhome.layout']);
+        }
+        if (profile.settings['tvhome.language'] === undefined) localStorage.removeItem('tvhome.language');
+        else localStorage.setItem('tvhome.language', profile.settings['tvhome.language']);
         localStorage.setItem(marker, identity);
         if (window.HomeI18n) {
           if (previousLanguage !== window.HomeI18n.preference() && window.location && window.location.reload) {

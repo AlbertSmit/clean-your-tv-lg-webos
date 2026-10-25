@@ -89,7 +89,7 @@ def begin(spawn, candidate=CANDIDATE, before_publish=None):
 def spawn(transaction):
     fd=os.open(d.STATE/'profile-guardian.log',os.O_CREAT|os.O_APPEND|os.O_WRONLY|os.O_NOFOLLOW,0o600)
     try:
-        return subprocess.Popen(['/usr/bin/python3',str(Path(__file__).with_name('guardian_device.py')),transaction],
+        return subprocess.Popen([d.current_executable(),str(Path(__file__).with_name('guardian_device.py')),transaction],
                                 stdin=subprocess.DEVNULL,stdout=fd,stderr=fd,start_new_session=True,close_fds=True)
     finally: os.close(fd)
 

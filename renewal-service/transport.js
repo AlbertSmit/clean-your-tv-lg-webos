@@ -20,6 +20,7 @@ function createRequest(https, timeoutMs) {
         req=https.request({hostname:'developer.lge.com',port:443,method:'GET',
           path:'/secure/'+(operation==='check'?'Check':'Reset')+'DevModeSession.dev?sessionToken='+encodeURIComponent(token),
           rejectUnauthorized:true,agent:false,
+          ca:require('fs').readFileSync(__dirname+'/ca-bundle.crt','utf8'),
           headers:{Accept:'application/json'}
         },function(res) {
           if (res.statusCode !== 200) {fail('http-status'); return;}

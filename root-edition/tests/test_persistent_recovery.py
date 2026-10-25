@@ -47,6 +47,21 @@ class IntegrationTests(unittest.TestCase):
   self.assertEqual(r['effect'],'start_guarded');self.assertEqual(self.read(),self.baseline)
   self.assertEqual(r['intent']['phase'],'starting')
   self.assertTrue(r['intent']['enabled'])
+ def test_boot_rearms_protection_without_reopening_home_over_user_app(self):
+  starting=self.c.boot(self.intent,'boot-b','attempt-b',False)['intent']
+  foreground=['com.emby.app']
+  def start(before_publish):
+   self.create_route('route-b');before_publish('route-b')
+   return {'transaction':'route-b'}
+  def call(uri,payload):
+   if uri.endswith('/launch'):foreground[0]=payload['id']
+   return {'returnValue':True}
+  with patch('emergency_trial.start',side_effect=start),patch('persistent_health.require_fresh') as fresh,patch('persistent_health.require_guardian') as guardian,patch.object(d,'active_guardian',return_value=True),patch.object(self,'call',side_effect=call):
+   result=self.c.restart(starting)
+  fresh.assert_called_with('route-b');guardian.assert_called_once_with('route-b')
+  self.assertEqual(result['intent']['phase'],'active')
+  self.assertTrue(result['intent']['enabled']);self.assertEqual(self.home,CANDIDATE)
+  self.assertEqual(foreground,['com.emby.app'])
  def test_failsafe_does_not_request_restart(self):
   r=self.c.boot(self.intent,'boot-a','failsafe',True)
   self.assertEqual(r['effect'],'none');self.assertFalse(r['intent']['enabled'])

@@ -16,6 +16,7 @@ class UpdaterRecoveryTests(unittest.TestCase):
                 if failure=='query':remote.run.side_effect=RuntimeError('unavailable')
                 remote.luna.return_value={'returnValue':True,'status':{'apps':[] if failure!='busy' else [{}]}}
                 installer=operations.Installer(remote,store,profile,Path(tmp),{},lambda *_:None)
+                installer._selected_python='/usr/bin/python3'
                 installer.root_files_match=MagicMock(return_value=failure!='files')
                 store.begin(profile,'setup-root-updater',stage='setup',requires_updater=True,release_sha='a'*64,bundle_sha='b'*64)
                 pending=store.pending(profile)

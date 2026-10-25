@@ -1,5 +1,6 @@
 (window.HomeI18n && window.HomeI18n.ready ? window.HomeI18n.ready : function(callback){callback();})(function(){
 (function(){'use strict';
+function legacy(){
 var buttons=['open','refresh','restore','details'].map(function(id){return document.getElementById(id);}),index=0,busy=false,polling=false,generation=0,timer,saved=null;
 function tr(source,params){return window.HomeI18n?window.HomeI18n.t(source,params):source.replace(/\{(\w+)\}/g,function(_,key){return params[key];});}
 function text(s){document.getElementById('status').textContent=tr(s);}
@@ -26,5 +27,15 @@ buttons[2].onclick=function(){if(busy||polling||buttons[2].disabled||buttons[2].
 buttons[0].onclick=function(){var b;try{b=new PalmServiceBridge();b.onservicecallback=function(raw){b.cancel();try{if(JSON.parse(raw).returnValue===true)return;}catch(_){}text('Could not open Home.');guidance('Refresh status first. If recovery remains unavailable, use the installer on your computer.');};b.call('luna://com.webos.applicationManager/launch',JSON.stringify({id:'com.gathin.tvhome'}));}catch(_){text('Could not open Home.');}};
 buttons[3].onclick=function(){var detail=document.getElementById('diagnostic');detail.hidden=!detail.hidden;buttons[3].textContent=tr(detail.hidden?'Show diagnostics':'Hide diagnostics');buttons[3].setAttribute('aria-expanded',String(!detail.hidden));};
 document.addEventListener('keydown',function(e){if([9,27,37,38,39,40,13,461].indexOf(e.keyCode)<0)return;e.preventDefault();if(e.keyCode===27||e.keyCode===461){buttons[0].click();return;}if(e.keyCode===38||e.keyCode===40){var reading=document.getElementById('recoveryReading');reading.scrollTop+=(e.keyCode===38?-1:1)*Math.max(80,Math.floor(reading.clientHeight*.75));return;}if(e.keyCode===13){if(!e.repeat)buttons[index].click();return;}var step=e.keyCode===37||(e.keyCode===9&&e.shiftKey)?-1:1;for(var n=1;n<=buttons.length;n++){var next=(index+step*n+buttons.length)%buttons.length;if(!buttons[next].hidden&&!buttons[next].disabled){index=next;buttons[index].focus();break;}}});buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.onmouseover=function(){index=i;b.focus();};});buttons[0].focus();text('Reading status…');refresh();
+}
+if(window.SystemUpdates){
+ var legacyPanel=document.getElementById('legacyRecovery'),systemMode=true;
+ if(legacyPanel)legacyPanel.hidden=true;
+ function openHome(){var bridge;try{bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){bridge.cancel();try{if(JSON.parse(raw).returnValue===true)return;}catch(_){}openSystem();};bridge.call('luna://com.webos.applicationManager/launch',JSON.stringify({id:'com.gathin.tvhome'}));}catch(_){openSystem();}}
+ function openSystem(){return window.SystemUpdates.open({edition:'no-root',standalone:true,recovery:true,onClose:openHome,fallback:function(){systemMode=false;if(legacyPanel)legacyPanel.hidden=false;legacy();}});}
+ document.addEventListener('webOSRelaunch',function(){if(systemMode)openSystem();});
+ document.addEventListener('visibilitychange',function(){if(systemMode&&!document.hidden&&!window.SystemUpdates.isOpen())openSystem();});
+ openSystem();
+}else legacy();
 }());
 });

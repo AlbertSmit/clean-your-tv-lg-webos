@@ -5,6 +5,21 @@ import unittest
 
 
 class BuildAssetsTests(unittest.TestCase):
+    def test_https_service_assets_survive_the_public_source_filter(self):
+        import json
+        from cytv import package
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        for folder in ('renewal-service', 'updater-service'):
+            sources = build['tracked_files'](folder)
+            app = {'appinfo.json': json.dumps({'id':'com.test.home','version':'1.0.0','type':'native'}).encode()}
+            files = package.data_files(build['pack_app'](app, sources))
+            prefix = 'usr/palm/services/'+json.loads(sources['services.json'])['id']+'/'
+            bundle = files[prefix+'ca-bundle.crt']
+            self.assertIn(b'-----BEGIN CERTIFICATE-----', bundle)
+            self.assertEqual(bundle, (root/'renewal-service/ca-bundle.crt').read_bytes())
+            self.assertIn(prefix+'ca-LICENSE.txt', files)
+
     def test_installer_bundle_contains_approved_brand_masters(self):
         import tempfile
         root = Path(__file__).resolve().parents[2]
@@ -37,7 +52,21 @@ class BuildAssetsTests(unittest.TestCase):
                    'service.js': (root / 'native/service/service.js').read_bytes()}
         files = package.data_files(build['pack_app'](app, service, helper=True, architecture='arm'))
         prefix = 'usr/palm/services/com.local.nativehome.service/'
-        self.assertEqual(files[prefix + 'state-permissions.js'], permissions)
+        self.assertEqual(files[prefix + 'state-permissions.js'],
+                         files['usr/palm/applications/com.local.nativehome/state-permissions.js'])
+        import os
+        import subprocess
+        import tempfile
+        # Execute the service's packaged entry dependency, not its source copy.
+        with tempfile.TemporaryDirectory() as directory:
+            for name, raw in files.items():
+                target = Path(directory) / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            result = subprocess.run([os.environ.get('NODE012', 'node'), '-e',
+                'var secure=require(process.argv[1]);if(typeof secure!=="function"||typeof Object.assign!=="function"||typeof Promise!=="function")process.exit(1);',
+                str(Path(directory) / prefix / 'state-permissions.js')], capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(b"require('./state-permissions')", files[prefix + 'service.js'])
         self.assertNotIn('state-permissions.js', service, 'Do not mutate the source mapping')
 

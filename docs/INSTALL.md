@@ -1,5 +1,7 @@
 # Install Clean Your TV — No-root and Root
 
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 Use **cytv** to install either edition. It includes the runtime and TV packages;
@@ -14,7 +16,7 @@ so your computer can be switched off during everyday use.
 | Setup credentials | Developer Mode passphrase, then separate on-TV control pairing | Root password/key or SSH agent; verify the TV's SSH identity |
 | Home control | On-TV Home Helper | System Home routing with independent recovery |
 | After setup | Keep Developer Mode active and local networking available for Helper | Keep root access and recovery services available |
-| Updates | From your computer; renewal is optional Beta | Compatible signed Home releases through Settings after updater setup |
+| Updates | From your computer; renewal is optional Beta | Compatible signed edition release sets through Settings after supervisor setup |
 
 Root setup **does not obtain root**, flash firmware or enable Developer Mode.
 Do not install Developer Mode over an existing rooted setup. Never run Root Home
@@ -23,7 +25,7 @@ control and No-root Helper together. See [edition comparison](EDITIONS.md).
 Hardware evidence is scoped to documented builds, principally
 **LG OLED55C3RLA / firmware 43.21.71**. Installation success does not establish
 compatibility with another TV. Read [compatibility](COMPATIBILITY.md) and
-[Root acceptance and remaining checks](../root-edition/RELEASE-ACCEPTANCE.md).
+[1.1.0 hardware acceptance and remaining checks](RELEASE-1.1.0-ACCEPTANCE.md).
 
 ## 2. Prepare your TV and computer
 
@@ -34,13 +36,20 @@ Allow Local Network access when your computer asks.
 **No-root:** install LG's Developer Mode app, sign in, enable Developer Mode and
 complete any requested restart. Enable **Key Server** and keep the TV's passphrase
 available. SSH pairing and the later on-screen control-pairing request are separate.
+The updated Helper requires TV Node.js 0.12.2+; installation checks this before
+changing packages. Older published packages do not gain compatibility automatically.
 Keep the official session timer active: expiry can remove sideloaded apps.
 See [Developer Mode preparation](MANUAL_INSTALL.md#2-no-root-prepare-the-tv).
 
 **Root:** confirm existing root SSH access and retain recovery backups. The TV
-needs Python 3, luna-send, Homebrew services and a supported ARM32 Magic Remote
+needs Python 3.9+, Node.js 8+, luna-send, Homebrew services and a supported ARM32 Magic Remote
 input interface. Investigate a changed SSH host key rather than bypassing the
 check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-access).
+
+If the TV has no suitable Python 3, Root setup can automatically download a
+separate verified ARMv7 runtime on your computer/Android device and transfer it
+over SSH. TVs with a suitable system Python skip this download. See
+[optional Python delivery and compatibility limits](OPTIONAL-PYTHON.md).
 
 ## 3. Download and start cytv
 
@@ -56,7 +65,7 @@ Download the matching package from the
 
 For Windows, use File Explorer **Extract All** and keep the complete folder.
 Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
-Android 0.1.3-preview requirements, APK installation and limitations are covered
+Android 0.2.0-preview requirements, APK installation and limitations are covered
 in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
 The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
 for the Linux graphical app.
@@ -125,7 +134,7 @@ A successful installer run verifies commands and state, not physical buttons.
 
 Use cytv's status, diagnostics, restore and uninstall actions with the saved TV
 connection. Removing cytv from your computer does not remove the TV installation.
-Root uninstall through cytv removes project packages, including Root Updater and
+Root uninstall through cytv removes project packages, including System Updater, Root Updater and
 installed No-root components; retained inactive recovery evidence is intentional.
 See [desktop maintenance](DESKTOP_INSTALL.md#remove-the-project-from-a-rooted-tv),
 [CLI maintenance](CLI.md), and [manual maintenance](MAINTENANCE.md).
@@ -179,3 +188,7 @@ Without one, setup stops before pairing or changing the TV. The compiler must
 run in your actual Termux/container environment; CPU architecture alone does not
 prove Android compatibility. Node.js, Python and CLI requirements still apply.
 End-to-end Termux and C5/webOS 26 compatibility remain unverified.
+
+## Root GUI after supervisor setup
+
+If Root immediately shows `Denied methods call status` after supervisor bootstrap, close and reopen the **Home Root** app once to restart its GUI, then check Software updates again. If the error persists, retain diagnostics and inspect status; do not delete supervisor or recovery state.

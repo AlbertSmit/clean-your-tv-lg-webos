@@ -1,5 +1,17 @@
 # Update, disable, rollback and uninstall
 
+## Whole-edition updates in 1.1.0
+
+The stable release adds signed complete edition release sets through an
+independent System Updater supervisor. On-TV updates need existing root/Homebrew
+services, TV Node.js 8+, suitable Python and an explicit computer bootstrap with
+`cytv enable-system-updates --edition root` for Root, or the manual supervisor
+bootstrap with a root SSH alias for No-root on a rooted TV. Unrooted TVs continue
+computer-assisted updates. See [update setup](../root-edition/UPDATES.md).
+Legacy app-only OTA does not install the new infrastructure. Unknown outcomes,
+conflicting installers and downgrades are refused. Keep recovery evidence and
+referenced managed Python slots; maintenance commands never download a runtime.
+
 For cytv installations of either edition, use its saved connection and maintenance
 actions: [desktop maintenance](DESKTOP_INSTALL.md), [CLI reference](CLI.md).
 For manual Root setup, follow [Root removal and replacement](../root-edition/ROLLOUT.md#remove-or-replace-root-edition)
@@ -61,6 +73,11 @@ Revoke the SSAP pairing through TV device/connection settings if desired; erase
 `.lgtv-key.json` and `build/setup/ssap-key.json` on the computer when no longer needed.
 
 ## Rollback
+
+If the independent System Updater is installed, use its edition Updater's
+Recovery flow for the verified previous component set. Do not manually replace
+packages around its captured baseline. The manual procedure below applies to
+source installations without that supervisor.
 
 Pause first, then reinstall your saved previous packages. Reconfigure pairing/input
 registration if necessary. Previous helper versions have different recovery behavior;

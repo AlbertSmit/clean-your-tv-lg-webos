@@ -1,4 +1,75 @@
-# Documentation audit — 2026-10-24
+# Documentation audit — 1.1.0 candidate, 2026-10-25
+
+Scope: current maintained usage, setup, update/recovery, build/release guidance
+and all ten localized guides on `release/next`. Truth sources are
+`release-versions.json`, app/service manifests, actual cytv CLI/operations,
+System Updater setup/policy and the checked installer artifacts. The candidate is
+unpublished; the public latest release remains v1.0.3.
+
+## Reviewed and updated
+
+| Area | Files / result |
+| --- | --- |
+| Entry points and release scope | README, CHANGELOG, CONTRIBUTING, LANGUAGES, RELEASE-1.1.0; distinguish candidate versions/Actions artifacts from published stable and dated evidence |
+| Setup and maintenance | INSTALL, CLI, DESKTOP_INSTALL, MANUAL_INSTALL, android/README, EDITIONS, COMPATIBILITY, MAINTENANCE and COMPANION-APPS; current versions, Root prerequisites, optional Python and separate supervisor bootstrap |
+| Updates and recovery | UPDATES, RECOVERY, Root README/UPDATES/RECOVERY/STATUS/ROLLOUT/DOCTOR, package/runtime READMEs; whole-edition sets, old updater boundaries, retained recovery and refusal of uncertain retries |
+| Helper diagnostics and baselines | HELPER-DIAGNOSTICS and native/published/README; distinguish current capture versions from retained immutable historical packages |
+| Hardware gates | Root TESTING and RELEASE-ACCEPTANCE current-scope sections; automatic activation has no ordinary Keep step; previous artifact records remain historical |
+| Translations | All ten docs/i18n guides: en, de, es, pt-BR, fr, it, ko, hi, pl, ru; candidate/download distinction, versions, optional runtime, system setup and recovery |
+| Development and delivery | BUILD, RELEASE-PROCESS, TLS-TRUST and THIRD_PARTY_NOTICES; source requirements, draft build dispatch, optional Python provenance and updateable versus fixed infrastructure |
+| Test handoff | RC-1.1.0-TESTING; exact existing five-platform build, macOS package selection, staged remote checks and limits of a modern-TV Python test |
+
+## Reviewed without behavior changes
+
+APP-MANAGEMENT still matches app inventory flows.
+DEVELOPER-MODE-BETA retains its actual unrooted-renewal limitations.
+TV-WEB-BUILD now also documents the separate Helper Node 0.12 build; Chromium 38 frontend behavior remains unchanged.
+RELEASE-FLOW, RELEASE_CHECKLIST and the release PR template already contain the
+new recurring documentation gate from #46. They remain the process reference.
+Assets/font/icon notices describe their own source/attribution scope.
+Vendored ws documentation is upstream material.
+
+Dated release notes, development/lab records, version-specific Root acceptance,
+plans/specifications and this audit's older section preserve original versions
+and results. They are evidence, not current installation instructions; historical
+claims do not certify 1.1.0. No published historical release is relabelled as RC.
+
+## Verification and device boundary
+
+- Independent documentation review and targeted rereview passed after clarifying
+  retained Root Updater migrations in both primary guides and all ten languages.
+  Local verification passed for 45 changed Markdown files, 353 relative
+  links/anchors, balanced command fences and `git diff --check`.
+- Checked current command names/options against cytv CLI and setup sources.
+  Root supervisor setup is separate from Install. A No-root cytv profile uses
+  prisoner SSH; rooted No-root setup instead needs the documented root SSH bundle
+  procedure. Existing Root Updater state can block generic reinstallation.
+- Existing Actions run 40178512948 passed all five platform builds at source
+  acf1acccb0ec0802c993f94a39080859dcda9591. Later documentation edits do not change
+  those bytes; final freeze still requires builds at its actual final commit.
+- The downloaded macOS ARM64 console passed version/payload checks locally;
+  the extracted app passed code-signature verification and offscreen GUI smoke.
+- Read-only checks on OLED55C3RLA reported webOS 11.2.0, Python 3.12.6 and Node
+  20.12.2. Candidate status/doctor connected successfully and existing recovery
+  integrity verified. Root 0.1.11 / Root Updater 0.1.0 remain installed.
+  No candidate installation, visible controls, cold boot, upgrade or rollback
+  acceptance was performed. A manufacturing-version field is not evidence of
+  the currently installed firmware number.
+
+Remaining release work is physical-TV acceptance, the Helper 0.6.19 exact archive
+and rollback approval, signed test release-set coverage and final frozen-head
+validation. Local Markdown verification covers links/anchors, fenced commands and
+whitespace; external LG documentation, OS permission dialogs and every published
+historical asset are not re-certified by this audit. The build's existence and
+artifact inventory were read through GitHub; no stable feed or publication changed.
+
+---
+
+# Historical documentation audit — 2026-10-24
+
+Historical workspace layout: on 2026-10-25 the `stable/` checkout was moved to
+the project root. Current work and Git commands use the project root; references
+to `stable/` below describe the layout at the time of this audit.
 
 Scope: the primary `stable/` checkout's 61 tracked Markdown files, plus the local
 workspace README. The former release-desktop checkout is now archived at
@@ -50,3 +121,28 @@ availability and OS dialogs were not independently revalidated in this pass.
 Current guides still use preview terminology in places because the Root package
 identity and manual bundle maturity remain separate from model-scoped historical
 stable acceptance. Do not remove those caveats simply to match a version number.
+
+## Helper Node 0.12 correction — issue #47
+
+Reviewed the merged candidate setup/runtime guidance after adding Babel, local
+polyfills and the legacy WebSocket path to Helper 0.6.19. Updated COMPATIBILITY,
+INSTALL, TV-WEB-BUILD, all ten user guides, installer translations, CONTRIBUTING,
+THIRD_PARTY_NOTICES and RELEASE-1.1.0. Removed the stale additional Helper
+Node 10 requirement from translated system-update instructions; the separate
+supervisor/Root Node 8 requirement remains. Historical downloads and immutable
+Helper baselines retain their original scope. The existing five-platform test
+artifacts predate this fix and must be rebuilt.
+
+Local checks: complete scripts/test.sh and TV payload build; actual official
+Node 0.12.2 executes the packaged Helper controller, status/listApps and WSS
+regression. Independent implementation review/rereview found no actionable
+issues. No LG 49UJ750V input-grab, standby, cold-boot or new rollback acceptance
+is claimed. CLI interfaces and unrelated Root/recovery instructions are unchanged.
+
+## Stable publication documentation pass — 2026-10-25
+
+Updated README, all ten localized guides, current installation/maintenance/update references, Root documentation and Android download guidance for v1.1.0 stable. Current downloads point to the final release; the RC testing guide is marked superseded and its old Actions run remains historical. Earlier audit entries, specifications and hardware records retain their original scope.
+
+Added the one-time Home Root GUI restart after supervisor bootstrap when `Denied methods call status` appears. Current C3 evidence and untested paths are recorded in [1.1.0 acceptance](RELEASE-1.1.0-ACCEPTANCE.md); stable publication does not validate every model, Helper 0.6.19 hardware behavior or complete signed system upgrade/rollback.
+
+Verification: checked the documentation diff for whitespace errors, confirmed all ten guides name v1.1.0 stable and contain no obsolete Actions run or Node 10+ Helper requirement, checked changed Markdown relative file links, and scanned current user guides for stale unpublished-release/download instructions. Historical RC/build/audit references remain explicit history. The full local test suite passed in the coordinating publication task; no product source changed in this documentation pass.

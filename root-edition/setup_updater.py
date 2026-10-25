@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--bundle',type=Path,required=True);parser.add_argument('--baseline',type=Path,required=True)
     parser.add_argument('--ssh');parser.add_argument('--identity',type=Path);parser.add_argument('--apply',action='store_true')
     parser.add_argument('--device',action='store_true',help=argparse.SUPPRESS)
+    parser.add_argument('--python',default='/usr/bin/python3',choices=('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'))
     args=parser.parse_args()
     if args.device:
         from updater.bootstrap import apply
@@ -38,7 +39,7 @@ def main():
             for name in (*manifest['files'],'bundle.json'):
                 output=target/name;output.parent.mkdir(parents=True,exist_ok=True);output.write_bytes((folder/name).read_bytes())
         subprocess.run(['scp','-O',*options[:-1],'-r',str(staging/'updater'),str(staging/'baseline'),args.ssh+':'+remote+'/'],check=True,stdin=subprocess.DEVNULL)
-    argv=['/usr/bin/python3',remote+'/updater/setup-updater.py','--device','--apply','--bundle',remote+'/updater','--baseline',remote+'/baseline']
+    argv=['env','-u','PYTHONHOME','-u','PYTHONPATH','PYTHONDONTWRITEBYTECODE=1','PYTHONNOUSERSITE=1',args.python,remote+'/updater/setup-updater.py','--device','--apply','--bundle',remote+'/updater','--baseline',remote+'/baseline']
     subprocess.run(['ssh',*options,shlex.join(argv)],check=True,stdin=subprocess.DEVNULL)
 
 

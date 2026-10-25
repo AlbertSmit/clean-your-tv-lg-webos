@@ -75,6 +75,20 @@ class StateTests(unittest.TestCase):
 
 
 class PackageTests(unittest.TestCase):
+    def test_personalized_ipks_have_modern_reproducible_tar_dates(self):
+        for app in ('com.gathin.tvhome', package.ROOT_APP):
+            with self.subTest(app=app):
+                raw = package.ipk(app, '1.0.0', {'usr/palm/applications/'+app+'/index.html': b'home'})
+                inventory = {'apps': [{'id': 'youtube'}]}
+                first, _ = package.personalize(raw, app, inventory)
+                second, _ = package.personalize(raw, app, inventory)
+                self.assertEqual(first, second)
+                for name in ('control.tar.gz', 'data.tar.gz'):
+                    with tarfile.open(fileobj=io.BytesIO(package.read_ar(first)[name]), mode='r:gz') as archive:
+                        for member in archive:
+                            self.assertGreaterEqual(member.mtime, 1577836800, member.name)
+                            self.assertLessEqual(member.mtime, 1767225600, member.name)
+
     def test_ipk_has_executable_and_writable_helper_state(self):
         data = package.ipk('com.local.nativehome', '0.6.13', {
             'usr/palm/applications/com.local.nativehome/relay': b'ELF',

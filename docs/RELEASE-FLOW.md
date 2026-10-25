@@ -35,7 +35,81 @@ An issue describes work; its implementation enters through a PR. Metadata-only
 commits such as preparing the plan and selecting versions may be made directly
 on the preparation branch. Product changes should enter through reviewed PRs.
 
+## Maintain the release candidate PR description
+
+Every `release/next` → `main` release candidate must maintain a current release
+record in its PR description, starting when the draft is opened. Use the
+[release PR template](../.github/PULL_REQUEST_TEMPLATE/release.md). Updating
+`release-plan.json` alone does not update this record.
+
+The maintainer integrating an implementation PR must update both the release
+inventory and the candidate PR description as part of that integration. Refresh
+the description after scope changes, exclusions or reversions, version decisions,
+new validation results and candidate freeze. Do not leave this until publication.
+
+The description must contain:
+
+- **Scope:** every included implementation PR and related issue, its resulting
+  behavior, and any exclusions or partial delivery. Keep it consistent with
+  `release-plan.json`.
+- **Version table:** the overall release and every component (Home, Home Helper,
+  cytv installer, Android installer, Root edition and independent updater). Show
+  the last published version, the version currently committed in the candidate,
+  the proposed/final target, the reason for changing or retaining it, and whether
+  the bump is proposed or committed. Include Android `versionCode`. Before a
+  target is selected, write `TBD`; never present a proposal as an applied bump.
+- **Packaging impact:** identify packages/installers that need rebuilding and
+  any pinned baseline that prevents source changes from shipping. In particular,
+  Helper source fixes do not reach users while builders reuse the published
+  package at the unchanged Helper version. Record the required version bump,
+  manifest synchronization, new source-package validation and rollback checks.
+- **Validation:** actual test/build results with links or reproducible commands
+  and the checked commit or PR revision. Distinguish checks on an earlier PR
+  from checks on the combined or frozen candidate; record pending and failed
+  checks. A version bump or package rebuild needs validation of the new artifacts.
+- **Acceptance and release gates:** physical-TV model/firmware and tested paths,
+  known limitations, untested behavior, rollback evidence and remaining work.
+  Keep the checklist current; automated checks are not hardware acceptance.
+
+At freeze, replace tentative version targets with the final values, verify them
+against release metadata and component manifests, link the release notes, and
+record validation of the exact frozen candidate. Until then, explicitly state
+that the PR is an unfrozen draft and which bumps have not been committed.
+
+## Update documentation for every candidate
+
+The maintainer preparing each candidate owns a documentation pass against its
+actual release inventory. Start it while collecting changes, refresh affected
+instructions when an implementation PR merges, and finish it before marking the
+release PR ready. Release notes alone do not replace updated usage instructions.
+
+- Review README, installation/update/removal guides, troubleshooting, supported
+  devices and prerequisites, and affected component documentation. Update commands,
+  download links, versions, screenshots and recovery/rollback instructions where
+  behavior changed. Remove obsolete instructions.
+- Review translated guides for the same changes. Update affected translations;
+  record any remaining gaps explicitly in the release PR.
+- Check documented commands and links against the candidate's actual CLI and
+  artifacts. Distinguish candidate-only instructions from the published stable
+  release, and retain honest hardware-tested and untested limitations.
+- Add a **Documentation** section to the release PR listing the reviewed/updated
+  files, verification performed and remaining work. If a guide needs no change,
+  record why. Resolve stale instructions before marking the PR ready; document
+  deliberate remaining limitations rather than checking an unfinished item.
+
+Repeat this pass after scope changes, reversions or version changes. The release
+template and [release checklist](RELEASE_CHECKLIST.md) make it a maintainer gate;
+CI does not establish that documentation matches product behavior.
+
 ## Freeze and validate the candidate
+
+To collect device feedback before hardware acceptance is available, first prepare
+new version metadata and release notes, then explicitly dispatch **cytv standalone
+builds** on `release/next` with `test_build=true`. This produces installer artifacts
+without filling `acceptance`, publishing a release, or satisfying Release policy.
+Ordinary unfrozen pushes still skip platform builds. Keep the release PR in draft;
+test artifacts do not establish hardware acceptance or replace the final exact-head
+build after acceptance is recorded.
 
 Choose the final version based on the actual scope. Set it in `release-plan.json`
 and `release-versions.json`, update changed component manifests/versions, and
@@ -136,6 +210,37 @@ Resolve a failed publication before integrating the next release.
 
 After the release merges, fast-forward `release/next` to `main`, clear the plan
 for the next cycle, and continue collecting features without a new version.
+
+## Automatic next candidate and recovery
+
+After signed publication passes its public verification, the publishing workflow
+starts the next cycle automatically: it advances `release/next` to a commit based
+on the published `main` tree, clears only `release-plan.json`, and opens a new
+draft PR to `main`. Existing next-cycle work is preserved. A failed publication
+does not reset the branch. Shipping notices still run if next-cycle setup fails.
+
+The **Maintain next release candidate** workflow also checks pushes to
+`release/next` and supports manual dispatch on that branch. It creates a draft
+only when the branch has changes and no open candidate exists; it preserves the
+description of an existing PR. Opening the draft does not freeze a version or
+establish artifact/TV acceptance. Maintain its scope and validation record as
+described above. Actions-created commits/PRs do not themselves trigger other
+workflows; subsequent implementation pushes trigger the normal checks.
+
+Repository Actions settings must enable **Allow GitHub Actions to create and
+approve pull requests**. These workflows request PR write access and do not
+approve or merge PRs. If automatic setup fails after publication, repair the
+reported permissions/state and retry with:
+
+```sh
+python3 scripts/release-flow.py start-cycle --tag vX.Y.Z
+```
+
+For an already prepared next-cycle branch, run
+`python3 scripts/release-flow.py ensure-candidate`. Both commands reuse an existing
+candidate. The cycle reset verifies the published tag against current `main`,
+checks the signed feeds, and uses a non-forced ref update so concurrent work
+cannot be overwritten. Never reset or force-push an active preparation branch.
 
 ## Initial rollout and protection maintenance
 

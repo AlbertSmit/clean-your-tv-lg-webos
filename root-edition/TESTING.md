@@ -1,5 +1,7 @@
 # Root Edition test plan
 
+For **[v1.1.0 stable / Root 0.2.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**, start with [installation](../docs/INSTALL.md), [supervisor setup](UPDATES.md) and [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md). The [candidate test guide](../docs/RC-1.1.0-TESTING.md) is superseded historical guidance. The bounded trials below are explicit developer tests, not a normal installer Keep/confirmation step. Historical acceptance remains tied to its original build.
+
 ## Local checks (no TV required)
 
 ```sh
@@ -52,14 +54,18 @@ SSH keys, private backups, firmware images or complete device logs.
 For the new package, record its `bundle.json` SHA-256 before starting. Earlier
 private tests do not count as acceptance of this build. Run these steps together:
 
-1. Install recovery-only; confirm production Home and startup are unchanged.
-2. Confirm candidate payload hashes, service root identity and owned activity.
-3. Explicitly stop the legacy helper. Start the bounded trial; confirm native
-   Home, Back Cancel, confirmed Back exit and other controls.
-4. Let the deadline expire. Check all original Home destinations and user-visible
-   control. Resume the legacy helper explicitly through its existing UI.
-5. Repeat recovery after worker failure and reboot, then Homebrew failsafe.
-6. Exercise interrupted installation and uninstall only on this isolated package;
+1. Inspect existing recovery/updater state before replacing anything; check the
+   candidate payload and record its exact source/build. Do not bypass retained
+   updater or unresolved-operation checks.
+2. Use the supported interactive setup; confirm candidate hashes, service root
+   identity, independent recovery and automatic Home activation.
+3. Confirm native Home, Back Cancel, confirmed Back exit and other controls with
+   the No-root Helper stopped. There is no normal installer trial/Keep step.
+4. Exercise Change Home off/on and triple-Home escape; verify LG destinations and
+   user-visible control, with no automatic re-enable after emergency off.
+5. Repeat the startup/recovery matrix with the user present, then separately
+   prepare supervisor upgrade/rollback and Homebrew failsafe tests.
+6. Exercise interrupted installation and uninstall only in a prepared test;
    preserve conflicting/unknown state for inspection.
 
 Local tests cover independent installer completion, unknown outcomes, exact

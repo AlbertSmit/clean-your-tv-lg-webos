@@ -60,7 +60,7 @@ def supervise(transaction):
     if j['transaction'] != transaction or j['state'] != 'pending': return
     r, w = os.pipe(); observer = None
     try:
-        observer = subprocess.Popen(['/usr/bin/python3', str(Path(__file__).with_name('emergency_reader.py')), str(w)],
+        observer = subprocess.Popen([d.current_executable(), str(Path(__file__).with_name('emergency_reader.py')), str(w)],
                                     pass_fds=(w,), stdin=subprocess.DEVNULL, close_fds=True)
         os.close(w); w = None
         sequence = [0]
@@ -104,7 +104,7 @@ def start(before_publish=None):
         guardian = bounded.spawn(transaction)
         fd = os.open(d.STATE/'emergency.log', os.O_CREAT|os.O_APPEND|os.O_WRONLY|os.O_NOFOLLOW, 0o600)
         try:
-            supervisor = subprocess.Popen(['/usr/bin/python3', str(Path(__file__).resolve()), transaction],
+            supervisor = subprocess.Popen([d.current_executable(), str(Path(__file__).resolve()), transaction],
                 stdin=subprocess.DEVNULL, stdout=fd, stderr=fd, start_new_session=True, close_fds=True)
         finally: os.close(fd)
         for _ in range(30):

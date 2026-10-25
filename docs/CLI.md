@@ -1,11 +1,14 @@
 # cytv standalone installer
 
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 For double-click setup without a terminal, use the [desktop application](DESKTOP_INSTALL.md).
 
 `cytv` is one terminal wizard for **No-root Edition** and **Root**. Native
-builds embed the TV packages, Python runtime and SSH/control libraries. End users
+builds embed the TV packages, the computer Python runtime and SSH/control libraries.
+The optional TV ARMv7 Python archive is downloaded separately on demand. End users
 do not need Git, Node.js, Python, Bash, Zig or a separate SSH client.
 
 This is a new installer, not an expansion of the hardware compatibility claim.
@@ -47,7 +50,8 @@ The Root installer includes Root Updater. In the same installation it installs
 Root Home, prepares its exact package as the rollback baseline, registers the
 independent updater and boot recovery worker, and verifies the service before
 enabling Root Home. No separate updater command is needed. Subsequent compatible
-application releases install from Settings → Software updates on the TV.
+edition release sets install from Settings → Software updates after the separate
+System Updater bootstrap described below.
 
 If updater setup or verification fails, activation stops with LG Home selected
 and the operation receipt retained. Run `cytv status` and inspect the retained
@@ -215,6 +219,7 @@ volume/pointer, standby/wake and cold boot. Both editions use three short Home p
 ./cytv doctor
 ./cytv restore
 ./cytv uninstall
+./cytv enable-system-updates --edition root
 ```
 
 Saved profiles keep subsequent commands short. Multiple profiles show a numbered
@@ -231,6 +236,31 @@ SSH agent or TV passwordless login). It never opens the fallback credential menu
 An encrypted key still needs interactive unlocking. Interactive
 TV pairing may still be required for installation; use the wizard for first setup.
 `--check-payload` verifies embedded assets without connecting to a TV.
+
+## Enable whole-edition updates (1.1.0)
+
+For Root with an existing trusted root SSH connection, use
+`cytv enable-system-updates --edition root`. For the No-root edition on a rooted
+TV, use the manual supervisor bootstrap with `--edition no-root` and a root SSH
+alias in the linked guide; a cytv No-root profile connects as `prisoner`.
+This explicit computer-assisted action provisions the independent System Updater
+supervisor and captures the installed rollback baseline. It needs root, Homebrew
+services, TV Node.js 8+ and suitable Python 3.9+; eligible missing Python can be
+provisioned during setup. An unrooted TV continues using computer updates.
+It refuses conflicting legacy transactions, unknown outcomes and existing
+supervisor state. An app-only legacy OTA does not install this infrastructure.
+See [Root system updates](../root-edition/UPDATES.md) and [No-root updates](UPDATES.md).
+
+To prepare only the pinned runtime download without contacting a TV, run:
+
+```sh
+cytv --prepare-python-runtime --data-dir /path/to/private-cache
+```
+
+Use the same private data directory for setup. This optional ARMv7 runtime needs
+a compatible TV loader/libc and additional staging space; it does not replace
+Node.js, root services or input compatibility. [Runtime details](OPTIONAL-PYTHON.md).
+Status, doctor, restore and uninstall never download a new interpreter.
 
 ## Interrupted operations
 
@@ -263,6 +293,12 @@ desktop OS/architecture, edition, action, failed phase, pending action/stage and
 stack **file/function/line locations**. It excludes exception text, source lines,
 locals, addresses, identity paths, credentials, app lists, environment and raw TV
 logs. No report is submitted automatically.
+
+Root diagnostics report individual requirement results as `pass`, `fail` or
+`unknown` in `tv.root_requirements`. SSH command failures can include a safe
+numeric `ssh_command.exit_status`; neither credentials nor raw remote output are
+included. A Python failure does not establish that the other Root requirements
+passed. Report the actual failed checks, TV model and firmware.
 
 SSAP connection reports can also include a numeric WebSocket close code and an
 allowlisted reason such as `tv-not-ready`. Raw close reasons remain excluded.

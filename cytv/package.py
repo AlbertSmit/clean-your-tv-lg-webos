@@ -7,6 +7,8 @@ from pathlib import Path, PurePosixPath
 import tarfile
 
 ROOT_APP = 'com.cleanyourtv.root.preview'
+# webOS pkgverifier rejects epoch-zero tar dates. Fixed 2024-01-01 keeps builds reproducible.
+IPK_MTIME = 1704067200
 
 
 def safe_name(name):
@@ -53,6 +55,7 @@ def tgz(files, executable=(), helper_state=False, directories=True):
     with tarfile.open(fileobj=raw, mode='w', format=tarfile.USTAR_FORMAT) as archive:
         for name in sorted(dirs) if directories else ():
             entry = tarfile.TarInfo(name)
+            entry.mtime = IPK_MTIME
             entry.type, entry.mode = tarfile.DIRTYPE, 0o755
             if helper_state and name in ('usr/palm/applications/com.local.nativehome/state', 'usr/palm/services/com.local.nativehome.service/state'):
                 entry.uid, entry.gid, entry.mode = 5999, 5000, 0o770
@@ -60,6 +63,7 @@ def tgz(files, executable=(), helper_state=False, directories=True):
             archive.addfile(entry)
         for name, data in sorted(files.items()):
             entry = tarfile.TarInfo(name)
+            entry.mtime = IPK_MTIME
             entry.size, entry.mode = len(data), 0o755 if name in executable else 0o644
             archive.addfile(entry, io.BytesIO(data))
     return gzip.compress(raw.getvalue(), mtime=0)

@@ -10,6 +10,13 @@ class ExistingRoot(UserError):
     """A previous Root deployment needs an explicit reinstall decision."""
 
 
+class TVCommandError(UserError):
+    """A failed SSH command with a numeric status, never remote output."""
+    def __init__(self, exit_status):
+        super().__init__('TV command failed. Run cytv doctor; retain the operation journal.')
+        self.exit_status = exit_status if type(exit_status) is int and -1 <= exit_status <= 255 else None
+
+
 class DeveloperKeyError(UserError):
     """A Key Server failure with a fixed reason code, never key material."""
     def __init__(self, message, reason_code):

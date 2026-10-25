@@ -1,7 +1,11 @@
 """Install only after subscribing to independent backend completion events."""
 import os,json,time,select,subprocess,codecs
+import shutil,stat,tempfile
+from pathlib import Path
 from installer_status import Completion
 class OutcomeUnknown(RuntimeError):pass
+STAGING_ROOT=Path('/var/lib/clean-your-tv-installer')
+TRUST_ANCHOR=Path('/')
 
 def stop(p):
  if p is None:return
@@ -10,6 +14,41 @@ def stop(p):
  except subprocess.TimeoutExpired:p.kill();p.communicate()
 
 def install(app,path,disconnect_at=None,timeout=15,on_accepted=None,on_ready=None):
+ # appinstalld on newer webOS cannot see /tmp. Expose only the verified IPK,
+ # never the private bundle, runtime or rollback cache containing it.
+ # A shared /media/developer/temp parent can allow package substitution by rename.
+ # Keep the public IPK outside /tmp, beneath root-owned, non-writable ancestors.
+ if STAGING_ROOT==TRUST_ANCHOR or not STAGING_ROOT.is_relative_to(TRUST_ANCHOR):raise ValueError('Unsafe installer staging path')
+ for parent in STAGING_ROOT.parents:
+  info=parent.lstat()
+  if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or info.st_mode & 0o022:raise ValueError('Unsafe installer staging ancestor')
+  if parent==TRUST_ANCHOR:break
+ STAGING_ROOT.mkdir(mode=0o755,exist_ok=True)
+ info=STAGING_ROOT.lstat()
+ if not stat.S_ISDIR(info.st_mode) or info.st_uid!=os.geteuid() or info.st_mode & 0o022:raise ValueError('Unsafe installer staging directory')
+ STAGING_ROOT.chmod(0o755)
+ stage=Path(tempfile.mkdtemp(prefix='cytv-root-install-',dir=STAGING_ROOT))
+ try:
+  fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+  with os.fdopen(fd,'rb') as source:
+   info=os.fstat(source.fileno())
+   if not stat.S_ISREG(info.st_mode) or not 0<info.st_size<=32*1024*1024:raise ValueError('Invalid installer package')
+   raw=source.read(32*1024*1024+1)
+   if len(raw)!=info.st_size:raise ValueError('Installer package changed')
+  target=stage/'package.ipk'
+  with target.open('xb') as output:
+   output.write(raw);output.flush();os.fsync(output.fileno());os.fchmod(output.fileno(),0o644)
+  stage.chmod(0o755)
+ except BaseException:
+  shutil.rmtree(stage)
+  raise
+ result=_install(app,str(target),disconnect_at,timeout,on_accepted,on_ready)
+ # An unknown outcome leaves the package available to an installer still running.
+ try:shutil.rmtree(stage)
+ except OSError:result['staging_retained']=str(stage)
+ return result
+
+def _install(app,path,disconnect_at=None,timeout=15,on_accepted=None,on_ready=None):
  def start(uri,payload):
   return subprocess.Popen(['/usr/bin/luna-send','-i',uri,json.dumps(payload)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
  monitor=start('luna://com.webos.appInstallService/status',{'subscribe':True})

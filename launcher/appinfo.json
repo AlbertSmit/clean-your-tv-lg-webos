@@ -1,6 +1,6 @@
 {
   "id": "com.gathin.tvhome",
-  "version": "1.3.8",
+  "version": "1.4.0",
   "vendor": "tv-vibehack",
   "type": "web",
   "main": "index.html",
@@ -18,5 +18,6 @@
   "supportGIP": true,
   "needNetworkToLaunchOnBoot": false,
   "splashBackground": "splash.png",
-  "titleVisible": true
+  "titleVisible": true,
+  "systemUpdateProtocol": 1
 }

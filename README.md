@@ -47,27 +47,29 @@ URLs, so they follow the latest published release without a version in the link.
 [![Download Linux x64 graphical installer — DEB](assets/brand/downloads/linux.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-linux-x64.deb)
 [![Download Android ARM64 preview installer — APK](assets/brand/downloads/android.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-android-arm64.apk)
 
+The buttons above download **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. It adds whole-edition system updates and optional Python for older Root TVs. Hardware evidence remains specific to the tested configuration; see [release notes](docs/RELEASE-1.1.0.md) and [compatibility](docs/COMPATIBILITY.md).
+
 Windows downloads the graphical ZIP: use **Extract All**, then open
 `cytv-desktop/cytv-desktop.exe` with its `_internal` folder beside it. Windows
-publisher signing is not configured. Android **0.1.7-preview** is an ARM64,
+publisher signing is not configured. Android is an ARM64,
 debug-signed APK; see [Android preview and requirements](android/README.md).
 These downloads do not establish physical-TV compatibility.
 
 One wizard installs either edition. Root activates and opens Home immediately,
 without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.0.3.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.1.0.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.1.11 with persistent activation and Settings updates; earlier C3 evidence keeps its original scope | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.2.0 with persistent activation and Settings updates; scoped C3 hardware evidence | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
-It installs separately. Cold-power testing is deferred; one intermittent emergency-gesture observation remains open. [Compare requirements, controls and limits](docs/EDITIONS.md).
+It installs separately. True cold boot remains untested for this release; the current C3 check passed triple-Home emergency exit and explicit resume. [Compare requirements, controls and limits](docs/EDITIONS.md).
 The features and remote-control guide below describe **No-root Edition**.
 
 ![Clean Your TV menu with a five-app dock and Inputs, Wi-Fi and Settings shortcuts](docs/launcher-menu.png)
@@ -81,7 +83,11 @@ Use a computer or a compatible Android phone for initial installation and mainte
 runtime and TV packages. **+ / Add app** can refresh the app inventory on the TV.
 No-root requires an active Developer Mode session and local networking for Helper
 monitoring. Root requires existing root SSH access and recovery services; do not
-enable Developer Mode over root. See [installation requirements](docs/INSTALL.md).
+enable Developer Mode over root. Root needs a suitable TV Python 3.9+ and Node.js
+8+ in addition to webOS services. The 1.1.0 installer can supply a verified private
+ARMv7 Python on demand when the existing Python is unsuitable. Working system
+Python skips that download; ordinary installers do not embed the runtime archive.
+See [installation requirements](docs/INSTALL.md) and [optional Python](docs/OPTIONAL-PYTHON.md).
 
 Compatibility varies by model, remote and firmware; see [compatibility and known limits](docs/COMPATIBILITY.md)
 before installing. Not affiliated with LG.
@@ -220,17 +226,11 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The v1.0.3 distribution contains cytv **0.2.16**, Home **1.3.8**, Helper
-**0.6.18**, Root **0.1.12** and No-root Updater **0.1.6**. Source versions are
-recorded in `release-versions.json`; [release notes](docs/RELEASE-1.0.3.md)
-explain packaging and remaining checks.
+The **v1.1.0 stable** distribution contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9**, and System Updater **1.0.0 / protocol 1**. Component versions are recorded in `release-versions.json`; see [release notes](docs/RELEASE-1.1.0.md).
 
-Hardware records describe particular artifacts. Earlier C3/C4 reports do not
-certify every current binary or another model. C5/webOS 26 Helper startup remains
-under investigation; Root cold-power testing is deferred and one intermittent
-emergency-gesture observation remains open. See [compatibility](docs/COMPATIBILITY.md),
-[Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and the
-[installation checks](docs/INSTALL.md#5-verify-before-daily-use).
+Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
+
+Earlier hardware reports retain their original artifact scope. C5/webOS 26 Helper startup remains under investigation. See [compatibility](docs/COMPATIBILITY.md), [Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and [installation checks](docs/INSTALL.md#5-verify-before-daily-use).
 
 ## Project layout
 
@@ -257,4 +257,12 @@ app inventories are included. Please redact logs before opening an issue.
 
 ## Software updates
 
-Rooted TVs with Homebrew Channel can use **Settings → Software updates** with a separate Home Updater recovery app. Signed releases preserve your apps and settings and pause renewal automatically during installation. Start with the [setup and recovery guide](docs/UPDATES.md). No-root users continue updating from their computer. Existing Home versions below 1.2.0 require a personalized rebuild first; generic release packages do not contain your app inventory.
+The 1.1.0 release introduces **Update all** in **Settings → Software updates**
+for rooted TVs with Homebrew Channel and a separately provisioned System Updater.
+Its signed release set updates Home/Helper/Home Updater for No-root edition on a
+rooted TV, or Root Home/runtime/Root Updater for Root edition. Initial installation
+and supervisor setup require the computer installer; installing a launcher IPK or
+using legacy Home-only OTA does not install that infrastructure. Unrooted TVs
+continue updating from their computer. Updates preserve the profile and retain a
+verified previous component set for recovery; explicit emergency stops stay off.
+See [setup and recovery](docs/UPDATES.md). Complete signed system upgrade and rollback acceptance remains pending.

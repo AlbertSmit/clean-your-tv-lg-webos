@@ -1,6 +1,12 @@
 # Root candidate runtime
 
-Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-owned files without group/world write permission. Python 3 and `/usr/bin/luna-send` are required. Invoke `/usr/bin/python3 /var/lib/clean-your-tv-root/runtime/cli.py COMMAND` as root.
+Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-owned files without group/world write permission. Python 3.9+ and `/usr/bin/luna-send` are required; Root setup also requires TV Node.js 8+,
+Homebrew services and supported ARM32 input. With system Python, invoke
+`/usr/bin/python3 /var/lib/clean-your-tv-root/runtime/cli.py COMMAND` as root.
+For a managed-runtime installation use its retained verified interpreter binding;
+do not substitute a missing system interpreter or change global PATH.
+[Optional Python](../../docs/OPTIONAL-PYTHON.md) is provisioned only by setup,
+never by status, restore or removal; referenced runtime slots remain retained.
 
 - `status`: read actual system profiles and independent Home setting, journal and recovery integrity.
 - `trial`: activate **com.cleanyourtv.root.preview** for at most 60 seconds using a detached rollback guardian. Refuses any unresolved journal, unexpected baseline, missing Home registration or missing recovery provisioning.
@@ -27,6 +33,11 @@ state instead of using this Root runtime.
 
 A confirmed normal shutdown retains the Home override, generated profile and transaction binding so bootd can select Clean Your TV as its first app. Startup recovery still restores the old transaction before arming fresh health protection. Explicit exit, input failure without a shutdown signal, and failsafe recovery restore LG Home.
 
+Boot recovery rearms protection without issuing a second Home launch after
+readiness. Native boot presentation uses the retained profile; reopening Home
+late would interrupt an app the user already selected during startup. Manual
+enable and ordinary Home routing retain their explicit user-requested behavior.
+
 Runtime state is `/var/lib/clean-your-tv-root`; owned profile is `/var/webos-profile/override/clean-your-tv-root.json`. Both directories must be root-owned and not group/world writable, and must reside on the same filesystem for crash-safe hard-link publication. Runtime never edits app files, stock libraries, zoom behavior, or the existing no-root launcher.
 
 Recovery provisioning is `recovery-provision.json`: version 1, mode `recovery-only`, absolute `boot_callback`, and `files` mapping absolute callback and every runtime Python path to its SHA-256 hex digest. All files and ancestors must be trusted. The installed callback must invoke the fixed runtime `cli.py boot`. The installer finalizes this manifest only after boot activity registration is verified. A valid manifest establishes installed-byte integrity, not hardware acceptance.
@@ -39,7 +50,8 @@ Local tests exercise policy, real file ownership/conflict handling, subprocess t
 
 Trial preflight refuses an existing controller PID marker or running known No-root relay, including ambiguous stale markers. It rechecks before publishing the profile. It never edits the helper's control or blocked files and never relaunches that app. The legacy `stop` command creates the same blocked latch as a user disable, while manual relaunch clears it; an automatic stop/relaunch cannot preserve user intent. Explicitly stopping the old helper is therefore required before this candidate's trial; it remains stopped afterward. Transparent pause/resume requires a separate transaction-aware helper protocol and is not provided here. Do not launch the helper during a Root trial.
 
-During hardware acceptance, use the existing long-Home gesture to disable the No-root helper first. After Root restoration, verify stock routing and explicitly use the existing helper button to re-enable No-root if desired. Neither runtime nor uninstaller removes stale controller markers automatically; investigate stale state rather than blindly deleting it.
+During hardware acceptance, use three short Home presses within two seconds to
+disable the current No-root helper first (through 0.6.13: hold Home about two seconds). After Root restoration, verify stock routing and explicitly use the existing helper button to re-enable No-root if desired. Neither runtime nor uninstaller removes stale controller markers automatically; investigate stale state rather than blindly deleting it.
 
 ## RC15 persistent candidate
 

@@ -8,6 +8,10 @@ import stat
 import subprocess
 import sys
 import tempfile
+# Runtime scripts execute directly; the binding helper lives in private state.
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+import python_binding
+from python_binding import current_executable
 import time
 from profile_plan import snapshot
 from profile_recovery import recover, validate, PAYLOAD, DIGEST, payload_for, REAL_HOME, CANDIDATE, STOCK
@@ -40,7 +44,7 @@ def active_guardian(journal):
         if ready['transaction']!=journal['transaction'] or ready['deadline']!=deadline: return False
         if (PROC/str(pid)).stat().st_uid!=EXPECTED_UID: return False
         command=(PROC/str(pid)/'cmdline').read_bytes().split(b'\0')
-        expected=[b'/usr/bin/python3',str(Path(__file__).with_name('guardian_device.py')).encode(),journal['transaction'].encode(),b'']
+        expected=[current_executable().encode(),str(Path(__file__).with_name('guardian_device.py')).encode(),journal['transaction'].encode(),b'']
         return command==expected and process_start(pid)==ready['start_ticks']
     except (OSError,ValueError,KeyError,TypeError,IndexError): return False
 
@@ -171,7 +175,7 @@ def main(mode):
         if active_guardian(j): return 'guarded-trial'
         fd = os.open(STATE/'profile-recovery.log',os.O_CREAT|os.O_APPEND|os.O_WRONLY|os.O_NOFOLLOW,0o600)
         try:
-            child = subprocess.Popen(['/usr/bin/python3',str(Path(__file__).resolve()),'recover'],
+            child = subprocess.Popen([current_executable(),str(Path(__file__).resolve()),'recover'],
                                      stdin=subprocess.DEVNULL,stdout=fd,stderr=fd,
                                      start_new_session=True,close_fds=True)
         finally: os.close(fd)

@@ -5,13 +5,15 @@ import hashlib
 import http.client
 import io
 import json
+import os
 from pathlib import Path
 import shlex
+import stat
 import time
 import urllib.request
 
 from .state import private_write
-from .errors import UserError, TVRejected, DeveloperKeyError
+from .errors import UserError, TVRejected, DeveloperKeyError, TVCommandError
 
 
 class AgentLoginFailed(UserError):
@@ -296,8 +298,9 @@ class SSH:
                 if total > 8 * 1024 * 1024:
                     raise UserError('TV response exceeded the size limit.')
             elif channel.exit_status_ready():
-                if channel.recv_exit_status() != 0:
-                    raise UserError('TV command failed. Run cytv doctor; retain the operation journal.')
+                status = channel.recv_exit_status()
+                if status != 0:
+                    raise TVCommandError(status)
                 return
             elif channel.closed:
                 raise UserError('TV connection interrupted. Run cytv status before retrying.')
@@ -315,22 +318,57 @@ class SSH:
         finally:
             channel.close()
 
-    def upload(self, path, data, mode=0o600):
+    @staticmethod
+    def _upload_command(path, digest, mode):
         if mode not in (0o600, 0o640, 0o644, 0o755):
             raise ValueError('Unsupported TV file mode')
         path = str(path)
-        digest = hashlib.sha256(data).hexdigest()
         permissions = {0o600: '-rw-------', 0o640: '-rw-r-----', 0o644: '-rw-r--r--', 0o755: '-rwxr-xr-x'}[mode]
         parent = path.rsplit('/', 1)[0]
-        command = (
+        return (
             'set -e; umask 077; tmp=$(mktemp ' + shlex.quote(parent + '/.cytv.XXXXXX') + '); '
             'trap \'rm -f "$tmp"\' EXIT; cat > "$tmp"; '
             f'chmod {mode:o} "$tmp"; '
             '[ "$(LC_ALL=C ls -ld "$tmp" | cut -c1-10)" = ' + shlex.quote(permissions) + ' ]; '
             '[ "$(sha256sum "$tmp" | cut -d " " -f 1)" = ' + shlex.quote(digest) + ' ]; '
             'mv -f "$tmp" ' + shlex.quote(path) + '; printf CYTV_UPLOAD_OK')
+    def upload(self, path, data, mode=0o600):
+        command = self._upload_command(path, hashlib.sha256(data).hexdigest(), mode)
         if self.run(command, data=data, timeout=90).strip() != 'CYTV_UPLOAD_OK':
             raise UserError('TV upload could not be verified. Existing destination was not confirmed.')
+
+    def upload_file(self, path, source, mode=0o600, timeout=600):
+        """Transfer a large verified asset without keeping another copy in memory."""
+        source = Path(source)
+        info = source.lstat()
+        if not stat.S_ISREG(info.st_mode):
+            raise ValueError('Upload source must be a regular file')
+        fd = os.open(source, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0))
+        with os.fdopen(fd, 'rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if not stat.S_ISREG(opened.st_mode) or (opened.st_dev, opened.st_ino) != (info.st_dev, info.st_ino):
+                raise ValueError('Upload source changed')
+            digest = hashlib.sha256()
+            for chunk in iter(lambda: stream.read(256 * 1024), b''):
+                digest.update(chunk)
+            command = self._upload_command(path, digest.hexdigest(), mode)
+            stream.seek(0)
+            deadline = time.monotonic() + timeout
+            channel = self.channel(command)
+            try:
+                for chunk in iter(lambda: stream.read(256 * 1024), b''):
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise UserError('TV operation timed out. Run cytv status before retrying.')
+                    channel.settimeout(min(30, remaining))
+                    channel.sendall(chunk)
+                channel.shutdown_write()
+                remaining = max(0, deadline - time.monotonic())
+                reply = b''.join(self.chunks(channel, remaining)).decode('utf-8').strip()
+                if reply != 'CYTV_UPLOAD_OK':
+                    raise UserError('TV upload could not be verified. Existing destination was not confirmed.')
+            finally:
+                channel.close()
 
     def luna(self, uri, payload, terminal=None, timeout=30, app_id=None):
         args = ['/usr/bin/luna-send' if self.root else '/usr/bin/luna-send-pub', '-i' if terminal else '-n', *([] if terminal else ['1']),

@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.1.0 — Unpublished release candidate
+
+- Fix Home Helper startup on TV Node 0.12.2 with a separate Babel/polyfill build,
+  compatible WebSocket client and guarded error logging (#47, #54). Original-TV input,
+  standby and cold-boot acceptance remains pending.
+
+- Add a fixed System Updater supervisor and signed whole-edition updates with
+  independent recovery, preserved profiles and component-set rollback.
+- Supply a verified private ARMv7 Python on demand for eligible Root TVs; keep
+  runtime bytes out of ordinary installers and retain bindings for recovery.
+- Improve per-requirement Root diagnostics, Android operation receipts, TV
+  package metadata, protected staging and bundled HTTPS trust.
+- Prepare cytv 0.3.0, Home 1.4.0, Helper 0.6.19, Root and both Updaters 0.2.0,
+  Android 0.2.0-preview / code 9 and supervisor 1.0.0 / protocol 1.
+- See [candidate notes](docs/RELEASE-1.1.0.md) and
+  [test instructions](docs/RC-1.1.0-TESTING.md). Physical-TV acceptance and the
+  Helper rollback transition remain pending; this is not a published release.
+
 ## v1.0.3 — Home recovery and installer diagnostics
 
 - Carry the complete unpublished v1.0.2 scope, with Root 0.1.12 for shared app.js/style.css changes.

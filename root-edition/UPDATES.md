@@ -1,186 +1,121 @@
 # Root software updates and recovery
 
-Root Settings → Software updates checks the separate signed `root-update.json`
-release feed. Ordinary Home's updater cannot install Root Edition. This
-implementation has local automated coverage and an isolated TV validation of
-Settings update, automatic timeout rollback and profile preservation on an LG C3.
-See the [hardware record](../docs/development/ROOT-UPDATES-TV-VALIDATION.md) for
-the tested commit, isolation and remaining release gates.
+**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** updates a complete signed edition release set through
+an independent fixed **System Updater supervisor**. Root's set includes Root Home,
+Root Updater and the compatible Root recovery infrastructure. No-root's separate
+set includes Home, Helper and Home Updater. The editions are not interchangeable;
+third-party apps and TV firmware are outside the set.
 
-## One-time setup
+Current C3 checks covered supervisor bootstrap, installed-version menus and friendly feed-unavailable handling. A complete signed system upgrade and rollback remain untested. See [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md); [earlier Root update evidence](../docs/development/ROOT-UPDATES-TV-VALIDATION.md) retains its original artifact and scenario scope.
 
-The `cytv` installer now performs this setup automatically before enabling Root
-Home, including rollback verification and a service check. The commands below
-are for manual installations that do not use `cytv`.
+## Computer-assisted bootstrap
 
-Root Updater is independent of Root Home. A computer is needed once to install
-its service, seed the rollback package and register its boot recovery worker.
-After setup, compatible Root application releases update from Settings.
+Existing root SSH, Homebrew services, TV Node.js 8+ and suitable Python 3.9+ are
+required. Supplying Python does not supply root, Node.js or compatible webOS APIs.
+Unrooted TVs use computer updates. A legacy Home-only OTA cannot install the new
+supervisor or managed-runtime infrastructure.
 
-First install an updater-compatible Root bundle using [ROLLOUT](ROLLOUT.md),
-with Root mode disabled. Keep that exact bundle as the rollback baseline:
+For a fresh setup, install the complete matching Root edition with LG Home selected. The cytv
+installation prepares Root Updater before enabling Home. Preparing the independent
+System Updater is a separate explicit action from a trusted computer:
 
 ```sh
-python3 root-edition/build.py --version 0.1.6 --output build/root-candidate
+cytv enable-system-updates --edition root
+```
+
+Use the saved TV connection, or supply `--host` and the existing root credentials.
+For an existing Root installation with a retained Root Updater, first inspect its
+status, transaction and matching recovery flow. Generic cytv reinstallation is
+deliberately refused while that updater remains; these fresh-setup commands do
+not provide a migration shortcut. Follow the [existing-TV checkpoint](../docs/UPDATES.md#one-time-computer-preparation)
+and review the infrastructure transition before replacing anything. A standalone launcher update does not install the supervisor.
+For the No-root edition on an already rooted TV, use the manual supervisor
+command below with `--edition no-root` and an existing root SSH alias. The cytv
+No-root connection logs in as `prisoner`; changing its port does not grant root.
+Developer Mode access alone is insufficient. This captures the actual
+installed baseline and provisions the supervisor. Existing supervisor state,
+conflicting legacy transactions, uncertain package outcomes and unsupported
+infrastructure stop setup; retain their evidence rather than deleting it.
+
+When suitable TV Python is missing, this setup can provision the separate pinned
+ARMv7 runtime over SSH on an eligible TV. Working system interpreters skip it.
+See [Python delivery and limits](../docs/OPTIONAL-PYTHON.md), including cache
+preparation with `cytv --prepare-python-runtime`. Maintenance commands never
+download another interpreter.
+
+For a fresh manual Root installation, build fresh output directories. These
+commands do not migrate an existing retained updater:
+
+```sh
+python3 root-edition/build.py --version 0.2.0 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
-python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate
-```
-
-The last command only prints the setup plan. After installing the matching Root
-bundle and verifying root SSH access, apply it explicitly:
-
-```sh
 python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply
+python3 system-updater/build.py --output build/system-updater
+python3 system-updater/setup.py --bundle build/system-updater --edition root --ssh my-tv --apply
 ```
 
-The distributed equivalent is `build/root-updater/setup-updater.py` with the
-same arguments. Keep the entire updater directory together. SSH uses strict
-host-key checking. Setup refuses existing updater state, foreign permission
-files, an active Root route, or a baseline that differs from the installed
-version. It does not replace a live recovery runtime.
+First install the matching Root bundle using [ROLLOUT](ROLLOUT.md); the Root
+Updater baseline must match it exactly. Keep the whole bundles together. The
+manual supervisor command defaults to `/usr/bin/python3`; `--python` accepts only
+approved system/managed interpreter paths. Use the verified installed binding
+when managed Python is required. It does not download Python itself. Omitting
+`--apply` prints a setup plan without changing the TV. OpenSSH uses strict host
+checking and batch authentication with an explicit alias such as `my-tv`.
 
-Legacy Root installations without `runtime/update_guard.py` need a supervised
-host migration to the new Root infrastructure first. Setup deliberately stops
-there. Restore LG routing, retain the existing Root data and recovery evidence,
-and follow the removal/replacement review in ROLLOUT; do not overwrite an active
-runtime or delete retained state to bypass checks. This is not an unattended
-upgrade path for legacy preview infrastructure. Installation from the ordinary
-Home profile only migrates its validated packaged data, not arbitrary browser
-storage from a legacy Root installation.
+The supervisor's private state is `/var/lib/clean-your-tv-system-updater`; its
+normal-boot worker uses `52-clean-your-tv-system-updater`. Root Updater retains
+its independent recovery role and interpreter binding. Never replace private
+code, cached baselines or state files to bypass a setup failure.
 
-Private updater code and state live in `/var/lib/clean-your-tv-root-updater`.
-The scoped LS2 registration points to that independent root-owned code; replacing
-Root Home does not replace the updater. `51-clean-your-tv-root-updater` starts
-journal reconciliation at normal boot. Setup retains evidence after an unknown
-result; never rerun it blindly.
+If Root immediately shows `Denied methods call status` after supervisor bootstrap, close and reopen **Home Root** once to restart the GUI, then check Software updates again. If it persists, retain diagnostics and recovery state.
 
 ## Update on the TV
 
-1. Open Root Home → Settings → Software updates. The check runs automatically.
-   The available version and notes appear only for the installed version or newer.
-2. Review the version and notes, then select Update → Install update.
-3. The updater saves apps, embedded icons, inputs, configuration and tile order.
-   It caches and verifies both new and previous packages before replacing Home.
-4. LG Home is selected while the independent worker installs. Keep the TV on.
-5. The new Root Home restores the profile before rendering and checks the visible
-   application tiles. It acknowledges successful startup automatically; no
-   post-install confirmation button is required. Failed readiness still rolls back.
-6. To enable Root routing again, use **Home settings → Change Home** (turn it on).
-   This enables persistent Home control after the recovery checks; no trial or
-   Keep confirmation is required. Successful update verification itself does not enable routing.
+Open **Home → Settings → Software updates**, review the offered release and
+confirm installation. The supervisor verifies the complete signed set, compatible
+contracts and all cached rollback components before replacing anything. It
+preserves the profile and suspends Home routing while installation is in progress.
+Keep the TV powered on.
 
-Bounds: 200 apps, 100 inputs, 4 MiB UTF-8 profile JSON, 256 KiB embedded icon URI
-per app, 32 MiB IPK and 64 MiB expanded payload. An unreadable saved profile,
-missing icon, malformed order, failed disk write or missing rollback package
-stops replacement. Third-party applications are not installed or removed.
+Startup health and profile readiness are confirmed automatically. Previously
+enabled Home control resumes only through guarded activation when its saved
+preference and recovery state still permit it. Explicit/emergency off, failsafe,
+a changed boot or uncertain activation keeps it off. There is no Keep countdown.
+An update does not grant permission to enable a previously disabled preference.
 
-Saved data belongs to Root, independently of ordinary Home. Completed transaction
-snapshots apply once per transaction and restored version; subsequent local tile
-order changes are retained. Browser storage erased later can recover the last
-transaction snapshot, which does not include edits made after that snapshot.
+Downgrades, incomplete sets, conflicting installers, missing rollback material
+and unknown install outcomes are refused. A successful installer run does not
+validate remote buttons, cold boot, firmware APIs or recovery on another model.
 
 ## Failure and recovery
 
-A verified completed installation followed by a payload or launch-confirmation
-failure permits one rollback to the verified cached prior package. Restored Home must also
-acknowledge profile restoration and tile rendering before `rolled-back` is
-reported. Failed rollback or absent readiness keeps recovery evidence and LG
-Home; it does not start a retry loop.
+Open the separate **Root Updater** application if Home cannot open, or use
+**Software updates → Recovery**. The supervisor owns the transaction and its
+complete rollback set. Confirming rollback restores the saved components and
+pre-update profile; later settings changes can be lost. Availability depends on
+verified retained transaction evidence. Do not substitute an app-only old IPK.
 
-The current TV adapter recognizes only the independently matched successful
-installer event (`statusValue=30` without errors). It does not yet have a
-hardware-validated classifier for terminal installation failure events. Raw
-installer errors therefore stay blocked as an unknown outcome, even if an error
-message says installation failed. The core's definite-failure rollback branch
-is tested, but must not be advertised as a firmware failure classifier. Add
-that classifier only after capturing and validating terminal failure evidence
-on the isolated target; never guess status codes from an error envelope.
+Run `cytv status` after an interruption. Unknown package outcomes remain blocked;
+installed-version readback or an idle installer does not reconstruct a missing
+terminal receipt. Automatic recovery is bounded; an uncertain activation is not
+replayed. Preserve journals, baselines and interpreter slots for investigation.
+Use `cytv doctor --report` for issue-ready diagnostics and `cytv restore` to
+request routing recovery. These commands do not provision a missing runtime.
+For removal, use cytv's verified uninstall flow; an ambiguous removal is not
+submitted twice automatically. See [CLI recovery](../docs/CLI.md#interrupted-operations).
 
-Open the separate **Root Updater** application even if Root Home is broken.
-In Root Home, **Software updates → Recovery** opens a separate recovery screen.
-It shows the saved transaction’s rollback version, or explains why rollback is
-unavailable. **Refresh status** restarts reconciliation; opening the screen alone
-only reads status. Back returns to Software updates and restores remote focus.
-The rollback confirmation names the exact saved version. Confirmed updates cannot
-be rolled back through this recovery flow.
+## Release preparation and validation
 
-Roll back is offered only when the
-original install has durable terminal evidence and rollback has not started.
-An interrupted installer with unknown outcome remains blocked. Reading the
-installed version or seeing an idle installer is not proof of completion;
-the current worker cannot reconstruct lost historical terminal events. Such
-cases require maintainer inspection through root SSH, not a clear-lock action.
+Follow [the release process](../docs/RELEASE-PROCESS.md) and the
+[1.1.0 release scope](../docs/RELEASE-1.1.0.md). Legacy `root-update.json`
+application metadata alone does not describe a complete system release set.
+The fixed supervisor remains separate from the components it installs.
 
-Root enable/trial/confirmation is blocked while an update owns routing. Explicit
-exit and emergency recovery remain available. The ordinary Home helper and
-Developer Mode renewal are not enabled by this updater.
-
-## Release preparation
-
-Root releases use separate metadata, even when they share a repository release
-tag with ordinary Home. Build, inspect and test the exact artifacts first:
-
-```sh
-bash scripts/test.sh
-python3 root-edition/build.py --version 0.1.6 --output build/root-0.1.6
-python3 root-edition/update_manifest.py --bundle build/root-0.1.6 --release v0.10.5 --notes 'Root application improvements' --output build/root-update.manifest.json
-node scripts/sign-root-update.cjs build/root-update.manifest.json /absolute/path/to/release-private.pem build/root-update.json
-```
-
-The signing command requires an explicitly supplied private key and checks the
-result against the repository's existing release public key. It creates a new
-file and never publishes. No private key is included in either bundle. Publish
-only after approval and isolated hardware acceptance. Root metadata pins exact
-application identity, version, runtime/updater/profile contracts, IPK size and
-SHA-256. Unknown contracts require a computer-assisted infrastructure upgrade.
-
-Recovery runtime and updater infrastructure remain pinned. Ordinary updates
-replace only the Root application package; the worker verifies/reasserts the
-previously owned recovery service registration after package installation.
-Registration drift is a recovery error, not permission to overwrite foreign
-files. LS2 role/API configuration follows the existing Root provisioner and
-[webOS LS2 security configuration](https://www.webosose.org/docs/guides/development/configuration-files/security-guide/);
-OSE documentation alone does not establish TV firmware compatibility.
-
-## Isolated TV acceptance
-
-Before a public release, test on a separate controlled Root installation:
-
-- First setup and effective root service identity; reject an unrelated caller.
-- Upgrade between two signed versioned packages with a populated app/input
-  inventory, custom config and reordered tiles; verify after restart.
-- Withhold first-launch readiness and verify exactly one rollback, restored
-  data readiness, LG routing and no old helper activation.
-- Kill the web UI and worker separately around submission, terminal receipt,
-  verification and rollback. Confirm no overlapping installation.
-- Reboot with a pending transaction. Unknown install outcomes must stay blocked;
-  known completed install/rollback must resume launch verification.
-- Verify boot hooks, LS2 permissions, emergency recovery and updater availability
-  after package replacement on the actual supported firmware.
-
-Automated tests and deterministic offline builds are not TV acceptance evidence.
-
-## Publish without a stale Root feed
-
-Installer CI, packaging and OTA signing are automatic stages of the same
-release process. Merging a new `release` version in `release-versions.json`
-with matching component manifests and release notes starts the full pipeline.
-For an explicit repair of an already prepared draft, the fallback command is:
-
-```sh
-node scripts/publish-release.cjs vX.Y.Z
-```
-
-The protected GitHub workflow generates and signs both edition feeds from the
-actual release IPKs, selects and verifies the No-root rollback package, uploads
-standalone IPKs, refreshes metadata/checksums and verifies all referenced assets
-before publishing. Its key is an encrypted environment secret available only to
-`main`. Package changes require component-version bumps; incompatible rollback
-baselines stop publication. Recovery infrastructure is not updated by an
-application-only package.
-
-`--check-only` checks existing feeds without signing or publishing. The read-only
-Release update feed workflow repeats validation after public release edits.
-Direct `gh release edit` bypasses preparation; use the checked command above.
-See [the release process](../docs/RELEASE-PROCESS.md) for provisioning and the
-`publish=false` end-to-end signing check.
+Remaining physical-hardware validation for the published release includes:
+first bootstrap and caller permissions, complete upgrade and explicit rollback,
+profile preservation, startup/remote input, normal and cold boot, failsafe and
+interruptions around terminal installer evidence. Helper 0.6.19 needs its own
+rollback approval; approval of 0.6.18 is insufficient. QEMU and automated tests
+cannot establish TV acceptance. Issue #37's UK6540PTD / firmware 05.50.70 remains
+unvalidated for the managed runtime; issue #24's unfinished removal is not claimed
+resolved by the Android receipt fix.

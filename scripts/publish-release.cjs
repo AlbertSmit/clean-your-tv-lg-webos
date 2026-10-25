@@ -3,7 +3,7 @@
 // Normal publication delegates signing to the protected GitHub environment.
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {execFileSync}=require('node:child_process');
-const policy=require('../root-edition/updater/fetch'),homePolicy=require('../updater-service/policy');
+const policy=require('../root-edition/updater/fetch'),homePolicy=require('../updater-service/policy'),systemPolicy=require('../system-updater/policy');
 function verifyRootRelease(feed,build,bytes,key=fs.readFileSync(path.join(__dirname,'../updater-service/release-public.pem'))){
  if(!build.versions||typeof build.versions.root!=='string')throw Error('release-root-version-missing');
  const candidate=policy.verify(feed,key);
@@ -21,6 +21,17 @@ function verifyHomeRelease(feed,build,bytes,key=fs.readFileSync(path.join(__dirn
  if(prior.helper!==candidate.helper||homePolicy.compare(prior.home,candidate.home)>=0)throw Error('incompatible-home-rollback');
  return candidate;
 }
+function verifySystemRelease(feed,build,assets,key=fs.readFileSync(path.join(__dirname,'../updater-service/release-public.pem'))){
+ const manifest=systemPolicy.verify(feed,key);
+ if(manifest.release!==build.tag)throw Error('system-release-tag-mismatch');
+ for(const item of manifest.components){
+  const version=build.versions[({'root-infrastructure':'root','root-updater':'updater'})[item.name]||item.name];
+  if(typeof version!=='string'||item.version!==version)throw Error('system-release-version-mismatch');
+  const filename=path.basename(new URL(item.url).pathname),raw=assets[filename];
+  if(!raw||raw.length!==item.size||crypto.createHash('sha256').update(raw).digest('hex')!==item.sha256)throw Error('system-release-package-mismatch');
+ }
+ return manifest;
+}
 function main(args){
  const [tag,option]=args;
  if(!/^v\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(tag||'')||args.length>2||(option&&!['--check-only','--publish-verified'].includes(option)))throw Error('Usage: node scripts/publish-release.cjs vX.Y.Z [--check-only|--publish-verified]');
@@ -33,7 +44,7 @@ function main(args){
  const folder=fs.mkdtempSync(path.join(os.tmpdir(),'cytv-release-'));
  const gh=argv=>execFileSync('gh',argv,{encoding:'utf8',maxBuffer:1024*1024,stdio:['ignore','pipe','pipe']});
  try{
-  gh(['release','download',tag,'--pattern','root-update.json','--pattern','BUILD-INFO.json','--pattern','update.json','--pattern','previous-update.json','--dir',folder]);
+  gh(['release','download',tag,'--pattern','root-update.json','--pattern','BUILD-INFO.json','--pattern','update.json','--pattern','previous-update.json','--pattern','system-update-root.json','--pattern','system-update-no-root.json','--dir',folder]);
   const feed=JSON.parse(fs.readFileSync(path.join(folder,'root-update.json')));
   const build=JSON.parse(fs.readFileSync(path.join(folder,'BUILD-INFO.json')));
   if(build.tag!==tag)throw Error('release-tag-mismatch');
@@ -53,9 +64,20 @@ function main(args){
    if(crypto.createHash('sha256').update(raw).digest('hex')!==item.sha256)throw Error('home-package-mismatch');
    if(item===home)verifyHomeRelease(homeFeed,build,raw,key);
   }
+  for(const edition of ['root','no-root']){
+   const envelope=JSON.parse(fs.readFileSync(path.join(folder,'system-update-'+edition+'.json')));
+   const system=systemPolicy.verify(envelope,key),assets={};
+   if(system.edition!==edition)throw Error('system-edition-mismatch');
+   for(const item of system.components){
+    const filename=path.basename(new URL(item.url).pathname);
+    if(!fs.existsSync(path.join(folder,filename)))gh(['release','download',tag,'--pattern',filename,'--dir',folder]);
+    assets[filename]=fs.readFileSync(path.join(folder,filename));
+   }
+   verifySystemRelease(envelope,build,assets,key);
+  }
   process.stdout.write('Verified '+tag+': Root '+candidate.version+', Home '+home.home+', Helper '+home.helper+' and signed rollback '+prior.home+' match release metadata and packages.\n');
   if(option!=='--check-only')process.stdout.write(gh(['release','edit',tag,'--draft=false','--latest']));
  }finally{fs.rmSync(folder,{recursive:true,force:true});}
 }
-module.exports={verifyRootRelease,verifyHomeRelease};
+module.exports={verifyRootRelease,verifyHomeRelease,verifySystemRelease};
 if(require.main===module){try{main(process.argv.slice(2));}catch(error){process.stderr.write(String(error.message)+'\n');process.exitCode=1;}}

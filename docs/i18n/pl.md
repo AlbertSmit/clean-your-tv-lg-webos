@@ -4,12 +4,31 @@ No-root i Root to równorzędne opcje dla różnych konfiguracji telewizora. Wyb
 
 ## Wymagania
 
-Ta instrukcja obejmuje instalację, obsługę i odzyskiwanie. Wybór języka oraz aplikacja okienkowa macOS/Linux są dostępne w [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). Starsze pliki v0.9.0 nie zawierają aplikacji okienkowej. Zobacz [instalację obu edycji](../INSTALL.md).
+Ta instrukcja opisuje **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Odnośniki `releases/latest/download` pobierają opublikowane wydanie stabilne. Zobacz [instalację](../INSTALL.md) i [opis wydania](../RELEASE-1.1.0.md).
+
+Wersje wydania: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater i Root Updater **0.2.0**, Android **0.2.0-preview** (kod **9**), nadzorca System Updater **1.0.0**, protokół **1**.
 
 Włącz telewizor i połącz go z tą samą zaufaną siecią lokalną co komputer. Później komputer może być wyłączony. Zgodność zależy od modelu, oprogramowania i pilota; Root ma nieukończone testy sprzętowe.
 
 - **No-root:** włącz LG Developer Mode i Key Server. Wpisz hasło wyświetlane na telewizorze i zaakceptuj na nim osobne żądanie parowania. Developer Mode musi pozostać aktywny: wygaśnięcie sesji może usunąć tak zainstalowane aplikacje. Sprawdzaj oficjalny licznik także przy włączonym odnawianiu Beta. Monitorowanie Helper wymaga sieci lokalnej.
+
+Zaktualizowany Helper No-root wymaga Node.js 0.12.2 lub nowszego na telewizorze. Instalator sprawdza ten wymóg przed instalacją. Wcześniej opublikowane pakiety nie uzyskują tej zgodności automatycznie; dostęp do urządzeń wejściowych, wybudzanie i zimny start wymagają testów na każdym modelu.
+
 - **Root:** potrzebny jest istniejący dostęp root przez SSH. Instalator nie uzyskuje uprawnień root. Nie włączaj Developer Mode na telewizorze z istniejącym rootem. Zachowaj dostęp root i usługi odzyskiwania.
+
+## Opcjonalny Python dla Root
+
+Root wymaga na TV Pythona 3.9+. Instalator sprawdza rzeczywiste moduły i operacje, w tym `json`, `fcntl`, blokady, pliki i podprocesy; sam numer wersji nie wystarcza. Jeśli obecny interpreter spełnia wymagania, dodatkowy Python nie jest pobierany. W przeciwnym razie podczas konfiguracji komputer lub Android może pobrać przypięty CPython **3.13.17 dla ARMv7 soft-float**, sprawdzić URL, rozmiar i SHA-256, a następnie przesłać go istniejącym zaufanym połączeniem SSH. Zwykłe pakiety instalatora nie zawierają tego archiwum. TV nie potrzebuje Internetu na tym etapie.
+
+Dodatkowe pobranie to około **26,3 MB**, znormalizowana transmisja SSH **51,5 MB**, zainstalowane pliki **119,3 MB**; przygotowanie wymaga **320 MiB** wolnego miejsca na TV. Zgodność programu ładującego i bibliotek jest sprawdzana przed aktywacją. Prywatne wersje znajdują się w `/var/lib/clean-your-tv-python/`, bez zmiany systemowego Pythona, libc lub globalnego PATH. Nadal potrzebne są root, odpowiednie usługi webOS i Node.js **8+** dla Root/System Updater; No-root Helper wymaga Node.js **0.12.2+**.
+
+Na komputerze z Internetem przygotuj zweryfikowaną pamięć podręczną bez wyszukiwania TV ani łączenia się z nim:
+
+```sh
+./cytv --prepare-python-runtime --data-dir /sciezka/prywatna-pamiec
+```
+
+Podczas instalacji użyj tego samego `--data-dir`. Do przenoszenia przygotuj osobny prywatny katalog, bez zwykłych kluczy SSH i profili. Polecenia `status`, `doctor`, `restore` i `uninstall` nie pobierają Pythona automatycznie. Zachowaj wersje używane przez Root, updatery i odzyskiwanie, także po usunięciu aplikacji. Więcej: [opcjonalny runtime](../OPTIONAL-PYTHON.md).
 
 ## Instalacja i język
 
@@ -53,24 +72,34 @@ Po przerwaniu operacji najpierw uruchom `status` i zachowaj dzienniki. `restore`
 
 ## Aktualizacja i usuwanie
 
-Zachowaj działające pakiety i prywatne kopie ustawień. Zatrzymaj No-root Helper przed wymianą pakietów i aktualizuj z komputera bez wcześniejszego odinstalowania, które może usunąć ustawienia. Łączna instalacja Root przez cytv zawiera aktualizator zgodnych wydań w Ustawienia → Aktualizacje oprogramowania; instalacja ręczna ma inne ograniczenia. Nie nadpisuj działającego środowiska Root pojedynczą IPK. Do ponownej instalacji używaj wyraźnie zatwierdzanej procedury cytv. Usunięcie aplikacji komputerowej nie usuwa aplikacji TV.
+Po połączeniu cytv pokazuje wersję zainstalowaną → dołączoną i rozróżnia pierwszą instalację, ponowną instalację i cofnięcie wersji. Sprawdź podsumowanie przed potwierdzeniem; `--yes` nie omija kontroli zgodności. Zachowaj działające pakiety i prywatne kopie ustawień. Przed wymianą pakietów z komputera zatrzymaj No-root Helper; nie odinstalowuj wcześniej aplikacji. Nie zastępuj działającego Root pojedynczym IPK: użyj odpowiedniej procedury cytv. Usunięcie aplikacji komputerowej nie usuwa aplikacji z TV.
 
-Dokumentacja techniczna po angielsku: [aplikacja komputerowa](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [No-root](../INSTALL.md), [instalacja ręczna](../MANUAL_INSTALL.md), [odzyskiwanie](../RECOVERY.md), [edycje](../EDITIONS.md).
+Kandydat dodaje **Aktualizuj wszystko** w Ustawienia → Aktualizacje oprogramowania. Niezależny System Updater weryfikuje podpisany zestaw dla danej edycji: Home, Helper i Home Updater dla No-root na TV z rootem; Root Home, Root Updater oraz runtime sterowania i odzyskiwania dla Root. Aktualizacja na TV wymaga **roota, Homebrew Channel**, odpowiedniego Pythona, Node.js 8+ i działających usług webOS. Na TV bez roota aktualizuj z komputera.
 
-Po połączeniu cytv odczytuje wersje na telewizorze i pokazuje obecną → dołączoną wersję dla Home i Home Helper (No-root) albo Root i Root Updater. Sprawdź i potwierdź przed instalacją. Pierwsza instalacja, ponowna instalacja i instalacja starszej wersji są oznaczone osobno; `--yes` pomija potwierdzenie, ale wyświetla wersje.
+Przy pierwszej instalacji użyj kompletnego instalatora kandydata, który przygotuje Home i Updater odzyskiwania danej edycji. Ta wersja przejściowa nie jest oferowana w stabilnym kanale aktualizacji.
 
-Aktualizacje oprogramowania pokazują szczegóły tylko zainstalowanej lub nowszej wersji. Otwórz Odzyskiwanie, aby zobaczyć zapisaną wersję do przywrócenia lub powód niedostępności; Wstecz wraca do aktualizacji.
+Jeśli Root jest już zainstalowany i zachowany jest Root Updater, zwykła ponowna instalacja może zostać celowo zablokowana. Najpierw uruchom `status` i diagnostykę, następnie sprawdź transakcję oraz stan odzyskiwania w dotychczasowym Updaterze. Aktywne lub niepewne operacje rozwiąż przez odpowiadający im wcześniejszy mechanizm odzyskiwania; przejście na nową infrastrukturę wymaga oceny rzeczywistego stanu TV. Nie usuwaj dziennika ani nie obchodź blokady przez `--yes`, pojedynczy IPK lub stare OTA. OTA samej aplikacji nie instaluje nowej infrastruktury. Zobacz [kontrolę istniejącego TV](../UPDATES.md#one-time-computer-preparation).
 
-No-root sprawdza ABI powłoki TV i akceptuje jądro 64-bitowe ze zweryfikowanym środowiskiem ARM32. Jeśli weryfikacja się nie powiedzie, dołącz wygenerowany raport JSON; nie udostępniaj kluczy ani haseł.
+Dopiero po potwierdzeniu zgodnej konfiguracji z Home `systemUpdateProtocol = 1` i właściwym Updaterem odzyskiwania włącz nadzorcę z komputera. W instalatorze wybierz włączenie aktualizacji wszystkich komponentów TV; dla Root, z zapisanym połączeniem root SSH:
 
-Aktualizacje Home wymagają potwierdzenia przed instalacją; później uruchomienie jest sprawdzane automatycznie. Odświeżanie stanu zachowuje przycisk wybrany pilotem.
+```sh
+./cytv --language pl enable-system-updates --edition root --host TV_ADDRESS
+```
 
-W Root i No-root gotowość po instalacji jest potwierdzana automatycznie; nie musisz potwierdzać, że wszystko działa. Przywracanie pozostaje dostępne po potwierdzeniu, bez limitu czasu, aż do następnej aktualizacji. Przywraca poprzednią wersję Home i ustawienia zapisane przed aktualizacją; późniejsze zmiany ustawień mogą zostać utracone. Przed rozpoczęciem pojawia się ostrzeżenie. Aktualizacja i przywracanie No-root z telewizora nadal wymagają roota i Homebrew Channel; w przeciwnym razie użyj instalatora na komputerze.
+Dla No-root na TV z rootem najpierw zainstaluj Home/Helper/Home Updater z komputera, następnie skorzystaj z procedury z aliasem root SSH w [instrukcji aktualizacji](../UPDATES.md#one-time-computer-preparation). Nadzorca zapisuje zweryfikowaną bazę odzyskiwania faktycznie zainstalowanych komponentów. Starsze OTA aktualizujące tylko aplikację nie instalują nowego Pythona, nadzorcy ani infrastruktury updaterów. Po przygotowaniu używaj wspólnego mechanizmu; kolidujące starsze instalatory są blokowane.
 
-Ekran aktualizacji rozdziela wersje, stan i czytelne informacje o zmianach. Góra/Dół przewija informacje; Lewo/Prawo wybiera stałe działania poniżej. Po automatycznych testach uruchomienia Root przywraca wcześniej włączone sterowanie Home; No-root zachowuje stan oddzielnego Helpera. Wyłączone ustawienie oraz jawne lub awaryjne wyłączenie pozostają wyłączone.
+Instalacja wymaga potwierdzenia, a sprawdzenie uruchomienia jest automatyczne. Profil i ustawienia są zachowywane; jawne lub awaryjne wyłączenie sterowania Home nie jest cofane. Góra/Dół przewija opis zmian, Lewo/Prawo wybiera stałe przyciski, a odświeżanie nie przenosi zaznaczenia. Pomarańczowa kropka oznacza nową wersję, także gdy wymaga komputera. Otwórz Odzyskiwanie w Updaterze, aby zobaczyć stan i dostępną poprzednią wersję. Cofnięcie aktualizacji systemu przywraca cały poprzedni zestaw i zapisany profil; późniejsze zmiany ustawień zostaną utracone. Automatyczna kontrola uruchomienia nie usuwa możliwości cofnięcia, która pozostaje do następnej transakcji.
 
-Otwarcie ustawień Home uruchamia sprawdzanie aktualizacji w tle. Pomarańczowa kropka przy Aktualizacje oprogramowania oznacza nowszą wersję, również gdy wymaga instalacji z komputera. Ustawienia pozostają dostępne podczas sprawdzania.
+Po przerwaniu uruchom `status` i zachowaj dziennik oraz dane odzyskiwania. Niejednoznaczny wynik blokuje ponowną instalację i cofanie; odczyt wersji nie dowodzi zakończenia instalatora. Nie usuwaj dziennika, blokad ani wersji Pythona, aby wymusić próbę. `doctor --report` wskazuje poszczególne niespełnione wymagania Root i zapisuje numeryczne kody SSH bez poświadczeń i surowego wyjścia. Sprawdź raport przed udostępnieniem.
 
-No-root: otwórz Ustawienia Home → Tryb dewelopera, aby uzyskać dostęp do automatycznego odnawiania, sprawdzania sesji i diagnostyki. Główny ekran nadal pokazuje krótki stan i błędy odnawiania. Wstecz wraca do ustawień Home. Obie edycje umieszczają Język, Aktualizacje oprogramowania i Ustawienia TV w tym samym wierszu; strzałka otwiera daną pozycję.
+## Testy sprzętowe i ograniczenia
 
-Po otwarciu Home Helper pokazuje swoje przeznaczenie i stan. Uruchomienie zatrzymanego Helpera wymaga potwierdzenia. Home Updater i Root Updater wyjaśniają przywracanie; zwykłe aktualizacje są w ustawieniach Home. Przywracanie jest dostępne tylko dla zapisanej wersji i wymaga potwierdzenia przed zastąpieniem Home i jego ustawień.
+Root 0.2.0, Root Updater 0.2.0 i nadzorca 1.0.0 sprawdzono na OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0 (`d344d92`, identyczna zawartość produktu jak `4b66951`). Przeszły sterowanie, potrójny Home i wznowienie, czuwanie/wybudzenie z Emby otwartym przez 70 sekund, menu wersji i czytelny komunikat o niedostępnej liście aktualizacji. Prawdziwy zimny start, Helper 0.6.19 na TV, UK6540PTD i pełna podpisana aktualizacja/wycofanie systemu nie zostały przetestowane. Wydanie stabilne przyjęto z tym ograniczonym zakresem dowodów; inne modele nie są zweryfikowane.
+
+No-root sprawdza ABI powłoki i dopuszcza 64-bitowe jądro tylko ze zweryfikowanym środowiskiem ARM32. Nazwa modelu ani `armv7l` nie gwarantują zgodności. Zakres wcześniejszych testów pozostaje ograniczony do sprawdzonego sprzętu i pakietów.
+
+No-root: Ustawienia Home → Tryb dewelopera zawiera odnawianie Beta, kontrolę sesji i diagnostykę. Zawsze sprawdzaj oficjalny licznik. Home Helper pokazuje stan i prosi o potwierdzenie wznowienia po zatrzymaniu.
+
+Dokumentacja techniczna: [aplikacja komputerowa](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [instalacja ręczna](../MANUAL_INSTALL.md), [odzyskiwanie](../RECOVERY.md), [edycje](../EDITIONS.md), [aktualizacje](../UPDATES.md).
+
+Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy, zamknij i ponownie otwórz Home Root jeden raz, a następnie sprawdź aktualizacje. Jeśli błąd pozostaje, zachowaj diagnostykę i dane odzyskiwania.

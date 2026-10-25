@@ -61,6 +61,15 @@ jobs:
           python-version: "3.12"
       - run: npm ci --ignore-scripts --no-audit --no-fund
         if: needs.scope.outputs.any == 'true'
+      - name: Prepare pinned Node 0.12.2 for Helper regression
+        if: runner.os == 'Linux' && (needs.scope.outputs.tv == 'true' || needs.scope.outputs.installer == 'true')
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location https://nodejs.org/dist/v0.12.2/node-v0.12.2-linux-x64.tar.gz --output node-v0.12.2-linux-x64.tar.gz
+          echo '4e1578efc2a2cc67651413a05ccc4c5d43f6b4329c599901c556f24d93cd0508  node-v0.12.2-linux-x64.tar.gz' | sha256sum --check -
+          tar -xzf node-v0.12.2-linux-x64.tar.gz
+          echo "NODE012=$RUNNER_TEMP/node-v0.12.2-linux-x64/bin/node" >> "$GITHUB_ENV"
       - run: python -m pip install -r cytv/requirements.txt
         if: needs.scope.outputs.any == 'true'
       - name: Test affected components
@@ -89,3 +98,27 @@ jobs:
       - name: Verify real webOS-style file ownership
         if: runner.os == 'Linux' && needs.scope.outputs.tv == 'true'
         run: sudo "$(command -v node)" native/prototype/test-state-permissions-linux.cjs
+  optional-python:
+    needs: scope
+    if: needs.scope.outputs.installer == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: build/python-runtime-cache
+          key: root-python-4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea
+      - name: Install ARM user emulation and EABI sysroot
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qemu-user libc6-armel-cross libgcc-s1-armel-cross
+      - name: Execute the pinned ARM32 Python and native module smoke tests
+        run: python scripts/test-python-runtime.py
+      - name: Verify shell provisioning boundaries as root
+        run: sudo "$(command -v python)" -m unittest tests.cytv.test_python_runtime

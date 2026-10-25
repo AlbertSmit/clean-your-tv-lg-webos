@@ -69,8 +69,11 @@ def main():
                         shutil.copyfileobj(source, output, 256*1024)
                     target.chmod(item.mode)
         result = subprocess.run([args.qemu, '-L', args.sysroot, str(tree/'bin/python3.13'),
-                                 '-I', '-B', '-c', SMOKE], check=True, text=True,
+                                 '-I', '-B', '-c', SMOKE], text=True,
                                 capture_output=True, timeout=120)
+        if result.returncode:
+            print(result.stderr, file=sys.stderr)
+            result.check_returncode()
         print(result.stdout.strip())
         print('Verified normalized runtime files:', len(inventory['files']))
         print('QEMU smoke is not physical-TV, boot or rollback acceptance.')

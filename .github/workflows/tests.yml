@@ -108,7 +108,7 @@ jobs:
       - name: Install ARM user emulation and EABI sysroot
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qemu-user libc6-armel-cross
+          sudo apt-get install -y --no-install-recommends qemu-user libc6-armel-cross libgcc-s1-armel-cross
       - name: Execute the pinned ARM32 Python and native module smoke tests
         run: python scripts/test-python-runtime.py
       - name: Verify shell provisioning boundaries as root

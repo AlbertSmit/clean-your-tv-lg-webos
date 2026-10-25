@@ -100,6 +100,21 @@ def lockdown(state,base,allow_missing=False):
     return value['files']
 
 
+
+def python_command(state):
+    launcher=state/'python-launcher';receipt=state/'python-runtime.json'
+    if not os.path.lexists(launcher) and not os.path.lexists(receipt):return '/usr/bin/python3'
+    pinned='4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea'
+    executable='/var/lib/clean-your-tv-python/'+pinned+'/bin/python3.13'
+    value=json.loads(read(receipt))
+    if (not isinstance(value,dict) or set(value)!={'schema','executable','archive_sha256','inventory_sha256'} or value.get('schema')!=1
+            or value.get('executable')!=executable or value.get('archive_sha256')!=pinned
+            or not isinstance(value.get('inventory_sha256'),str) or not re.fullmatch('[a-f0-9]{64}',value['inventory_sha256'])
+            or read(launcher)!=('#!/bin/sh\nunset PYTHONHOME PYTHONPATH\nexport PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\nexec '+executable+' "$@"\n').encode()
+            or stat.S_IMODE(launcher.stat().st_mode)!=0o700):raise ValueError('Unknown updater Python binding')
+    return str(launcher)
+
+
 def operate(action,state=STATE,base=Path('/var/luna-service2-dev'),hook=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater'),installed=Path('/media/developer/apps/usr/palm'),destination=None,refresh=lambda:None,stop_processes=stop,proc=Path('/proc')):
     if action not in ('status','disable','archive'):raise ValueError('Unsupported supervisor cleanup action')
     state,base,hook,installed=map(Path,(state,base,hook,installed))
@@ -135,7 +150,11 @@ def operate(action,state=STATE,base=Path('/var/luna-service2-dev'),hook=Path('/v
         receipt=json.loads(read(state/'registration.json')).get('files')
         if not isinstance(receipt,dict) or set(receipt)!={str(paths[k]) for k in ('service','role','client','api')}:raise ValueError('Unknown supervisor registration ownership inventory')
         expected={key:receipt[str(paths[key])]['installed'].encode() for key in ('service','role','client','api')}
-        expected['hook']=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        python=python_command(state)
+        expected['hook']=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        legacy_hook=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        retained_hook=hook if os.path.lexists(hook) else state/'removed-registration/hook'
+        if python=='/usr/bin/python3' and read(retained_hook)==legacy_hook:expected['hook']=legacy_hook
         if record is not None:
             if record.get('phase') not in ('disabling','disabled'):raise ValueError('Unknown supervisor removal journal')
             if destination is not None and destination!=record.get('archive'):raise ValueError('Different supervisor archive already reserved')

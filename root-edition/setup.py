@@ -18,13 +18,16 @@ def ssh_options(alias, identity=None):
     return options + [alias]
 
 
-def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migrate=False, transaction=None):
+def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migrate=False, transaction=None, python=None):
     if action not in ('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'):
         raise ValueError('Unsupported action')
     if migrate and action != 'install':
         raise ValueError('Migration is only available with install')
     if action == 'confirm' and (not transaction or not re.fullmatch(r'[0-9a-f-]{36}',transaction)):
         raise ValueError('confirm requires the trial transaction ID')
+    from python_binding import launcher_bytes
+    selected = '/usr/bin/python3' if python is None else python
+    launcher_bytes(selected)  # Whitelist before any SSH or staging mutation.
     options = ssh_options(alias, identity)
     remote_driver = '/var/lib/clean-your-tv-root/deploy.py'
     if action == 'install':
@@ -46,14 +49,16 @@ def execute(action, alias, bundle=None, identity=None, run=subprocess.run, migra
             run(['scp', '-O', *options[:-1], '-r', *[str(p) for p in sorted(local.iterdir())], alias + ':' + staging + '/'],
                 check=True, stdin=subprocess.DEVNULL)
         remote_driver = staging + '/deploy.py'
-        argv = ['/usr/bin/python3', remote_driver, 'install', '--bundle', staging]
+        argv = [selected, remote_driver, 'install', '--bundle', staging]
         if migrate:
             argv.append('--migrate-packaged-home')
         command = shlex.join(argv)
     else:
-        argv = ['/usr/bin/python3', remote_driver, action]
+        argv = [selected, remote_driver, action]
         if action == 'confirm': argv += ['--transaction',transaction]
         command = shlex.join(argv)
+    if selected != '/usr/bin/python3':
+        command = 'unset PYTHONHOME PYTHONPATH; export PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1; exec '+command
     return run(['ssh', *options, command], check=True, stdin=subprocess.DEVNULL)
 
 
@@ -62,11 +67,12 @@ def main():
     parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'))
     parser.add_argument('--ssh', required=True, help='Explicit, preconfigured OpenSSH alias')
     parser.add_argument('--transaction')
+    parser.add_argument('--python', help='Already-provisioned, pinned TV interpreter path')
     parser.add_argument('--identity', type=Path)
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--migrate-packaged-home', action='store_true', help='Copy installed Home packaged preferences only; excludes browser storage')
     args = parser.parse_args()
-    execute(args.command, args.ssh, args.bundle, args.identity, migrate=args.migrate_packaged_home,transaction=args.transaction)
+    execute(args.command, args.ssh, args.bundle, args.identity, migrate=args.migrate_packaged_home,transaction=args.transaction,python=args.python)
 
 
 if __name__ == '__main__':

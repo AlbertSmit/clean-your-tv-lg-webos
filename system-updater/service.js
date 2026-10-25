@@ -1,4 +1,6 @@
 'use strict';
+function pythonCommand(){return require('./python_boot').command(require('path').dirname(__dirname));}
+
 var Service=require('webos-service'),execFile=require('child_process').execFile;
 var SERVICE='com.cleanyourtv.system.updater.service';
 var launchers={'no-root':'com.gathin.tvhome',root:'com.cleanyourtv.root.preview'};
@@ -18,9 +20,11 @@ function createDispatch(execute){return async function(message,method,payload){
 module.exports={createDispatch:createDispatch,methods:Object.keys(fields)};
 var service=new Service(SERVICE),dispatch=createDispatch(function(method,payload){return new Promise(function(resolve,reject){
  if(process.getuid()!==0)return reject(Error('root-service-required'));
- var child=execFile('/usr/bin/python3',[__dirname+'/run-system-updater.py',method],{timeout:100000,maxBuffer:8*1024*1024},function(error,stdout){
+ var child=execFile(pythonCommand(),[__dirname+'/run-system-updater.py',method],{timeout:100000,maxBuffer:8*1024*1024},function(error,stdout){
   try{var value=JSON.parse(stdout);if(value.returnValue===true)return resolve(value.result);reject(Error(value.errorText||'system-update-failed'));}catch(_){reject(Error('System update state unavailable. Open Recovery before retrying.'));}
  });child.stdin.end(JSON.stringify(payload));
 });});
 Object.keys(fields).forEach(function(method){service.register(method,function(message){dispatch(message,method,message.payload||{}).then(function(result){message.respond({returnValue:true,result:result});},function(error){message.respond({returnValue:false,errorText:error.message});});});
 });
+
+module.exports.pythonCommand=pythonCommand;

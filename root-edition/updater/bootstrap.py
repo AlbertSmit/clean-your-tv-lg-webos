@@ -38,7 +38,7 @@ def verify_bundle(bundle):
               'updater/core.py','updater/store.py','updater/profile.py','updater/device.py','updater/package.py','updater/cli.py',
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
               'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
-              'observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py'}
+              'observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js'}
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')
     for name,sha in manifest['files'].items():
         if digest(safe_bytes(bundle/name))!=sha:raise ValueError('Updater bundle hash mismatch: '+name)
@@ -93,6 +93,9 @@ def apply(bundle,baseline):
     if os.path.lexists(HOOK):raise FileExistsError('Updater boot hook collision')
     STATE.mkdir(mode=0o700);(STATE/'cache').mkdir(mode=0o700);code=STATE/'code';code.mkdir(mode=0o700)
     from updater.store import Store
+    from python_binding import install_launcher, verify_binding
+    verify_binding(ROOT_STATE)
+    install_launcher(STATE, atomic)
     store=Store(STATE)
     store.write('bootstrap',{'phase':'prepared','bundle':manifest})
     code_files={k:v for k,v in manifest['files'].items() if k not in ('root-updater.ipk','setup-updater.py')}
@@ -131,7 +134,7 @@ def apply(bundle,baseline):
     store.write('registration',{'files':{str(paths[k]):{'original':v.decode(),'installed':updated[k].decode()} for k,v in original.items()}})
     for key,path in paths.items():
         mode=stat.S_IMODE(path.stat().st_mode);atomic(path,updated[key],mode)
-    atomic(HOOK,'#!/bin/sh\n/usr/bin/python3 '+str(code/'run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
+    atomic(HOOK,'#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(code/'python_boot.js')+' '+str(STATE)+' '+str(code/'run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
     import provision
     provision.refresh()
     store.write('bootstrap',{'phase':'complete','hardware_validated':False})

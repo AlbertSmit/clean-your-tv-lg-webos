@@ -25,7 +25,7 @@ BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater')
 ROOT_UPDATER_TRANSACTION=Path('/var/lib/clean-your-tv-root-updater/transaction.json')
 APPS={'home':'com.gathin.tvhome','helper':'com.local.nativehome','updater':'com.cleanyourtv.updater','root':'com.cleanyourtv.root.preview','root-updater':'com.cleanyourtv.root.updater'}
-CODE={'infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
+CODE={'python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
@@ -73,7 +73,8 @@ def verify_bundle(bundle):
 def infrastructure_name(name):
     if not isinstance(name,str):raise ValueError('Invalid infrastructure inventory')
     path=PurePosixPath(name)
-    if path.is_absolute() or str(path)!=name or '..' in path.parts or '\\' in name or '\x00' in name or len(path.parts)<2 or path.parts[0] not in ('runtime','updater','service'):raise ValueError('Invalid infrastructure inventory')
+    if path.is_absolute() or str(path)!=name or '..' in path.parts or '\\' in name or '\x00' in name or len(path.parts)<2 or path.parts[0] not in ('runtime','updater','service','support'):raise ValueError('Invalid infrastructure inventory')
+    if path.parts[0]=='support' and name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Invalid infrastructure support path')
     return name
 
 def infrastructure_paths(bundle):
@@ -83,7 +84,7 @@ def infrastructure_paths(bundle):
 
 def infrastructure_destination(name,runtime=Path('/var/lib/clean-your-tv-root/runtime'),updater=Path('/var/lib/clean-your-tv-root-updater/code'),service=Path('/var/lib/clean-your-tv-root/service')):
     kind,relative=infrastructure_name(name).split('/',1)
-    path=Path({'runtime':runtime,'updater':updater,'service':service}[kind])/relative
+    path=Path({'runtime':runtime,'updater':updater,'service':service,'support':Path(runtime).parent}[kind])/relative
     if any(parent.is_symlink() for parent in path.parents):raise ValueError('Indirect infrastructure path')
     return path
 
@@ -281,6 +282,9 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         else:infrastructure_readback(item,raw)
     state.mkdir(mode=0o700);code=state/'code';code.mkdir(mode=0o700);(state/'cache').mkdir(mode=0o700)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
+    sys.path.insert(0,str(bundle))
+    from python_binding import install_launcher
+    install_launcher(state, atomic)
     record('bootstrap',{'phase':'prepared','edition':current['edition']})
     for name in CODE:
         path=code/name;path.parent.mkdir(parents=True,mode=0o700,exist_ok=True);atomic(path,safe(bundle/name))
@@ -306,7 +310,7 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     record('registration',{'files':{str(paths[k]):{'original':original[k].decode(),'installed':v.decode()} for k,v in updated.items()}})
     for key,path in paths.items():atomic(path,updated[key],stat.S_IMODE(path.stat().st_mode))
     apply_legacy_lockdown(state)
-    atomic(hook,'#!/bin/sh\n/usr/bin/python3 '+str(code/'run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
+    atomic(hook,'#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(code/'python_boot.js')+' '+str(state)+' '+str(code/'run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
     if refresh is None:
         executable=next((p for p in (Path('/usr/bin/ls-control'),Path('/usr/sbin/ls-control')) if p.is_file()),None)
         if executable is None:raise ValueError('ls-control unavailable')
@@ -321,7 +325,8 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     record('bootstrap',{'phase':'complete','edition':current['edition'],'hardware_validated':False})
     return {'installed':True,'edition':current['edition'],'hardware_validated':False}
 
-def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None):
+def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,python='/usr/bin/python3'):
+    if python not in ('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'):raise ValueError('Unapproved Python executable')
     manifest=verify_bundle(bundle)
     baseline_manifest=verify_baseline(baseline,bundle) if baseline is not None else None
     if baseline is None and edition not in ('root','no-root'):raise ValueError('Edition required')
@@ -342,13 +347,14 @@ def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None)
             sources.append(str(target))
         run(['scp','-O',*options,'-r',*sources,alias+':'+remote+'/'],check=True,stdin=subprocess.DEVNULL)
     remote_bundle=remote+'/bundle'
-    argv=['/usr/bin/python3',remote_bundle+'/setup-system-updater.py','--device','--apply','--bundle',remote_bundle]
+    argv=['env','-u','PYTHONHOME','-u','PYTHONPATH','PYTHONDONTWRITEBYTECODE=1','PYTHONNOUSERSITE=1',python,remote_bundle+'/setup-system-updater.py','--device','--apply','--bundle',remote_bundle]
     if baseline is not None:argv+=['--baseline',remote+'/baseline']
     else:argv+=['--edition',edition]
     return run(['ssh',*options,alias,shlex.join(argv)],check=True,stdin=subprocess.DEVNULL)
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--bundle',type=Path,required=True);parser.add_argument('--baseline',type=Path);parser.add_argument('--edition',choices=('root','no-root'));parser.add_argument('--ssh');parser.add_argument('--identity',type=Path);parser.add_argument('--apply',action='store_true');parser.add_argument('--device',action='store_true',help=argparse.SUPPRESS)
+    parser.add_argument('--python',default='/usr/bin/python3',choices=('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'))
     args=parser.parse_args()
     if args.device:
         if not args.apply or os.geteuid()!=0 or not Path('/usr/bin/luna-send').is_file() or sys.version_info<(3,9):raise PermissionError('Explicit root webOS Python 3.9+ setup required')
@@ -365,6 +371,6 @@ def main():
     print(json.dumps({'operation':'one-time-system-updater-setup','edition':baseline['edition'],'permissions':permission_plan(),'hardware_validated':False},indent=2))
     if args.apply:
         if not args.ssh:parser.error('--apply requires --ssh')
-        execute(args.bundle,args.baseline,args.ssh,args.identity,edition=baseline['edition'])
+        execute(args.bundle,args.baseline,args.ssh,args.identity,edition=baseline['edition'],python=args.python)
 
 if __name__=='__main__':main()

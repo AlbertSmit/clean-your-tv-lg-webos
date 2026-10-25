@@ -22,6 +22,37 @@ UPDATER_APP = 'com.cleanyourtv.root.updater'
 SYSTEM_UPDATER_APP = 'com.cleanyourtv.system.updater'
 SYSTEM_UPDATER_STATE = '/var/lib/clean-your-tv-system-updater'
 
+# Trusted host code: the target copy cannot bootstrap verification of itself.
+# Keep this pre-execution validator aligned with root-edition/python_boot.js.
+_RETAINED_PYTHON_CHECK = r'''
+function pythonCommand(state){
+ var fs=require('fs'),path=require('path'),crypto=require('crypto'),launcher=state+'/python-launcher',receipt=state+'/python-runtime.json';
+ function present(name){try{fs.lstatSync(name);return true;}catch(e){if(e.code==='ENOENT')return false;throw e;}}
+ function owned(name,file){
+  var item=fs.lstatSync(name);
+  if(item.uid!==0||(item.mode&18)||item.isSymbolicLink()||(file?(!item.isFile()||item.nlink!==1):!item.isDirectory()))throw Error('unsafe-python-binding');
+  for(var parent=path.dirname(name);;parent=path.dirname(parent)){
+   item=fs.lstatSync(parent);if(!item.isDirectory()||item.isSymbolicLink()||item.uid!==0||(item.mode&18))throw Error('unsafe-python-binding');
+   if(parent===path.dirname(parent))break;
+  }
+  return fs.lstatSync(name);
+ }
+ if(!present(launcher)&&!present(receipt))return '/usr/bin/python3';
+ var pin='4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea',executable='/var/lib/clean-your-tv-python/'+pin+'/bin/python3.13';
+ if((owned(launcher,true).mode&511)!==448||owned(receipt,true).size>65536)throw Error('unsafe-python-binding');
+ var binding=JSON.parse(fs.readFileSync(receipt,'utf8'));
+ if(Object.keys(binding).sort().join(',')!=='archive_sha256,executable,inventory_sha256,schema'||binding.schema!==1||binding.executable!==executable||binding.archive_sha256!==pin||!/^[a-f0-9]{64}$/.test(binding.inventory_sha256))throw Error('invalid-python-binding');
+ if(fs.readFileSync(launcher,'utf8')!=='#!/bin/sh\nunset PYTHONHOME PYTHONPATH\nexport PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\nexec '+executable+' "$@"\n')throw Error('invalid-python-launcher');
+ var inventoryPath=path.dirname(path.dirname(executable))+'/.cytv-runtime.json';
+ if(owned(inventoryPath,true).size>4*1024*1024||owned(executable,true).size>256*1024*1024)throw Error('oversized-python-runtime');
+ var raw=fs.readFileSync(inventoryPath),inventory=JSON.parse(raw);
+ if(crypto.createHash('sha256').update(raw).digest('hex')!==binding.inventory_sha256||inventory.schema!==1||inventory.archive_sha256!==pin||!inventory.files||crypto.createHash('sha256').update(fs.readFileSync(executable)).digest('hex')!==inventory.files['bin/python3.13'])throw Error('changed-python-runtime');
+ return launcher;
+}
+
+try { pythonCommand(process.argv[1]); } catch (_) { process.exit(1); }
+'''
+
 
 def root_updater_paths():
     return [UPDATER_STATE, '/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater',
@@ -38,6 +69,65 @@ class Installer:
         self.payload, self.manifest, self.progress = Path(payload), manifest, progress
         self.helper_retry = lambda: False
         self.tv_info = tv_info if tv_info is not None else {}
+
+    @staticmethod
+    def _python_command(args):
+        if args[0].startswith('/var/lib/clean-your-tv-python/'):
+            args = ['env', '-u', 'PYTHONHOME', '-u', 'PYTHONPATH', 'PYTHONDONTWRITEBYTECODE=1', 'PYTHONNOUSERSITE=1', *args]
+        return shlex.join(args)
+
+    def _select_python(self, provision=False):
+        from .python_runtime import select_python
+        from .state import default_dir
+        cache = (self.store.root if self.store is not None else default_dir()) / 'python-cache'
+        return select_python(self.remote, cache, self.progress, provision=provision)
+
+    def _python(self, state=None):
+        if getattr(self, '_selected_python', None):
+            return self._selected_python
+        managed = '/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
+        states = list(dict.fromkeys([state or ROOT_STATE, ROOT_STATE, UPDATER_STATE, SYSTEM_UPDATER_STATE]))
+        if self.store is not None:
+            pending = self.store.pending(self.profile) or {}
+            for key, base in (('archive', ROOT_STATE), ('updater_archive', UPDATER_STATE), ('system_updater_archive', SYSTEM_UPDATER_STATE)):
+                archived = pending.get(key)
+                if isinstance(archived, str) and re.fullmatch(re.escape(base)+r'\.archive-[0-9a-f]{32}', archived):
+                    states.append(archived)
+        for location in states:
+            # Check ownership and literal bytes before executing any retained launcher.
+            # The selected literal remains usable after its state is archived by removal.
+            helper = location + ('/python_binding.py' if location == ROOT_STATE or location.startswith(ROOT_STATE+'.archive-') else '/code/python_binding.py')
+            script = r'''cytv_state=STATE
+cytv_launcher="$cytv_state/python-launcher"
+cytv_receipt="$cytv_state/python-runtime.json"
+if [ ! -e "$cytv_launcher" ] && [ ! -L "$cytv_launcher" ] && [ ! -e "$cytv_receipt" ] && [ ! -L "$cytv_receipt" ]; then exit 0; fi
+cytv_owned() {
+    cytv_path="$1"
+    while :; do
+        [ ! -L "$cytv_path" ] && [ "$(stat -c %u "$cytv_path")" = 0 ] || return 1
+        cytv_mode=$(stat -c %a "$cytv_path") || return 1
+        [ "$((0$cytv_mode & 022))" -eq 0 ] || return 1
+        [ "$cytv_path" != / ] || break
+        cytv_path=$(dirname "$cytv_path")
+    done
+}
+if ! cytv_owned "$cytv_launcher" || ! cytv_owned "$cytv_receipt" || ! cytv_owned MANAGED ||
+   [ ! -f "$cytv_launcher" ] || [ ! -f "$cytv_receipt" ] || [ "$(stat -c %a "$cytv_launcher")" != 700 ] ||
+   [ "$(stat -c %h "$cytv_launcher")" != 1 ] || [ "$(stat -c %h "$cytv_receipt")" != 1 ] ||
+   ! printf '%s\n' '#!/bin/sh' 'unset PYTHONHOME PYTHONPATH' 'export PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1' 'exec MANAGED "$@"' | cmp -s - "$cytv_launcher"; then printf CYTV_PYTHON_INVALID; exit 0; fi
+if ! cytv_owned HELPER || [ ! -f HELPER ] || [ "$(stat -c %h HELPER)" != 1 ]; then printf CYTV_PYTHON_INVALID; exit 0; fi
+unset NODE_OPTIONS NODE_PATH
+if ! /usr/bin/node -e NODE_CHECK "$cytv_state" >/dev/null 2>&1; then printf CYTV_PYTHON_INVALID; exit 0; fi
+if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 MANAGED -c 'import runpy,sys; runpy.run_path(sys.argv[1])["verify_binding"](sys.argv[2]); print("CYTV_PYTHON_BOUND")' HELPER "$cytv_state"; then printf CYTV_PYTHON_INVALID; fi
+'''.replace('STATE', shlex.quote(location)).replace('MANAGED', managed).replace('HELPER', shlex.quote(helper)).replace('NODE_CHECK', shlex.quote(_RETAINED_PYTHON_CHECK))
+            reply = self.remote.run(script).strip()
+            if reply == 'CYTV_PYTHON_BOUND':
+                self._selected_python = managed
+                return managed
+            if reply:
+                raise UserError('Retained Python binding could not be verified. Keep recovery state and run cytv status.')
+        self._selected_python = '/usr/bin/python3'
+        return self._selected_python
 
     def enable_system_updates(self):
         """Provision the independent supervisor without replacing the active edition."""
@@ -59,11 +149,15 @@ class Installer:
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise UserError('System updater bundle integrity could not be verified. Use a complete installer build.') from error
         probe = ('if test "$(id -u)" = 0 && test -x /usr/bin/luna-send && '
-                 '/usr/bin/python3 -c "import sys,json,fcntl; sys.exit(0 if sys.version_info >= (3,9) else 1)" && '
                  '/usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 8 ? 0 : 1)\'; '
                  'then printf CYTV_SYSTEM_ROOT_READY; fi')
         if self.remote.run(probe).strip() != 'CYTV_SYSTEM_ROOT_READY':
-            raise UserError('On-TV system updates require root SSH access, TV Python 3.9+ and Node.js 8+. Unrooted TVs use the computer installer.')
+            raise UserError('On-TV system updates require root SSH access and Node.js 8+. Unrooted TVs use the computer installer.')
+        python = self._python(SYSTEM_UPDATER_STATE)
+        from .python_runtime import SYSTEM_PROBE
+        check = self._python_command([python, '-I', '-B', '-c', SYSTEM_PROBE])
+        if self.remote.run('if ' + check + ' >/dev/null 2>&1; then printf CYTV_PYTHON_READY; fi').strip() != 'CYTV_PYTHON_READY':
+            self._selected_python = self._select_python(provision=True)
         self.store.begin(self.profile, 'enable-system-updates', stage='upload')
         stage = '/tmp/cytv-system-updater-' + uuid.uuid4().hex
         self.remote.run('umask 077; mkdir ' + stage)
@@ -73,8 +167,8 @@ class Installer:
             self.remote.upload(stage + '/' + package.safe_name(name), (bundle / name).read_bytes(), mode=0o600)
         self.store.checkpoint(self.profile, stage='setup')
         self.progress('Preparing updates for every TV component…')
-        reply = json.loads(self.remote.run(shlex.join([
-            '/usr/bin/python3', stage + '/setup-system-updater.py', '--bundle', stage,
+        reply = json.loads(self.remote.run(self._python_command([
+            self._python(), stage + '/setup-system-updater.py', '--bundle', stage,
             '--edition', self.profile['edition'], '--device', '--apply']), timeout=360))
         if not isinstance(reply, dict) or reply.get('installed') is not True:
             raise UserError('System updater setup was not confirmed. Keep recovery state and run cytv status.')
@@ -83,12 +177,12 @@ class Installer:
 
     def root_action(self, action, bundle=None, migrate=False):
         driver = (bundle or ROOT_STATE) + '/deploy.py'
-        args = ['/usr/bin/python3', driver, action]
+        args = [self._python(ROOT_STATE), driver, action]
         if bundle:
             args += ['--bundle', bundle]
         if migrate:
             args.append('--migrate-packaged-home')
-        raw = self.remote.run(shlex.join(args), timeout=1080 if action == 'uninstall' else 720 if action == 'restore' else 180)
+        raw = self.remote.run(self._python_command(args), timeout=1080 if action == 'uninstall' else 720 if action == 'restore' else 180)
         reply = json.loads(raw)
         if not isinstance(reply, dict) or reply.get('returnValue') is not True:
             raise UserError('Root operation was not confirmed. Run cytv status; retain recovery state.')
@@ -96,19 +190,35 @@ class Installer:
 
     def preflight(self, install=False):
         if self.profile['edition'] == 'root':
+            from .python_runtime import SYSTEM_PROBE
             probes = ('test "$(id -u)" = 0', 'test -x /usr/bin/python3',
                       'test -x /usr/bin/luna-send', 'test -d /media/developer/apps',
                       'test -d /var/luna-service2-dev',
                       '/usr/bin/python3 -c "import json"', '/usr/bin/python3 -c "import fcntl"',
-                      '/usr/bin/python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)"',
+                      self._python_command(['/usr/bin/python3', '-I', '-B', '-c', SYSTEM_PROBE]),
                       '/usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 8 ? 0 : 1)\'')
             checks = dict.fromkeys(diagnostics.ROOT_REQUIREMENTS, 'unknown')
             self.tv_info['root_requirements'] = checks
-            for name, probe in zip(diagnostics.ROOT_REQUIREMENTS, probes):
-                command = ('if ( ' + probe + ' ) >/dev/null 2>&1; then printf CYTV_ROOT_READY; '
+            python = self._python()
+            def check(name, probe):
+                # Keep independent import diagnostics when an earlier import failed;
+                # otherwise exercise every module/process/filesystem feature used on TV.
+                if name == 'python-version' and any(checks[n] != 'pass' for n in ('python-json', 'python-fcntl')):
+                    probe = '/usr/bin/python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)"'
+                probe = probe.replace('test -x /usr/bin/python3', 'test -x '+shlex.quote(python))
+                command = ('if ( ' + probe.replace('/usr/bin/python3', ('env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 ' if python.startswith('/var/lib/clean-your-tv-python/') else '') + shlex.quote(python)) + ' ) >/dev/null 2>&1; then printf CYTV_ROOT_READY; '
                            'else printf CYTV_ROOT_MISSING; fi')
                 reply = self.remote.run(command).strip()
                 checks[name] = {'CYTV_ROOT_READY': 'pass', 'CYTV_ROOT_MISSING': 'fail'}.get(reply, 'unknown')
+            for name, probe in zip(diagnostics.ROOT_REQUIREMENTS, probes):
+                check(name, probe)
+            python_names = {'python3', 'python-json', 'python-fcntl', 'python-version'}
+            if (install and any(checks[name] != 'pass' for name in python_names)
+                    and all(result == 'pass' for name, result in checks.items() if name not in python_names)):
+                python = self._selected_python = self._select_python(provision=True)
+                for name, probe in zip(diagnostics.ROOT_REQUIREMENTS, probes):
+                    if name in python_names:
+                        check(name, probe)
             failed = [name for name, result in checks.items() if result != 'pass']
             if failed:
                 raise UserError('Root requirements failed or could not be verified: {requirements}. Check the diagnostic report.'.format(
@@ -311,8 +421,8 @@ printf '%s' "$cytv_state"
             for name in [*updater_manifest['files'], 'bundle.json']:
                 self.remote.upload(updater_stage + '/' + package.safe_name(name), (updater / name).read_bytes())
             self.store.checkpoint(self.profile, stage='setup')
-            reply = json.loads(self.remote.run(shlex.join([
-                '/usr/bin/python3', updater_stage + '/setup-updater.py', '--device', '--apply',
+            reply = json.loads(self.remote.run(self._python_command([
+                self._python(), updater_stage + '/setup-updater.py', '--device', '--apply',
                 '--bundle', updater_stage, '--baseline', stage]), timeout=300))
             if not isinstance(reply, dict) or reply.get('installed') is not True:
                 raise UserError('Root updater setup was not confirmed. Keep recovery state and run cytv status.')
@@ -341,7 +451,7 @@ if hashlib.sha256(raw).hexdigest() != sys.argv[1]: raise ValueError('Rollback ca
 inspect_package(raw, current)
 print('CYTV_UPDATER_VERIFIED')
 """
-        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script, baseline_sha]), timeout=60).strip() != 'CYTV_UPDATER_VERIFIED':
+        if self.remote.run(self._python_command([self._python(), '-c', script, baseline_sha]), timeout=60).strip() != 'CYTV_UPDATER_VERIFIED':
             raise UserError('Root updater recovery verification failed. Keep recovery state and run cytv status.')
         reply = self.remote.luna(UPDATER_APP + '.service/status', {}, app_id=package.ROOT_APP, timeout=110)
         if reply.get('returnValue') is not True or 'result' not in reply or reply['result'] is not None:
@@ -366,7 +476,7 @@ print('CYTV_UPDATER_VERIFIED')
             try:
                 self.stop_helper()
                 check = "import sys; sys.path.insert(0, '/var/lib/clean-your-tv-root/runtime'); from helper_bridge import require_idle; require_idle(); print('CYTV_HELPER_IDLE')"
-                if self.remote.run(shlex.join(['/usr/bin/python3', '-c', check])).strip() != 'CYTV_HELPER_IDLE':
+                if self.remote.run(self._python_command([self._python(), '-c', check])).strip() != 'CYTV_HELPER_IDLE':
                     raise RuntimeError('Helper idle state is unconfirmed')
                 break
             except RuntimeError:
@@ -581,7 +691,7 @@ for proc in Path('/proc').iterdir():
         raise RuntimeError('Updater bootstrap is still running')
 print('CYTV_BOOTSTRAP_IDLE')
 """
-            if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script])).strip() != 'CYTV_BOOTSTRAP_IDLE':
+            if self.remote.run(self._python_command([self._python(), '-c', script])).strip() != 'CYTV_BOOTSTRAP_IDLE':
                 return False
             condition = ' || '.join('[ -e ' + shlex.quote(p) + ' ] || [ -L ' + shlex.quote(p) + ' ]' for p in root_updater_paths())
             if self.remote.run('if ' + condition + '; then printf CYTV_EXISTING_UPDATER; else printf CYTV_UPDATER_ABSENT; fi').strip() != 'CYTV_UPDATER_ABSENT':
@@ -622,10 +732,10 @@ print('CYTV_BOOTSTRAP_IDLE')
 
     def root_archive(self, action, destination=None, identity=None):
         from .root_archive import SCRIPT
-        args = ['/usr/bin/python3', '-c', SCRIPT, action]
+        args = [self._python(), '-c', SCRIPT, action]
         if destination is not None:
             args += [destination, json.dumps(identity)]
-        reply = json.loads(self.remote.run(shlex.join(args)))
+        reply = json.loads(self.remote.run(self._python_command(args)))
         if not isinstance(reply, dict):
             raise UserError('Recovery archive could not be verified. Keep recovery state and run cytv status.')
         return reply
@@ -674,8 +784,8 @@ for name,digest in files.items():
 print('CYTV_ROOT_FILES_OK')
 '''
         try:
-            args = ['/usr/bin/python3', '-c', script, pending['release_sha'], pending['bundle_sha'], 'migrate' if pending.get('migrate') else 'fresh']
-            return self.remote.run(shlex.join(args)).strip() == 'CYTV_ROOT_FILES_OK'
+            args = [self._python(), '-c', script, pending['release_sha'], pending['bundle_sha'], 'migrate' if pending.get('migrate') else 'fresh']
+            return self.remote.run(self._python_command(args)).strip() == 'CYTV_ROOT_FILES_OK'
         except RuntimeError:
             return False
 
@@ -714,29 +824,29 @@ print('CYTV_ROOT_FILES_OK')
 
     def system_updater_cleanup(self, action, archive=None):
         from .system_updater_remove import COMMAND
-        args = ['/usr/bin/python3', '-c', COMMAND, action]
+        args = [self._python(), '-c', COMMAND, action]
         if archive is not None:
             args.append(archive)
-        reply = json.loads(self.remote.run(shlex.join(args), timeout=60))
+        reply = json.loads(self.remote.run(self._python_command(args), timeout=60))
         if not isinstance(reply, dict):
             raise UserError('Updater permissions removal could not be verified.')
         return reply
 
     def root_updater_cleanup(self, action, archive):
         from .root_updater_remove import COMMAND
-        reply = json.loads(self.remote.run(shlex.join(['/usr/bin/python3', '-c', COMMAND, action, archive]), timeout=60))
+        reply = json.loads(self.remote.run(self._python_command([self._python(), '-c', COMMAND, action, archive]), timeout=60))
         if not isinstance(reply, dict):
             raise UserError('Root Updater cleanup could not be verified.')
         return reply
 
     def cleanup_legacy_permissions(self):
         from .legacy_permissions_remove import SCRIPT
-        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT]), timeout=30).strip() != 'CYTV_LEGACY_PERMISSIONS_REMOVED':
+        if self.remote.run(self._python_command([self._python(), '-c', SCRIPT]), timeout=30).strip() != 'CYTV_LEGACY_PERMISSIONS_REMOVED':
             raise UserError('Updater permissions removal could not be verified.')
 
     def cleanup_updater_app_permissions(self):
         from .app_permissions_remove import SCRIPT
-        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT]), timeout=30).strip() != 'CYTV_APP_PERMISSIONS_REMOVED':
+        if self.remote.run(self._python_command([self._python(), '-c', SCRIPT]), timeout=30).strip() != 'CYTV_APP_PERMISSIONS_REMOVED':
             raise UserError('Root Updater app permissions removal could not be verified. Recovery data was kept.')
 
     def verify_project_removed(self):
@@ -753,7 +863,7 @@ for folder in ('services.d','roles.d','client-permissions.d','api-permissions.d'
         if any(p.name.startswith(app+'.') for app in apps): raise ValueError('Project bus registration remains')
 print('CYTV_PROJECT_REMOVED')
 """
-        if self.remote.run(shlex.join(['/usr/bin/python3', '-c', script])).strip() != 'CYTV_PROJECT_REMOVED':
+        if self.remote.run(self._python_command([self._python(), '-c', script])).strip() != 'CYTV_PROJECT_REMOVED':
             raise UserError('Project startup or service registrations remain. Removal is not complete.')
         settings = self.remote.luna('com.webos.settingsservice/getSystemSettings', {'category': 'general', 'keys': ['defaultApps']})
         reply = self.remote.luna('com.webos.service.systemprofile/getProfiles', {'names': ['defaultApps', 'idleApp'], 'subscribe': False})
@@ -767,7 +877,7 @@ print('CYTV_PROJECT_REMOVED')
 
     def recover_root_removal(self, action):
         from .root_remove_recovery import SCRIPT
-        reply = json.loads(self.remote.run(shlex.join(['/usr/bin/python3', '-c', SCRIPT, action]), timeout=1080))
+        reply = json.loads(self.remote.run(self._python_command([self._python(), '-c', SCRIPT, action]), timeout=1080))
         if not isinstance(reply, dict) or reply.get('returnValue') is not True:
             if isinstance(reply, dict) and reply.get('reason') == 'busy':
                 raise UserError('The previous removal is still running. Wait a minute, then choose Remove again. The app will check the TV before continuing.')

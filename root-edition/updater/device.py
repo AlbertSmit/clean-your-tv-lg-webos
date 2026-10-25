@@ -42,6 +42,8 @@ class Device:
             path=Path(name)
             if not path.is_relative_to(self.root_state):raise ValueError('Foreign recovery infrastructure')
             if hashlib.sha256(safe_bytes(path,limit=1048576,uid=0)).hexdigest()!=digest:raise ValueError('Recovery integrity failed')
+        from python_binding import verify_binding
+        verify_binding(self.state);verify_binding(self.root_state)
         self.require_home_resume_runtime(self.root_state)
         return receipt
 
@@ -116,7 +118,8 @@ class Device:
         finally:os.close(fd)
 
     def runtime(self, mode, transaction=None):
-        command=['/usr/bin/python3',str(self.root_state/'runtime/cli.py'),mode]
+        from python_binding import command as python_command
+        command=[python_command(self.root_state),str(self.root_state/'runtime/cli.py'),mode]
         if transaction is not None:
             import re
             if mode not in ('suspend-update','finish-update','abort-update') or not re.fullmatch('[a-f0-9]{32}',transaction):

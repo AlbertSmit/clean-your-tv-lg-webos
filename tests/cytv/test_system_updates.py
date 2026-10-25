@@ -15,6 +15,7 @@ class Remote:
 
     def run(self, command, **kwargs):
         self.calls.append(('run', command))
+        if 'CYTV_PYTHON_READY' in command:return 'CYTV_PYTHON_READY'
         if 'CYTV_SYSTEM_ROOT_READY' in command:
             return 'CYTV_SYSTEM_ROOT_READY' if self.root else ''
         if 'setup-system-updater.py' in command:

@@ -174,6 +174,7 @@ class CLITests(unittest.TestCase):
             def __init__(self): self.calls = []
             def run(self, command, **kwargs):
                 self.calls.append(command)
+                if 'CYTV_PYTHON_BOUND' in command:return ''
                 if 'CYTV_ROOT_READY' in command: return 'CYTV_ROOT_READY'
                 if 'CYTV_EXISTING_ROOT' in command: return 'CYTV_EXISTING_ROOT'
                 if 'deploy.json' in command: return '{"stage":"installed-recovery-only"}'

@@ -9,6 +9,7 @@ import types
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0,str(ROOT/'root-edition'))
 pkg = types.ModuleType('system_updater'); pkg.__path__ = [str(ROOT/'system-updater')]; sys.modules['system_updater'] = pkg
 support = types.ModuleType('system_updater.support'); support.__path__ = [str(ROOT/'root-edition/updater')]; sys.modules['system_updater.support'] = support
 from system_updater.support.store import Store

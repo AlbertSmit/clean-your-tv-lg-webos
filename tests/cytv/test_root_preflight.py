@@ -144,7 +144,9 @@ class RootPreflightTests(unittest.TestCase):
 
         info, remote = {}, Remote()
         with self.assertRaises(TVCommandError):
-            Installer(remote, None, {'edition': 'root'}, '.', {}, tv_info=info).preflight(install=True)
+            installer=Installer(remote, None, {'edition': 'root'}, '.', {}, tv_info=info)
+            installer._selected_python='/usr/bin/python3'
+            installer.preflight(install=True)
         self.assertEqual(remote.calls, 2)
         self.assertEqual(info['root_requirements'],
                          dict(dict.fromkeys(REQUIREMENTS, 'unknown'), **{'root-user': 'pass'}))

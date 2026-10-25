@@ -8,6 +8,7 @@ def verify():
     d.trusted_dir(d.STATE)
     root = Path(__file__).resolve().parent
     d.trusted_dir(root)
+    d.python_binding.verify_binding(d.STATE)
     proof = d.safe_json(d.STATE/'recovery-provision.json')
     if proof.get('version') != 1 or proof.get('mode') != 'recovery-only':
         raise ValueError('Recovery provisioning required')
@@ -16,6 +17,7 @@ def verify():
         raise ValueError('Independent boot callback required')
     files = proof.get('files', {})
     required = {str(p) for p in root.glob('*.py')} | {str(callback)}
+    required.update(str(d.STATE/name) for name in ('python_binding.py','python_boot.js','python-launcher','python-runtime.json') if (d.STATE/name).exists())
     if not required.issubset(files):
         raise ValueError('Incomplete recovery manifest')
     import os, stat

@@ -26,7 +26,7 @@ def validate_request(method,payload):
 
 
 def spawn_worker():
-    subprocess.Popen(['/usr/bin/python3',str(Path(__file__).resolve().parents[1]/'run-updater.py'),'worker'],
+    subprocess.Popen([sys.executable,str(Path(__file__).resolve().parents[1]/'run-updater.py'),'worker'],
                      stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,
                      start_new_session=True,close_fds=True)
 

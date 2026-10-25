@@ -44,6 +44,7 @@ for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.
 
 node root-edition/service/test-handlers.js
 node root-edition/service/test-persistent.js
+node root-edition/service/test-python-binding.js
 node root-edition/ui/test-catalogs.cjs
 node root-edition/ui/test-localization.cjs
 node root-edition/ui/test-updater-localization.cjs

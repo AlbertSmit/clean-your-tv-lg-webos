@@ -11,6 +11,11 @@
       "pr": 26,
       "issues": [],
       "summary": "Fix launcher focus, AirPlay opening and safe startup app refresh"
+    },
+    {
+      "pr": 29,
+      "issues": [],
+      "summary": "Fix Helper startup, monitoring recovery, and late LG Home takeover"
     }
   ],
   "excluded": [],

@@ -37,6 +37,9 @@ artifacts still need validation before merging into main or publishing.
   older-TV Node URL/HTTPS compatibility and certificate trust for updater and
   renewal services. Preserve unresolved installation/recovery evidence.
 - Fix Android operation receipt creation on filesystems that reject hard links.
+- Accept macOS packaged-payload aliases during supervisor setup without weakening
+  inner-file validation. Avoid reopening Root Home after boot readiness over an
+  app the user already launched; initial presentation remains native to webOS.
 - Maintain subsequent release candidates after verified publication and preserve
   release scope/notification provenance.
 

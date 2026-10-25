@@ -104,4 +104,6 @@ Documentação técnica: [desktop](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [in
 
 Se Root mostrar `Denied methods call status` logo após preparar o supervisor, feche e reabra Home Root uma vez e verifique as atualizações novamente. Se persistir, guarde o diagnóstico e o estado de recuperação.
 
+Próximo candidato (#59): se o estado do Helper não puder ser verificado, **Iniciar Helper** continua disponível com confirmação. Abrir o bloco não reinicia o Helper nem cancela uma parada de emergência. Os ajustes de Home exigem que o controle responda.
+
 Próximo candidato (#55): o Root valida a migração antes de instalar. Uma instalação interrompida antes do provisionamento pode ser removida sem um snapshot LS2 que nunca foi criado; um registro verificado é preservado para o arquivamento e a reinstalação normais do cytv. Snapshots ausentes em etapas posteriores ou evidências conflitantes ainda bloqueiam a limpeza. Exige o novo driver; a falha ao iniciar o serviço de recuperação no OLED Flex continua sem solução.

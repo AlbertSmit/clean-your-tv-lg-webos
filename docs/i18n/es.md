@@ -114,4 +114,6 @@ Si Root muestra `Denied methods call status` justo después de preparar el super
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
 
+Próximo candidato (#59): si no se puede comprobar el estado de Helper, **Iniciar Helper** sigue disponible con confirmación. Abrir el icono no reinicia Helper ni desactiva una parada de emergencia. Los ajustes de Home requieren que responda el control.
+
 Próximo candidato (#55): Root valida la migración antes de instalar. Una instalación interrumpida antes del aprovisionamiento puede eliminarse sin una instantánea LS2 que nunca se creó; conserva un comprobante para el archivado y la reinstalación normales de cytv. La ausencia posterior de instantáneas o los datos contradictorios siguen bloqueando la limpieza. Requiere el nuevo controlador; el fallo de inicio del servicio de recuperación en OLED Flex sigue sin resolverse.

@@ -114,4 +114,6 @@ Zeigt Root direkt nach der Supervisor-Einrichtung `Denied methods call status`, 
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
 
+Nächster Kandidat (#59): Wenn der Helper-Status nicht geprüft werden kann, bleibt **Helper starten** mit Bestätigung verfügbar. Das Öffnen der Kachel startet Helper nicht neu und hebt keinen Notstopp auf. Die Home-Tasteneinstellungen benötigen eine antwortende Steuerung.
+
 Nächster Kandidat (#55): Root prüft die Migrationsdaten vor der Installation. Eine vor der Provisionierung unterbrochene Installation kann ohne einen noch nicht erstellten LS2-Snapshot entfernt werden; ein geprüfter Beleg bleibt für die normale cytv-Archivierung und Neuinstallation erhalten. Später fehlende Snapshots oder widersprüchliche Daten stoppen die Bereinigung weiterhin. Dies erfordert den neuen Treiber; der Startfehler des Recovery-Dienstes auf OLED Flex bleibt ungelöst.

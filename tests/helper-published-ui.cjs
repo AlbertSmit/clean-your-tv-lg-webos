@@ -76,11 +76,17 @@ for (const reply of [publishedStatus(true), {returnValue: true, running: false, 
   assert.equal(ui.calls.filter(c => c.params.params && c.params.params.nativeHomeStart === true).length, 1);
 }
 assert.equal(panel({returnValue: true, running: true}).buttons[1].disabled, false, 'current protocol remains supported');
-for (const reply of [{returnValue: false}, {returnValue: true, running: null}, {returnValue: true, running: 'true'}, null]) {
+for (const reply of [{returnValue: false, errorCode: -1, errorText: 'Denied method call "status" for category "/"'}, {returnValue: false}, {returnValue: true, running: null}, {returnValue: true, running: 'true'}, null, undefined]) {
   const ui = panel(reply);
+  if (reply === undefined) for (const callback of [...ui.timers.values()]) callback();
   assert.equal(ui.buttons[1].disabled, true);
-  assert.equal(ui.buttons[2].hidden, true);
-  assert.equal(ui.calls.length, 1, 'invalid status cannot trigger a fallback or launch');
+  assert.equal(ui.buttons[2].hidden, false, 'unknown status still permits a confirmed manual start');
+  assert.match(ui.status.textContent, /status could not be checked/);
+  assert.equal(ui.calls.length, 1, 'unknown status never launches Helper automatically');
+  ui.buttons[2].onclick();
+  assert.equal(ui.calls.length, 1, 'Start must wait for confirmation');
+  ui.window.confirmStart();
+  assert.equal(ui.calls.filter(c => c.params.params && c.params.params.nativeHomeStart === true).length, 1);
 }
 for (const home of [{returnValue: false}, {returnValue: true, enabled: 'true'}, null, undefined]) {
   const ui = panel(publishedStatus(), home);

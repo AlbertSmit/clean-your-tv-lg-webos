@@ -133,7 +133,9 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         """Provision the independent supervisor without replacing the active edition."""
         if self.store.pending(self.profile):
             raise UserError('Previous operation is unresolved. Run cytv status; retain recovery state before retrying.')
-        bundle = self.payload / 'system-updater'
+        # Canonicalize the packaged root (macOS /var and PyInstaller app aliases),
+        # while keeping links inside the bundle subject to the integrity check.
+        bundle = self.payload.resolve() / 'system-updater'
         try:
             metadata = json.loads((bundle / 'bundle.json').read_text())
             files = metadata['files']

@@ -1,6 +1,7 @@
-# v1.0.2 — Home recovery and installer diagnostics
+# v1.0.2 — Unpublished candidate, superseded by v1.0.3
 
-Publication requires successful checks and signed-feed verification.
+Never published. Signing rejected changed Root shared UI under version 0.1.11.
+Use [v1.0.3](RELEASE-1.0.3.md), which correctly increments Root to 0.1.12.
 The operator confirmed successful RC checks and authorized release on 2026-10-25.
 
 ## Components

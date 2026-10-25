@@ -1,6 +1,12 @@
 # Changelog
 
-## v1.0.2 — Home recovery and installer diagnostics
+## v1.0.3 — Home recovery and installer diagnostics
+
+- Carry the complete unpublished v1.0.2 scope, with Root 0.1.12 for shared app.js/style.css changes.
+- Keep cytv 0.2.16, Home 1.3.8, Helper 0.6.18, Android 0.1.7-preview (code 8) and Updater 0.1.6.
+- v1.0.2 signing correctly rejected changed Root bytes at the old version; that draft was never shipped.
+
+## v1.0.2 — Unpublished candidate (superseded by v1.0.3)
 
 - Fix Home return animation, focus, AirPlay opening and startup app refresh (#25/#26).
 - Recover Helper monitoring/startup and late LG Home takeover; add guided one-report diagnostics (#29/#31, issue #12).

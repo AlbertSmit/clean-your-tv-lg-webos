@@ -21,6 +21,7 @@ MAINTENANCE_ACTIONS = (
     ('Check connection and create a diagnostic report', 'doctor'),
     ('Return to LG Home', 'restore'),
     ('Uninstall Clean Your TV', 'uninstall'),
+    ('Home button diagnostics', 'home-diagnostics'),
 )
 
 

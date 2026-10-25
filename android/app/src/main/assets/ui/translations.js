@@ -126,7 +126,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Обновите Android System WebView или Chrome и откройте CYTV снова (нужен WebView 108+).",
     "connectionMethod": "Выберите способ подключения",
-    "maintenanceProgress": "Не выключайте телевизор. CYTV выполняет выбранное действие."
+    "maintenanceProgress": "Не выключайте телевизор. CYTV выполняет выбранное действие.",
+    "homeDiagnostics": "Диагностика кнопки Home",
+    "homeDiagnosticsDesc": "Запишите одно нажатие Home и сохраните один отчёт. Только Helper без root.",
+    "diagnosticProgress": "После приглашения нажмите Home один раз. Оставьте приложение открытым на минуту.",
+    "saveReport": "Сохранить отчёт",
+    "reportDone": "Отчёт готов",
+    "reportDoneDesc": "Сохраните JSON-отчёт и прикрепите его к обращению.",
+    "reportSaved": "Отчёт сохранён.",
+    "reportError": "Не удалось сохранить отчёт. Попробуйте ещё раз."
   },
   "en": {
     "detect": "Check connection",
@@ -241,7 +249,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Update Android System WebView or Chrome, then reopen CYTV (WebView 108+ required).",
     "connectionMethod": "Choose your connection method",
-    "maintenanceProgress": "Keep the TV on. CYTV is carrying out the selected action."
+    "maintenanceProgress": "Keep the TV on. CYTV is carrying out the selected action.",
+    "homeDiagnostics": "Home button diagnostics",
+    "homeDiagnosticsDesc": "Record one Home press and save one report. No-root Helper only.",
+    "diagnosticProgress": "When prompted, press Home once. Keep this app open for one minute.",
+    "saveReport": "Save report",
+    "reportDone": "Report ready",
+    "reportDoneDesc": "Save the JSON report and attach it to your issue.",
+    "reportSaved": "Report saved.",
+    "reportError": "Could not save the report. Please try again."
   },
   "de": {
     "detect": "Verbindung prüfen",
@@ -356,7 +372,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Aktualisiere Android System WebView oder Chrome und öffne CYTV erneut (WebView 108+ erforderlich).",
     "connectionMethod": "Verbindungsmethode wählen",
-    "maintenanceProgress": "Lassen Sie den Fernseher eingeschaltet. CYTV führt die gewählte Aktion aus."
+    "maintenanceProgress": "Lassen Sie den Fernseher eingeschaltet. CYTV führt die gewählte Aktion aus.",
+    "homeDiagnostics": "Home-Taste diagnostizieren",
+    "homeDiagnosticsDesc": "Einen Home-Tastendruck aufzeichnen und einen Bericht speichern. Nur No-root Helper.",
+    "diagnosticProgress": "Nach Aufforderung einmal Home drücken. Diese App eine Minute geöffnet lassen.",
+    "saveReport": "Bericht speichern",
+    "reportDone": "Bericht bereit",
+    "reportDoneDesc": "JSON-Bericht speichern und an Ihre Meldung anhängen.",
+    "reportSaved": "Bericht gespeichert.",
+    "reportError": "Bericht konnte nicht gespeichert werden. Erneut versuchen."
   },
   "fr": {
     "detect": "Vérifier la connexion",
@@ -471,7 +495,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Mettez à jour Android System WebView ou Chrome, puis rouvrez CYTV (WebView 108+ requis).",
     "connectionMethod": "Choisissez le mode de connexion",
-    "maintenanceProgress": "Laissez le téléviseur allumé. CYTV exécute l’action sélectionnée."
+    "maintenanceProgress": "Laissez le téléviseur allumé. CYTV exécute l’action sélectionnée.",
+    "homeDiagnostics": "Diagnostic du bouton Home",
+    "homeDiagnosticsDesc": "Enregistrez un appui sur Home et sauvegardez un rapport. Helper sans root uniquement.",
+    "diagnosticProgress": "À l’invite, appuyez une fois sur Home. Gardez cette app ouverte une minute.",
+    "saveReport": "Enregistrer le rapport",
+    "reportDone": "Rapport prêt",
+    "reportDoneDesc": "Enregistrez le rapport JSON et joignez-le à votre signalement.",
+    "reportSaved": "Rapport enregistré.",
+    "reportError": "Impossible d’enregistrer le rapport. Réessayez."
   },
   "it": {
     "detect": "Verifica connessione",
@@ -586,7 +618,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Aggiorna Android System WebView o Chrome, poi riapri CYTV (richiesto WebView 108+).",
     "connectionMethod": "Scegli come connetterti",
-    "maintenanceProgress": "Lascia la TV accesa. CYTV sta eseguendo l’azione selezionata."
+    "maintenanceProgress": "Lascia la TV accesa. CYTV sta eseguendo l’azione selezionata.",
+    "homeDiagnostics": "Diagnostica del tasto Home",
+    "homeDiagnosticsDesc": "Registra una pressione di Home e salva un rapporto. Solo Helper senza root.",
+    "diagnosticProgress": "Quando richiesto, premi Home una volta. Tieni questa app aperta per un minuto.",
+    "saveReport": "Salva rapporto",
+    "reportDone": "Rapporto pronto",
+    "reportDoneDesc": "Salva il rapporto JSON e allegalo alla segnalazione.",
+    "reportSaved": "Rapporto salvato.",
+    "reportError": "Impossibile salvare il rapporto. Riprova."
   },
   "es": {
     "detect": "Comprobar conexión",
@@ -701,7 +741,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Actualiza Android System WebView o Chrome y vuelve a abrir CYTV (se requiere WebView 108 o posterior).",
     "connectionMethod": "Elige cómo conectarte",
-    "maintenanceProgress": "Mantén el televisor encendido. CYTV está realizando la acción seleccionada."
+    "maintenanceProgress": "Mantén el televisor encendido. CYTV está realizando la acción seleccionada.",
+    "homeDiagnostics": "Diagnóstico del botón Home",
+    "homeDiagnosticsDesc": "Registra una pulsación de Home y guarda un informe. Solo Helper sin root.",
+    "diagnosticProgress": "Cuando se indique, pulsa Home una vez. Mantén esta app abierta un minuto.",
+    "saveReport": "Guardar informe",
+    "reportDone": "Informe listo",
+    "reportDoneDesc": "Guarda el informe JSON y adjúntalo a tu incidencia.",
+    "reportSaved": "Informe guardado.",
+    "reportError": "No se pudo guardar el informe. Inténtalo de nuevo."
   },
   "pt-BR": {
     "detect": "Verificar conexão",
@@ -816,7 +864,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Atualize o Android System WebView ou o Chrome e abra o CYTV novamente (requer WebView 108 ou superior).",
     "connectionMethod": "Escolha como conectar",
-    "maintenanceProgress": "Mantenha a TV ligada. O CYTV está executando a ação selecionada."
+    "maintenanceProgress": "Mantenha a TV ligada. O CYTV está executando a ação selecionada.",
+    "homeDiagnostics": "Diagnóstico do botão Home",
+    "homeDiagnosticsDesc": "Grave um toque em Home e salve um relatório. Apenas Helper sem root.",
+    "diagnosticProgress": "Quando solicitado, pressione Home uma vez. Mantenha este app aberto por um minuto.",
+    "saveReport": "Salvar relatório",
+    "reportDone": "Relatório pronto",
+    "reportDoneDesc": "Salve o relatório JSON e anexe ao seu chamado.",
+    "reportSaved": "Relatório salvo.",
+    "reportError": "Não foi possível salvar o relatório. Tente novamente."
   },
   "pl": {
     "detect": "Sprawdź połączenie",
@@ -931,7 +987,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Zaktualizuj Android System WebView lub Chrome i ponownie otwórz CYTV (wymagany WebView 108 lub nowszy).",
     "connectionMethod": "Wybierz sposób połączenia",
-    "maintenanceProgress": "Pozostaw telewizor włączony. CYTV wykonuje wybrane działanie."
+    "maintenanceProgress": "Pozostaw telewizor włączony. CYTV wykonuje wybrane działanie.",
+    "homeDiagnostics": "Diagnostyka przycisku Home",
+    "homeDiagnosticsDesc": "Zapisz jedno naciśnięcie Home i jeden raport. Tylko Helper bez roota.",
+    "diagnosticProgress": "Po wyświetleniu instrukcji naciśnij Home raz. Pozostaw aplikację otwartą przez minutę.",
+    "saveReport": "Zapisz raport",
+    "reportDone": "Raport gotowy",
+    "reportDoneDesc": "Zapisz raport JSON i dołącz go do zgłoszenia.",
+    "reportSaved": "Raport zapisany.",
+    "reportError": "Nie udało się zapisać raportu. Spróbuj ponownie."
   },
   "ko": {
     "detect": "연결 확인",
@@ -1046,7 +1110,15 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Android System WebView 또는 Chrome을 업데이트한 후 CYTV를 다시 여세요(WebView 108 이상 필요).",
     "connectionMethod": "연결 방법 선택",
-    "maintenanceProgress": "TV를 켜 두세요. CYTV가 선택한 작업을 실행하고 있습니다."
+    "maintenanceProgress": "TV를 켜 두세요. CYTV가 선택한 작업을 실행하고 있습니다.",
+    "homeDiagnostics": "Home 버튼 진단",
+    "homeDiagnosticsDesc": "Home 누르기를 기록하고 보고서 하나를 저장합니다. No-root Helper 전용입니다.",
+    "diagnosticProgress": "안내가 나오면 Home을 한 번 누르세요. 앱을 1분 동안 열어 두세요.",
+    "saveReport": "보고서 저장",
+    "reportDone": "보고서 준비 완료",
+    "reportDoneDesc": "JSON 보고서를 저장하고 이슈에 첨부하세요.",
+    "reportSaved": "보고서를 저장했습니다.",
+    "reportError": "보고서를 저장하지 못했습니다. 다시 시도하세요."
   },
   "hi": {
     "detect": "कनेक्शन जाँचें",
@@ -1161,6 +1233,14 @@ const words = {
     "notificationChannel": "CYTV",
     "webviewUpdate": "Android System WebView या Chrome अपडेट करें, फिर CYTV दोबारा खोलें (WebView 108+ ज़रूरी है)।",
     "connectionMethod": "कनेक्शन का तरीका चुनें",
-    "maintenanceProgress": "TV चालू रखें। CYTV चुनी गई कार्रवाई कर रहा है।"
+    "maintenanceProgress": "TV चालू रखें। CYTV चुनी गई कार्रवाई कर रहा है।",
+    "homeDiagnostics": "Home बटन की जाँच",
+    "homeDiagnosticsDesc": "Home का एक प्रेस रिकॉर्ड करें और एक रिपोर्ट सेव करें। केवल No-root Helper के लिए।",
+    "diagnosticProgress": "कहने पर Home एक बार दबाएँ। यह ऐप एक मिनट खुला रखें।",
+    "saveReport": "रिपोर्ट सेव करें",
+    "reportDone": "रिपोर्ट तैयार है",
+    "reportDoneDesc": "JSON रिपोर्ट सेव करके अपनी समस्या के साथ संलग्न करें।",
+    "reportSaved": "रिपोर्ट सेव हो गई।",
+    "reportError": "रिपोर्ट सेव नहीं हुई। फिर कोशिश करें।"
   }
 };

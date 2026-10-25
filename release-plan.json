@@ -13,6 +13,11 @@
         37
       ],
       "summary": "Diagnose individual Root requirements and record safe SSH command exit status; reporter failure in #37 remains under investigation"
+    },
+    {
+      "pr": 39,
+      "issues": [],
+      "summary": "Fix webOS package installation and TV runtime compatibility"
     }
   ],
   "excluded": [],

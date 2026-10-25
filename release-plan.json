@@ -23,6 +23,15 @@
         12
       ],
       "summary": "Add guided Home Helper diagnostics and single-report export"
+    },
+    {
+      "pr": 32,
+      "issues": [
+        22,
+        23,
+        24
+      ],
+      "summary": "Improve key diagnostics and guide unfinished No-root removal recovery"
     }
   ],
   "excluded": [],

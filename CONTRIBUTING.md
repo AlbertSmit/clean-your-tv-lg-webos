@@ -1,12 +1,15 @@
 # Contributing
 
-In the maintained local workspace, use `stable/` as the only active checkout for
+In the maintained local workspace, use the project root as the only active checkout for
 all development, documentation, builds, commits and releases. This includes
-No-root, Root and the desktop/console installer. `stable` is the directory name;
-`release/next` is the integration branch; `main` accepts finalized release PRs only.
+No-root, Root and the desktop/console installer. Run Git and build commands from
+the project root. `release/next` is the integration branch; `main` accepts finalized release PRs only.
 Switch branches within this checkout as needed.
 The former `release-desktop/` checkout is archived under
-`archives/2026-10-24-release-desktop/` in the workspace container. Archives and the
+`archives/2026-10-24-release-desktop/`. The former `stable/` checkout was moved
+to the project root on 2026-10-25, preserving its Git history and local changes.
+The previous workspace README and legacy Root symlink are preserved in
+`archives/2026-10-25-workspace-flattening/`. Archives and the
 legacy Root checkout are for reference/recovery only; do not develop or publish
 from them. Coordinate concurrent edits and commit or stash incomplete changes
 before switching branches. Contributors with their own clone can use its normal

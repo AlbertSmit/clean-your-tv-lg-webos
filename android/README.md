@@ -28,7 +28,7 @@ Profiles, imported keys and pairing data live in the app-private directory. Andr
 
 ## Build
 
-Use the maintained `stable/` checkout. Requires JDK 17, Python 3.12, Android SDK platform 35/build-tools 35.0.0/platform-tools and accepted SDK licenses. Gradle 8.13 is pinned by the wrapper; Android Gradle Plugin 8.9.2 and Chaquopy 17.1.0 are pinned in the build.
+Run builds from the maintained project root. Requires JDK 17, Python 3.12, Android SDK platform 35/build-tools 35.0.0/platform-tools and accepted SDK licenses. Gradle 8.13 is pinned by the wrapper; Android Gradle Plugin 8.9.2 and Chaquopy 17.1.0 are pinned in the build.
 
 From the repository root, prepare a public TV payload using the existing build flow (or use an already built, hash-verified `build/cytv/payload`):
 

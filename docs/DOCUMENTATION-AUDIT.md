@@ -1,5 +1,9 @@
 # Documentation audit — 2026-10-24
 
+Historical workspace layout: on 2026-10-25 the `stable/` checkout was moved to
+the project root. Current work and Git commands use the project root; references
+to `stable/` below describe the layout at the time of this audit.
+
 Scope: the primary `stable/` checkout's 61 tracked Markdown files, plus the local
 workspace README. The former release-desktop checkout is now archived at
 `archives/2026-10-24-release-desktop/` in the workspace container, including its

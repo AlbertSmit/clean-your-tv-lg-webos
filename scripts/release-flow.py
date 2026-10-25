@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Release branch policy, immutable shipping inventory and retryable notices."""
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -210,6 +211,90 @@ def collect(root=ROOT):
     print('Collected release scope without selecting or changing the version')
 
 
+def remote_json(path, ref):
+    return json.loads(base64.b64decode(api('contents/' + path + '?ref=' + ref)['content']))
+
+
+def ensure_candidate():
+    owner = REPO.split('/')[0]
+    existing = api(f'pulls?state=open&base=main&head={owner}:release%2Fnext&per_page=100')
+    if existing:
+        print('Release candidate already exists: ' + existing[0]['html_url'])
+        return existing[0]
+    head = api('commits/release%2Fnext')['sha']
+    comparison = api('compare/main...' + head)
+    if not comparison['ahead_by']:
+        print('No next-cycle changes; no candidate PR needed yet')
+        return None
+    plan = remote_json(PLAN, head)
+    validate_shape(plan)
+    versions = remote_json('release-versions.json', head)
+    published = api('releases/latest')['tag_name']
+    previous = remote_json('release-versions.json', published)
+    rows = [('Overall release', 'release'), ('Home', 'home'), ('Home Helper', 'helper'),
+            ('cytv installer', 'cytv'), ('Android installer / versionCode', 'android'),
+            ('Root edition', 'root'), ('Independent updater', 'updater')]
+    body = ['## Release candidate', '',
+            f'Unfrozen draft after {published}. Base: `main`; head: `release/next`.',
+            f'Initial source: `{head}`. Final version and hardware acceptance are not selected.', '',
+            '## Scope', '']
+    body += [f"- #{c['pr']}: {c['summary']}" +
+             (' (Related issues: ' + ', '.join('#' + str(n) for n in c['issues']) + ')' if c['issues'] else '')
+             for c in plan['changes']] or ['No implementation PRs collected yet.']
+    body += [f"- Excluded #{c['pr']}: {c['reason']}" for c in plan['excluded']]
+    body += ['', '## Component versions', '',
+             '| Component | Last published | Currently committed | Proposed/final target | Status |',
+             '| --- | --- | --- | --- | --- |']
+    for label, key in rows:
+        old, current = previous[key], versions[key]
+        if key == 'android':
+            old += ' / ' + str(previous['android_version_code'])
+            current += ' / ' + str(versions['android_version_code'])
+        body.append(f'| {label} | {old} | {current} | TBD | Target not selected |')
+    body += ['', '## Packaging and validation', '',
+             'No new artifact builds or TV acceptance are claimed for this draft. Rebuild requirements,',
+             'component bumps, rollback evidence and validation of the exact frozen commit remain pending.',
+             'Keep pinned Helper baselines and source/package version checks intact.', '',
+             '## Release gates', '',
+             '- [ ] Collect all implementation PRs and issues in `release-plan.json`.',
+             '- [ ] Maintain this description after every scope/version/validation change.',
+             '- [ ] Select final versions, synchronize manifests and write release notes.',
+             '- [ ] Record actual TV acceptance, limitations and rollback evidence.',
+             '- [ ] Complete required tests, all platform builds and Release policy at the frozen head.']
+    pr = api('pulls', method='POST', data={'title': 'Next release candidate',
+             'head': BRANCH, 'base': 'main', 'draft': True, 'body': '\n'.join(body) + '\n'})
+    print('Created release candidate: ' + pr['html_url'])
+    return pr
+
+
+def start_cycle(tag):
+    if not re.fullmatch(r'v\d{1,4}\.\d{1,4}\.\d{1,4}', tag):
+        raise ValueError('Invalid release tag')
+    release = api('releases/tags/' + tag)
+    main = api('commits/main')
+    if (release['draft'] or release['prerelease'] or release['tag_name'] != tag or
+            api('commits/' + tag)['sha'] != main['sha']):
+        raise ValueError('Start the next cycle only after publication of the current main commit')
+    subprocess.run(['node', str(ROOT / 'scripts/publish-release.cjs'), tag, '--check-only'], check=True)
+    head = api('commits/release%2Fnext')['sha']
+    comparison = api('compare/' + main['sha'] + '...' + head)
+    if comparison['ahead_by']:
+        plan = remote_json(PLAN, head)
+        if plan.get('version') is not None:
+            raise ValueError('release/next already has newer work; refusing to reset its plan')
+        return ensure_candidate()
+    plan = {'schema': 1, 'version': None, 'changes': [], 'excluded': [], 'acceptance': ''}
+    tree = api('git/trees', method='POST', data={'base_tree': main['commit']['tree']['sha'],
+               'tree': [{'path': PLAN, 'mode': '100644', 'type': 'blob',
+                         'content': json.dumps(plan, indent=2) + '\n'}]})
+    commit = api('git/commits', method='POST', data={
+        'message': 'Start next release cycle after verified ' + tag + ' publication',
+        'tree': tree['sha'], 'parents': [main['sha']]})
+    # A non-fast-forward update fails if another writer has added work meanwhile.
+    api('git/refs/heads/' + BRANCH, method='PATCH', data={'sha': commit['sha'], 'force': False})
+    return ensure_candidate()
+
+
 def inventory_at(commit, root=ROOT):
     associated = api('commits/' + commit + '/pulls?per_page=100', pages=True)
     prs = [p for p in associated if p.get('merged_at') and p['merge_commit_sha'] == commit and
@@ -338,7 +423,8 @@ def protect():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['check', 'collect', 'inventory', 'notify', 'protect'])
+    parser.add_argument('command', choices=['check', 'collect', 'inventory', 'notify', 'protect',
+                                           'ensure-candidate', 'start-cycle'])
     parser.add_argument('--tag')
     parser.add_argument('--source-root', type=Path, default=ROOT)
     parser.add_argument('--output', type=Path)
@@ -347,6 +433,12 @@ def main():
         check_pr(json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text()))
     elif args.command == 'collect':
         collect(args.source_root)
+    elif args.command == 'ensure-candidate':
+        ensure_candidate()
+    elif args.command == 'start-cycle':
+        if not args.tag:
+            parser.error('start-cycle requires --tag')
+        start_cycle(args.tag)
     elif args.command == 'inventory':
         if args.output is None:
             parser.error('inventory requires --output')

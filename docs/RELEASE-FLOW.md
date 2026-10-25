@@ -137,6 +137,37 @@ Resolve a failed publication before integrating the next release.
 After the release merges, fast-forward `release/next` to `main`, clear the plan
 for the next cycle, and continue collecting features without a new version.
 
+## Automatic next candidate and recovery
+
+After signed publication passes its public verification, the publishing workflow
+starts the next cycle automatically: it advances `release/next` to a commit based
+on the published `main` tree, clears only `release-plan.json`, and opens a new
+draft PR to `main`. Existing next-cycle work is preserved. A failed publication
+does not reset the branch. Shipping notices still run if next-cycle setup fails.
+
+The **Maintain next release candidate** workflow also checks pushes to
+`release/next` and supports manual dispatch on that branch. It creates a draft
+only when the branch has changes and no open candidate exists; it preserves the
+description of an existing PR. Opening the draft does not freeze a version or
+establish artifact/TV acceptance. Maintain its scope and validation record as
+described above. Actions-created commits/PRs do not themselves trigger other
+workflows; subsequent implementation pushes trigger the normal checks.
+
+Repository Actions settings must enable **Allow GitHub Actions to create and
+approve pull requests**. These workflows request PR write access and do not
+approve or merge PRs. If automatic setup fails after publication, repair the
+reported permissions/state and retry with:
+
+```sh
+python3 scripts/release-flow.py start-cycle --tag vX.Y.Z
+```
+
+For an already prepared next-cycle branch, run
+`python3 scripts/release-flow.py ensure-candidate`. Both commands reuse an existing
+candidate. The cycle reset verifies the published tag against current `main`,
+checks the signed feeds, and uses a non-forced ref update so concurrent work
+cannot be overwritten. Never reset or force-push an active preparation branch.
+
 ## Initial rollout and protection maintenance
 
 The first installation is an infrastructure bootstrap: merge the workflow,

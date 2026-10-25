@@ -1494,6 +1494,13 @@ HomeI18n.add({
 // Shared system updater and standalone recovery interface.
 HomeI18n.add({
   "en": {
+    "Update information could not be verified.": "Update information could not be verified.",
+    "Could not connect to the update server. Nothing was installed.": "Could not connect to the update server. Nothing was installed.",
+    "Update information is not available yet. Nothing was installed.": "Update information is not available yet. Nothing was installed.",
+    "No previous update is saved for rollback yet.": "No previous update is saved for rollback yet.",
+    "Update information is not available yet. Try again later.": "Update information is not available yet. Try again later.",
+    "Could not connect to check for updates. Check your connection and try again.": "Could not connect to check for updates. Check your connection and try again.",
+    "Update information could not be verified. Nothing was installed.": "Update information could not be verified. Nothing was installed.",
     "System updater operation failed. Open Recovery.": "System updater operation failed. Open Recovery.",
     "Updater response timed out. Open Recovery to check status.": "Updater response timed out. Open Recovery to check status.",
     "Invalid updater response. Open Recovery.": "Invalid updater response. Open Recovery.",
@@ -1524,6 +1531,13 @@ HomeI18n.add({
     "Restore previous system": "Restore previous system"
   },
   "de": {
+    "Update information could not be verified.": "Update-Informationen konnten nicht überprüft werden.",
+    "Could not connect to the update server. Nothing was installed.": "Keine Verbindung zum Update-Server. Es wurde nichts installiert.",
+    "Update information is not available yet. Nothing was installed.": "Update-Informationen sind noch nicht verfügbar. Es wurde nichts installiert.",
+    "No previous update is saved for rollback yet.": "Es ist noch kein vorheriges Update für die Wiederherstellung gespeichert.",
+    "Update information is not available yet. Try again later.": "Update-Informationen sind noch nicht verfügbar. Versuche es später erneut.",
+    "Could not connect to check for updates. Check your connection and try again.": "Keine Verbindung zur Update-Prüfung. Prüfe deine Verbindung und versuche es erneut.",
+    "Update information could not be verified. Nothing was installed.": "Update-Informationen konnten nicht überprüft werden. Es wurde nichts installiert.",
     "System updater operation failed. Open Recovery.": "Der System-Updater konnte den Vorgang nicht ausführen. Öffne die Wiederherstellung.",
     "Updater response timed out. Open Recovery to check status.": "Zeitüberschreitung beim Updater. Öffne die Wiederherstellung, um den Status zu prüfen.",
     "Invalid updater response. Open Recovery.": "Ungültige Updater-Antwort. Öffne die Wiederherstellung.",
@@ -1554,6 +1568,13 @@ HomeI18n.add({
     "Restore previous system": "Vorheriges System wiederherstellen"
   },
   "es": {
+    "Update information could not be verified.": "No se pudo verificar la información de actualización.",
+    "Could not connect to the update server. Nothing was installed.": "No se pudo conectar al servidor de actualizaciones. No se instaló nada.",
+    "Update information is not available yet. Nothing was installed.": "La información de actualización aún no está disponible. No se instaló nada.",
+    "No previous update is saved for rollback yet.": "Todavía no hay una actualización anterior guardada para restaurar.",
+    "Update information is not available yet. Try again later.": "La información de actualización aún no está disponible. Inténtalo más tarde.",
+    "Could not connect to check for updates. Check your connection and try again.": "No se pudo conectar para buscar actualizaciones. Revisa tu conexión e inténtalo de nuevo.",
+    "Update information could not be verified. Nothing was installed.": "No se pudo verificar la información de actualización. No se instaló nada.",
     "System updater operation failed. Open Recovery.": "Falló la operación del actualizador del sistema. Abre Recuperación.",
     "Updater response timed out. Open Recovery to check status.": "El actualizador no respondió a tiempo. Abre Recuperación para comprobar el estado.",
     "Invalid updater response. Open Recovery.": "Respuesta del actualizador no válida. Abre Recuperación.",
@@ -1584,6 +1605,13 @@ HomeI18n.add({
     "Restore previous system": "Restaurar el sistema anterior"
   },
   "pt-BR": {
+    "Update information could not be verified.": "Não foi possível verificar as informações de atualização.",
+    "Could not connect to the update server. Nothing was installed.": "Não foi possível conectar ao servidor de atualizações. Nada foi instalado.",
+    "Update information is not available yet. Nothing was installed.": "As informações de atualização ainda não estão disponíveis. Nada foi instalado.",
+    "No previous update is saved for rollback yet.": "Ainda não há uma atualização anterior salva para restauração.",
+    "Update information is not available yet. Try again later.": "As informações de atualização ainda não estão disponíveis. Tente novamente mais tarde.",
+    "Could not connect to check for updates. Check your connection and try again.": "Não foi possível conectar para buscar atualizações. Verifique sua conexão e tente novamente.",
+    "Update information could not be verified. Nothing was installed.": "Não foi possível verificar as informações de atualização. Nada foi instalado.",
     "System updater operation failed. Open Recovery.": "A operação do atualizador do sistema falhou. Abra Recuperação.",
     "Updater response timed out. Open Recovery to check status.": "O atualizador não respondeu a tempo. Abra a Recuperação para verificar o status.",
     "Invalid updater response. Open Recovery.": "Resposta inválida do atualizador. Abra a Recuperação.",
@@ -1614,6 +1642,13 @@ HomeI18n.add({
     "Restore previous system": "Restaurar o sistema anterior"
   },
   "fr": {
+    "Update information could not be verified.": "Les informations de mise à jour n’ont pas pu être vérifiées.",
+    "Could not connect to the update server. Nothing was installed.": "Impossible de se connecter au serveur de mise à jour. Rien n’a été installé.",
+    "Update information is not available yet. Nothing was installed.": "Les informations de mise à jour ne sont pas encore disponibles. Rien n’a été installé.",
+    "No previous update is saved for rollback yet.": "Aucune mise à jour précédente n’est encore enregistrée pour la restauration.",
+    "Update information is not available yet. Try again later.": "Les informations de mise à jour ne sont pas encore disponibles. Réessayez plus tard.",
+    "Could not connect to check for updates. Check your connection and try again.": "Impossible de se connecter pour rechercher des mises à jour. Vérifiez votre connexion et réessayez.",
+    "Update information could not be verified. Nothing was installed.": "Les informations de mise à jour n’ont pas pu être vérifiées. Rien n’a été installé.",
     "System updater operation failed. Open Recovery.": "L’opération de mise à jour du système a échoué. Ouvrez Récupération.",
     "Updater response timed out. Open Recovery to check status.": "Délai de réponse dépassé. Ouvrez la récupération pour vérifier l’état.",
     "Invalid updater response. Open Recovery.": "Réponse de mise à jour invalide. Ouvrez la récupération.",
@@ -1644,6 +1679,13 @@ HomeI18n.add({
     "Restore previous system": "Restaurer le système précédent"
   },
   "it": {
+    "Update information could not be verified.": "Impossibile verificare le informazioni sugli aggiornamenti.",
+    "Could not connect to the update server. Nothing was installed.": "Impossibile connettersi al server degli aggiornamenti. Non è stato installato nulla.",
+    "Update information is not available yet. Nothing was installed.": "Le informazioni sugli aggiornamenti non sono ancora disponibili. Non è stato installato nulla.",
+    "No previous update is saved for rollback yet.": "Non è ancora salvato un aggiornamento precedente da ripristinare.",
+    "Update information is not available yet. Try again later.": "Le informazioni sugli aggiornamenti non sono ancora disponibili. Riprova più tardi.",
+    "Could not connect to check for updates. Check your connection and try again.": "Impossibile connettersi per cercare aggiornamenti. Controlla la connessione e riprova.",
+    "Update information could not be verified. Nothing was installed.": "Impossibile verificare le informazioni sugli aggiornamenti. Non è stato installato nulla.",
     "System updater operation failed. Open Recovery.": "L’operazione di aggiornamento del sistema non è riuscita. Apri Ripristino.",
     "Updater response timed out. Open Recovery to check status.": "Tempo di risposta scaduto. Apri Ripristino per controllare lo stato.",
     "Invalid updater response. Open Recovery.": "Risposta di aggiornamento non valida. Apri Ripristino.",
@@ -1674,6 +1716,13 @@ HomeI18n.add({
     "Restore previous system": "Ripristina il sistema precedente"
   },
   "ko": {
+    "Update information could not be verified.": "업데이트 정보를 검증할 수 없습니다.",
+    "Could not connect to the update server. Nothing was installed.": "업데이트 서버에 연결할 수 없습니다. 아무것도 설치되지 않았습니다.",
+    "Update information is not available yet. Nothing was installed.": "업데이트 정보를 아직 사용할 수 없습니다. 아무것도 설치되지 않았습니다.",
+    "No previous update is saved for rollback yet.": "아직 복원할 이전 업데이트가 저장되어 있지 않습니다.",
+    "Update information is not available yet. Try again later.": "업데이트 정보를 아직 사용할 수 없습니다. 나중에 다시 시도하세요.",
+    "Could not connect to check for updates. Check your connection and try again.": "업데이트를 확인하기 위해 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.",
+    "Update information could not be verified. Nothing was installed.": "업데이트 정보를 검증할 수 없습니다. 아무것도 설치되지 않았습니다.",
     "System updater operation failed. Open Recovery.": "시스템 업데이트 작업에 실패했습니다. 복구를 여세요.",
     "Updater response timed out. Open Recovery to check status.": "업데이터 응답 시간이 초과되었습니다. 복구를 열어 상태를 확인하세요.",
     "Invalid updater response. Open Recovery.": "잘못된 업데이터 응답입니다. 복구를 여세요.",
@@ -1704,6 +1753,13 @@ HomeI18n.add({
     "Restore previous system": "이전 시스템 복원"
   },
   "hi": {
+    "Update information could not be verified.": "अपडेट की जानकारी सत्यापित नहीं हो सकी।",
+    "Could not connect to the update server. Nothing was installed.": "अपडेट सर्वर से कनेक्ट नहीं हो सका। कुछ भी इंस्टॉल नहीं हुआ।",
+    "Update information is not available yet. Nothing was installed.": "अपडेट की जानकारी अभी उपलब्ध नहीं है। कुछ भी इंस्टॉल नहीं हुआ।",
+    "No previous update is saved for rollback yet.": "वापस लौटने के लिए अभी कोई पिछला अपडेट सहेजा नहीं गया है।",
+    "Update information is not available yet. Try again later.": "अपडेट की जानकारी अभी उपलब्ध नहीं है। बाद में फिर कोशिश करें।",
+    "Could not connect to check for updates. Check your connection and try again.": "अपडेट जाँचने के लिए कनेक्ट नहीं हो सका। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+    "Update information could not be verified. Nothing was installed.": "अपडेट की जानकारी सत्यापित नहीं हो सकी। कुछ भी इंस्टॉल नहीं हुआ।",
     "System updater operation failed. Open Recovery.": "सिस्टम अपडेटर की कार्रवाई विफल हुई। रिकवरी खोलें।",
     "Updater response timed out. Open Recovery to check status.": "अपडेटर के जवाब का समय समाप्त हुआ। स्थिति जाँचने के लिए रिकवरी खोलें।",
     "Invalid updater response. Open Recovery.": "अपडेटर का जवाब अमान्य है। रिकवरी खोलें।",
@@ -1734,6 +1790,13 @@ HomeI18n.add({
     "Restore previous system": "पिछला सिस्टम बहाल करें"
   },
   "pl": {
+    "Update information could not be verified.": "Nie udało się zweryfikować informacji o aktualizacji.",
+    "Could not connect to the update server. Nothing was installed.": "Nie udało się połączyć z serwerem aktualizacji. Nic nie zainstalowano.",
+    "Update information is not available yet. Nothing was installed.": "Informacje o aktualizacji nie są jeszcze dostępne. Nic nie zainstalowano.",
+    "No previous update is saved for rollback yet.": "Nie zapisano jeszcze poprzedniej aktualizacji do przywrócenia.",
+    "Update information is not available yet. Try again later.": "Informacje o aktualizacji nie są jeszcze dostępne. Spróbuj ponownie później.",
+    "Could not connect to check for updates. Check your connection and try again.": "Nie udało się połączyć, aby sprawdzić aktualizacje. Sprawdź połączenie i spróbuj ponownie.",
+    "Update information could not be verified. Nothing was installed.": "Nie udało się zweryfikować informacji o aktualizacji. Nic nie zainstalowano.",
     "System updater operation failed. Open Recovery.": "Operacja aktualizacji systemu nie powiodła się. Otwórz odzyskiwanie.",
     "Updater response timed out. Open Recovery to check status.": "Upłynął czas odpowiedzi aktualizatora. Otwórz odzyskiwanie, aby sprawdzić stan.",
     "Invalid updater response. Open Recovery.": "Nieprawidłowa odpowiedź aktualizatora. Otwórz odzyskiwanie.",
@@ -1764,6 +1827,13 @@ HomeI18n.add({
     "Restore previous system": "Przywróć poprzedni system"
   },
   "ru": {
+    "Update information could not be verified.": "Не удалось проверить информацию об обновлении.",
+    "Could not connect to the update server. Nothing was installed.": "Не удалось подключиться к серверу обновлений. Ничего не установлено.",
+    "Update information is not available yet. Nothing was installed.": "Информация об обновлении пока недоступна. Ничего не установлено.",
+    "No previous update is saved for rollback yet.": "Предыдущее обновление для отката пока не сохранено.",
+    "Update information is not available yet. Try again later.": "Информация об обновлении пока недоступна. Попробуйте позже.",
+    "Could not connect to check for updates. Check your connection and try again.": "Не удалось подключиться для проверки обновлений. Проверьте соединение и повторите попытку.",
+    "Update information could not be verified. Nothing was installed.": "Не удалось проверить информацию об обновлении. Ничего не установлено.",
     "System updater operation failed. Open Recovery.": "Не удалось выполнить операцию системного обновления. Откройте восстановление.",
     "Updater response timed out. Open Recovery to check status.": "Истекло время ответа службы обновлений. Откройте восстановление для проверки состояния.",
     "Invalid updater response. Open Recovery.": "Некорректный ответ службы обновлений. Откройте восстановление.",

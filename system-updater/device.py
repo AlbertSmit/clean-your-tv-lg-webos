@@ -23,6 +23,13 @@ STATE=Path('/var/lib/clean-your-tv-system-updater')
 ROOT_STATE=Path('/var/lib/clean-your-tv-root')
 ROOT_UPDATER=Path('/var/lib/clean-your-tv-root-updater')
 INSTALLED=Path('/media/developer/apps')
+VERIFICATION_ERROR='Update information could not be verified. Nothing was installed.'
+
+
+class OfferUnavailable(ValueError):
+    def __init__(self,reason):
+        self.reason=reason
+        super().__init__('Update information is not available yet. Nothing was installed.' if reason=='feed-unavailable' else 'Could not connect to the update server. Nothing was installed.')
 
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
@@ -70,9 +77,23 @@ class Device:
 
     def fetch(self,method,payload=None,binary=False):
         if method not in ('offer','verify','package'):raise ValueError('Invalid verifier operation')
-        result=subprocess.run(['/usr/bin/node',str(self.code/'system_updater/policy.js'),method],input=json.dumps(payload or {}).encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=80,check=True)
-        if len(result.stdout)>(64*1024*1024 if binary else 131072):raise ValueError('Oversized verifier response')
-        return result.stdout if binary else json.loads(result.stdout)
+        try:
+            result=subprocess.run(['/usr/bin/node',str(self.code/'system_updater/policy.js'),method],input=json.dumps(payload or {}).encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=80,check=True)
+        except (subprocess.CalledProcessError,subprocess.TimeoutExpired,OSError) as error:
+            reason='verification-error'
+            if isinstance(error,subprocess.TimeoutExpired):reason='connection-error'
+            elif isinstance(error,subprocess.CalledProcessError):
+                try:
+                    raw=error.stdout or b''
+                    value=json.loads(raw) if len(raw)<=131072 else None
+                    if isinstance(value,dict) and set(value)=={'error'} and value['error'] in ('feed-unavailable','connection-error'):reason=value['error']
+                except (ValueError,TypeError):pass
+            if method=='offer' and reason in ('feed-unavailable','connection-error'):raise OfferUnavailable(reason) from None
+            if reason=='connection-error':raise ValueError('Could not connect to the update server. Nothing was installed.') from None
+            raise ValueError(VERIFICATION_ERROR) from None
+        if len(result.stdout)>(64*1024*1024 if binary else 131072):raise ValueError(VERIFICATION_ERROR)
+        try:return result.stdout if binary else json.loads(result.stdout)
+        except (ValueError,TypeError):raise ValueError(VERIFICATION_ERROR) from None
 
     def _verify_release(self,value,edition):
         checked=release_set(value,edition)
@@ -102,7 +123,9 @@ class Device:
     def offer(self,edition):
         self.integrity()
         if edition not in SETS:raise ValueError('Invalid edition')
-        candidate=self._verify_release(self.fetch('offer',{'edition':edition})['candidate'],edition)
+        value=self.fetch('offer',{'edition':edition})
+        try:candidate=self._verify_release(value['candidate'],edition)
+        except (ValueError,KeyError,TypeError):raise ValueError(VERIFICATION_ERROR) from None
         prior=self._baseline(edition);reason='available'
         if any(version(c['version'])<version(p['version']) for c,p in zip(candidate['components'],prior['components'])):reason='component-downgrade'
         elif version(candidate['release'][1:])<=version(prior['release'][1:]):reason='current'
@@ -120,7 +143,13 @@ class Device:
         return {'edition':edition,'release':candidate['release'],'notes':candidate['notes'],'components':components,'canInstall':reason=='available','reason':reason,'candidate':candidate,'prior':prior}
 
     def check(self,edition):
-        offer=self.offer(edition);return {k:v for k,v in offer.items() if k not in ('candidate','prior')}
+        try:offer=self.offer(edition)
+        except OfferUnavailable as error:
+            try:prior=self._baseline(edition)
+            except (ValueError,KeyError,TypeError):raise ValueError(VERIFICATION_ERROR) from None
+            components=[{'name':c['name'],'installed':c['version'] if c['kind']=='infrastructure' else self.installed(c['application']),'version':None} for c in prior['components']]
+            return {'edition':edition,'release':None,'notes':'','components':components,'canInstall':False,'reason':error.reason}
+        return {k:v for k,v in offer.items() if k not in ('candidate','prior')}
 
     def check_legacy(self):
         self.enforce_legacy_lockdown()

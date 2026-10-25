@@ -287,3 +287,50 @@ class ComponentOfferTests(DeviceBase):
 
 class SignedPythonBindingMigrationTests(SignedInfrastructureTests):
     extra_candidate_files={'support/python_binding.py':b'pinned binding helper','support/python_boot.js':b'pinned boot helper'}
+
+class OfferUnavailableTests(DeviceBase):
+    def setUp(self):
+        super().setUp()
+        from test_core import release
+        self.prior=release('1.0.0');self.prior['edition']='root'
+        for c,name in zip(self.prior['components'],('root','root-updater','root-infrastructure')):
+            c['name']=name;c['application']=self.mod.IDENTITIES[name];c['kind']='infrastructure' if name=='root-infrastructure' else 'ipk'
+            if c['kind']=='infrastructure':c['files']={}
+        self.store.write('baseline',self.prior)
+        self.device.integrity=lambda:None
+        for app in ('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
+            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({'id':app,'version':'1.0.2'}))
+    def failure(self,code):
+        return self.mod.subprocess.CalledProcessError(1,['/usr/bin/node','/private/internal/policy.js','offer'],output=json.dumps({'error':code}).encode(),stderr=b'/private/internal details')
+    def test_missing_offer_and_transport_use_verified_baseline_without_transaction(self):
+        from unittest.mock import patch
+        for code in ('feed-unavailable','connection-error'):
+            with self.subTest(code=code),patch.object(self.mod.subprocess,'run',side_effect=self.failure(code)):
+                self.assertEqual(self.device.check('root'),{'edition':'root','release':None,'notes':'','components':[{'name':'root','installed':'1.0.2','version':None},{'name':'root-updater','installed':'1.0.2','version':None},{'name':'root-infrastructure','installed':'1.0.0','version':None}],'canInstall':False,'reason':code})
+                self.assertIsNone(self.store.read('transaction'))
+    def test_offer_subprocess_timeout_is_connection_empty_state(self):
+        from unittest.mock import patch
+        with patch.object(self.mod.subprocess,'run',side_effect=self.mod.subprocess.TimeoutExpired(['/private/internal/policy.js'],80)):
+            self.assertEqual(self.device.check('root')['reason'],'connection-error')
+    def test_unverified_offer_and_unknown_subprocess_errors_are_safe_and_fail_closed(self):
+        from unittest.mock import patch
+        failures=[self.failure('verification-error'),self.failure('made-up'),self.mod.subprocess.CalledProcessError(1,['/private/internal/policy.js'],output=b'bad JSON',stderr=b'secret'),self.mod.subprocess.CompletedProcess([],0,stdout=b'broken')]
+        for failure in failures:
+            with self.subTest(failure=failure),patch.object(self.mod.subprocess,'run',**({'return_value':failure} if isinstance(failure,self.mod.subprocess.CompletedProcess) else {'side_effect':failure})):
+                with self.assertRaisesRegex(ValueError,r'^Update information could not be verified\. Nothing was installed\.$'):self.device.check('root')
+                self.assertIsNone(self.store.read('transaction'))
+    def test_missing_feed_does_not_make_untrusted_baseline_displayable(self):
+        from unittest.mock import patch
+        self.prior['components'][0].pop('local');self.store.write('baseline',self.prior)
+        with patch.object(self.mod.subprocess,'run',side_effect=self.failure('feed-unavailable')):
+            with self.assertRaises(ValueError):self.device.check('root')
+    def test_install_offer_never_falls_back_to_baseline(self):
+        from unittest.mock import patch
+        with patch.object(self.mod.subprocess,'run',side_effect=self.failure('feed-unavailable')):
+            with self.assertRaisesRegex(ValueError,r'^Update information is not available yet\. Nothing was installed\.$'):self.device.offer('root')
+        self.assertIsNone(self.store.read('transaction'))
+    def test_package_errors_are_safe_and_never_binary_results(self):
+        from unittest.mock import patch
+        with patch.object(self.mod.subprocess,'run',side_effect=self.failure('connection-error')):
+            with self.assertRaisesRegex(ValueError,r'^Could not connect to the update server\. Nothing was installed\.$'):self.device.fetch('package',binary=True)

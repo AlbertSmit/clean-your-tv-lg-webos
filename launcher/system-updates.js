@@ -4,7 +4,7 @@
   var URI = 'luna://com.cleanyourtv.system.updater.service/';
   var panel, reading, versions, message, notes, notesHeading, editionLabel, buttons;
   var options = {}, offer = null, transaction = null, previous, timer, generation = 0;
-  var busy = false, polling = false, recovery = false, selected = 0, errorText = '', stickyError = '';
+  var busy = false, polling = false, recovery = false, selected = 0, errorText = '', stickyError = '', checkError = '';
   var terminal = ['complete', 'rolled-back', 'aborted'];
   function t(source, params) {
     return window.HomeI18n ? window.HomeI18n.t(source, params) : String(source).replace(/\{(\w+)\}/g, function (match, key) { return params && params[key] !== undefined ? params[key] : match; });
@@ -56,7 +56,7 @@
     var rows = offer && offer.components || [];
     versions.textContent = rows.map(function (component) {
       var labels = {home:'Home',helper:'Home Helper',updater:'Home Updater',root:'Root Home','root-updater':'Root Updater','root-infrastructure':'Home control runtime'};
-      return t(labels[component.name] || component.name) + ': ' + t('Installed: {version}', {version:component.installed || t('unknown')}) + '  →  ' + t('Available: {version}', {version:component.version});
+      return t(labels[component.name] || component.name) + ': ' + t('Installed: {version}', {version:component.installed || t('unknown')}) + (component.version == null ? '' : '  →  ' + t('Available: {version}', {version:component.version}));
     }).join('\n');
     var descriptions = {
       complete:'Update complete. Your apps and settings are preserved.',
@@ -68,9 +68,11 @@
       'rolling-back':'Restoring previous components and saved profile…'
     };
     var phase = transaction && transaction.phase;
-    message.textContent = stickyError || errorText ? t(stickyError || errorText) : phase ? t(descriptions[phase] || 'Update state: {status}. Keep the TV powered on.', {status:phase}) : busy ? t('Checking for updates…') : offer && offer.canInstall ? t('A signed system update is available.') : t('Your apps and settings stay saved.');
-    if (offer && !offer.canInstall && offer.reason && !phase) {
-      var reasons = {current:'All components are up to date.', 'root-required':'Update available. Without root, install it from a computer using the guide.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.', 'missing-baseline':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
+    var displayError = stickyError || errorText || (!recovery && !phase && checkError);
+    message.textContent = displayError ? t(displayError) : phase ? t(descriptions[phase] || 'Update state: {status}. Keep the TV powered on.', {status:phase}) : busy ? t('Checking for updates…') : recovery ? t('No previous update is saved for rollback yet.') : offer && offer.canInstall ? t('A signed system update is available.') : t('Your apps and settings stay saved.');
+    if (!recovery && phase && checkError) message.textContent += '\n' + t(checkError);
+    if (!recovery && !displayError && offer && !offer.canInstall && offer.reason && !phase) {
+      var reasons = {'feed-unavailable':'Update information is not available yet. Try again later.', 'connection-error':'Could not connect to check for updates. Check your connection and try again.', current:'All components are up to date.', 'root-required':'Update available. Without root, install it from a computer using the guide.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.', 'missing-baseline':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
       message.textContent += '\n' + t(reasons[offer.reason] || 'Update unavailable: {reason}', {reason:offer.reason});
     }
     if (!profileAvailable() && !recovery) message.textContent += '\n' + t('For regular updates, open Home settings.');
@@ -93,15 +95,24 @@
     clearTimeout(timer);
     if (visible()) timer = setTimeout(function () { refresh(false, true); }, 1500);
   }
+  function checkOffer(request) {
+    return rpc('check', {edition:options.edition}).then(function (value) {
+      if (request === generation) { offer = value; checkError = ''; }
+    }).catch(function () {
+      if (request !== generation) return;
+      checkError = 'Update information could not be verified.';
+      if (offer) offer.canInstall = false;
+    });
+  }
   function refresh(check, background) {
     if (busy || polling || !visible()) return Promise.resolve();
     var request = generation;
     if (background) polling = true; else { busy = true; render(true); }
     return rpc('status', {}).then(function (state) {
       if (request !== generation) return;
-      transaction = state;
-      if (check) return rpc('check', {edition:options.edition}).then(function (value) { if (request === generation) offer = value; });
-    }).then(function () { if (request === generation) errorText = ''; }).catch(function (error) {
+      transaction = state; errorText = '';
+      if (check) return checkOffer(request);
+    }).catch(function (error) {
       if (request === generation) errorText = error.message;
     }).then(function () { if (request !== generation) return; busy = polling = false; render(true); schedule(); });
   }
@@ -170,11 +181,11 @@
   }
   function open(value) {
     var request = ++generation, supervisorSeen = false; clearTimeout(timer); options = value || {}; options.edition = options.edition === 'root' ? 'root' : 'no-root';
-    if (!panel) build(); if (panel.hidden) previous = document.activeElement; busy = true; polling = false; transaction = offer = null; stickyError = options.error || ''; errorText = ''; recovery = options.recovery === true; selected = 0;
+    if (!panel) build(); if (panel.hidden) previous = document.activeElement; busy = true; polling = false; transaction = offer = null; stickyError = options.error || ''; errorText = checkError = ''; recovery = options.recovery === true; selected = 0;
     return rpc('status', {}).then(function (state) {
       if (request !== generation) return;
       supervisorSeen = true; transaction = state; panel.hidden = false; render();
-      return rpc('check', {edition:options.edition}).then(function (value) { if (request === generation) offer = value; });
+      if (!recovery) return checkOffer(request);
     }).catch(function (error) {
       if (request !== generation) return;
       if (!supervisorSeen && error.unavailable && options.fallback) { panel.hidden = true; options.fallback(); return; }

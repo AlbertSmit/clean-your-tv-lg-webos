@@ -131,3 +131,9 @@ class RollbackPreconditionTests(CoreBase):
         self.reserve();self.advance('verifying');self.io.time+=121;self.advance('rolling-back')
         def fail_suspend(tx):raise ValueError('newer routing intent prevents suspension')
         self.io.suspend=fail_suspend;self.assertEqual(self.m.run()['phase'],'recovery-required');self.assertEqual(self.m.run()['phase'],'recovery-required')
+
+class ComponentVersionTests(CoreBase):
+    def test_bootstrap_release_never_allows_component_downgrade(self):
+        self.io.current['release']='v0.0.0';self.io.candidate['components'][1]['version']='0.9.0'
+        with self.assertRaisesRegex(ValueError,'downgrade'):self.reserve()
+        self.assertIsNone(self.store.read('transaction'));self.assertFalse(any(c.startswith('install:') for c in self.io.calls))

@@ -110,7 +110,7 @@ def release_set(payload,edition,release,local=True,notes='Computer-provisioned b
     if edition=='root':
         raw,files=infrastructure(payload);raws['root-infrastructure']=raw
         item={'name':'root-infrastructure','kind':'infrastructure','version':components[-2]['version'],'sha256':digest(raw),'size':len(raw)}
-        if local:item.update(local=True,files=files)
+        if local:item.update(local=True,files=files,absent=[])
         else:item['url']='https://github.com/Razdva122/clean-your-tv-lg-webos/releases/download/'+release+'/root-infrastructure_'+item['version']+'.tar.gz'
         components.append(item)
     return {'schema':1,'edition':edition,'release':release,'supervisor':1,'notes':notes,'components':components},raws

@@ -16,6 +16,7 @@ class Remote:
 
     def run(self, command, data=None, timeout=30):
         self.calls.append(('run', command))
+        if 'CYTV_NODE_READY' in command: return 'CYTV_NODE_READY'
         if 'CYTV_HELPER_IDLE' in command: return 'CYTV_HELPER_IDLE'
         if command == 'uname -m':
             return 'armv7l'
@@ -61,6 +62,85 @@ class Remote:
 
 
 class OperationTests(unittest.TestCase):
+    def test_old_tv_python_is_rejected_before_the_root_install_receipt(self):
+        import subprocess, sys
+        remote = Remote()
+        original_run = remote.run
+        def run(command, **kwargs):
+            if 'CYTV_ROOT_READY' in command and 'version_info' in command:
+                args = shlex.split(command)
+                snippet = args[args.index('-c')+1]
+                result = subprocess.run([sys.executable, '-c',
+                    'import sys; sys.version_info=(3,8,10); exec('+repr(snippet)+')'], capture_output=True)
+                return 'CYTV_ROOT_READY' if result.returncode == 0 else 'CYTV_ROOT_MISSING'
+            return original_run(command, **kwargs)
+        remote.run = run
+        installer = self.installer(remote, 'root')
+        with self.assertRaisesRegex(RuntimeError, 'python-version'):
+            installer.install(self.inventory)
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
+
+    def test_no_root_rejects_node8_before_creating_a_receipt(self):
+        import subprocess
+        remote = Remote()
+        original_run = remote.run
+        def run(command, **kwargs):
+            if 'CYTV_NODE_READY' in command:
+                args = shlex.split(command)
+                snippet = args[args.index('-e')+1]
+                result = subprocess.run(['node', '-e',
+                    "Object.defineProperty(process.versions,'node',{value:'8.12.0'});"+snippet], capture_output=True)
+                return 'CYTV_NODE_READY' if result.returncode == 0 else ''
+            return original_run(command, **kwargs)
+        remote.run = run
+        installer = self.installer(remote)
+        with self.assertRaisesRegex(RuntimeError, 'Node.js 10'):
+            installer.install(self.inventory, 'secret')
+        self.assertIsNone(self.store.pending(installer.profile))
+        self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
+
+    @unittest.skipIf(__import__('os').name == 'nt', 'TV staging uses a POSIX shell')
+    def test_install_staging_is_readable_by_a_separate_installer_uid(self):
+        import subprocess
+        from cytv.transport import SSH
+        remote = Remote()
+        original_run = remote.run
+        temp = self.root / 'developer-temp'
+        temp.mkdir(mode=0o700)  # May have been created by an older installer.
+        def execute(command, data=None, timeout=30):
+            result = subprocess.run(['sh', '-c', command.replace('/media/developer/temp', str(temp))],
+                                    input=data, capture_output=True, check=True)
+            return result.stdout.decode()
+        def run(command, **kwargs):
+            if '/media/developer/temp' in command:
+                return execute(command, **kwargs)
+            return original_run(command, **kwargs)
+        remote.run = run
+        ssh = object.__new__(SSH)
+        ssh.run = execute
+        original_upload = remote.upload
+        def upload(path, data, mode=0o600):
+            if path.startswith('/media/developer/temp/'):
+                ssh.upload(path, data, mode)
+            else:
+                original_upload(path, data, mode)
+        remote.upload = upload
+        original_luna = remote.luna
+        def luna(uri, payload, **kwargs):
+            if uri.endswith('/install'):
+                path = Path(payload['ipkUrl'].replace('/media/developer/temp', str(temp)))
+                self.assertTrue(path.is_file())
+                for directory in (temp, path.parent):
+                    mode = directory.stat().st_mode & 0o777
+                    self.assertTrue(mode & 0o001, 'backend UID cannot traverse '+str(directory))
+                    self.assertEqual(mode & 0o022, 0, 'staging must not be writable by other users')
+                self.assertTrue(path.stat().st_mode & 0o004, 'backend UID cannot read IPK')
+            return original_luna(uri, payload, **kwargs)
+        remote.luna = luna
+        self.installer(remote).install(self.inventory, 'secret')
+        self.assertEqual(list(temp.iterdir()), [])
+
     def test_pending_no_root_removal_resumes_after_restore_interruption(self):
         installer = self.installer(Remote())
         self.store.begin(installer.profile, 'uninstall')

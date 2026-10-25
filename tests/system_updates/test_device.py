@@ -33,6 +33,10 @@ class DeviceBase(unittest.TestCase):
         self.store.write('legacy-lockdown',{'schema':1,'files':{}})
         self.device=self.mod.Device(self.store,code=self.root/'code',root_state=self.root/'root',root_updater=self.root/'root-updater',installed=self.root/'installed',uid=os.getuid())
     def tearDown(self):self.tmp.cleanup()
+    def baseline(self,value):
+        c=next(c for c in value['components'] if c['name']=='root-infrastructure')
+        (self.root/'code/infrastructure-paths.json').write_text(json.dumps(sorted(set(c['files'])|set(c.get('absent',[])))))
+        self.store.write('baseline',value)
 
 class Tests(DeviceBase):
     def test_package_foreign_paths_and_identity_rejected(self):
@@ -40,8 +44,8 @@ class Tests(DeviceBase):
         raw=ipk(foreign=True);descriptor.update(sha256=digest(raw),size=len(raw))
         with self.assertRaises(ValueError):self.device.inspect(raw,descriptor)
     def test_infrastructure_exact_baseline_allowlist_and_no_symlinks(self):
-        raw=tar({'runtime/cli.py':b'new','updater/service.js':b'code'});c={'name':'root-infrastructure','version':'1.0.0','kind':'infrastructure','sha256':digest(raw),'size':len(raw),'files':{'runtime/cli.py':'a'*64,'updater/service.js':'b'*64},'local':True}
-        self.store.write('baseline',{'edition':'root','components':[c]});self.assertEqual(set(self.device.inspect(raw,c)),set(c['files']))
+        raw=tar({'runtime/cli.py':b'new','updater/service.js':b'code'});c={'name':'root-infrastructure','version':'1.0.0','kind':'infrastructure','sha256':digest(raw),'size':len(raw),'files':{'runtime/cli.py':digest(b'new'),'updater/service.js':digest(b'code')},'local':True}
+        self.baseline({'edition':'root','components':[c]});self.assertEqual(set(self.device.inspect(raw,c)),set(c['files']))
         bad=tar({'runtime/cli.py':b'new','updater/service.js':b'code','runtime/../outside':b'bad'});c.update(sha256=digest(bad),size=len(bad))
         with self.assertRaises(ValueError):self.device.inspect(bad,c)
     def test_supervisor_integrity_detects_code_change(self):
@@ -100,8 +104,8 @@ class PreferenceTests(PreferenceBase):
 class InfraTransitionTests(DeviceBase):
     def test_local_resume_accepts_only_prior_or_candidate_file_hashes(self):
         old=tar({'runtime/cli.py':b'old'});new=tar({'runtime/cli.py':b'new'})
-        a={'name':'root-infrastructure','kind':'infrastructure','version':'1.0.0','size':len(old),'sha256':digest(old),'files':{'runtime/cli.py':digest(b'old')},'local':True};b={**a,'version':'1.1.0','size':len(new),'sha256':digest(new)}
-        self.store.write('baseline',{'edition':'root','components':[a]});self.store.write('transaction',{'edition':'root','prior':{'components':[a]},'candidate':{'components':[b]}})
+        a={'name':'root-infrastructure','kind':'infrastructure','version':'1.0.0','size':len(old),'sha256':digest(old),'files':{'runtime/cli.py':digest(b'old')},'local':True};b={k:v for k,v in {**a,'version':'1.1.0','size':len(new),'sha256':digest(new)}.items() if k not in ('local','files')}
+        self.baseline({'edition':'root','components':[a]});self.store.write('transaction',{'edition':'root','prior':{'components':[a]},'candidate':{'components':[b]}})
         (self.root/'state/cache'/a['sha256']).write_bytes(old);(self.root/'state/cache'/b['sha256']).write_bytes(new);runtime=self.root/'root/runtime';runtime.mkdir(parents=True);(runtime/'cli.py').write_bytes(b'old')
         self.device.validate_infrastructure_transition();(runtime/'cli.py').write_bytes(b'new');self.device.validate_infrastructure_transition();(runtime/'cli.py').write_bytes(b'foreign')
         with self.assertRaises(ValueError):self.device.validate_infrastructure_transition()
@@ -170,7 +174,7 @@ class PrivateServiceTests(DeviceBase):
     def test_private_recovery_service_has_fixed_destination_and_receipts(self):
         files={'runtime/cli.py':b'runtime','service/service.js':b'new-service','updater/service.js':b'updater'}
         raw=tar(files);c={'name':'root-infrastructure','kind':'infrastructure','version':'1.1.0','sha256':digest(raw),'size':len(raw),'local':True,'files':{n:digest(v) for n,v in files.items()}}
-        self.store.write('baseline',{'edition':'root','components':[c]})
+        self.baseline({'edition':'root','components':[c]})
         self.assertEqual(self.device.inspect(raw,c),c['files'])
         for name,data in files.items():
             path=self.device._infra_path(name);path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
@@ -201,10 +205,10 @@ class SignedInfrastructureTests(DeviceBase):
         import shutil
         from test_core import ROOT
         old_files={'runtime/cli.py':b'old runtime','service/service.js':b'old service','updater/service.js':b'old updater'}
-        new_files={name:value.replace(b'old',b'new') for name,value in old_files.items()};old=tar(old_files);new=tar(new_files)
+        new_files={name:value.replace(b'old',b'new') for name,value in old_files.items()};new_files.update(getattr(self,'extra_candidate_files',{}));old=tar(old_files);new=tar(new_files)
         def infra(raw,version,local=False):
             c={'name':'root-infrastructure','kind':'infrastructure','version':version,'sha256':digest(raw),'size':len(raw)}
-            if local:c.update(local=True,files={n:digest(b) for n,b in old_files.items()})
+            if local:c.update(local=True,files={n:digest(b) for n,b in old_files.items()},absent=sorted(set(new_files)-set(old_files)))
             else:c['url']='https://github.com/Razdva122/clean-your-tv-lg-webos/releases/download/v1.1.0/infrastructure.tar.gz'
             return c
         previous=infra(old,'1.0.0',True);candidate=infra(new,'1.1.0')
@@ -214,7 +218,7 @@ class SignedInfrastructureTests(DeviceBase):
         signed=json.loads(subprocess.run(['node','-e',js],input=json.dumps(release).encode(),stdout=subprocess.PIPE,check=True).stdout);release['proof']=signed['proof']
         baseline={**release,'release':'v1.0.0','components':[{k:v for k,v in c.items() if k!='url'} for c in components]};baseline.pop('proof');baseline['components'][-1]=previous
         for c in baseline['components'][:-1]:c.update(version='1.0.0',local=True)
-        self.store.write('baseline',baseline);self.store.write('transaction',{'edition':'root','prior':baseline,'candidate':release})
+        self.baseline(baseline);self.store.write('transaction',{'edition':'root','prior':baseline,'candidate':release})
         for c,raw in ((previous,old),(candidate,new)):(self.root/'state/cache'/c['sha256']).write_bytes(raw)
         code=self.root/'code/system_updater';code.mkdir();shutil.copyfile(ROOT/'system-updater/policy.js',code/'policy.js');(code/'release-public.pem').write_text(signed['key'])
         self.store.write('infrastructure',{'schema':1,'code':{str(p.relative_to(self.root/'code')):digest(p.read_bytes()) for p in code.iterdir()}})
@@ -232,8 +236,35 @@ class SignedInfrastructureTests(DeviceBase):
         for c,expected in ((candidate,new_files),(previous,old_files)):
             terminal=[];self.device.install(c,lambda value:None,terminal.append);self.assertTrue(terminal[0]['success'])
             for name,data in expected.items():self.assertEqual(self.device._infra_path(name).read_bytes(),data)
+            if c is previous:
+                for name in set(new_files)-set(old_files):self.assertFalse(os.path.lexists(self.device._infra_path(name)))
+            updater_hashes={n.split('/',1)[1]:digest(b) for n,b in expected.items() if n.startswith('updater/')}
+            self.assertEqual(legacy.read('infrastructure')['code'],updater_hashes)
             self.assertEqual(json.loads(proof.read_bytes())['files'][str(self.root/'root/service/service.js')],digest(expected['service/service.js']));self.assertEqual(legacy.read('infrastructure')['recovery_sha256'],digest(proof.read_bytes()))
 
 class RepeatedHelperPauseTests(HelperBootPauseTests):
     def test_automatic_rollback_respects_newer_explicit_disable(self):
         self.device._suspend_helper(self.tx);self.startup.write_bytes(b'{"enabled":false}');self.device._suspend_helper(self.tx);self.device.finish(self.tx);self.assertEqual(self.startup.read_bytes(),b'{"enabled":false}')
+
+
+class SignedMissingCaMigrationTests(SignedInfrastructureTests):
+    extra_candidate_files={'updater/updater/ca-bundle.crt':b'pinned CA fixture','updater/updater/ca-LICENSE.txt':b'license fixture'}
+
+class AbsentPathTests(DeviceBase):
+    def test_prior_absence_must_be_actual_absence_and_foreign_bytes_are_not_deleted(self):
+        old=tar({'updater/service.js':b'old'});new=tar({'updater/service.js':b'new','updater/updater/ca-bundle.crt':b'CA'})
+        a={'name':'root-infrastructure','kind':'infrastructure','version':'1.0.0','size':len(old),'sha256':digest(old),'local':True,'files':{'updater/service.js':digest(b'old')},'absent':['updater/updater/ca-bundle.crt']};b={'name':'root-infrastructure','kind':'infrastructure','version':'1.1.0','size':len(new),'sha256':digest(new)}
+        self.baseline({'edition':'root','components':[a]});self.store.write('transaction',{'edition':'root','prior':{'components':[a]},'candidate':{'components':[b]}})
+        for c,raw in ((a,old),(b,new)):(self.root/'state/cache'/c['sha256']).write_bytes(raw)
+        path=self.device._infra_path('updater/service.js');path.parent.mkdir(parents=True);path.write_bytes(b'old');self.assertTrue(self.device.verify_installed(a));self.device.validate_infrastructure_transition()
+        ca=self.device._infra_path('updater/updater/ca-bundle.crt');ca.parent.mkdir();ca.write_bytes(b'foreign')
+        self.assertFalse(self.device.verify_installed(a))
+        with self.assertRaises(ValueError):self.device.validate_infrastructure_transition()
+        self.assertEqual(ca.read_bytes(),b'foreign')
+
+class ComponentOfferTests(DeviceBase):
+    def test_newer_release_with_older_helper_is_not_installable(self):
+        from test_core import release
+        prior=release('2.0.0');prior['release']='v0.0.0';candidate=release('2.1.0');candidate['components'][1]['version']='1.9.0'
+        self.device.integrity=lambda:None;self.device.fetch=lambda method,payload:{'candidate':candidate};self.device._verify_release=lambda value,edition:value;self.device._baseline=lambda edition:prior;self.device.installed=lambda app:'2.0.0'
+        offer=self.device.offer('no-root');self.assertFalse(offer['canInstall']);self.assertEqual(offer['reason'],'component-downgrade')

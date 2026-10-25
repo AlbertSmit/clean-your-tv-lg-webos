@@ -70,7 +70,50 @@ def verify_bundle(bundle):
         if digest(safe(bundle/name))!=sha:raise ValueError('Supervisor bundle hash mismatch')
     return manifest
 
-def verify_baseline(baseline):
+def infrastructure_name(name):
+    if not isinstance(name,str):raise ValueError('Invalid infrastructure inventory')
+    path=PurePosixPath(name)
+    if path.is_absolute() or str(path)!=name or '..' in path.parts or '\\' in name or '\x00' in name or len(path.parts)<2 or path.parts[0] not in ('runtime','updater','service'):raise ValueError('Invalid infrastructure inventory')
+    return name
+
+def infrastructure_paths(bundle):
+    names=json.loads(safe(Path(bundle)/'infrastructure-paths.json'))
+    if not isinstance(names,list) or not names or len(set(map(infrastructure_name,names)))!=len(names):raise ValueError('Invalid pinned infrastructure inventory')
+    return names
+
+def infrastructure_destination(name,runtime=Path('/var/lib/clean-your-tv-root/runtime'),updater=Path('/var/lib/clean-your-tv-root-updater/code'),service=Path('/var/lib/clean-your-tv-root/service')):
+    kind,relative=infrastructure_name(name).split('/',1)
+    path=Path({'runtime':runtime,'updater':updater,'service':service}[kind])/relative
+    if any(parent.is_symlink() for parent in path.parents):raise ValueError('Indirect infrastructure path')
+    return path
+
+def capture_infrastructure(names,runtime=Path('/var/lib/clean-your-tv-root/runtime'),updater=Path('/var/lib/clean-your-tv-root-updater/code'),service=Path('/var/lib/clean-your-tv-root/service')):
+    files={};absent=[]
+    for name in names:
+        path=infrastructure_destination(name,runtime,updater,service)
+        try:path.lstat()
+        except FileNotFoundError:absent.append(name);continue
+        files[name]=safe(path,os.geteuid())
+    return files,sorted(absent)
+
+def verify_infrastructure_inventory(item,files,pinned=None):
+    absent=item.get('absent',[])
+    if item.get('kind')!='infrastructure' or item.get('files')!={n:digest(b) for n,b in files.items()} or not files or not isinstance(absent,list) or any(not isinstance(n,str) for n in absent) or len(set(absent))!=len(absent) or set(absent)&set(files):raise ValueError('Invalid infrastructure inventory')
+    names=set(files)|set(absent)
+    for name in names:infrastructure_name(name)
+    if pinned is not None and names!=set(pinned):raise ValueError('Baseline infrastructure inventory differs from pinned bootstrap inventory')
+    return names
+
+def infrastructure_readback(item,raw):
+    for name,data in entries(raw).items():
+        if safe(infrastructure_destination(name),os.geteuid())!=data:raise ValueError('Installed infrastructure baseline mismatch')
+    for name in item.get('absent',[]):
+        try:infrastructure_destination(name).lstat()
+        except FileNotFoundError:continue
+        raise ValueError('Absent infrastructure baseline changed')
+
+
+def verify_baseline(baseline,bundle=None):
     baseline=Path(baseline);manifest=json.loads(safe(baseline/'baseline.json'))
     edition=manifest.get('edition');expected={'root','root-updater'} if edition=='root' else {'home','helper','updater'}
     if edition=='root':expected.add('root-infrastructure')
@@ -82,7 +125,7 @@ def verify_baseline(baseline):
         if len(raw)!=item['size'] or digest(raw)!=sha:raise ValueError('Baseline hash mismatch')
         if item['name']=='root-infrastructure':
             files=entries(raw)
-            if item.get('kind')!='infrastructure' or item.get('files')!={n:digest(b) for n,b in files.items()} or not files or any(not n.startswith(('runtime/','updater/','service/')) for n in files):raise ValueError('Invalid infrastructure inventory')
+            verify_infrastructure_inventory(item,files,infrastructure_paths(bundle) if bundle is not None else None)
         else:
             app=APPS[item['name']];files=package_files(raw)
             info=json.loads(files['usr/palm/applications/'+app+'/appinfo.json'])
@@ -135,18 +178,12 @@ def snapshot(bundle,edition,output,installed=INSTALLED,runtime=Path('/var/lib/cl
         raw=bytes(raw);sha=digest(raw);(output/'cache'/sha).write_bytes(raw)
         components.append({'name':name,'kind':'ipk','application':app,'version':info['version'],'sha256':sha,'size':len(raw),'local':True})
     if edition=='root':
-        files={}
-        for name in json.loads(safe(Path(bundle)/'infrastructure-paths.json')):
-            if name.startswith('runtime/'):path=Path(runtime)/name[len('runtime/'):]
-            elif name.startswith('service/'):path=Path(service)/name[len('service/'):]
-            elif name.startswith('updater/'):path=Path(updater)/name[len('updater/'):]
-            else:raise ValueError('Invalid managed infrastructure path')
-            files[name]=safe(path,0)
+        files,absent=capture_infrastructure(infrastructure_paths(bundle),runtime,updater,service)
         raw=tgz(files);sha=digest(raw);(output/'cache'/sha).write_bytes(raw)
-        components.append({'name':'root-infrastructure','kind':'infrastructure','version':components[0]['version'],'sha256':sha,'size':len(raw),'local':True,'files':{n:digest(b) for n,b in files.items()}})
+        components.append({'name':'root-infrastructure','kind':'infrastructure','version':components[0]['version'],'sha256':sha,'size':len(raw),'local':True,'files':{n:digest(b) for n,b in files.items()},'absent':absent})
     manifest={'schema':1,'supervisor':1,'edition':edition,'release':'v0.0.0','notes':'Exact installed baseline captured during explicit computer setup.','components':components}
     (output/'baseline.json').write_text(json.dumps(manifest)+'\n')
-    verify_baseline(output)
+    verify_baseline(output,bundle)
     return output
 
 
@@ -232,7 +269,7 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     state=Path(state)
     if os.path.lexists(state):raise FileExistsError('Supervisor setup exists; inspect retained state from computer before changing it')
     require_legacy_idle()
-    bundle=Path(bundle);baseline=Path(baseline);manifest=verify_bundle(bundle);current=verify_baseline(baseline)
+    bundle=Path(bundle);baseline=Path(baseline);manifest=verify_bundle(bundle);current=verify_baseline(baseline,bundle)
     require_transition_home(installed,current['edition'])
     if os.path.lexists(hook):raise FileExistsError('Supervisor boot hook exists')
     # Prove baseline payloads match installed files before creating any durable state.
@@ -241,10 +278,7 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         if item['kind']=='ipk':
             for name,data in package_files(raw).items():
                 if safe(Path(installed)/name)!=data:raise ValueError('Installed baseline payload mismatch: '+name)
-        else:
-            for name,data in entries(raw).items():
-                target=Path('/var/lib/clean-your-tv-root/runtime')/name[len('runtime/'):] if name.startswith('runtime/') else Path('/var/lib/clean-your-tv-root/service')/name[len('service/'):] if name.startswith('service/') else Path('/var/lib/clean-your-tv-root-updater/code')/name[len('updater')+1:]
-                if safe(target,0)!=data:raise ValueError('Installed infrastructure baseline mismatch')
+        else:infrastructure_readback(item,raw)
     state.mkdir(mode=0o700);code=state/'code';code.mkdir(mode=0o700);(state/'cache').mkdir(mode=0o700)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
     record('bootstrap',{'phase':'prepared','edition':current['edition']})
@@ -283,12 +317,13 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         if item['kind']=='ipk':
             for name,data in package_files(safe(baseline/'cache'/item['sha256'])).items():
                 if safe(Path(installed)/name)!=data:raise ValueError('Installed baseline changed during bootstrap')
+        else:infrastructure_readback(item,safe(baseline/'cache'/item['sha256']))
     record('bootstrap',{'phase':'complete','edition':current['edition'],'hardware_validated':False})
     return {'installed':True,'edition':current['edition'],'hardware_validated':False}
 
 def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None):
     manifest=verify_bundle(bundle)
-    baseline_manifest=verify_baseline(baseline) if baseline is not None else None
+    baseline_manifest=verify_baseline(baseline,bundle) if baseline is not None else None
     if baseline is None and edition not in ('root','no-root'):raise ValueError('Edition required')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*',alias):raise ValueError('Use an explicit OpenSSH host alias')
     options=['-o','StrictHostKeyChecking=yes','-o','BatchMode=yes','-o','ConnectTimeout=10']
@@ -325,7 +360,7 @@ def main():
                 print(json.dumps(provision(args.bundle,baseline)))
         else:print(json.dumps(provision(args.bundle,args.baseline)))
         return
-    verify_bundle(args.bundle);baseline=verify_baseline(args.baseline) if args.baseline else {'edition':args.edition}
+    verify_bundle(args.bundle);baseline=verify_baseline(args.baseline,args.bundle) if args.baseline else {'edition':args.edition}
     if not baseline['edition']:parser.error('--edition is required without --baseline')
     print(json.dumps({'operation':'one-time-system-updater-setup','edition':baseline['edition'],'permissions':permission_plan(),'hardware_validated':False},indent=2))
     if args.apply:

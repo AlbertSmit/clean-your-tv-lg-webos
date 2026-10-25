@@ -6,6 +6,9 @@
 - ws: bundled Node WebSocket dependency; license in native/app/vendor/ws/LICENSE.
 - webos-service: supplied by the TV runtime, not redistributed here.
 - Zig, Python and LG's webOS CLI are external build/setup prerequisites.
+- Outbound HTTPS services bundle the Mozilla CA store converted by curl, under MPL 2.0.
+  The snapshot, source, SHA-256 and refresh instructions are recorded in
+  `docs/TLS-TRUST.md`; each service ships `ca-LICENSE.txt` alongside `ca-bundle.crt`.
 - Compiled TV web apps include core-js (MIT) for ECMAScript compatibility and may
   include Babel helpers (MIT). Their license texts are retained in each web app's
   `compat-LICENSE.txt`. Babel and PostCSS are build tools, pinned by package-lock.json.

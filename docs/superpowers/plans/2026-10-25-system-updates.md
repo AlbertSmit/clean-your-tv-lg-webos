@@ -71,3 +71,11 @@ access after installation, remains required before shipping a release.
 
 Integration target authorized by the user: reviewed PR into `release/next`.
 The release version and hardware acceptance are deliberately left to candidate freeze.
+
+
+After integration with the current candidate (including PR #39), the full suite
+and public payload build passed again. Bootstrap baselines now record known
+missing infrastructure files against the pinned inventory, allowing older Root
+Updater installations to upgrade and roll back newly introduced CA files safely.
+Independent review approved that migration delta and per-component downgrade
+protection. Feature PR: #40, targeting release/next.

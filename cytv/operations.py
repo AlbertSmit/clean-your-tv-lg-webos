@@ -96,12 +96,23 @@ class Installer:
 
     def preflight(self, install=False):
         if self.profile['edition'] == 'root':
-            command = ('test "$(id -u)" = 0 && test -x /usr/bin/python3 && '
-                       'test -x /usr/bin/luna-send && test -d /media/developer/apps && '
-                       'test -d /var/luna-service2-dev && /usr/bin/python3 -c "import json,fcntl" && '
-                       'printf CYTV_ROOT_READY')
-            if self.remote.run(command).strip() != 'CYTV_ROOT_READY':
-                raise UserError('Root requires a root SSH login, Python 3, Homebrew services and webOS TV.')
+            probes = ('test "$(id -u)" = 0', 'test -x /usr/bin/python3',
+                      'test -x /usr/bin/luna-send', 'test -d /media/developer/apps',
+                      'test -d /var/luna-service2-dev',
+                      '/usr/bin/python3 -c "import json"', '/usr/bin/python3 -c "import fcntl"',
+                      '/usr/bin/python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)"',
+                      '/usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 8 ? 0 : 1)\'')
+            checks = dict.fromkeys(diagnostics.ROOT_REQUIREMENTS, 'unknown')
+            self.tv_info['root_requirements'] = checks
+            for name, probe in zip(diagnostics.ROOT_REQUIREMENTS, probes):
+                command = ('if ( ' + probe + ' ) >/dev/null 2>&1; then printf CYTV_ROOT_READY; '
+                           'else printf CYTV_ROOT_MISSING; fi')
+                reply = self.remote.run(command).strip()
+                checks[name] = {'CYTV_ROOT_READY': 'pass', 'CYTV_ROOT_MISSING': 'fail'}.get(reply, 'unknown')
+            failed = [name for name, result in checks.items() if result != 'pass']
+            if failed:
+                raise UserError('Root requirements failed or could not be verified: {requirements}. Check the diagnostic report.'.format(
+                    requirements=', '.join(failed)))
             if install:
                 paths = [ROOT_STATE, BASE + '/applications/' + package.ROOT_APP,
                          BASE + '/services/' + package.ROOT_APP + '.service', BASE + '/packages/' + package.ROOT_APP]
@@ -127,6 +138,10 @@ class Installer:
             self.tv_info.update(userland_abi=abi, arm32_supported=supported)
             if not supported:
                 raise UserError('The bundled Home Helper requires ARM32. A compatible TV runtime could not be confirmed.')
+            if install:
+                node = self.remote.run('if /usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 10 ? 0 : 1)\'; then printf CYTV_NODE_READY; fi')
+                if node.strip() != 'CYTV_NODE_READY':
+                    raise UserError('Home Helper requires TV Node.js 10+ for its bundled WebSocket runtime. Installation has not started.')
             root_state = self.remote.run(
                 'if [ -e /var/webos-profile/override/clean-your-tv-root.json ] || '
                 '[ -L /var/webos-profile/override/clean-your-tv-root.json ]; then printf CYTV_ROOT_STATE; fi')
@@ -206,7 +221,11 @@ printf '%s' "$cytv_state"
         self.store.begin(self.profile, 'install', expected=expected,
                          versions={HOME: self.manifest['home_version'], HELPER: self.manifest['helper_version']})
         stage = '/media/developer/temp/cytv-' + uuid.uuid4().hex
-        self.remote.run('umask 077; mkdir -p /media/developer/temp && mkdir ' + stage)
+        # appinstalld may run as another UID. Allow traversal/read, never foreign writes.
+        self.remote.run('umask 022; mkdir -p /media/developer/temp && '
+                        'case "$(LC_ALL=C ls -ld /media/developer/temp | cut -c10)" in '
+                        'x|t) ;; *) chmod o+x /media/developer/temp || exit 1;; esac && '
+                        'mkdir -m 755 ' + stage)
         for app, data, name in ((HELPER, helper, 'helper.ipk'), (HOME, launcher, 'launcher.ipk')):
             self.progress('Installing ' + ('Home Helper' if app == HELPER else 'Home') + '…')
             path = stage + '/' + name

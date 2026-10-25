@@ -38,7 +38,7 @@ Keep the official session timer active: expiry can remove sideloaded apps.
 See [Developer Mode preparation](MANUAL_INSTALL.md#2-no-root-prepare-the-tv).
 
 **Root:** confirm existing root SSH access and retain recovery backups. The TV
-needs Python 3, luna-send, Homebrew services and a supported ARM32 Magic Remote
+needs Python 3.9+, Node.js 8+, luna-send, Homebrew services and a supported ARM32 Magic Remote
 input interface. Investigate a changed SSH host key rather than bypassing the
 check. See [Root access requirements](MANUAL_INSTALL.md#5-root-prepare-trusted-access).
 

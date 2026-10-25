@@ -11,7 +11,7 @@ import time
 import urllib.request
 
 from .state import private_write
-from .errors import UserError, TVRejected, DeveloperKeyError
+from .errors import UserError, TVRejected, DeveloperKeyError, TVCommandError
 
 
 class AgentLoginFailed(UserError):
@@ -296,8 +296,9 @@ class SSH:
                 if total > 8 * 1024 * 1024:
                     raise UserError('TV response exceeded the size limit.')
             elif channel.exit_status_ready():
-                if channel.recv_exit_status() != 0:
-                    raise UserError('TV command failed. Run cytv doctor; retain the operation journal.')
+                status = channel.recv_exit_status()
+                if status != 0:
+                    raise TVCommandError(status)
                 return
             elif channel.closed:
                 raise UserError('TV connection interrupted. Run cytv status before retrying.')

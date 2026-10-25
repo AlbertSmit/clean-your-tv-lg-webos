@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import unittest,os,json,io
+import unittest,os,json,io,tempfile
 from unittest.mock import patch
 from observed_install import install,OutcomeUnknown
 class Fake:
@@ -14,21 +14,49 @@ class Fake:
  def communicate(self,timeout):return b'',b''
  def close(self):self.stdout.close();os.close(self.writer)
 class Tests(unittest.TestCase):
- def run_case(self,final=True,mismatch=False,active=False,callback=None,accepted_event=False,accept_error=False,ready_callback=None):
+ def run_case(self,final=True,mismatch=False,active=False,callback=None,accepted_event=False,accept_error=False,ready_callback=None,check_stage=False):
+  tmp=tempfile.TemporaryDirectory();root=Path(tmp.name);source=root/'private';source.mkdir(mode=0o700)
+  package=source/'test.ipk';package.write_bytes(b'verified package');package.chmod(0o600)
+  public=root/'public'
   procs=[]
   def popen(args,**kwargs):
    p=Fake(41+len(procs));procs.append(p)
    if len(procs)==1:p.send({'subscribed':True,'returnValue':True,'status':{'apps':[{'id':'other'}] if active else []}})
    else:
     self.assertIn('/status',procs[0].uri)
+    ipk=json.loads(args[3])['ipkUrl']
+    if check_stage:
+     self.assertNotEqual(Path(ipk),package)
+     self.assertEqual(Path(ipk).parent.parent,public)
+     self.assertEqual(Path(ipk).read_bytes(),b'verified package')
+     self.assertEqual(Path(ipk).stat().st_mode & 0o777,0o644)
+     self.assertEqual(Path(ipk).parent.stat().st_mode & 0o777,0o755)
+     self.assertEqual(source.stat().st_mode & 0o777,0o700)
+     self.assertEqual(package.stat().st_mode & 0o777,0o600)
     p.send({'statusValue':37})
-    if accepted_event:procs[0].send({'id':'test.app','returnValue':False if accept_error else True,'statusValue':37,'details':{'packageId':'test.app','ipkFile':'/test.ipk','client':'wrong' if mismatch else 'com.webos.lunasend-42'}})
-    if final:procs[0].send({'message':'Готово','id':'test.app','statusValue':30,'details':{'packageId':'test.app','ipkFile':'/test.ipk','client':'wrong' if mismatch else 'com.webos.lunasend-42'}})
+    if accepted_event:procs[0].send({'id':'test.app','returnValue':False if accept_error else True,'statusValue':37,'details':{'packageId':'test.app','ipkFile':ipk,'client':'wrong' if mismatch else 'com.webos.lunasend-42'}})
+    if final:procs[0].send({'message':'Готово','id':'test.app','statusValue':30,'details':{'packageId':'test.app','ipkFile':ipk,'client':'wrong' if mismatch else 'com.webos.lunasend-42'}})
    p.uri=args[2];return p
   try:
-   with patch('observed_install.subprocess.Popen',popen):return install('test.app','/test.ipk',timeout=.03,on_accepted=callback,on_ready=ready_callback),procs
+   with patch('observed_install.subprocess.Popen',popen),patch('observed_install.STAGING_ROOT',public,create=True),patch('observed_install.TRUST_ANCHOR',root,create=True):
+    result=install('test.app',str(package),timeout=.03,on_accepted=callback,on_ready=ready_callback)
+    if check_stage:self.assertEqual(list(public.iterdir()),[])
+    return result,procs
   finally:
+   if check_stage and not final:self.assertTrue(list(public.glob('*/package.ipk')),'unknown install must retain its backend-readable IPK')
    for p in procs:p.close()
+   tmp.cleanup()
+ def test_only_the_verified_package_is_exposed_to_appinstalld(self):self.run_case(check_stage=True)
+ def test_unknown_install_retains_the_backend_package(self):
+  with self.assertRaises(OutcomeUnknown):self.run_case(final=False,check_stage=True)
+ def test_unsafe_staging_root_is_rejected_before_luna_submission(self):
+  import observed_install
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp).resolve();public=root/'public';public.mkdir();public.chmod(0o777)
+   package=root/'test.ipk';package.write_bytes(b'verified package')
+   with patch('observed_install.STAGING_ROOT',public),patch('observed_install.TRUST_ANCHOR',root,create=True),patch('observed_install.subprocess.Popen') as start:
+    with self.assertRaisesRegex(ValueError,'Unsafe installer staging'):install('test.app',str(package))
+    start.assert_not_called()
  def test_error_acceptance_never_reported(self):
   events=[]
   self.run_case(callback=events.append,accepted_event=True,accept_error=True)

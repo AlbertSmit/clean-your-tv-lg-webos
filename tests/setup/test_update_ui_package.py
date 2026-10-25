@@ -22,7 +22,7 @@ class UpdateUiPackageTests(unittest.TestCase):
             shutil.copy(ROOT/'package.json', root/'package.json')
             for name in ('system-updates.js', 'release-notes.js', 'renewal-panel.css', 'i18n.js', 'i18n.css', 'catalogs.js', 'user-data.js'):
                 shutil.copy(ROOT/'launcher'/name, root/'launcher'/name)
-            for name in ('service.js', 'permissions.js', 'services.json', 'release-public.pem'):
+            for name in ('service.js', 'permissions.js', 'services.json', 'release-public.pem', 'ca-bundle.crt', 'ca-LICENSE.txt'):
                 (root/'updater-service'/name).write_text('fixture')
             for name in ('scripts/update-permissions.cjs', 'scripts/lib/update-permissions.cjs',
                          'root-edition/ui/root-locales.js', 'launcher/fonts/NotoSans.ttf', 'docs/UPDATES.md'):
@@ -39,4 +39,6 @@ class UpdateUiPackageTests(unittest.TestCase):
             self.assertIn('#renewalPanel', stylesheet)
             self.assertNotRegex(stylesheet, r'\binset\s*:')
             self.assertTrue((root/'build/updater-app/compat-polyfills.js').is_file())
+            self.assertEqual((root/'build/updater-service/ca-bundle.crt').read_text(), 'fixture')
+            self.assertEqual((root/'build/updater-service/ca-LICENSE.txt').read_text(), 'fixture')
             self.assertIn('compat-polyfills.js', (root/'build/updater-app/index.html').read_text())

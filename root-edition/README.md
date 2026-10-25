@@ -42,8 +42,8 @@ the ordinary launcher. Never run both modes' input handling together.
 
 ## Requirements and limits
 
-An already rooted TV, working root SSH access with a verified host key, Python 3
-on the TV, Homebrew services and the supported ARM32 Magic Remote input interface
+An already rooted TV, working root SSH access with a verified host key, Python 3.9+
+and Node.js 8+ on the TV, Homebrew services and the supported ARM32 Magic Remote input interface
 are required. Installation checks fail closed for unexpected state. A doctor
 report alone does not establish compatibility.
 

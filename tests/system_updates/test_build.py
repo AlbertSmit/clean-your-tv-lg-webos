@@ -171,3 +171,39 @@ class BuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'legacy Root Home'):setup.require_legacy_idle([journal])
                 journal.write_text('{"schema":1,"phase":"complete","homeResumePhase":"complete"}')
                 setup.require_legacy_idle([journal])
+
+    def test_missing_pinned_infrastructure_is_explicit_and_cannot_expand_destinations(self):
+        from unittest.mock import patch
+        build=load('build');setup=load('setup')
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();bundle=root/'bundle';build.build(bundle)
+            names=json.loads((bundle/'infrastructure-paths.json').read_text())
+            roots={kind:root/kind for kind in ('runtime','updater','service')}
+            missing={'updater/updater/ca-bundle.crt','updater/updater/ca-LICENSE.txt'}
+            self.assertTrue(missing<=set(names))
+            for name in names:
+                if name in missing:continue
+                kind,relative=name.split('/',1);path=roots[kind]/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(name.encode())
+            files,absent=setup.capture_infrastructure(names,**roots)
+            self.assertEqual(set(absent),missing);self.assertEqual(set(files)|set(absent),set(names))
+            installed=root/'installed'
+            for kind,app in (('root','com.cleanyourtv.root.preview'),('root-updater','com.cleanyourtv.root.updater')):
+                appdir=installed/'usr/palm/applications'/app;appdir.mkdir(parents=True)
+                (appdir/'appinfo.json').write_text(json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html'}));(appdir/'index.html').write_text('Home')
+                package_dir=installed/'usr/palm/packages'/app;package_dir.mkdir(parents=True);(package_dir/'packageinfo.json').write_text(json.dumps({'id':app,'app':app,'version':'1.0.0','services':[app+'.service']}))
+                service_dir=installed/'usr/palm/services'/(app+'.service');service_dir.mkdir(parents=True);(service_dir/'service.js').write_text('service')
+            baseline=setup.snapshot(bundle,'root',root/'baseline',installed=installed,**roots)
+            manifest=setup.verify_baseline(baseline,bundle)
+            captured=next(c for c in manifest['components'] if c['name']=='root-infrastructure')
+            self.assertEqual(set(captured['absent']),missing)
+            self.assertEqual(set(captured['files']),set(names)-missing)
+            captured['absent'].append('runtime/arbitrary.py');(baseline/'baseline.json').write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError,'pinned bootstrap inventory'):setup.verify_baseline(baseline,bundle)
+            descriptor={'kind':'infrastructure','files':{n:hashlib.sha256(b).hexdigest() for n,b in files.items()},'absent':absent}
+            setup.verify_infrastructure_inventory(descriptor,files,names)
+            with self.assertRaisesRegex(ValueError,'inventory'):
+                setup.verify_infrastructure_inventory({**descriptor,'absent':absent+['runtime/arbitrary.py']},files,names)
+            with self.assertRaisesRegex(ValueError,'inventory'):
+                setup.verify_infrastructure_inventory({**descriptor,'absent':absent+absent},files,names)
+            target=roots['updater']/'updater/ca-bundle.crt';target.symlink_to(root/'nonexistent')
+            with self.assertRaisesRegex(ValueError,'Indirect'):setup.capture_infrastructure(names,**roots)

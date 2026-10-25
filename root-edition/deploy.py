@@ -29,6 +29,18 @@ def require_device():
         raise PermissionError('Device actions require a webOS TV')
 
 
+def require_node():
+    try:
+        result = subprocess.run(['/usr/bin/node', '-e',
+            'process.exit(Number(process.versions.node.split(".")[0]) >= 8 ? 0 : 1)'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10)
+        if result.returncode == 0:
+            return
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    raise RuntimeError('Root requires TV Node.js 8+')
+
+
 def checked_file(root, name):
     path = PurePosixPath(name)
     if path.is_absolute() or str(path) != name or '..' in path.parts or '\\' in name:
@@ -147,6 +159,8 @@ def migrate_packaged_home():
 
 
 def install(bundle, run=command, observe=observed_install, migrate=False):
+    if sys.version_info < (3, 9):
+        raise RuntimeError('Root requires TV Python 3.9+')
     if STATE.exists() or STATE.is_symlink() or any(p.exists() or p.is_symlink() for p in installed_paths()):
         raise FileExistsError('Candidate or state already exists; inspect and recover, never retry blindly')
     manifest = verify_bundle(bundle)
@@ -231,6 +245,7 @@ def main():
         parser.error('migration is only available with install')
     require_device()
     if args.command == 'install':
+        require_node()
         if args.bundle is None: parser.error('install requires --bundle')
         result = install(args.bundle, migrate=args.migrate_packaged_home)
     elif args.command == 'uninstall': result = uninstall()

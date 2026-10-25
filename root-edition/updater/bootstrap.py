@@ -37,6 +37,7 @@ def verify_bundle(bundle):
     required={'root-updater.ipk','run-updater.py','service.js','services.json','package.json','setup-updater.py',
               'updater/core.py','updater/store.py','updater/profile.py','updater/device.py','updater/package.py','updater/cli.py',
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
+              'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
               'observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py'}
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')
     for name,sha in manifest['files'].items():
@@ -64,7 +65,11 @@ def atomic(path,raw,mode=0o600):
 
 
 def apply(bundle,baseline):
+    import sys
+    if sys.version_info < (3, 9):raise RuntimeError('Root Updater requires TV Python 3.9+')
     if os.geteuid()!=0 or not Path('/usr/bin/luna-send').is_file():raise PermissionError('Explicit rooted webOS device required')
+    from deploy import require_node
+    require_node()
     manifest=verify_bundle(bundle);bundle=Path(bundle);baseline=Path(baseline)
     from deploy import verify_bundle as root_bundle
     baseline_manifest=root_bundle(baseline)

@@ -102,7 +102,8 @@ class Device:
         if edition not in SETS:raise ValueError('Invalid edition')
         candidate=self._verify_release(self.fetch('offer',{'edition':edition})['candidate'],edition)
         prior=self._baseline(edition);reason='available'
-        if version(candidate['release'][1:])<=version(prior['release'][1:]):reason='current'
+        if any(version(c['version'])<version(p['version']) for c,p in zip(candidate['components'],prior['components'])):reason='component-downgrade'
+        elif version(candidate['release'][1:])<=version(prior['release'][1:]):reason='current'
         else:
             try:
                 self.check_legacy()
@@ -135,22 +136,31 @@ class Device:
     def cache_bytes(self,c):return safe_bytes(self.cached(c),limit=64*1024*1024,uid=self.uid)
 
     def _infra_inventory(self):
+        pinned=json.loads(safe_bytes(self.code/'infrastructure-paths.json',limit=65536,uid=self.uid))
+        if not isinstance(pinned,list) or not pinned or len(set(pinned))!=len(pinned):raise ValueError('Invalid pinned infrastructure inventory')
+        for name in pinned:
+            if not isinstance(name,str):raise ValueError('Unsafe managed infrastructure path')
+            path=PurePosixPath(name)
+            if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater'):raise ValueError('Unsafe managed infrastructure path')
         baseline=self.store.read('baseline')
         if not baseline or baseline.get('edition')!='root':raise ValueError('Root infrastructure baseline unavailable')
         c=next((c for c in baseline['components'] if c['name']=='root-infrastructure'),None)
-        if not c or not isinstance(c.get('files'),dict) or not c['files']:raise ValueError('Missing infrastructure allowlist')
-        for name in c['files']:
-            path=PurePosixPath(name)
-            if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater'):raise ValueError('Unsafe managed infrastructure path')
-        return c['files']
+        if not c or not isinstance(c.get('files'),dict):raise ValueError('Missing infrastructure baseline inventory')
+        absent=c.get('absent',[])
+        if not isinstance(absent,list) or any(not isinstance(name,str) for name in absent) or len(set(absent))!=len(absent) or set(c['files'])&set(absent) or set(c['files'])|set(absent)!=set(pinned):raise ValueError('Baseline does not partition pinned infrastructure inventory')
+        return set(pinned)
 
     def inspect(self,raw,c):
         if len(raw)!=c['size'] or digest(raw)!=c['sha256']:raise ValueError('Package hash mismatch')
         if c['kind']=='infrastructure':
             if c['name']!='root-infrastructure' or c.get('application') is not None:raise ValueError('Foreign infrastructure component')
             files=archive(raw)
-            if set(files)!=set(self._infra_inventory()):raise ValueError('Infrastructure inventory changed; computer migration required')
-            return {name:digest(value) for name,value in files.items()}
+            inventory=self._infra_inventory();hashes={name:digest(value) for name,value in files.items()}
+            if c.get('local') is True:
+                absent=c.get('absent',[]);recorded=c.get('files')
+                if not isinstance(recorded,dict) or not isinstance(absent,list) or any(not isinstance(n,str) for n in absent) or len(set(absent))!=len(absent) or set(recorded)&set(absent) or set(recorded)|set(absent)!=inventory or hashes!=recorded:raise ValueError('Local infrastructure inventory/hash mismatch')
+            elif set(files)!=inventory:raise ValueError('Infrastructure inventory changed; computer migration required')
+            return hashes
         app=IDENTITIES.get(c['name'])
         if not app or c.get('application')!=app:raise ValueError('Foreign application component')
         parts=members(raw);files=package_archive(parts['data.tar.gz']);control=package_archive(parts['control.tar.gz'])
@@ -212,17 +222,20 @@ class Device:
     def _refresh_root_receipts(self,hashes):
         proof_path=self.root_state/'recovery-provision.json';proof=json.loads(safe_bytes(proof_path,limit=1024*1024,uid=self.uid))
         if proof.get('mode')!='recovery-only' or not isinstance(proof.get('files'),dict):raise ValueError('Invalid recovery provisioning receipt')
-        for name,h in hashes.items():
+        inventory=self._infra_inventory()
+        if set(hashes)-inventory:raise ValueError('Foreign infrastructure receipt path')
+        for name in inventory:
             if name.startswith(('runtime/','service/')):
                 path=str(self._infra_path(name))
-                if path not in proof['files']:raise ValueError('Recovery receipt lacks managed runtime/service')
-                proof['files'][path]=h
+                if name in hashes:proof['files'][path]=hashes[name]
+                else:proof['files'].pop(path,None)
         proof_raw=json.dumps(proof,sort_keys=True,separators=(',',':')).encode();self.atomic(proof_path,proof_raw)
         from .support.store import Store
         root_store=Store(self.root_updater,uid=self.uid);receipt=root_store.read('infrastructure')
         if not isinstance(receipt,dict) or not isinstance(receipt.get('code'),dict):raise ValueError('Missing Root updater receipt')
         updater={name.split('/',1)[1]:h for name,h in hashes.items() if name.startswith('updater/')}
-        if set(updater)!=set(receipt['code']):raise ValueError('Root updater receipt inventory mismatch')
+        allowed={name.split('/',1)[1] for name in inventory if name.startswith('updater/')}
+        if set(receipt['code'])-allowed or set(updater)-allowed:raise ValueError('Root updater receipt inventory mismatch')
         receipt['code']=updater;receipt['recovery_sha256']=digest(proof_raw);root_store.write('infrastructure',receipt)
 
     def _trusted_component(self,c):
@@ -243,8 +256,21 @@ class Device:
             on_submit({'component':c['name'],'sha256':c['sha256']})
             files=archive(raw)
             for name,value in files.items():
-                path=self._infra_path(name);mode=stat.S_IMODE(path.stat().st_mode)
+                path=self._infra_path(name)
+                mode=stat.S_IMODE(path.stat().st_mode) if os.path.lexists(path) else (0o700 if name=='service/boot-recover.sh' else 0o600)
+                if any(p.is_symlink() for p in (path,*path.parents)):raise ValueError('Indirect managed infrastructure destination')
+                if not path.parent.exists():
+                    path.parent.mkdir(parents=True,mode=0o700);self.sync(path.parent.parent)
                 self.atomic(path,value,mode)
+            # A local rollback can remove only paths explicitly absent before
+            # bootstrap, and only while bytes still match the trusted candidate.
+            tx=self.store.read('transaction');candidate=next(item for item in tx['candidate']['components'] if item['name']=='root-infrastructure')
+            candidate_hashes=self.inspect(self.cache_bytes(candidate),candidate)
+            for name in c.get('absent',[]):
+                path=self._infra_path(name)
+                if not os.path.lexists(path):continue
+                if digest(safe_bytes(path,uid=self.uid))!=candidate_hashes[name]:raise ValueError('Candidate-created infrastructure changed; refuse removal')
+                path.unlink();self.sync(path.parent)
             self._refresh_root_receipts(hashes);self.repair_registrations();self.restart_root_service();on_terminal({'success':True,'sha256':c['sha256']});return
         self.snapshot_mutable()
         from observed_install import install
@@ -259,7 +285,8 @@ class Device:
     def verify_installed(self,c):
         hashes=self.inspect(self.cache_bytes(c),c)
         if c['kind']=='infrastructure':
-            return all(digest(safe_bytes(self._infra_path(name),uid=self.uid))==expected for name,expected in hashes.items())
+            return (all(digest(safe_bytes(self._infra_path(name),uid=self.uid))==expected for name,expected in hashes.items())
+                    and all(not os.path.lexists(self._infra_path(name)) for name in c.get('absent',[])))
         verify_payload(self.installed_root,hashes)
         return self.installed(c['application'])==c['version']
 
@@ -565,9 +592,14 @@ class Device:
         for leg in ('prior','candidate'):
             c=next(c for c in tx[leg]['components'] if c['name']=='root-infrastructure')
             expected.append(self.inspect(self.cache_bytes(c),c))
+        prior=next(c for c in tx['prior']['components'] if c['name']=='root-infrastructure');absent=set(prior.get('absent',[]))
         for name in self._infra_inventory():
-            current=digest(safe_bytes(self._infra_path(name),limit=32*1024*1024,uid=self.uid))
-            if current not in (expected[0][name],expected[1][name]):raise ValueError('Managed infrastructure conflict; computer recovery required')
+            path=self._infra_path(name)
+            if not os.path.lexists(path):
+                if name not in absent:raise ValueError('Required managed infrastructure is missing')
+                continue
+            current=digest(safe_bytes(path,limit=32*1024*1024,uid=self.uid))
+            if current not in (expected[0].get(name),expected[1].get(name)):raise ValueError('Managed infrastructure conflict; computer recovery required')
 
     def sync_root_baseline(self,tx):
         if tx.get('edition')!='root' or tx.get('phase') not in ('complete','rolled-back'):return

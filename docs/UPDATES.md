@@ -208,7 +208,10 @@ Home or changing its routing. It snapshots the actual installed app, service and
 package files into verified rollback IPKs, including personalized inventory.
 The setup checks `systemUpdateProtocol = 1` in the installed Home metadata before
 capturing a baseline; older Home interfaces are refused without mutation.
-Existing runtime/updater files are cached separately. Mutable settings and
+Existing runtime/updater files are cached separately. Missing files from the
+pinned bootstrap inventory (including certificates absent in older Root Updater
+installations) are recorded explicitly. Rollback removes such newly introduced
+files only when their bytes match the verified candidate. Mutable settings and
 credentials are excluded from the package archives.
 
 For a rooted TV running the ordinary No-root edition, use an existing OpenSSH

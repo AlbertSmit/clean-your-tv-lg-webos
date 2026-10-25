@@ -67,16 +67,16 @@ class OperationTests(unittest.TestCase):
         remote = Remote()
         original_run = remote.run
         def run(command, **kwargs):
-            if 'CYTV_ROOT_READY' in command:
+            if 'CYTV_ROOT_READY' in command and 'version_info' in command:
                 args = shlex.split(command)
                 snippet = args[args.index('-c')+1]
                 result = subprocess.run([sys.executable, '-c',
                     'import sys; sys.version_info=(3,8,10); exec('+repr(snippet)+')'], capture_output=True)
-                return 'CYTV_ROOT_READY' if result.returncode == 0 else ''
+                return 'CYTV_ROOT_READY' if result.returncode == 0 else 'CYTV_ROOT_MISSING'
             return original_run(command, **kwargs)
         remote.run = run
         installer = self.installer(remote, 'root')
-        with self.assertRaisesRegex(RuntimeError, 'Python 3.9'):
+        with self.assertRaisesRegex(RuntimeError, 'python-version'):
             installer.install(self.inventory)
         self.assertIsNone(self.store.pending(installer.profile))
         self.assertFalse(any(c[0] == 'upload' for c in remote.calls))

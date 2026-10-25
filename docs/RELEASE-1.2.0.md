@@ -1,8 +1,9 @@
 # v1.2.0 — Helper recovery and Root firmware settings
 
-Unpublished candidate in [release PR #58](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/58).
-The latest published release remains v1.1.0. Candidate packages are for supervised
-testing until acceptance and the protected release gates are complete.
+This release adds confirmed Helper recovery and Root firmware-blocking settings.
+Download final packages from the [1.2.0 release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)
+after verified publication. [PR #58](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/58)
+records the build and publication checks; a merge alone does not prove delivery.
 
 | Component | Published 1.1.0 | Candidate 1.2.0 |
 | --- | --- | --- |
@@ -57,8 +58,11 @@ whole-edition rollback acceptance.
 
 ## Acceptance and provenance
 
-No physical-TV acceptance has been supplied for this candidate. Historical
-[1.1.0 evidence](RELEASE-1.1.0-ACCEPTANCE.md) applies to its recorded build only.
+The maintainer reported that checks were normal and directed the release. The
+[1.2.0 acceptance record](RELEASE-1.2.0-ACCEPTANCE.md) describes this confirmation
+and its limits: OLED55C3RLA / 43.21.71 was confirmed, but the exact tested
+revision was not restated.
+Historical [1.1.0 evidence](RELEASE-1.1.0-ACCEPTANCE.md) applies to its own build only.
 Required candidate checks include Home/Back/navigation/volume, triple-Home and
 manual resume, standby separately from restart/cold boot, supported update and
 rollback, and the firmware-control matrix in the feature guide.
@@ -66,9 +70,9 @@ rollback, and the firmware-control matrix in the feature guide.
 Original-device feedback is outstanding on OLED48C24LA / 43.21.74 (#59),
 OLED Flex 42LX3Q9LA / webOS 11.2.0 (#55) and UN70006LA / 04.64.00 (#51).
 Automated checks and successful installation do not certify these devices.
-Record actual source commits, build runs and acceptance in PR #58. Publication
+Source commits, build runs and acceptance are recorded in PR #58. Publication
 must verify BUILD-INFO.json, RELEASE-INVENTORY.json, SHA256SUMS and signed feeds
 before shipping notices or delivered issue statuses are assigned.
 
 The [documentation pass](DOCUMENTATION-AUDIT-1.2.0.md) records candidate guidance
-and the publication work that remains.
+and the publication boundary.

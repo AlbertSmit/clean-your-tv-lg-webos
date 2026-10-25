@@ -1,6 +1,6 @@
 # Manual installation of No-root and Root without cytv
 
-**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.1.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -309,7 +309,7 @@ From the source root; this operation does not connect to the TV:
 ```bash
 mkdir -p build
 npm ci --ignore-scripts --no-audit --no-fund
-python3 root-edition/build.py --output build/root-candidate --version 0.2.0
+python3 root-edition/build.py --output build/root-candidate --version 0.3.0
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
@@ -373,7 +373,7 @@ the delivered files, waits for an independent terminal installation event,
 provisions permissions, the recovery service/activity and its integrity manifest.
 **It does not enable Root Home.**
 
-Next candidate (#55): the device driver validates the migration source and reads
+Since 1.2.0 (#55): the device driver validates the migration source and reads
 the exact preference bytes before creating Root state or installing the package.
 A missing or invalid source stops installation without changing the active Root
 state. Host-side temporary bundle staging may already exist.
@@ -505,7 +505,7 @@ After removal, some recovery registrations are already gone, so the old
 `status` command may no longer report valid recovery; that is not a reason
 to resubmit removal.
 
-Next candidate (#55): a deployment interrupted at `payload-verified`,
+Since 1.2.0 (#55): a deployment interrupted at `payload-verified`,
 `personalization-starting`, `personalization-complete` or
 `provision-apply-starting` can use the normal `uninstall` command even when
 provisioning never created its snapshot. The driver verifies the early journal

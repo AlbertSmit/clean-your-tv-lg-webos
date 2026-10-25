@@ -1,7 +1,6 @@
-# LG firmware update blocking (next candidate)
+# LG firmware update blocking (since 1.2.0)
 
-This optional Root Edition control is candidate-only; it is not included in
-v1.1.0. Open **Home settings → LG firmware updates**. It controls LG's TV
+This optional Root Edition control is included in 1.2.0 (Root 0.3.0). Open **Home settings → LG firmware updates**. It controls LG's TV
 firmware updates, including firmware security updates. Clean Your TV's own
 **Software updates** screen remains separate.
 
@@ -42,7 +41,7 @@ Upstream evidence: [configuration API](https://github.com/webosbrew/webos-homebr
 [startup implementation](https://github.com/webosbrew/webos-homebrew-channel/blob/main/services/startup.sh),
 and [early update-check limitation](https://github.com/webosbrew/webos-homebrew-channel/issues/96).
 
-## Acceptance before release
+## Acceptance and further device checks
 
 Automated tests cover strict boolean values, partial configuration writes,
 missing/non-root/denied API, rejected/malformed replies, stale preference,
@@ -57,4 +56,6 @@ real restart separately from standby, inspect effective update blocking without
 starting a firmware installation, and record any remaining update prompt.
 Test preference changes from Homebrew while this screen is open. Verify a
 supported Home update/rollback and that the preference remains Homebrew-owned.
-No physical-TV acceptance is claimed yet.
+See the [1.2.0 acceptance record](RELEASE-1.2.0-ACCEPTANCE.md) for the
+maintainer confirmation and its evidence limits. Original-device checks remain
+separate.

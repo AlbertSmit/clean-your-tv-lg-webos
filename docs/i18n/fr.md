@@ -4,9 +4,9 @@ No-root et Root sont des options équivalentes pour différentes configurations 
 
 ## Prérequis
 
-Ce guide décrit **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Les liens `releases/latest/download` fournissent la version stable publiée. Voir [installation](../INSTALL.md) et [notes de version](../RELEASE-1.1.0.md).
+Ce guide décrit **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Les liens `releases/latest/download` fournissent la version stable publiée. Voir [installation](../INSTALL.md) et [notes de version](../RELEASE-1.2.0.md).
 
-La version contient cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater et Root Updater **0.2.0**, Android **0.2.0-preview** (code de version **9**) et le superviseur System Updater **1.0.0** (protocole **1**). Ce sont les composants de v1.1.0.
+La version contient cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater et Root Updater **0.2.1**, Android **0.2.1-preview** (code de version **10**) et le superviseur System Updater **1.0.0** (protocole **1**). Ce sont les composants de v1.2.0.
 
 Root 0.2.0, Root Updater 0.2.0 et le superviseur 1.0.0 ont été vérifiés sur OLED55C3RLA / micrologiciel 43.21.71 / webOS 11.2.0 (`d344d92`, contenu produit identique à `4b66951`). Commandes, triple Home et reprise, veille/réveil avec Emby ouvert pendant 70 secondes, menus des versions et message clair en cas de flux indisponible ont réussi. Le vrai démarrage à froid, Helper 0.6.19 sur TV, UK6540PTD et une mise à jour/restauration complète signée restent non testés. La publication stable accepte ces preuves limitées ; les autres modèles ne sont pas validés.
 
@@ -114,14 +114,14 @@ Si Root affiche `Denied methods call status` juste après la préparation du sup
 
 [1.1.0 hardware acceptance](../RELEASE-1.1.0-ACCEPTANCE.md)
 
-Prochain candidat (#51) : après un refus de paquet par le téléviseur, le rapport JSON conserve uniquement la catégorie d’opération, des codes numériques bornés, un état de paquet autorisé et un résultat booléen. Il exclut le texte brut de l’erreur, les chemins et les identifiants d’applications. Vérifiez-le avant de le partager ; aucune nouvelle tentative automatique. La correction de l’échec d’installation sur UN70006LA n’est pas confirmée.
+1.2.0 (#51) : après un refus de paquet par le téléviseur, le rapport JSON conserve uniquement la catégorie d’opération, des codes numériques bornés, un état de paquet autorisé et un résultat booléen. Il exclut le texte brut de l’erreur, les chemins et les identifiants d’applications. Vérifiez-le avant de le partager ; aucune nouvelle tentative automatique. La correction de l’échec d’installation sur UN70006LA n’est pas confirmée.
 
-Prochain candidat (#59) : si l’état de Helper ne peut pas être vérifié, **Démarrer Helper** reste disponible avec confirmation. Ouvrir la tuile ne redémarre pas Helper et ne lève pas un arrêt d’urgence. Les réglages Home nécessitent un contrôle qui répond.
+1.2.0 (#59) : si l’état de Helper ne peut pas être vérifié, **Démarrer Helper** reste disponible avec confirmation. Ouvrir la tuile ne redémarre pas Helper et ne lève pas un arrêt d’urgence. Les réglages Home nécessitent un contrôle qui répond.
 
-Prochain candidat (#55) : Root valide la migration avant l’installation. Une installation interrompue avant le provisionnement peut être supprimée sans instantané LS2 jamais créé ; un reçu vérifié est conservé pour l’archivage et la réinstallation habituels de cytv. Un instantané manquant plus tard ou des preuves contradictoires bloquent toujours le nettoyage. Le nouveau pilote est requis ; l’échec du démarrage du service de récupération sur OLED Flex reste non résolu.
+1.2.0 (#55) : Root valide la migration avant l’installation. Une installation interrompue avant le provisionnement peut être supprimée sans instantané LS2 jamais créé ; un reçu vérifié est conservé pour l’archivage et la réinstallation habituels de cytv. Un instantané manquant plus tard ou des preuves contradictoires bloquent toujours le nettoyage. Le nouveau pilote est requis ; l’échec du démarrage du service de récupération sur OLED Flex reste non résolu.
 
-## Blocage du micrologiciel LG dans le prochain candidat
+## Blocage du micrologiciel LG dans 1.2.0
 
-Root uniquement : Réglages Home → Mises à jour du micrologiciel LG modifie le réglage existant de Homebrew Channel. Cela inclut les mises à jour de sécurité du micrologiciel ; celles de Clean Your TV restent séparées. Un vrai redémarrage du TV est nécessaire dans les deux sens ; la veille ne suffit pas. Le bouton montre le réglage enregistré, pas un blocage effectif vérifié. Certains TV vérifient avant le blocage ; les alertes peuvent rester et un blocage sur le routeur peut être nécessaire. Homebrew conserve le réglage après suppression ou retour arrière de CYTV. En cas d’indisponibilité ou de résultat non confirmé, vérifiez Homebrew et actualisez l’état. La validation sur TV reste à faire.
+Root uniquement : Réglages Home → Mises à jour du micrologiciel LG modifie le réglage existant de Homebrew Channel. Cela inclut les mises à jour de sécurité du micrologiciel ; celles de Clean Your TV restent séparées. Un vrai redémarrage du TV est nécessaire dans les deux sens ; la veille ne suffit pas. Le bouton montre le réglage enregistré, pas un blocage effectif vérifié. Certains TV vérifient avant le blocage ; les alertes peuvent rester et un blocage sur le routeur peut être nécessaire. Homebrew conserve le réglage après suppression ou retour arrière de CYTV. En cas d’indisponibilité ou de résultat non confirmé, vérifiez Homebrew et actualisez l’état. Le périmètre des tests TV figure dans le compte rendu de validation.
 
-[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

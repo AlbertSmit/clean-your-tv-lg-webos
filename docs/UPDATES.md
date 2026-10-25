@@ -1,6 +1,6 @@
 # Updates and recovery — 1.1.0
 
-Use [v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
+Use [v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
 
 ## Updating every component from the TV
 

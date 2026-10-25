@@ -8,7 +8,7 @@ upgrade or remove your ordinary launcher.
 
 | | No-root Edition | Root Stable |
 | --- | --- | --- |
-| 1.1.0 stable | Home 1.4.0 + Helper 0.6.19; current Helper TV acceptance pending | Root 0.2.0; scoped C3 controls and standby/wake checks passed |
+| 1.2.0 | Home 1.4.1 + Helper 0.6.19; original-device feedback remains open | Root 0.3.0; see the [acceptance scope](RELEASE-1.2.0-ACCEPTANCE.md) |
 | Root required | No | Existing root required; installer does not obtain it |
 | Everyday external device | None | None |
 | Setup | Computer, LG Developer Mode and local pairing | Computer, verified root SSH, compatibility and recovery checks |

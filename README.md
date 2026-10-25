@@ -47,7 +47,7 @@ URLs, so they follow the latest published release without a version in the link.
 [![Download Linux x64 graphical installer — DEB](assets/brand/downloads/linux.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-linux-x64.deb)
 [![Download Android ARM64 preview installer — APK](assets/brand/downloads/android.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-android-arm64.apk)
 
-The buttons above download **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. It adds whole-edition system updates and optional Python for older Root TVs. Hardware evidence remains specific to the tested configuration; see [release notes](docs/RELEASE-1.1.0.md) and [compatibility](docs/COMPATIBILITY.md).
+The buttons above download **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. It adds confirmed Helper recovery, Root firmware settings and installer recovery/diagnostic improvements. Hardware evidence remains specific to the tested configuration; see [release notes](docs/RELEASE-1.2.0.md) and [compatibility](docs/COMPATIBILITY.md).
 
 Windows downloads the graphical ZIP: use **Extract All**, then open
 `cytv-desktop/cytv-desktop.exe` with its `_internal` folder beside it. Windows
@@ -58,14 +58,14 @@ These downloads do not establish physical-TV compatibility.
 One wizard installs either edition. Root activates and opens Home immediately,
 without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
-[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.1.0.md)
+[Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.2.0.md)
 
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.2.0 with persistent activation and Settings updates; scoped C3 hardware evidence | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.3.0 with persistent activation and Settings updates; version-specific hardware evidence | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -226,11 +226,11 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The **v1.1.0 stable** distribution contains cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, Android **0.2.0-preview / code 9**, and System Updater **1.0.0 / protocol 1**. Component versions are recorded in `release-versions.json`; see [release notes](docs/RELEASE-1.1.0.md).
+The **v1.2.0 stable** distribution contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10**, and System Updater **1.0.0 / protocol 1**. Component versions are recorded in `release-versions.json`; see [release notes](docs/RELEASE-1.2.0.md).
 
 Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
 
-Earlier hardware reports retain their original artifact scope. C5/webOS 26 Helper startup remains under investigation. See [compatibility](docs/COMPATIBILITY.md), [Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and [installation checks](docs/INSTALL.md#5-verify-before-daily-use).
+The [1.2.0 acceptance record](docs/RELEASE-1.2.0-ACCEPTANCE.md) records the maintainer's confirmation on OLED55C3RLA / 43.21.71 and its limits. Earlier hardware reports retain their original artifact scope. C5/webOS 26 Helper startup remains under investigation. See [compatibility](docs/COMPATIBILITY.md), [Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and [installation checks](docs/INSTALL.md#5-verify-before-daily-use).
 
 ## Project layout
 

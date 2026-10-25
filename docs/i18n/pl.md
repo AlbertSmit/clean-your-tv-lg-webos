@@ -4,9 +4,9 @@ No-root i Root to równorzędne opcje dla różnych konfiguracji telewizora. Wyb
 
 ## Wymagania
 
-Ta instrukcja opisuje **[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)**. Odnośniki `releases/latest/download` pobierają opublikowane wydanie stabilne. Zobacz [instalację](../INSTALL.md) i [opis wydania](../RELEASE-1.1.0.md).
+Ta instrukcja opisuje **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Odnośniki `releases/latest/download` pobierają opublikowane wydanie stabilne. Zobacz [instalację](../INSTALL.md) i [opis wydania](../RELEASE-1.2.0.md).
 
-Wersje wydania: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root **0.2.0**, Home Updater i Root Updater **0.2.0**, Android **0.2.0-preview** (kod **9**), nadzorca System Updater **1.0.0**, protokół **1**.
+Wersje wydania: cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root **0.3.0**, Home Updater i Root Updater **0.2.1**, Android **0.2.1-preview** (kod **10**), nadzorca System Updater **1.0.0**, protokół **1**.
 
 Włącz telewizor i połącz go z tą samą zaufaną siecią lokalną co komputer. Później komputer może być wyłączony. Zgodność zależy od modelu, oprogramowania i pilota; Root ma nieukończone testy sprzętowe.
 
@@ -104,14 +104,14 @@ Dokumentacja techniczna: [aplikacja komputerowa](../DESKTOP_INSTALL.md), [CLI](.
 
 Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy, zamknij i ponownie otwórz Home Root jeden raz, a następnie sprawdź aktualizacje. Jeśli błąd pozostaje, zachowaj diagnostykę i dane odzyskiwania.
 
-Następny kandydat (#51): po odrzuceniu pakietu przez TV raport JSON zachowuje tylko kategorię operacji, ograniczone liczbowe kody błędu/statusu, dozwolony stan pakietu i wynik logiczny. Pomija surowy tekst błędu TV, ścieżki i identyfikatory aplikacji. Sprawdź raport przed udostępnieniem; nie ma automatycznej ponownej próby, a naprawa instalacji na UN70006LA nie jest jeszcze potwierdzona.
+1.2.0 (#51): po odrzuceniu pakietu przez TV raport JSON zachowuje tylko kategorię operacji, ograniczone liczbowe kody błędu/statusu, dozwolony stan pakietu i wynik logiczny. Pomija surowy tekst błędu TV, ścieżki i identyfikatory aplikacji. Sprawdź raport przed udostępnieniem; nie ma automatycznej ponownej próby, a naprawa instalacji na UN70006LA nie jest jeszcze potwierdzona.
 
-Następny kandydat (#59): jeśli nie można sprawdzić stanu Helper, **Uruchom Helper** pozostaje dostępne z potwierdzeniem. Otwarcie kafelka nie uruchamia ponownie Helper ani nie znosi zatrzymania awaryjnego. Ustawienia Home wymagają odpowiedzi sterowania.
+1.2.0 (#59): jeśli nie można sprawdzić stanu Helper, **Uruchom Helper** pozostaje dostępne z potwierdzeniem. Otwarcie kafelka nie uruchamia ponownie Helper ani nie znosi zatrzymania awaryjnego. Ustawienia Home wymagają odpowiedzi sterowania.
 
-Następny kandydat (#55): Root sprawdza dane migracji przed instalacją. Instalację przerwaną przed konfiguracją usług można usunąć bez nigdy nieutworzonej migawki LS2; zachowuje zweryfikowany zapis dla zwykłej archiwizacji i ponownej instalacji cytv. Brak migawki na późniejszym etapie lub sprzeczne dowody nadal blokują czyszczenie. Wymagany jest nowy sterownik; problem startu usługi odzyskiwania na OLED Flex pozostaje nierozwiązany.
+1.2.0 (#55): Root sprawdza dane migracji przed instalacją. Instalację przerwaną przed konfiguracją usług można usunąć bez nigdy nieutworzonej migawki LS2; zachowuje zweryfikowany zapis dla zwykłej archiwizacji i ponownej instalacji cytv. Brak migawki na późniejszym etapie lub sprzeczne dowody nadal blokują czyszczenie. Wymagany jest nowy sterownik; problem startu usługi odzyskiwania na OLED Flex pozostaje nierozwiązany.
 
-## Blokada oprogramowania LG w następnym kandydacie
+## Blokada oprogramowania LG w 1.2.0
 
-Tylko Root: Ustawienia Home → Aktualizacje oprogramowania LG zmienia istniejące ustawienie Homebrew Channel. Dotyczy też aktualizacji zabezpieczeń TV; aktualizacje Clean Your TV są oddzielne. Obie zmiany wymagają prawdziwego ponownego uruchomienia TV; czuwanie nie wystarczy. Przełącznik pokazuje zapisane ustawienie, nie potwierdza działania blokady. Niektóre TV sprawdzają wcześniej; powiadomienia mogą pozostać i może być potrzebna blokada na routerze. Homebrew zachowuje ustawienie po usunięciu lub cofnięciu wersji CYTV. Przy niedostępności lub braku potwierdzenia sprawdź Homebrew i odśwież stan. Testy na fizycznym TV są nadal wymagane.
+Tylko Root: Ustawienia Home → Aktualizacje oprogramowania LG zmienia istniejące ustawienie Homebrew Channel. Dotyczy też aktualizacji zabezpieczeń TV; aktualizacje Clean Your TV są oddzielne. Obie zmiany wymagają prawdziwego ponownego uruchomienia TV; czuwanie nie wystarczy. Przełącznik pokazuje zapisane ustawienie, nie potwierdza działania blokady. Niektóre TV sprawdzają wcześniej; powiadomienia mogą pozostać i może być potrzebna blokada na routerze. Homebrew zachowuje ustawienie po usunięciu lub cofnięciu wersji CYTV. Przy niedostępności lub braku potwierdzenia sprawdź Homebrew i odśwież stan. Zakres testów TV opisuje zapis akceptacji.
 
-[LG firmware blocking](../LG-FIRMWARE-UPDATES.md)
+[LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)

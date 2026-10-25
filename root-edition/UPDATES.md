@@ -1,6 +1,6 @@
 # Root software updates and recovery
 
-**[v1.1.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.1.0)** updates a complete signed edition release set through
+**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** updates a complete signed edition release set through
 an independent fixed **System Updater supervisor**. Root's set includes Root Home,
 Root Updater and the compatible Root recovery infrastructure. No-root's separate
 set includes Home, Helper and Home Updater. The editions are not interchangeable;
@@ -47,7 +47,7 @@ For a fresh manual Root installation, build fresh output directories. These
 commands do not migrate an existing retained updater:
 
 ```sh
-python3 root-edition/build.py --version 0.2.0 --output build/root-candidate
+python3 root-edition/build.py --version 0.3.0 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
 python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply
 python3 system-updater/build.py --output build/system-updater

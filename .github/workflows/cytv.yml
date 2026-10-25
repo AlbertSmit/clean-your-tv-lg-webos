@@ -2,13 +2,29 @@ name: cytv standalone builds
 on:
   workflow_dispatch:
   push:
-    branches: [main, release/next]
-  pull_request:
+    branches: [release/next]
 permissions:
   contents: read
+concurrency:
+  group: cytv-candidate-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      candidate: ${{ steps.scope.outputs.candidate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: scope
+        run: python scripts/ci-scope.py
   android:
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/next')
+    needs: scope
+    if: needs.scope.outputs.candidate == 'true'
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:
@@ -66,6 +82,8 @@ jobs:
           path: dist/android/cytv-android-arm64*
           if-no-files-found: error
   build:
+    needs: scope
+    if: needs.scope.outputs.candidate == 'true'
     strategy:
       fail-fast: false
       matrix:

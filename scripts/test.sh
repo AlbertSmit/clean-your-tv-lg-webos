@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# No arguments runs the full suite (local checks and release validation).
+selected=" ${*:-tv installer android setup preview} "
+for component in "$@"; do
+  case "$component" in tv|installer|android|setup|preview) ;; *) echo "Unknown test component: $component" >&2; exit 2 ;; esac
+done
+has() { [[ "$selected" == *" $1 "* ]]; }
+
+if has tv; then
 npm run test:compat
 npm run lint:compat
 for test in tests/apps/*.cjs; do
@@ -13,7 +21,6 @@ node tests/renewal-core.cjs
 node tests/renewal-transport.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
-node tests/preview-bridge.cjs
 node tests/helper-entry.cjs
 node tests/helper-service-status.cjs
 node tests/helper-published-ui.cjs
@@ -49,9 +56,21 @@ for file in root-edition/ui/*.js; do node --check "$file"; done
 for file in root-edition/updater/*.js; do node --check "$file"; done
 python3 -m unittest discover -s root-edition/tests
 
-python3 -m unittest discover -s tests/setup
-python3 -m unittest discover -s tests/cytv
-python3 -m unittest discover -s tests -p test_preview.py
 for test in tests/updates/*.cjs; do node "$test"; done
 for file in updater-service/*.js updater-app/*.js; do node --check "$file"; done
 cmp launcher/user-data.js updater-service/user-data.js
+fi
+
+if has setup; then
+  python3 -m unittest discover -s tests/setup
+fi
+if has installer; then
+  python3 -m unittest discover -s tests/cytv
+fi
+if has android; then
+  python3 -m unittest discover -s android/tests
+fi
+if has preview; then
+  node tests/preview-bridge.cjs
+  python3 -m unittest discover -s tests -p test_preview.py
+fi

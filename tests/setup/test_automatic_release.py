@@ -6,6 +6,8 @@ import unittest
 import tempfile
 import struct
 import zipfile
+import subprocess
+from unittest.mock import patch
 from cytv.package import ipk
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,6 +19,60 @@ SHA = 'a' * 40
 
 
 class AutomaticRelease(unittest.TestCase):
+    def test_resolver_requires_all_successful_candidate_jobs(self):
+        import runpy
+        names = runpy.run_path(str(ROOT / 'scripts/release-flow.py'))['BUILD_JOBS']
+        jobs = [{'name': name, 'conclusion': 'success'} for name in names]
+        run = {'id': 42, 'head_sha': SHA}
+        for explicit in (None, 42):
+            responses = [run, {'jobs': jobs}] if explicit else [{'workflow_runs': [run]}, {'jobs': jobs}]
+            with self.subTest(explicit=explicit), \
+                 patch.object(release, 'github', side_effect=responses) as api, \
+                 patch.object(release, 'validate_build_run') as validate, \
+                 patch.object(release.subprocess, 'check_output', return_value=SHA):
+                self.assertEqual(release.resolve_build_source('b' * 40, explicit), run)
+                validate.assert_called_once_with(run, 'b' * 40)
+                self.assertIn('actions/runs/42/jobs', api.call_args.args[0])
+        for incomplete in (jobs[1:], [{**job, 'conclusion': 'skipped'} if job['name'] == 'android' else job for job in jobs]):
+            with self.subTest(jobs=incomplete), \
+                 patch.object(release, 'github', side_effect=[run, {'jobs': incomplete}]), \
+                 patch.object(release, 'validate_build_run'), self.assertRaises(ValueError):
+                release.resolve_build_source('b' * 40, 42)
+        with patch.object(release, 'github', return_value={'workflow_runs': []}), \
+             patch.object(release.subprocess, 'check_output', return_value=SHA), self.assertRaisesRegex(ValueError, 'No successful build'):
+            release.resolve_build_source('b' * 40)
+
+    def test_candidate_artifacts_require_exact_merge_parent_and_tree(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.check_output(['git', *args], cwd=root, text=True).strip()
+            git('init', '-b', 'main')
+            git('config', 'user.name', 'CI test')
+            git('config', 'user.email', 'ci@example.invalid')
+            (root / 'file').write_text('base')
+            git('add', '.'); git('commit', '-m', 'base')
+            git('checkout', '-b', 'release/next')
+            (root / 'file').write_text('candidate')
+            git('commit', '-am', 'candidate')
+            candidate = git('rev-parse', 'HEAD')
+            git('checkout', 'main')
+            git('merge', '--no-ff', 'release/next', '-m', 'release')
+            commit = git('rev-parse', 'HEAD')
+            run = {'conclusion': 'success', 'status': 'completed', 'head_sha': candidate,
+                   'head_branch': 'release/next', 'event': 'push', 'path': '.github/workflows/cytv.yml',
+                   'head_repository': {'full_name': 'Razdva122/clean-your-tv-lg-webos'}}
+            release.validate_build_run(run, commit, root=root)
+            for change in ({'head_sha': 'b' * 40}, {'event': 'pull_request'},
+                           {'head_repository': {'full_name': 'someone/fork'}}, {'conclusion': 'failure'}):
+                with self.subTest(change=change), self.assertRaises(ValueError):
+                    release.validate_build_run({**run, **change}, commit, root=root)
+            # A merge that adds even one unbuilt file cannot ship these artifacts.
+            (root / 'extra').write_text('unbuilt')
+            git('add', '.'); git('commit', '--amend', '--no-edit')
+            with self.assertRaisesRegex(ValueError, 'tree'):
+                release.validate_build_run(run, git('rev-parse', 'HEAD'), root=root)
+
     def test_android_release_binds_apk_to_trusted_source_metadata_and_payload(self):
         self.assertTrue(hasattr(release, 'verify_android_package'), 'Android release verification is missing')
         versions = {**VERSIONS, 'android': '0.1.3-preview', 'android_version_code': 4}

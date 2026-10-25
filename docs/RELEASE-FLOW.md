@@ -90,10 +90,22 @@ checks and acceptance are complete.
 ## Merge, publish and notify
 
 Merge the release PR using a merge commit. The existing publication pipeline
-builds, tests, packages, signs and verifies the exact resulting `main` commit.
-Pre-merge checks do not replace this validation. A merge means integrated;
+reuses the successful candidate installers after verifying that the exact second
+parent and Git tree match the resulting `main` commit. It runs the full tests,
+packages, signs and verifies the release without recompiling platform installers.
+A merge means integrated;
 shipping is confirmed only after publication and verification of the packages
 and signed update feeds.
+
+Ordinary PRs run only affected checks: TV/webOS, installer, Android, preview or
+packaging/release tools. Shared dependencies enable every affected group; unknown
+paths conservatively enable all checks. Documentation-only changes skip application
+checks and Pages builds while keeping the required Linux/macOS status names green.
+Once a candidate is frozen (final new version, matching plan, acceptance and notes),
+every subsequent candidate commit, including a documentation correction, needs a
+complete build so shipped artifacts remain bound to that exact source tree.
+Feature branches run tests on PR events; `main` and `release/next` also run tests
+on pushes. Preview Pages runs its own focused tests instead of the full suite.
 
 Packaging saves `RELEASE-INVENTORY.json` with the tag, exact source commit,
 release PR, included implementation PRs, their issues and delivered summaries.

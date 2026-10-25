@@ -1,14 +1,12 @@
 name: Automatic release
 on:
-  workflow_run:
-    workflows: [cytv standalone builds]
-    types: [completed]
+  push:
     branches: [main]
   workflow_dispatch:
     inputs:
       build_run:
-        description: Successful main cytv build run for this exact commit
-        required: true
+        description: Successful candidate build run (empty finds the exact merged candidate)
+        required: false
         type: string
       validate_only:
         description: Assemble and verify all packages without creating/publishing a release
@@ -24,28 +22,36 @@ concurrency:
   cancel-in-progress: false
 jobs:
   plan:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.plan.outputs.release }}
       tag: ${{ steps.plan.outputs.tag }}
       commit: ${{ steps.plan.outputs.commit }}
       build_run: ${{ steps.plan.outputs.build_run }}
+      build_commit: ${{ steps.plan.outputs.build_commit }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
           path: release-tools
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - id: source
-        name: Resolve and validate the successful main build before reading its source
+        name: Verify successful candidate builds match the exact main merge
         env:
           GH_TOKEN: ${{ github.token }}
-          BUILD_RUN: ${{ inputs.build_run || github.event.workflow_run.id }}
-        run: python release-tools/scripts/assemble-release.py --build-source --build-run "$BUILD_RUN"
+          BUILD_RUN: ${{ inputs.build_run }}
+          SOURCE_COMMIT: ${{ github.sha }}
+        working-directory: release-tools
+        shell: bash
+        run: |
+          args=(--build-source --source-commit "$SOURCE_COMMIT")
+          [ -z "$BUILD_RUN" ] || args+=(--build-run "$BUILD_RUN")
+          python scripts/assemble-release.py "${args[@]}"
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.source.outputs.commit }}
@@ -56,7 +62,7 @@ jobs:
         name: Plan a new version or skip an already published release
         env:
           GH_TOKEN: ${{ github.token }}
-          BUILD_RUN: ${{ inputs.build_run || github.event.workflow_run.id }}
+          BUILD_RUN: ${{ steps.source.outputs.build_run }}
           VALIDATE_ONLY: ${{ inputs.validate_only || false }}
           RELEASE_SOURCE_ROOT: ${{ github.workspace }}/release-source
         run: |
@@ -114,7 +120,8 @@ jobs:
       - name: Verify desktop and Android installers and assemble final public bundles
         env:
           SOURCE_BUILD_RUN: ${{ needs.plan.outputs.build_run }}
-        run: python release-tools/scripts/assemble-release.py --artifacts "$RUNNER_TEMP/release-builds" --output "$RUNNER_TEMP/release-assets"
+          BUILD_COMMIT: ${{ needs.plan.outputs.build_commit }}
+        run: python release-tools/scripts/assemble-release.py --artifacts "$RUNNER_TEMP/release-builds" --output "$RUNNER_TEMP/release-assets" --build-commit "$BUILD_COMMIT"
       - name: Bind release inventory to the exact source and refresh checksums
         if: hashFiles('release-source/release-plan.json') != '' || inputs.validate_only != true
         env:

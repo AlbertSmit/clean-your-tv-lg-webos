@@ -373,6 +373,11 @@ the delivered files, waits for an independent terminal installation event,
 provisions permissions, the recovery service/activity and its integrity manifest.
 **It does not enable Root Home.**
 
+Next candidate (#55): the device driver validates the migration source and reads
+the exact preference bytes before creating Root state or installing the package.
+A missing or invalid source stops installation without changing the active Root
+state. Host-side temporary bundle staging may already exist.
+
 If the old No-root Helper is running, press Home three times within two seconds to stop
 **that helper**, then release all buttons. Root refuses activation while Helper
 is active or an ambiguous old PID marker exists. Do not manually delete its
@@ -499,6 +504,21 @@ replacing the runtime does not resolve `Candidate or state already exists`.
 After removal, some recovery registrations are already gone, so the old
 `status` command may no longer report valid recovery; that is not a reason
 to resubmit removal.
+
+Next candidate (#55): a deployment interrupted at `payload-verified`,
+`personalization-starting`, `personalization-complete` or
+`provision-apply-starting` can use the normal `uninstall` command even when
+provisioning never created its snapshot. The driver verifies the early journal
+and absence of provisioning evidence, restores Home, skips only the inapplicable
+LS2 rollback, then requires terminal package removal and directory absence. An
+explicit `provisioning_not_started: true` receipt survives interrupted cleanup.
+The current cytv reinstall flow can archive that verified retained state using
+its normal process, routing and registration guards; recovery evidence is kept.
+Missing snapshots in later or conflicting states still stop cleanup. This
+behavior requires the new driver; do not overwrite an older retained runtime to
+retrofit it. Existing incomplete installations need review of their own state.
+The OLED Flex recovery-service startup failure in #55 remains unresolved; this
+change does not establish device compatibility or justify another blind install.
 
 Before preparing another installation, all of these conditions are required:
 confirmed terminal removal, absence of all three candidate directories,

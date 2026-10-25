@@ -165,6 +165,84 @@ class DeployTests(unittest.TestCase):
             import hashlib
             self.assertEqual(record['files']['config.js'], hashlib.sha256((target / 'config.js').read_bytes()).hexdigest())
 
+    def test_missing_migration_source_fails_before_state_or_package_install(self):
+        deploy = load('deploy')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            bundle = root / 'bundle'
+            load('build').build(bundle)
+            with patch.object(deploy, 'STATE', root/'state'), patch.object(deploy, 'INSTALLED', root/'installed'), patch.object(deploy, 'observed_install') as observe:
+                with self.assertRaisesRegex(ValueError, 'migration source'):
+                    deploy.install(bundle, migrate=True, observe=observe)
+                observe.assert_not_called()
+            self.assertFalse((root/'state').exists())
+
+    def test_preprovision_uninstall_skips_rollback_and_preserves_proof_on_resume(self):
+        deploy = load('deploy')
+        import observed_install
+        stages = ('payload-verified', 'personalization-starting', 'personalization-complete', 'provision-apply-starting')
+        for stage in stages:
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp).resolve()
+                state = root/'state';state.mkdir()
+                calls = []
+                def run(args):
+                    calls.append(args[-1])
+                    return {'returnValue':True,'result':'absent'}
+                real_write=deploy.write_stage
+                def interrupted(stage,**extra):
+                    if stage=='remove-submitting':raise OSError('interrupted before removal submission')
+                    real_write(stage,**extra)
+                with patch.object(deploy, 'STATE', state), patch.object(deploy, 'INSTALLED', root/'installed'), patch.object(observed_install, 'remove', return_value={'completed':True}) as remove:
+                    deploy.write_stage(stage)
+                    with patch.object(deploy,'write_stage',side_effect=interrupted):
+                        with self.assertRaises(OSError):deploy.uninstall(run=run)
+                    remove.assert_not_called()
+                    calls.clear()
+                    def resume(args):
+                        calls.append(args[-1]);return {'returnValue':True,'result':'absent'}
+                    deploy.uninstall(run=resume)
+                    self.assertEqual(calls,['restore'])
+                    self.assertIs(json.loads((state/'deploy.json').read_text())['provisioning_not_started'],True)
+
+    def test_preprovision_cleanup_refuses_conflicting_readiness_or_snapshot_links(self):
+        deploy = load('deploy')
+        import observed_install
+        for name in ('recovery-provision.pending.json','recovery-provision.json','ls2-provision-snapshot.json'):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                state=Path(tmp).resolve()
+                (state/name).symlink_to(state/'missing')
+                with patch.object(deploy,'STATE',state),patch.object(observed_install,'remove') as remove:
+                    deploy.write_stage('payload-verified')
+                    with self.assertRaises(ValueError):deploy.uninstall(run=lambda args: {'returnValue':True,'result':'absent'})
+                    remove.assert_not_called()
+
+    def test_preprovision_cleanup_refuses_an_active_provision_lock(self):
+        import fcntl, observed_install
+        deploy=load('deploy')
+        with tempfile.TemporaryDirectory() as tmp:
+            state=Path(tmp).resolve()
+            with patch.object(deploy,'STATE',state):
+                deploy.write_stage('provision-apply-starting')
+                with (state/'provision.lock').open('w') as lock:
+                    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                    with patch.object(deploy,'restore') as restore,patch.object(observed_install,'remove',return_value={'completed':True}):
+                        with self.assertRaises(BlockingIOError):deploy.uninstall(run=lambda args: None)
+                        restore.assert_not_called()
+
+    def test_preprovision_cleanup_rechecks_evidence_after_restore(self):
+        deploy=load('deploy')
+        import observed_install
+        with tempfile.TemporaryDirectory() as tmp:
+            state=Path(tmp).resolve()
+            def run(args):
+                (state/'ls2-provision-snapshot.json').write_text('{}')
+                return {'returnValue':True,'result':'absent'}
+            with patch.object(deploy,'STATE',state),patch.object(observed_install,'remove',return_value={'completed':True}) as remove:
+                deploy.write_stage('provision-apply-starting')
+                with self.assertRaises(ValueError):deploy.uninstall(run=run)
+                remove.assert_not_called()
+
     def test_install_success_requires_payload_then_orders_provision(self):
         deploy = load('deploy')
         builder = load('build')

@@ -44,6 +44,30 @@ class RootArchiveTests(unittest.TestCase):
         self.assertEqual((destination/'evidence.bin').read_bytes(), b'previous recovery evidence')
         self.assertEqual(json.loads((destination/'deploy.json').read_text())['stage'], 'uninstalled-state-retained')
 
+    def test_never_provisioned_removal_can_archive_only_with_explicit_proof(self):
+        (self.root/'ls2-provision-snapshot.json').unlink()
+        for value in (None, False, 'true'):
+            self.save('deploy.json', {'stage':'uninstalled-state-retained','app':'com.cleanyourtv.root.preview','provisioning_not_started':value})
+            with self.assertRaises((ValueError,OSError)):self.archive(self.root,self.installed,self.override)
+        self.save('deploy.json', {'stage':'uninstalled-state-retained','app':'com.cleanyourtv.root.preview','provisioning_not_started':True})
+        self.archive(self.root,self.installed,self.override)
+        self.assertEqual((Path(self.destination)/'evidence.bin').read_bytes(),b'previous recovery evidence')
+
+    def test_never_provisioned_proof_cannot_override_an_incomplete_snapshot(self):
+        self.save('deploy.json', {'stage':'uninstalled-state-retained','app':'com.cleanyourtv.root.preview','provisioning_not_started':True})
+        self.save('ls2-provision-snapshot.json', {'phase':'restoring'})
+        with self.assertRaises(ValueError):self.archive(self.root,self.installed,self.override)
+
+    def test_completed_rollback_can_archive_a_leftover_pending_manifest(self):
+        self.save('recovery-provision.pending.json', {'version':1})
+        self.archive(self.root,self.installed,self.override)
+
+    def test_never_provisioned_proof_refuses_a_pending_manifest(self):
+        (self.root/'ls2-provision-snapshot.json').unlink()
+        self.save('deploy.json', {'stage':'uninstalled-state-retained','app':'com.cleanyourtv.root.preview','provisioning_not_started':True})
+        self.save('recovery-provision.pending.json', {'version':1})
+        with self.assertRaises(ValueError):self.archive(self.root,self.installed,self.override)
+
     def test_incomplete_or_active_state_never_moves_recovery(self):
         for name, value in [
             ('deploy.json', {'stage':'installed-recovery-only','app':'com.cleanyourtv.root.preview'}),

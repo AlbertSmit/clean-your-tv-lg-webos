@@ -40,8 +40,8 @@ artifacts still need validation before merging into main or publishing.
 - Maintain subsequent release candidates after verified publication and preserve
   release scope/notification provenance.
 
-Related implementation PRs: #36, #38, #39, #40, #42 and #43. The preparation PR
-is collected into release-plan.json after integration. Issue #37 remains open for
+Related implementation/preparation PRs: #36, #38, #39, #40, #42, #43, #44, #45
+and #46, recorded in release-plan.json. Issue #37 remains open for
 UK6540PTD device feedback; issue #24's original unfinished removal is not claimed
 resolved by its separate Android receipt fix.
 
@@ -67,6 +67,14 @@ The Helper 0.6.19 archive and rollback approval must be recorded from actual
 validation; the retained 0.6.18 approval does not authorize this new package.
 
 ## Test installers
+
+[Five-platform test build 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
+passed at `acf1acccb0ec0802c993f94a39080859dcda9591`. Follow the
+[candidate testing guide](RC-1.1.0-TESTING.md), including existing Root/Updater
+inspection before reinstallation. Subsequent documentation changes do not alter
+those installer bytes; final frozen-head builds are still required. The
+[documentation audit](DOCUMENTATION-AUDIT.md) records current guide/translation
+coverage separately from historical device evidence.
 
 Maintainers can explicitly run **cytv standalone builds** on `release/next` with
 `test_build=true` after version metadata and these notes are present. This produces

@@ -1,5 +1,7 @@
 # Install Clean Your TV — No-root and Root
 
+**1.1.0 RC is unreleased.** The [latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) and its `/latest/download/` links currently deliver **1.0.3 stable**. For explicit RC testing, use [Actions run 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from product commit `acf1acc`; later documentation edits do not change those artifacts. RC versions are cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Physical-TV acceptance remains pending; see [release notes](RELEASE-1.1.0.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 Use **cytv** to install either edition. It includes the runtime and TV packages;
@@ -14,7 +16,7 @@ so your computer can be switched off during everyday use.
 | Setup credentials | Developer Mode passphrase, then separate on-TV control pairing | Root password/key or SSH agent; verify the TV's SSH identity |
 | Home control | On-TV Home Helper | System Home routing with independent recovery |
 | After setup | Keep Developer Mode active and local networking available for Helper | Keep root access and recovery services available |
-| Updates | From your computer; renewal is optional Beta | Compatible signed Home releases through Settings after updater setup |
+| Updates | From your computer; renewal is optional Beta | Compatible signed edition release sets through Settings after supervisor setup |
 
 Root setup **does not obtain root**, flash firmware or enable Developer Mode.
 Do not install Developer Mode over an existing rooted setup. Never run Root Home
@@ -61,7 +63,7 @@ Download the matching package from the
 
 For Windows, use File Explorer **Extract All** and keep the complete folder.
 Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
-Android 0.1.3-preview requirements, APK installation and limitations are covered
+Android 0.2.0-preview RC requirements, APK installation and limitations are covered
 in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
 The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
 for the Linux graphical app.
@@ -130,7 +132,7 @@ A successful installer run verifies commands and state, not physical buttons.
 
 Use cytv's status, diagnostics, restore and uninstall actions with the saved TV
 connection. Removing cytv from your computer does not remove the TV installation.
-Root uninstall through cytv removes project packages, including Root Updater and
+Root uninstall through cytv removes project packages, including System Updater, Root Updater and
 installed No-root components; retained inactive recovery evidence is intentional.
 See [desktop maintenance](DESKTOP_INSTALL.md#remove-the-project-from-a-rooted-tv),
 [CLI maintenance](CLI.md), and [manual maintenance](MAINTENANCE.md).

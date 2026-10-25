@@ -1,11 +1,14 @@
 # Install cytv without a terminal
 
+**1.1.0 RC is unreleased.** The [latest release](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) and its `/latest/download/` links currently deliver **1.0.3 stable**. For explicit RC testing, use [Actions run 40178512948](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from product commit `acf1acc`; later documentation edits do not change those artifacts. RC versions are cytv **0.3.0**, Home **1.4.0**, Helper **0.6.19**, Root **0.2.0**, both edition Updaters **0.2.0**, and Android **0.2.0-preview / code 9**. Physical-TV acceptance remains pending; see [release notes](RELEASE-1.1.0.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 The desktop wizard opens in its own window. The sidebar follows the four setup
 steps; Root and No-root are shown with descriptions before you choose. Expand
 **Maintenance action** on the start screen for status, diagnostics, restore and removal.
-It includes Python and the TV packages;
+It includes the computer Python runtime and the TV packages; the optional
+TV Python archive is a separate verified download during eligible Root setup;
 you do not need developer tools or terminal commands.
 
 Download the macOS, Windows or Linux desktop package from the
@@ -105,7 +108,10 @@ See the [ten localized installation, use and recovery guides](LANGUAGES.md).
 - Choose **No-root** for LG Developer Mode, or **Root** for an already rooted TV.
   Connection detection sets the current choice to match the detected connection; you can select either edition. Root privileges are verified after sign-in.
 - Review the TV and edition, then click **Continue**. Approve pairing on the TV.
-- Root activates Home control and opens Clean Your TV Home immediately. There is
+- Root checks Python 3.9+, TV Node.js 8+, root/Homebrew services and input support.
+  Eligible ARMv7 TVs without suitable Python can receive a separate pinned runtime
+  over SSH; this does not certify older-TV compatibility. Root activates Home
+  control and opens Clean Your TV Home immediately. There is
   no trial countdown or Keep confirmation.
 
 Passwords are masked. SSH identity changes still block the connection. While TV
@@ -131,7 +137,8 @@ Existing console commands remain available in the separately distributed CLI.
 Choose **Uninstall Clean Your TV** with the saved **Root** connection. The wizard
 restores LG Home and removes Root, Root Updater, its service and boot hook, plus
 any installed No-root Home, Helper and Home Updater packages. It also removes
-owned updater bus permissions. Other TV applications stay installed.
+owned updater bus permissions and the System Updater supervisor when present.
+Other TV applications stay installed.
 
 This also works if an older cytv already removed Root but left Root Updater behind.
 The wizard checks that the updater is idle before stopping it and verifies that
@@ -139,7 +146,8 @@ project apps, service registrations and startup hooks are gone. If a removal was
 interrupted, run the same action again; an ambiguous package removal is never
 submitted twice automatically.
 
-Root recovery records and the archived updater state remain for diagnostics.
+Root recovery records, archived updater state and referenced managed Python
+runtime slots remain for diagnostics and recovery.
 They have no active service or startup registration. The Mac application and its
 local reports remain installed on your computer.
 

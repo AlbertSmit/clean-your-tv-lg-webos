@@ -4,12 +4,28 @@ No-root and Root are equal options for different TV setups. Choose No-root for L
 
 ## Before installation
 
-This guide covers installation, daily use and recovery. Language selection and the macOS/Linux desktop app are included in [v0.10.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v0.10.3). Older v0.9.0 downloads do not include the desktop app. See the [shared installation guide](../INSTALL.md) for both editions.
+This guide covers installation, daily use and recovery. The latest published download is [v1.0.3](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.0.3). **v1.1.0 is an unreleased release candidate**: its test installers are [GitHub Actions artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948), built from `acf1acc`; later documentation changes do not change those binaries. Do not expect the candidate in `releases/latest` or the stable update feed. See the [shared installation guide](../INSTALL.md) and [candidate notes](../RELEASE-1.1.0.md).
+
+The candidate contains cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root Edition **0.2.0**, Home Updater and Root Updater **0.2.0**, Android **0.2.0-preview** (version code **9**) and System Updater supervisor **1.0.0** (protocol **1**). These are candidate versions, not the contents of the published v1.0.3 download.
 
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
 - **No-root:** enable LG Developer Mode and Key Server. Enter the passphrase displayed on the TV and accept the separate TV pairing request. Developer Mode must remain active; expiry can remove sideloaded apps. Monitor its official timer even with Beta renewal enabled. Helper monitoring needs local networking.
 - **Root:** existing root SSH access is required. The installer does not root the TV. Do not enable Developer Mode on an existing rooted setup. Keep root access and recovery services available.
+
+## Optional Python for Root in v1.1.0 RC
+
+Root needs a working Python **3.9+** on the TV. The installer checks the required modules (including `json` and `fcntl`), locking, filesystem and subprocess operations; the version number alone is insufficient. A suitable existing interpreter avoids the extra download. Otherwise setup downloads verified **CPython 3.13.17 for ARMv7 soft-float** on the computer or Android device, then transfers it over trusted SSH; the TV does not need Internet access. This optional archive is not bundled in ordinary installers: about **26.3 MB** downloaded, **51.5 MB** for normalized SSH transfer and **119.3 MB** installed, with **320 MiB** free required for initial staging. The private runtime does not replace system Python, libc or global PATH.
+
+The runtime still needs a compatible loader and libraries. Root SSH, Node.js **8+**, `luna-send` and the webOS application/service directories remain required; No-root Helper needs Node.js **10+**. LG UK6540PTD / firmware 05.50.70 / ARM32 (issue #37, Python 2.7.12 with no Python 3) has **not** passed hardware acceptance with this runtime. QEMU tests do not establish TV, cold-boot, remote-input or rollback compatibility. Historical hardware results apply only to their recorded model, firmware and artifacts.
+
+To prepare a verified cache on an Internet-connected computer **without contacting a TV**:
+
+```sh
+./cytv --language en --prepare-python-runtime
+```
+
+Use the same private data directory for setup; when moving a cache, prepare a fresh dedicated directory with `--data-dir /path/to/private-data` and use that option for both commands. Do not copy normal SSH keys or profiles into a shared cache. Status, diagnostics, restore and removal do not download Python automatically. Retain runtime slots referenced by installed updaters or recovery. See [Python details](../OPTIONAL-PYTHON.md).
 
 ## Install and select a language
 
@@ -53,7 +69,21 @@ After interruption, run `status` before retrying; retain journals and recovery f
 
 ## Updates and removal
 
-Keep known-working packages and private settings backups. Stop No-root Helper before replacing its packages; update from the computer without uninstalling first, since removal may erase settings. The combined cytv Root installation includes an updater for compatible releases under Settings → Software updates; the manual Root bundle has different limitations. Do not replace a live Root runtime with a standalone IPK. Reinstall only through the explicit cytv recovery/reinstallation flow. Removing the desktop app does not remove TV apps.
+Keep known-working packages and private settings backups. For computer-assisted No-root package replacement, stop Helper first and update without uninstalling, which may erase settings. Removing the desktop app does not remove TV apps. Do not replace a live Root runtime with a standalone IPK; use cytv's explicit recovery/reinstallation flow.
+
+In v1.1.0 RC, **Update all** in Home Settings → Software updates uses a signed release set: Home, Helper and Home Updater for No-root on a rooted TV; Root Home, Root Updater and the routing/recovery runtime for Root. This requires root, Homebrew Channel, working webOS installer services, Python 3.9+ and Node.js 8+; Helper additionally requires Node.js 10+. An unrooted TV still uses the computer installer.
+
+For a fresh setup, use the complete candidate installer to install the matching transition Home and edition-specific recovery Updater. **An existing Root installation with a retained Root Updater may deliberately block generic reinstallation.** First inspect `status`, Recovery and the existing transaction through the matching legacy recovery flow; follow the [existing-TV checkpoint](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv). Do not delete journals or bypass this check. The RC transition is not offered by the stable feed, and a legacy Home-only OTA does not install the new infrastructure.
+
+Only after the installed components and recovery state are ready, enable **updates for all TV components** in the desktop installer. For a saved root SSH connection and the Root edition:
+
+```sh
+./cytv --language en enable-system-updates --edition root --host TV_ADDRESS
+```
+
+This separate action provisions the fixed supervisor and captures the installed component set as a rollback baseline. It requires installed Home metadata with `systemUpdateProtocol = 1`; it does not reinstall Home or change routing. Ordinary No-root edition on a rooted TV needs root SSH and the matching computer-installed components; follow the [bootstrap procedure](../UPDATES.md#one-time-computer-preparation). A legacy Home-only OTA update does **not** provision the new supervisor, Python or updater infrastructure. Once the supervisor is installed, conflicting legacy installers are disabled; do not replace packages around it.
+
+System updates verify and cache the full candidate and previous set, preserve settings and profiles, and continue if Home or an Updater closes. Recovery restores the whole previous component set and saved profile. New physical-TV tests, including Helper 0.6.19 input release, cold startup, complete upgrade and rollback, remain pending; earlier C3 tests cover only their recorded Home-only packages. See [update and recovery details](../UPDATES.md).
 
 Technical details in English: [desktop setup](../DESKTOP_INSTALL.md), [CLI](../CLI.md), [Installation of both editions](../INSTALL.md), [manual installation](../MANUAL_INSTALL.md), [recovery](../RECOVERY.md), [edition comparison](../EDITIONS.md).
 
@@ -65,7 +95,7 @@ No-root checks the TV shell ABI, so a 64-bit kernel with verified ARM32 userspac
 
 Home updates require confirmation before installation; startup verification is automatic afterward. Background status refresh keeps the selected remote-control button in place.
 
-In Root and No-root, startup health is confirmed automatically after installation; you do not need to confirm that everything works. Recovery remains available after confirmation, without a time limit, until the next update. Rollback returns the previous Home version and its saved pre-update settings; later settings changes may be lost. A warning appears before you start rollback. On-device No-root updates and rollback still require root and Homebrew Channel; otherwise use the computer installer.
+Startup health is checked automatically in both editions; no manual health-confirmation step is required. Legacy Home-only rollback restores the previous Home package and its saved profile; System Updater rollback restores the complete previous release set. Recovery remains available after confirmation, without a time limit, until the next update. Later settings changes may be lost; rollback asks for confirmation. On-TV No-root updates and rollback still need root and Homebrew Channel. After an interruption, run `status` and inspect Recovery before continuing. An uncertain installer outcome blocks reinstallation and rollback: retain logs, journals and runtime slots, and never delete state to force a retry. Resume an interrupted cytv operation only through its checked recovery flow.
 
 The update screen now separates versions, status and readable release notes. Up/Down reads the notes; Left/Right selects the fixed actions below. After automatic startup checks, Root restores previously enabled Home control; No-root preserves the separate Helper state. Disabled preferences and explicit or emergency off remain off.
 

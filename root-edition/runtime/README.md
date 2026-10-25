@@ -1,6 +1,12 @@
 # Root candidate runtime
 
-Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-owned files without group/world write permission. Python 3 and `/usr/bin/luna-send` are required. Invoke `/usr/bin/python3 /var/lib/clean-your-tv-root/runtime/cli.py COMMAND` as root.
+Install these Python files under `/var/lib/clean-your-tv-root/runtime` as root-owned files without group/world write permission. Python 3.9+ and `/usr/bin/luna-send` are required; Root setup also requires TV Node.js 8+,
+Homebrew services and supported ARM32 input. With system Python, invoke
+`/usr/bin/python3 /var/lib/clean-your-tv-root/runtime/cli.py COMMAND` as root.
+For a managed-runtime installation use its retained verified interpreter binding;
+do not substitute a missing system interpreter or change global PATH.
+[Optional Python](../../docs/OPTIONAL-PYTHON.md) is provisioned only by setup,
+never by status, restore or removal; referenced runtime slots remain retained.
 
 - `status`: read actual system profiles and independent Home setting, journal and recovery integrity.
 - `trial`: activate **com.cleanyourtv.root.preview** for at most 60 seconds using a detached rollback guardian. Refuses any unresolved journal, unexpected baseline, missing Home registration or missing recovery provisioning.
@@ -39,7 +45,8 @@ Local tests exercise policy, real file ownership/conflict handling, subprocess t
 
 Trial preflight refuses an existing controller PID marker or running known No-root relay, including ambiguous stale markers. It rechecks before publishing the profile. It never edits the helper's control or blocked files and never relaunches that app. The legacy `stop` command creates the same blocked latch as a user disable, while manual relaunch clears it; an automatic stop/relaunch cannot preserve user intent. Explicitly stopping the old helper is therefore required before this candidate's trial; it remains stopped afterward. Transparent pause/resume requires a separate transaction-aware helper protocol and is not provided here. Do not launch the helper during a Root trial.
 
-During hardware acceptance, use the existing long-Home gesture to disable the No-root helper first. After Root restoration, verify stock routing and explicitly use the existing helper button to re-enable No-root if desired. Neither runtime nor uninstaller removes stale controller markers automatically; investigate stale state rather than blindly deleting it.
+During hardware acceptance, use three short Home presses within two seconds to
+disable the current No-root helper first (through 0.6.13: hold Home about two seconds). After Root restoration, verify stock routing and explicitly use the existing helper button to re-enable No-root if desired. Neither runtime nor uninstaller removes stale controller markers automatically; investigate stale state rather than blindly deleting it.
 
 ## RC15 persistent candidate
 

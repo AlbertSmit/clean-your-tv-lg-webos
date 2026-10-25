@@ -1,5 +1,17 @@
 # Root Edition status and evidence
 
+## 1.1.0 RC status — 2026-10-25
+
+The current candidate is unreleased: Root 0.2.0, Root Updater 0.2.0, independent
+System Updater supervisor and optional pinned ARMv7 Python. [Test artifacts](https://github.com/Razdva122/clean-your-tv-lg-webos/actions/runs/40178512948)
+are from product commit `acf1acc`; later documentation changes leave those product
+bytes unchanged. Latest published downloads remain 1.0.3 stable. Complete edition
+upgrade/rollback, managed runtime on UK6540PTD / 05.50.70, Helper 0.6.19 rollback,
+remote input and cold-power acceptance remain pending. QEMU/automated checks are
+not hardware validation. See [candidate scope](../docs/RELEASE-1.1.0.md) and
+[current update instructions](UPDATES.md). The dated records below retain their
+original artifact and hardware scope.
+
 Updated 2026-10-23. Test device: **LG OLED55C3RLA / firmware 43.21.71**.
 This file retains historical investigation results. **Current status:** Root Preview
 supports explicit permanent mode; software-reboot reactivation, actual launcher

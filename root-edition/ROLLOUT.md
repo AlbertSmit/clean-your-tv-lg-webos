@@ -23,7 +23,7 @@ a C compiler and the project Python dependencies, including
 npm ci --ignore-scripts --no-audit --no-fund
 bash scripts/test.sh
 mkdir -p build
-python3 root-edition/build.py --version 0.1.6 --output build/root-candidate
+python3 root-edition/build.py --version 0.2.0 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
 ```
 
@@ -41,7 +41,11 @@ renewal and helper-control scripts. Root's separate update UI requires the
 
 Configure an OpenSSH alias `my-tv` for your existing root login. Verify its host
 key through your existing trusted setup; do not disable host-key checking.
-The TV needs Python 3, luna-send and Homebrew services. The doctor is read-only:
+The TV needs suitable Python 3.9+, Node.js 8+, luna-send, Homebrew services and
+supported ARM32 Magic Remote input. These manual commands assume working system
+Python. Eligible TVs without it can use cytv's separately downloaded pinned ARMv7
+[managed Python](../docs/OPTIONAL-PYTHON.md); compatible loader/libc is still required.
+Maintenance must retain and use the verified interpreter binding. The doctor is read-only:
 
 ```sh
 python3 root-edition/doctor.py --ssh my-tv --output doctor-report.json
@@ -70,7 +74,9 @@ rollback baseline:
 python3 build/root-updater/setup-updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply
 ```
 
-Keep LG Home selected during setup. See [Root updates and recovery](UPDATES.md).
+Keep LG Home selected during setup. Whole-edition RC updates additionally need
+explicit computer bootstrap of the independent System Updater supervisor.
+See [Root updates and recovery](UPDATES.md); a legacy app-only OTA cannot do this.
 Existing Root Stable 0.1.0 uses package version 0.0.1 and older recovery
 infrastructure: it needs supervised computer migration, not an IPK-only update.
 The setup refuses live or retained state rather than overwriting it. Restore LG
@@ -143,8 +149,9 @@ python3 build/root-candidate/setup.py uninstall --ssh my-tv
 Uninstall restores first, removes owned recovery registration/startup hook, then
 removes the isolated package. It intentionally retains state and evidence. It
 does not touch the original launcher or start its helper. A retained state directory
-blocks reinstallation. Compatible Root application updates can use the separate
-[Root Updater](UPDATES.md); infrastructure replacement remains host-assisted.
+blocks reinstallation. Compatible Root edition release sets can use the independent
+[System Updater supervisor](UPDATES.md), including compatible recovery infrastructure.
+Initial supervisor/runtime bootstrap and legacy infrastructure migration remain host-assisted.
 Archive and resolve that state only after verified removal and restoration,
 following maintainer review.
 An unknown removal result is not permission to resubmit or delete directories.

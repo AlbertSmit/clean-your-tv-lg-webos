@@ -1,5 +1,21 @@
 # Root Edition recovery contract
 
+## 1.1.0 RC runtime and update recovery
+
+Current setup can use a separately provisioned pinned ARMv7 Python when eligible
+TVs lack suitable Python 3.9+. Root, boot recovery and independent updaters retain
+verified interpreter bindings; status/restore/removal do not download replacements.
+Keep referenced `/var/lib/clean-your-tv-python/` slots even after app removal.
+Node.js 8+, root/Homebrew services, loader/libc and input requirements remain.
+See [runtime limits](../docs/OPTIONAL-PYTHON.md).
+
+The independent System Updater restores whole-edition release sets and profiles;
+it needs explicit computer bootstrap. Unknown installer outcomes or interrupted
+removals retain evidence and stop unsafe replay. Use `cytv status`, then the saved
+connection's recovery/removal flow. New physical-TV acceptance is pending;
+see [current updates](UPDATES.md). The design notes below do not extend historical
+hardware claims to the RC.
+
 Historical metadata-recovery design. References to a future installer and open
 implementation gates below describe the original investigation. Current Root
 uses a separate package and implemented recovery runtime; it does not patch the

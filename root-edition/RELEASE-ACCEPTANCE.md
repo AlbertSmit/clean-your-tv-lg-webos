@@ -23,8 +23,12 @@ can still be treated as an input fault and disable Home control.
 ## Current release boundary
 
 The implementation supports protected trials and explicit permanent activation.
-Current distribution: **Root Edition 0.1.5** in v0.10.4, with Settings updates and
-separate update recovery. The 0.1.1 record describes earlier update evidence. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
+The published v1.0.3 distribution contains **Root 0.1.12**; the unpublished
+1.1.0 candidate contains **Root 0.2.0 / Root Updater 0.2.0**, optional Python
+bindings and the separate System Updater bootstrap. See
+[candidate notes](../docs/RELEASE-1.1.0.md) and
+[current test steps](../docs/RC-1.1.0-TESTING.md). New candidate hardware acceptance
+is pending. The 0.1.1 record describes earlier update evidence. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
 routing/lifecycle evidence below applies to its earlier fixed artifact.
 No blanket hardware certification is claimed for the final public artifact.
 

@@ -37,6 +37,11 @@
         37
       ],
       "summary": "Automatically supply verified optional ARMv7 Python for Root setup, recovery and updater bindings without embedding runtime bytes in ordinary installers; UK6540PTD acceptance pending"
+    },
+    {
+      "pr": 44,
+      "issues": [],
+      "summary": "Prepare 1.1.0 versions and draft installers for device feedback"
     }
   ],
   "excluded": [],

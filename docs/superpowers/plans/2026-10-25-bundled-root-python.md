@@ -30,11 +30,11 @@ absolute string. It checks the system Python and only downloads/provisions when
 provision=True and needed; caller may prefer an existing state launcher first.
 Managed directory and inventory format are fixed by the spec.
 
-- [ ] Write failing tests for a working system interpreter making zero downloads,
+- [x] Write failing tests for a working system interpreter making zero downloads,
   size/hash/cache/link/path failures, unsupported targets and smoke-test failure.
-- [ ] Implement bounded HTTPS acquisition, verified cache, safe archive normalization
+- [x] Implement bounded HTTPS acquisition, verified cache, safe archive normalization
   and atomic shell provisioning with space/ownership checks and progress.
-- [ ] Run the tests, inspect the pinned real archive, record results and commit.
+- [x] Run the tests, inspect the pinned real archive, record results and commit.
 
 ## Task 2: Root runtime and recovery binding
 
@@ -44,11 +44,11 @@ launcher_bytes(executable=None), install_launcher(state, write), and verify_bind
 The helper defaults to /usr/bin/python3 unless running from the managed namespace;
 it validates the managed inventory/ownership before persisting binding evidence.
 
-- [ ] Write failing tests for private launcher persistence, child interpreter and
+- [x] Write failing tests for private launcher persistence, child interpreter and
   guardian identity, boot hook ownership, recovery proof and legacy compatibility.
-- [ ] Bind deploy/provision/boot/service to the selected interpreter. Copy the helper
+- [x] Bind deploy/provision/boot/service to the selected interpreter. Copy the helper
   into build support; runtime children use actual sys.executable consistently.
-- [ ] Run Root/recovery tests, record results and commit.
+- [x] Run Root/recovery tests, record results and commit.
 
 ## Task 3: Installer and updater integration
 
@@ -57,18 +57,18 @@ root-edition/build_updater.py, root-edition/setup_updater.py, system-updater/,
 cytv/*updater_remove.py and scoped tests.
 Consumes select_python and python_binding interfaces above.
 
-- [ ] Add failing tests for missing-Python Root install automatically selecting
+- [x] Add failing tests for missing-Python Root install automatically selecting
   managed Python, zero-download maintenance, update workers and removal receipts.
-- [ ] Route every TV Python command through the selected interpreter/binding,
+- [x] Route every TV Python command through the selected interpreter/binding,
   preserve legacy hooks, include the binding helper in strict bundle inventories,
   and ensure system-updater infrastructure migration preserves valid bindings.
-- [ ] Run installer/updater/system tests, record results and commit.
+- [x] Run installer/updater/system tests, record results and commit.
 
 ## Task 4: User guidance, packaging, review and release integration
 
-- [ ] Add translated progress/error messages, packaging resource inclusion and docs
+- [x] Add translated progress/error messages, packaging resource inclusion and docs
   explaining automatic download/cache, offline priming, retained slots and limits.
-- [ ] Run combined installer, Root, updater and packaging checks; review whole diff,
+- [x] Run combined installer, Root, updater and packaging checks; review whole diff,
   resolve findings and run applicable CI on the implementation PR.
-- [ ] Merge implementation into release/next, collect inventory, update #35 and
+- [x] Merge implementation into release/next, collect inventory, update #35 and
   prepare candidate versions, release notes, builds and explicit acceptance gates.

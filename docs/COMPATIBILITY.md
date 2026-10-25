@@ -1,12 +1,19 @@
 # Compatibility and known limits
 
 TV runtime requirements are separate from the computer's build tools. No-root
-requires TV Node.js 10+ for the bundled WebSocket library; cytv and the source
+requires TV Node.js 0.12.2+ for the compiled Helper; cytv and the source
 installer reject older runtimes before installing packages. Root requires TV
 Python 3.9+ and Node.js 8+. Root install/setup checks these requirements; recovery
 commands do not add a new Node version gate. Passing these checks does not
 establish hardware compatibility. Outbound HTTPS uses the
 [bundled Mozilla CA store](TLS-TRUST.md).
+
+Helper app/service JavaScript is compiled separately with Babel for Node 0.12,
+with local core-js and safe-buffer polyfills loaded before application imports.
+Nodes below 10 select the vendored ws 6.2.4 compatibility path; newer runtimes
+use ws 8.21.0. The Node 0.12.2 regression exercises controller startup and a local
+WebSocket exchange. Input-device access, firmware SSAP behavior, standby and cold
+boot still require hardware acceptance on the LG 49UJ750V from issue #47.
 
 The unreleased 1.1.0 RC source contains cytv 0.3.0, Home 1.4.0, Helper 0.6.19,
 Root 0.2.0, both edition Updaters 0.2.0 and Android 0.2.0-preview / code 9.

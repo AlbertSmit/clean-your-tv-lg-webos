@@ -251,9 +251,9 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
             if not supported:
                 raise UserError('The bundled Home Helper requires ARM32. A compatible TV runtime could not be confirmed.')
             if install:
-                node = self.remote.run('if /usr/bin/node -e \'process.exit(Number(process.versions.node.split(".")[0]) >= 10 ? 0 : 1)\'; then printf CYTV_NODE_READY; fi')
+                node = self.remote.run('if /usr/bin/node -e \'var v=process.versions.node.split(".").map(Number);process.exit(v[0]>0||v[1]>12||(v[1]===12&&v[2]>=2)?0:1)\'; then printf CYTV_NODE_READY; fi')
                 if node.strip() != 'CYTV_NODE_READY':
-                    raise UserError('Home Helper requires TV Node.js 10+ for its bundled WebSocket runtime. Installation has not started.')
+                    raise UserError('Home Helper requires TV Node.js 0.12.2 or newer. Installation has not started.')
             root_state = self.remote.run(
                 'if [ -e /var/webos-profile/override/clean-your-tv-root.json ] || '
                 '[ -L /var/webos-profile/override/clean-your-tv-root.json ]; then printf CYTV_ROOT_STATE; fi')

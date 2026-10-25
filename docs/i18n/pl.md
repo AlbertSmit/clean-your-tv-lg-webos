@@ -11,6 +11,9 @@ Wersje kandydata: cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Root *
 Włącz telewizor i połącz go z tą samą zaufaną siecią lokalną co komputer. Później komputer może być wyłączony. Zgodność zależy od modelu, oprogramowania i pilota; Root ma nieukończone testy sprzętowe.
 
 - **No-root:** włącz LG Developer Mode i Key Server. Wpisz hasło wyświetlane na telewizorze i zaakceptuj na nim osobne żądanie parowania. Developer Mode musi pozostać aktywny: wygaśnięcie sesji może usunąć tak zainstalowane aplikacje. Sprawdzaj oficjalny licznik także przy włączonym odnawianiu Beta. Monitorowanie Helper wymaga sieci lokalnej.
+
+Zaktualizowany Helper No-root wymaga Node.js 0.12.2 lub nowszego na telewizorze. Instalator sprawdza ten wymóg przed instalacją. Wcześniej opublikowane pakiety nie uzyskują tej zgodności automatycznie; dostęp do urządzeń wejściowych, wybudzanie i zimny start wymagają testów na każdym modelu.
+
 - **Root:** potrzebny jest istniejący dostęp root przez SSH. Instalator nie uzyskuje uprawnień root. Nie włączaj Developer Mode na telewizorze z istniejącym rootem. Zachowaj dostęp root i usługi odzyskiwania.
 
 ## Opcjonalny Python dla Root

@@ -11,6 +11,9 @@ Der Kandidat enthält cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, Ro
 Fernseher einschalten und mit demselben vertrauenswürdigen Heimnetz wie den Computer verbinden. Danach muss der Computer nicht eingeschaltet bleiben. Die Kompatibilität hängt von Modell, Firmware und Fernbedienung ab; für Root stehen noch Gerätetests aus.
 
 - **No-root:** LG Developer Mode und Key Server einschalten. Die am Fernseher angezeigte Passphrase eingeben und die separate Kopplungsanfrage am Fernseher bestätigen. Developer Mode muss aktiv bleiben: Bei Ablauf können nachinstallierte Apps entfernt werden. Den offiziellen Timer auch mit aktivierter Beta-Verlängerung kontrollieren. Die Überwachung durch Helper benötigt das lokale Netzwerk.
+
+Der aktualisierte No-root Helper benötigt Node.js 0.12.2 oder neuer auf dem TV. Der Installer prüft die TV-Laufzeit vor der Installation. Ältere veröffentlichte Pakete erhalten diese Kompatibilität nicht automatisch; Eingabegeräte, Standby und Kaltstart müssen je Modell getestet werden.
+
 - **Root:** Bereits vorhandener Root-Zugang über SSH ist nötig. Der Installer richtet keinen Root-Zugang ein. Developer Mode nicht auf einem bereits gerooteten Fernseher aktivieren. Root-Zugang und Wiederherstellungsdienste verfügbar halten.
 
 ## Optionales Python für Root in v1.1.0 RC
@@ -71,7 +74,7 @@ Nach einer Unterbrechung zuerst `status` ausführen und Protokolle behalten. `re
 
 Funktionierende Pakete und private Einstellungssicherungen behalten. Bei No-root-Paketersatz vom Computer zuerst Helper stoppen und ohne vorherige Deinstallation aktualisieren, da diese Einstellungen löschen kann. Das Entfernen der Desktop-App entfernt keine TV-Apps. Keine einzelne IPK über eine aktive Root-Laufzeit installieren; den ausdrücklichen Wiederherstellungs- oder Neuinstallationsablauf von cytv verwenden.
 
-In v1.1.0 RC verwendet **Alles aktualisieren** unter Home-Einstellungen → Softwareupdates einen signierten Veröffentlichungssatz: Home, Helper und Home Updater für No-root auf einem gerooteten TV; Root Home, Root Updater sowie die Home-Steuerungs- und Wiederherstellungslaufzeit für Root. Benötigt werden Root, Homebrew Channel, funktionierende webOS-Installationsdienste, Python 3.9+ und Node.js 8+; Helper benötigt zusätzlich Node.js 10+. Fernseher ohne Root werden weiterhin vom Computer aktualisiert.
+In v1.1.0 RC verwendet **Alles aktualisieren** unter Home-Einstellungen → Softwareupdates einen signierten Veröffentlichungssatz: Home, Helper und Home Updater für No-root auf einem gerooteten TV; Root Home, Root Updater sowie die Home-Steuerungs- und Wiederherstellungslaufzeit für Root. Benötigt werden Root, Homebrew Channel, funktionierende webOS-Installationsdienste, Python 3.9+ und Node.js 8+. Fernseher ohne Root werden weiterhin vom Computer aktualisiert.
 
 Bei einer neuen Einrichtung mit dem vollständigen Installer des Kandidaten die passende Home-Übergangsversion und den Wiederherstellungs-Updater der Edition installieren. **Eine bestehende Root-Installation mit erhaltenem Root Updater kann eine allgemeine Neuinstallation absichtlich blockieren.** Zuerst `status`, Wiederherstellung und die vorhandene Transaktion mit dem passenden bisherigen Wiederherstellungsablauf prüfen; siehe [Prüfung eines bereits eingerichteten TVs](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv). Keine Journale löschen und diese Prüfung nicht umgehen. Der RC-Übergang wird nicht im stabilen Feed angeboten; ein älteres OTA-Update nur für Home installiert die neue Infrastruktur nicht.
 

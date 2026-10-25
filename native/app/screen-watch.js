@@ -1,5 +1,5 @@
 'use strict';
-var fs=require('fs'),os=require('os'),WebSocket=require('./vendor/ws');
+var fs=require('fs'),os=require('os'),WebSocket=require('./websocket');
 // Local self-connection: the TV rejects loopback, but accepts its own LAN address.
 // Never accepts a remote endpoint or launches anything itself.
 module.exports=function(data,log,onForeground,onReset,onPower){
@@ -19,7 +19,7 @@ module.exports=function(data,log,onForeground,onReset,onPower){
   });});
   if(!addresses.length){later();return;}
   var host=addresses[index++%addresses.length],s;
-  try{s=new WebSocket('wss://'+host+':3001',{rejectUnauthorized:false,handshakeTimeout:5000,maxPayload:65536});}
+  try{s=new WebSocket('wss://'+host+':3001',{rejectUnauthorized:false,handshakeTimeout:5000,maxPayload:65536,perMessageDeflate:false});}
   catch(e){later();return;}
   socket=s;
   var deadline=setTimeout(function(){s.terminate();},10000),pulse=null,alive=true;

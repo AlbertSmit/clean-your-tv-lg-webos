@@ -11,6 +11,9 @@ The candidate contains cytv **0.3.0**, Home **1.4.0**, Home Helper **0.6.19**, R
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
 - **No-root:** enable LG Developer Mode and Key Server. Enter the passphrase displayed on the TV and accept the separate TV pairing request. Developer Mode must remain active; expiry can remove sideloaded apps. Monitor its official timer even with Beta renewal enabled. Helper monitoring needs local networking.
+
+The updated No-root Helper requires TV Node.js 0.12.2 or newer. The installer checks the TV runtime before installation. Older published packages do not gain this compatibility automatically; input-device access and standby/cold boot still need testing on each model.
+
 - **Root:** existing root SSH access is required. The installer does not root the TV. Do not enable Developer Mode on an existing rooted setup. Keep root access and recovery services available.
 
 ## Optional Python for Root in v1.1.0 RC
@@ -71,7 +74,7 @@ After interruption, run `status` before retrying; retain journals and recovery f
 
 Keep known-working packages and private settings backups. For computer-assisted No-root package replacement, stop Helper first and update without uninstalling, which may erase settings. Removing the desktop app does not remove TV apps. Do not replace a live Root runtime with a standalone IPK; use cytv's explicit recovery/reinstallation flow.
 
-In v1.1.0 RC, **Update all** in Home Settings → Software updates uses a signed release set: Home, Helper and Home Updater for No-root on a rooted TV; Root Home, Root Updater and the routing/recovery runtime for Root. This requires root, Homebrew Channel, working webOS installer services, Python 3.9+ and Node.js 8+; Helper additionally requires Node.js 10+. An unrooted TV still uses the computer installer.
+In v1.1.0 RC, **Update all** in Home Settings → Software updates uses a signed release set: Home, Helper and Home Updater for No-root on a rooted TV; Root Home, Root Updater and the routing/recovery runtime for Root. This requires root, Homebrew Channel, working webOS installer services, Python 3.9+ and Node.js 8+. An unrooted TV still uses the computer installer.
 
 For a fresh setup, use the complete candidate installer to install the matching transition Home and edition-specific recovery Updater. **An existing Root installation with a retained Root Updater may deliberately block generic reinstallation.** First inspect `status`, Recovery and the existing transaction through the matching legacy recovery flow; follow the [existing-TV checkpoint](../RC-1.1.0-TESTING.md#first-checkpoint-inspect-the-existing-tv). Do not delete journals or bypass this check. The RC transition is not offered by the stable feed, and a legacy Home-only OTA does not install the new infrastructure.
 

@@ -124,3 +124,16 @@ current firmware/webOS, tested steps, failures, untested paths and recovery resu
 Attach the generated diagnostic JSON after reviewing it. Do not post SSH keys,
 pairing keys, private profile directories or raw device backups. Keep exact
 Helper archive/rollback evidence for its separate release approval.
+
+## Node 0.12 Helper feedback — issue #47
+
+The existing test build linked above predates the Helper compatibility fix.
+Use rebuilt candidate installers or the newly compiled Helper 0.6.19 package,
+not another installation of the older test artifact with the same candidate
+version. On LG 49UJ750V / webOS 3.5 / firmware 06.10.65, verify explicit
+Start Helper, controller startup and relay READY, short Home, triple-Home
+emergency release, unrelated remote keys, standby/wake and a separate cold boot.
+Check foreground/app-exit behavior and status/listApps. Retain redacted bootstrap
+and controller logs if startup fails; device existence alone does not establish
+open/grab permission. Record actual artifact SHA-256 and outcomes. Local Node
+0.12.2 and WSS regressions do not establish physical-TV acceptance.

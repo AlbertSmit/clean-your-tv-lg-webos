@@ -67,7 +67,7 @@ if name=='ares-setup-device' and '--listfull' in sys.argv:
 if name=='ares-novacom' and '--getkey' in sys.argv and os.environ['FAULT']=='pair': sys.exit(1)
 if name=='ares-novacom' and '--run' in sys.argv:
     if 'process.versions.node' in sys.argv[-1]:
-        print('8.12.0' if os.environ['FAULT']=='tv-node' else '10.24.1')
+        print('0.10.48' if os.environ['FAULT']=='tv-node' else '0.12.2')
     else: print('no confirmation' if os.environ['FAULT']=='ssh' else 'CYTV_SSH_OK')
 if name=='ares-install' and os.environ['FAULT']=='install': sys.exit(1)
 '''); cli.chmod(0o755)
@@ -142,10 +142,10 @@ printf '["configure"]\\n' >> calls.jsonl
         self.assertLess(calls.index(installs[-1]), calls.index(['configure']))
         self.assertEqual(calls[-1], ['ares-launch','-d','test-tv','-p','{"nativeHomeStart":true}','com.local.nativehome'])
 
-    def test_tv_node8_stops_before_inventory_and_package_install(self):
+    def test_tv_node_010_stops_before_inventory_and_package_install(self):
         result, calls = self.run_installer(fault='tv-node')
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('TV Node.js 10+', result.stdout+result.stderr)
+        self.assertIn('TV Node.js 0.12.2', result.stdout+result.stderr)
         self.assertFalse(any(c[0] in ('sync', 'ares-install', 'configure', 'ares-launch') for c in calls))
 
     def test_default_bootstrap_installs_pinned_zig_distribution(self):

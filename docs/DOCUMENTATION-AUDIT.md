@@ -23,7 +23,7 @@ unpublished; the public latest release remains v1.0.3.
 
 APP-MANAGEMENT still matches app inventory flows.
 DEVELOPER-MODE-BETA retains its actual unrooted-renewal limitations.
-TV-WEB-BUILD still matches the Chromium 38 compiler/compatibility checks.
+TV-WEB-BUILD now also documents the separate Helper Node 0.12 build; Chromium 38 frontend behavior remains unchanged.
 RELEASE-FLOW, RELEASE_CHECKLIST and the release PR template already contain the
 new recurring documentation gate from #46. They remain the process reference.
 Assets/font/icon notices describe their own source/attribution scope.
@@ -121,3 +121,20 @@ availability and OS dialogs were not independently revalidated in this pass.
 Current guides still use preview terminology in places because the Root package
 identity and manual bundle maturity remain separate from model-scoped historical
 stable acceptance. Do not remove those caveats simply to match a version number.
+
+## Helper Node 0.12 correction — issue #47
+
+Reviewed the merged candidate setup/runtime guidance after adding Babel, local
+polyfills and the legacy WebSocket path to Helper 0.6.19. Updated COMPATIBILITY,
+INSTALL, TV-WEB-BUILD, all ten user guides, installer translations, CONTRIBUTING,
+THIRD_PARTY_NOTICES and RELEASE-1.1.0. Removed the stale additional Helper
+Node 10 requirement from translated system-update instructions; the separate
+supervisor/Root Node 8 requirement remains. Historical downloads and immutable
+Helper baselines retain their original scope. The existing five-platform test
+artifacts predate this fix and must be rebuilt.
+
+Local checks: complete scripts/test.sh and TV payload build; actual official
+Node 0.12.2 executes the packaged Helper controller, status/listApps and WSS
+regression. Independent implementation review/rereview found no actionable
+issues. No LG 49UJ750V input-grab, standby, cold-boot or new rollback acceptance
+is claimed. CLI interfaces and unrelated Root/recovery instructions are unchanged.

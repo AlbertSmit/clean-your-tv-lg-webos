@@ -2,6 +2,10 @@
 
 ## v1.1.0 — Unpublished release candidate
 
+- Fix Home Helper startup on TV Node 0.12.2 with a separate Babel/polyfill build,
+  compatible WebSocket client and guarded error logging (#47). Original-TV input,
+  standby and cold-boot acceptance remains pending.
+
 - Add a fixed System Updater supervisor and signed whole-edition updates with
   independent recovery, preserved profiles and component-set rollback.
 - Supply a verified private ARMv7 Python on demand for eligible Root TVs; keep

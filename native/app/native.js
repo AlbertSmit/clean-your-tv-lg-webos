@@ -9,8 +9,16 @@ require('./state-permissions')(data,function(x){console.error(JSON.stringify(x))
 if(automatic&&fs.existsSync(data+'/blocked'))process.exit(0);
 var logPath=data+'/controller.log', pidPath=data+'/controller.pid';
 fs.writeFileSync(pidPath,String(process.pid));fs.writeFileSync(logPath,'');
-function log(x){fs.appendFileSync(logPath,JSON.stringify(Object.assign({time:Date.now()},x))+'\n');}
-process.on('uncaughtException',function(e){try{block();}catch(ignore){}log({error:String(e)});if(child)child.stdin.end();setTimeout(function(){process.exit(2);},2500);});
+function log(x){
+ try{fs.appendFileSync(logPath,JSON.stringify(Object.assign({time:Date.now()},x))+'\n');}
+ catch(e){try{console.error('Helper log failed: '+String(e));console.error(x);}catch(ignore){}}
+}
+process.on('uncaughtException',function(e){
+ try{block();}catch(ignore){}
+ log({error:String(e),stack:e&&e.stack});
+ setTimeout(function(){process.exit(2);},2500);
+ try{if(child)child.stdin.end();}catch(ignore){}
+});
 var Service=require('/usr/lib/node_modules/webos-service');
 var service=new Service('com.local.nativehome');
 service.activityManager.create('native-home-controller',function(){});

@@ -1,6 +1,11 @@
 # Signing and publishing update feeds
 
-The normal release trigger is a version change merged into `main`. Set
+The release branch policy, late version selection, required release PR checks
+and post-publication issue/PR notifications are described in
+[Release integration flow](RELEASE-FLOW.md).
+
+The normal release trigger is a finalized `release/next` PR merged into `main`.
+Choose the version at candidate freeze, not when creating the preparation branch. Set
 `release` and the changed component versions in `release-versions.json`, update
 the matching application/service manifests and add `docs/RELEASE-X.Y.Z.md`.
 No tag, terminal command, draft creation or Publish click is needed.
@@ -19,6 +24,9 @@ completion, **Automatic release**:
 5. Calls the protected signing workflow directly: it creates both feeds and
    rollback assets, signs them, uploads them, verifies every referenced package,
    publishes as latest and verifies again.
+6. Uses the checksummed `RELEASE-INVENTORY.json`, bound to the exact source
+   commit, to notify all included PRs and related issues without duplicate bot
+   comments. **Retry release notifications** retries this step independently.
 
 Already published versions are skipped. Failed tests, builds, packaging or
 signing never advance a new release to latest. Retrying the failed workflow can

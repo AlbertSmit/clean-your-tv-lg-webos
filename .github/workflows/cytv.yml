@@ -2,54 +2,13 @@ name: cytv standalone builds
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'cytv/**'
-      - 'android/**'
-      - 'assets/brand/**'
-      - 'assets/icons/**'
-      - 'scripts/build-cytv.py'
-      - 'scripts/compile-tv-web.cjs'
-      - 'scripts/tv_web_build.py'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'scripts/desktop_packaging.py'
-      - 'tests/cytv/**'
-      - 'launcher/**'
-      - 'native/**'
-      - 'root-edition/**'
-      - 'renewal-service/**'
-      - 'lgtv.py'
-      - 'release-versions.json'
-      - 'LICENSE'
-      - 'THIRD_PARTY_NOTICES.md'
-      - '.github/workflows/cytv.yml'
+    branches: [main, release/next]
   pull_request:
-    paths:
-      - 'cytv/**'
-      - 'android/**'
-      - 'assets/brand/**'
-      - 'assets/icons/**'
-      - 'scripts/build-cytv.py'
-      - 'scripts/compile-tv-web.cjs'
-      - 'scripts/tv_web_build.py'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'scripts/desktop_packaging.py'
-      - 'tests/cytv/**'
-      - 'launcher/**'
-      - 'native/**'
-      - 'root-edition/**'
-      - 'renewal-service/**'
-      - 'lgtv.py'
-      - 'release-versions.json'
-      - 'LICENSE'
-      - 'THIRD_PARTY_NOTICES.md'
-      - '.github/workflows/cytv.yml'
 permissions:
   contents: read
 jobs:
   android:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/next')
     runs-on: ubuntu-22.04
     timeout-minutes: 25
     steps:

@@ -79,3 +79,9 @@ missing infrastructure files against the pinned inventory, allowing older Root
 Updater installations to upgrade and roll back newly introduced CA files safely.
 Independent review approved that migration delta and per-component downgrade
 protection. Feature PR: #40, targeting release/next.
+
+The separate compiled legacy-browser gate was also run locally in all three
+profiles (modern, missing inset, missing inset/ES2015 APIs). The test bus now
+models LS2's explicit missing-supervisor envelope, retaining the production
+rule that ambiguous service failures must not activate a legacy installer.
+All three profiles passed with an intact grid, navigation and full-screen dialogs.

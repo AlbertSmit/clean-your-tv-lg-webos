@@ -1,6 +1,5 @@
 """Run the TV shell probe against a local /proc fixture; never contact a TV."""
 from pathlib import Path
-import os
 import subprocess
 import tempfile
 import unittest
@@ -18,13 +17,6 @@ class HelperPreflightTests(unittest.TestCase):
         state.mkdir()
         proc = root / 'proc'
         proc.mkdir()
-        env = dict(os.environ)
-        if grep_error:
-            tools = root / 'bin'
-            tools.mkdir()
-            (tools / 'grep').write_text('#!/bin/sh\nexit 2\n')
-            (tools / 'grep').chmod(0o755)
-            env['PATH'] = str(tools) + os.pathsep + env['PATH']
         if symlink:
             (state / 'controller.pid').symlink_to(root / 'missing')
         elif pid is not None:
@@ -40,7 +32,9 @@ class HelperPreflightTests(unittest.TestCase):
                     return '127 69 76 70 1 1 1 0 0 0 0 0 0 0 0 0 2 0 40 0'
                 if 'CYTV_ROOT_STATE' in command: return ''
                 script = command.replace(HELPER_STATE, state.as_posix()).replace('/proc/', proc.as_posix() + '/')
-                return subprocess.check_output(['sh', '-c', script], text=True, env=env)
+                if grep_error:
+                    script = 'grep() { return 2; }\n' + script
+                return subprocess.check_output(['sh', '-c', script], text=True)
         self.messages = []
         return Installer(Remote(), None, {'edition': 'no-root'}, '.', {}, self.messages.append)
 

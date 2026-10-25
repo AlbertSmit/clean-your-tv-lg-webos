@@ -82,8 +82,8 @@ tv_node=$(ares-novacom -d "$DEVICE" --run '/usr/bin/node -p "process.versions.no
 python3 - "$tv_node" <<'PY'
 import re, sys
 version = sys.argv[1].strip()
-if not re.fullmatch(r'\d+\.\d+\.\d+', version) or int(version.split('.')[0]) < 10:
-    raise SystemExit('Home Helper requires TV Node.js 10+. Installation has not started.')
+if not re.fullmatch(r'\d+\.\d+\.\d+', version) or tuple(map(int, version.split('.'))) < (0, 12, 2):
+    raise SystemExit('Home Helper requires TV Node.js 0.12.2 or newer. Installation has not started.')
 PY
 # Generated icons/directories and native executables must be readable/traversable
 # by the TV runtime after packaging. Pairing keys enforce their own private modes.

@@ -13,14 +13,14 @@ module.exports=function(options){
    var interfaces=(options.interfaces||require('os').networkInterfaces)(),hosts=[];
    Object.keys(interfaces).forEach(function(name){interfaces[name].forEach(function(a){if(!a.internal&&(a.family==='IPv4'||a.family===4)&&a.address.indexOf('169.254.')!==0)hosts.push(a.address);});});
    if(!hosts.length){finish('network-unavailable');return;}
-   var WebSocket=options.WebSocket||require(base+'/vendor/ws');
+   var WebSocket=options.WebSocket||require(base+'/websocket');
    var index=0;
    timer=setTimeout(function(){finish('inventory-timeout');},options.timeout||8000);
    function connect(){
     if(done)return;
     if(index>=hosts.length){finish('network-unavailable');return;}
     var current;
-    try{current=new WebSocket('wss://'+hosts[index++]+':3001',{rejectUnauthorized:false,handshakeTimeout:2000,maxPayload:1024*1024});}
+    try{current=new WebSocket('wss://'+hosts[index++]+':3001',{rejectUnauthorized:false,handshakeTimeout:2000,maxPayload:1024*1024,perMessageDeflate:false});}
     catch(_){connect();return;}
     socket=current;
     function retry(){

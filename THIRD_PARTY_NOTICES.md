@@ -4,6 +4,9 @@
   notices are retained in LICENSE. The font license is retained at launcher/fonts/OFL.txt.
 - Outfit: SIL Open Font License 1.1, retained alongside the font.
 - ws: bundled Node WebSocket dependency; license in native/app/vendor/ws/LICENSE.
+- Legacy Helper uses ws 6.2.4, the UTF-8 validator from ws 7.5.11 and
+  async-limiter 1.0.1 (MIT); sources, local changes and licenses are retained in
+  `native/app/vendor/ws-legacy/`. Modern TV Node continues to use ws 8.21.0.
 - webos-service: supplied by the TV runtime, not redistributed here.
 - Zig, Python and LG's webOS CLI are external build/setup prerequisites.
 - Outbound HTTPS services bundle the Mozilla CA store converted by curl, under MPL 2.0.
@@ -12,6 +15,8 @@
 - Compiled TV web apps include core-js (MIT) for ECMAScript compatibility and may
   include Babel helpers (MIT). Their license texts are retained in each web app's
   `compat-LICENSE.txt`. Babel and PostCSS are build tools, pinned by package-lock.json.
+- Compiled Helper app and service include core-js, safe-buffer and Babel helpers
+  (MIT), with licenses in each package directory's `compat-LICENSE.txt`.
 
 TV app icons are downloaded only for a user's local app inventory. They are not
 included in a clean public checkout or generic release package.

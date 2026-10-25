@@ -61,6 +61,15 @@ jobs:
           python-version: "3.12"
       - run: npm ci --ignore-scripts --no-audit --no-fund
         if: needs.scope.outputs.any == 'true'
+      - name: Prepare pinned Node 0.12.2 for Helper regression
+        if: runner.os == 'Linux' && (needs.scope.outputs.tv == 'true' || needs.scope.outputs.installer == 'true')
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location https://nodejs.org/dist/v0.12.2/node-v0.12.2-linux-x64.tar.gz --output node-v0.12.2-linux-x64.tar.gz
+          echo '4e1578efc2a2cc67651413a05ccc4c5d43f6b4329c599901c556f24d93cd0508  node-v0.12.2-linux-x64.tar.gz' | sha256sum --check -
+          tar -xzf node-v0.12.2-linux-x64.tar.gz
+          echo "NODE012=$RUNNER_TEMP/node-v0.12.2-linux-x64/bin/node" >> "$GITHUB_ENV"
       - run: python -m pip install -r cytv/requirements.txt
         if: needs.scope.outputs.any == 'true'
       - name: Test affected components

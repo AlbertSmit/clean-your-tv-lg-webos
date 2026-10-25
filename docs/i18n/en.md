@@ -9,6 +9,9 @@ This guide covers installation, daily use and recovery. Language selection and t
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
 - **No-root:** enable LG Developer Mode and Key Server. Enter the passphrase displayed on the TV and accept the separate TV pairing request. Developer Mode must remain active; expiry can remove sideloaded apps. Monitor its official timer even with Beta renewal enabled. Helper monitoring needs local networking.
+
+The updated No-root Helper requires TV Node.js 0.12.2 or newer. The installer checks the TV runtime before installation. Older published packages do not gain this compatibility automatically; input-device access and standby/cold boot still need testing on each model.
+
 - **Root:** existing root SSH access is required. The installer does not root the TV. Do not enable Developer Mode on an existing rooted setup. Keep root access and recovery services available.
 
 ## Install and select a language

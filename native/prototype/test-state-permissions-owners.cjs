@@ -68,7 +68,7 @@ test('recovered key enables foreground and power subscriptions with existing Bac
  const context={module:{exports:{}},require(n){
   if(n==='./state-permissions')return()=>f.run();
   if(n==='os')return{networkInterfaces:()=>({lan:[{internal:false,family:'IPv4',address:'192.0.2.1'}]})};
-  if(n==='./vendor/ws')return WS;
+  if(n==='./websocket')return WS;
   return require(n);
  },setTimeout(){return 1;},clearTimeout(){},setInterval(){return 2;},clearInterval(){}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../app/screen-watch'),'utf8'),context);

@@ -9,6 +9,9 @@ Este guia cobre instalação, uso e recuperação. A escolha de idioma e o aplic
 Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois, o computador pode ficar desligado. A compatibilidade depende do modelo, firmware e controle remoto; Root ainda tem testes em hardware pendentes.
 
 - **No-root:** ative LG Developer Mode e Key Server. Digite a frase de acesso exibida na TV e aceite nela o pedido separado de pareamento. Developer Mode deve continuar ativo: a expiração pode remover aplicativos instalados por esse método. Confira o cronômetro oficial mesmo com a renovação Beta ativada. O monitoramento do Helper depende da rede local.
+
+O Helper No-root atualizado exige Node.js 0.12.2 ou posterior na TV. O instalador verifica esse requisito antes da instalação. Pacotes publicados anteriormente não recebem essa compatibilidade automaticamente; o acesso ao controle, a espera e a inicialização a frio precisam ser testados em cada modelo.
+
 - **Root:** é necessário acesso SSH root já existente. O instalador não faz root. Não ative Developer Mode em uma TV que já tenha root. Mantenha o acesso root e os serviços de recuperação disponíveis.
 
 ## Instalação e idioma

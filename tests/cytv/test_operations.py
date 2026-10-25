@@ -101,7 +101,7 @@ class OperationTests(unittest.TestCase):
         self.assertTrue(all(selected in command and 'PYTHONDONTWRITEBYTECODE=1' in command for command in commands))
         self.assertIsNone(self.store.pending(installer.profile))
 
-    def test_no_root_rejects_node8_before_creating_a_receipt(self):
+    def test_no_root_rejects_node_010_before_creating_a_receipt(self):
         import subprocess
         remote = Remote()
         original_run = remote.run
@@ -111,15 +111,38 @@ class OperationTests(unittest.TestCase):
                 args = shlex.split(command)
                 snippet = args[args.index('-e')+1]
                 result = subprocess.run(['node', '-e',
-                    "Object.defineProperty(process.versions,'node',{value:'8.12.0'});"+snippet], capture_output=True)
+                    "Object.defineProperty(process.versions,'node',{value:'0.10.48'});"+snippet], capture_output=True)
                 return 'CYTV_NODE_READY' if result.returncode == 0 else ''
             return original_run(command, **kwargs)
         remote.run = run
         installer = self.installer(remote)
-        with self.assertRaisesRegex(RuntimeError, 'Node.js 10'):
+        with self.assertRaisesRegex(RuntimeError, 'Node.js 0.12.2'):
             installer.install(self.inventory, 'secret')
         self.assertIsNone(self.store.pending(installer.profile))
         self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
+
+    def test_helper_node_gate_accepts_0122_and_later(self):
+        import subprocess
+        for version, allowed in [('0.10.48', False), ('0.12.0', False), ('0.12.2', True),
+                                 ('0.12.18', True), ('8.12.0', True), ('10.24.1', True)]:
+            with self.subTest(version=version):
+                remote = Remote()
+                original_run = remote.run
+                def run(command, **kwargs):
+                    if 'CYTV_NODE_READY' in command:
+                        args = shlex.split(command)
+                        snippet = args[args.index('-e')+1]
+                        result = subprocess.run(['node', '-e',
+                            "Object.defineProperty(process.versions,'node',{value:"+repr(version)+"});"+snippet], capture_output=True)
+                        return 'CYTV_NODE_READY' if result.returncode == 0 else ''
+                    return original_run(command, **kwargs)
+                remote.run = run
+                installer = self.installer(remote)
+                if allowed:
+                    installer.preflight(install=True)
+                else:
+                    with self.assertRaisesRegex(RuntimeError, 'Node.js 0.12.2'):
+                        installer.preflight(install=True)
 
     @unittest.skipIf(__import__('os').name == 'nt', 'TV staging uses a POSIX shell')
     def test_install_staging_is_readable_by_a_separate_installer_uid(self):

@@ -17,6 +17,11 @@ artifacts still need validation before merging into main or publishing.
 
 ## Included changes
 
+- Compile No-root Helper app/service JS for TV Node 0.12.2+ with Babel,
+  core-js and safe-buffer. Select a compatible WebSocket implementation on old
+  TV runtimes and preserve controller errors when logging fails (#47).
+  Input-device, standby and cold-boot acceptance on the reported LG 49UJ750V
+  remains outstanding.
 - Update compatible TV edition components through a signed release set with an
   independent supervisor, preserved profile and explicit rollback. Computer
   setup provisions the supervisor and captures existing recovery baselines;

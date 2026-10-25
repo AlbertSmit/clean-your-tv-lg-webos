@@ -24,7 +24,7 @@ def compile_web(files):
     return output
 
 
-def stage(source, output):
+def stage(source, output, compiler=compile_web):
     source, output = Path(source), Path(output)
     if source.resolve() == output.resolve():
         raise ValueError('Compile into a separate staging directory, not the source.')
@@ -34,7 +34,7 @@ def stage(source, output):
             raise ValueError('Indirect web source: ' + str(path))
         if path.is_file():
             files[path.relative_to(source).as_posix()] = path.read_bytes()
-    compiled = compile_web(files)
+    compiled = compiler(files)
     if output.exists():
         shutil.rmtree(output)
     for name, raw in compiled.items():

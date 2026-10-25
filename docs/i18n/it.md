@@ -9,6 +9,9 @@ Questa guida tratta installazione, utilizzo e ripristino. La scelta della lingua
 Accendi il televisore e collegalo alla stessa rete locale affidabile del computer. Dopo l’installazione il computer può restare spento. La compatibilità dipende da modello, firmware e telecomando; Root ha ancora verifiche hardware da completare.
 
 - **No-root:** attiva LG Developer Mode e Key Server. Inserisci la frase di accesso mostrata sul televisore e accetta sullo schermo la richiesta separata di abbinamento. Developer Mode deve restare attivo: alla scadenza le app installate in questo modo possono essere rimosse. Controlla il timer ufficiale anche con rinnovo Beta attivo. Il monitoraggio di Helper richiede la rete locale.
+
+Il Helper No-root aggiornato richiede Node.js 0.12.2 o successivo sulla TV. Il programma di installazione verifica questo requisito prima di installare. I pacchetti già pubblicati non acquisiscono automaticamente questa compatibilità; accesso al telecomando, standby e avvio a freddo richiedono prove su ogni modello.
+
 - **Root:** serve un accesso SSH root già disponibile. L’installer non ottiene i privilegi root. Non attivare Developer Mode su una configurazione già dotata di root. Mantieni disponibili accesso root e servizi di ripristino.
 
 ## Installazione e lingua

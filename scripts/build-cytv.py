@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cytv import package
 from scripts.tv_web_build import compile_web
+from scripts.helper_build import compile_helper
 
 
 def tracked_files(prefix):
@@ -20,7 +21,7 @@ def tracked_files(prefix):
     files = {}
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
-    required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js'],
+    required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js', 'native/app/websocket.js'],
                 'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
                 'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
                 'launcher': ['launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
@@ -28,6 +29,8 @@ def tracked_files(prefix):
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
                              'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],
                 'native/service': ['native/service/app-inventory.js']}
+    if prefix == 'native/app':
+        required[prefix] += [p.relative_to(ROOT).as_posix() for p in (ROOT/'native/app/vendor/ws-legacy').rglob('*') if p.is_file()]
     for name in sorted(set(result.stdout.splitlines()) | set(required.get(prefix, []))):
         path = ROOT / name
         if path.is_symlink() or not path.is_file():
@@ -37,6 +40,9 @@ def tracked_files(prefix):
 
 
 def pack_app(appfiles, servicefiles, architecture='all', helper=False):
+    if helper:
+        servicefiles = dict(servicefiles, **{'state-permissions.js': appfiles['state-permissions.js']})
+        appfiles, servicefiles = compile_helper(appfiles), compile_helper(servicefiles)
     info = json.loads(appfiles['appinfo.json'])
     if info.get('type') == 'web':
         appfiles = compile_web(appfiles)

@@ -20,6 +20,8 @@ user guides under `docs/i18n/` when changing user-facing setup or controls.
 
 Run `npm ci` first. TV web packages use Babel/core-js and PostCSS, with a strict
 compatibility check after conversion; see [TV web build](docs/TV-WEB-BUILD.md).
+Helper app/service JS uses a separate Babel/core-js/safe-buffer build for TV
+Node 0.12.2+. Set `NODE012` to run its regression against that exact runtime.
 Keep changes small and reproducible. Run `scripts/test.sh`; describe the test model,
 firmware, expected behavior and actual behavior. Separate standby tests from cold
 boots. Never claim compatibility from a successful package installation alone.

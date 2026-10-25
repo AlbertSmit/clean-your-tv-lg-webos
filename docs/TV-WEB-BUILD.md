@@ -16,7 +16,8 @@ npm run test:compat
 All production TV web packages pass through `scripts/tv_web_build.py`:
 No-root Home, Root Home, Home Updater and Root Updater. Desktop and Android
 installers embed these compiled packages. Native executables, TV Node services
-and Python code retain their own runtimes and are not passed to Babel.
+and Python code retain their own runtimes. Helper JavaScript has a separate
+Node-targeted build described below; other TV Node services are not transformed.
 The installed cytv apps do not require Node/npm on the user's computer.
 
 ## Processing and validation
@@ -66,6 +67,33 @@ It checks actual card hit-testing, dimensions, icon fallback, scrolling,
 launch/navigation and full-screen dialogs. This models the reported engine
 limitations in a current browser; it is not an emulator of an entire old TV.
 Hardware confirmation is still required on the original webOS 3.5 device.
+
+## Helper Node compatibility
+
+`scripts/helper_build.py` and `scripts/compile-helper.cjs` target **Node 0.12**
+independently of Browserslist. Both `build-cytv.py` and `build.sh` compile the
+Helper app and its status/inventory service, including vendored JS. Every
+emitted `.js` file passes an ES5 parse check. Babel always runs, including on
+sources that parse as ES5: strict block function declarations still fail in
+Node 0.12 without transformation. Each top-level module loads local
+core-js and safe-buffer before importing application dependencies. The original
+Buffer constructor is preserved; only missing safe Buffer methods are added.
+A Node 0.x shim also forwards callback arguments through `process.nextTick`.
+
+`websocket.js` selects ws 6.2.4 below Node 10 and ws 8.21.0 on newer TV Node.
+The legacy tree includes async-limiter and the pure JS UTF-8 validator from
+ws 7.5.11; see its retained source notes. SSAP clients disable compression and
+keep their handshake/payload limits. TV-provided webos-service remains external.
+Published historical Helper baselines retain their original bytes.
+
+Run `node tests/helper-compat.cjs` with current Node, or set `NODE012` to a
+Node 0.12.2 executable. The regression compiles the actual Helper sources,
+exercises controller startup/error handling with TV hardware/Luna substitutes,
+and service status/listApps, and performs a real local WSS register/subscribe,
+fragmented text, ping/pong and close exchange. Invalid UTF-8 and oversized
+payloads must be rejected. CI downloads a SHA-256-pinned official Linux x64
+Node 0.12.2 archive. Packaged service tests also use that runtime when available.
+This verifies Node compatibility, not access to a TV's evdev devices.
 
 References: [LG engine versions](https://webostv.developer.lge.com/develop/specifications/web-api-and-web-engine),
 [Babel preset-env](https://babeljs.io/docs/babel-preset-env),

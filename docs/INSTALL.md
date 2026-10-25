@@ -34,6 +34,8 @@ Allow Local Network access when your computer asks.
 **No-root:** install LG's Developer Mode app, sign in, enable Developer Mode and
 complete any requested restart. Enable **Key Server** and keep the TV's passphrase
 available. SSH pairing and the later on-screen control-pairing request are separate.
+The updated Helper requires TV Node.js 0.12.2+; installation checks this before
+changing packages. Older published packages do not gain compatibility automatically.
 Keep the official session timer active: expiry can remove sideloaded apps.
 See [Developer Mode preparation](MANUAL_INSTALL.md#2-no-root-prepare-the-tv).
 

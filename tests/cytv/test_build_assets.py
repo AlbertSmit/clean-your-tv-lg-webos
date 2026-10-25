@@ -52,7 +52,21 @@ class BuildAssetsTests(unittest.TestCase):
                    'service.js': (root / 'native/service/service.js').read_bytes()}
         files = package.data_files(build['pack_app'](app, service, helper=True, architecture='arm'))
         prefix = 'usr/palm/services/com.local.nativehome.service/'
-        self.assertEqual(files[prefix + 'state-permissions.js'], permissions)
+        self.assertEqual(files[prefix + 'state-permissions.js'],
+                         files['usr/palm/applications/com.local.nativehome/state-permissions.js'])
+        import os
+        import subprocess
+        import tempfile
+        # Execute the service's packaged entry dependency, not its source copy.
+        with tempfile.TemporaryDirectory() as directory:
+            for name, raw in files.items():
+                target = Path(directory) / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(raw)
+            result = subprocess.run([os.environ.get('NODE012', 'node'), '-e',
+                'var secure=require(process.argv[1]);if(typeof secure!=="function"||typeof Object.assign!=="function"||typeof Promise!=="function")process.exit(1);',
+                str(Path(directory) / prefix / 'state-permissions.js')], capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(b"require('./state-permissions')", files[prefix + 'service.js'])
         self.assertNotIn('state-permissions.js', service, 'Do not mutate the source mapping')
 

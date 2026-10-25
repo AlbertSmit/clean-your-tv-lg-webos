@@ -21,7 +21,8 @@ def tracked_files(prefix):
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
     required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js'],
-                'renewal-service': ['renewal-service/home-control.js'],
+                'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
+                'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
                 'launcher': ['launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
@@ -126,7 +127,7 @@ def build_payload():
     launcher = {n: b for n, b in tracked_files('launcher').items() if n != 'apps.js' and not n.startswith('icons/')}
     launcher['config.js'] = b'window.CONFIG = {columns:5,dockApps:[],hiddenApps:["com.gathin.tvhome","com.local.nativehome"]};\n'
     launcher['apps.js'] = b'window.TV_APPS = {apps:[],inputs:[]};\n'
-    renewal = {n: b for n, b in tracked_files('renewal-service').items() if n.endswith(('.js', '.json')) and not n.startswith('state/')}
+    renewal = {n: b for n, b in tracked_files('renewal-service').items() if not n.startswith('state/')}
     (payload / 'launcher.ipk').write_bytes(pack_app(launcher, renewal))
     (payload / 'fonts').mkdir()
     for name, data in launcher.items():

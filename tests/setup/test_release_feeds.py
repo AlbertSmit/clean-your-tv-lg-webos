@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('prepare_release', ROOT / 'scripts/prepare-release.py')
@@ -95,8 +96,13 @@ class ReleaseFeeds(unittest.TestCase):
                     'state_permissions_sha256':release.digest(repair)}
         executables = {app+n for n in ('detach','relay','resume')}
         def prepare(files=helper_files, approval=approval, raw=None):
-            candidate = dict(current, helper=raw or ipk('com.local.nativehome','0.6.17',files,
-                executable=executables, helper_state=True, architecture='arm'))
+            # This approval reproduces the historical permission-only repair.
+            # Keep its original tar dates; modern packages require their own approval.
+            if raw is None:
+                with patch('cytv.package.IPK_MTIME', 0):
+                    raw = ipk('com.local.nativehome','0.6.17',files,
+                        executable=executables, helper_state=True, architecture='arm')
+            candidate = dict(current, helper=raw)
             return release.prepare_manifests('v0.10.10', {'tag':'v0.10.10','versions':{'home':'1.3.6','root':'0.1.10','helper':'0.6.17'}},
                 candidate, build(), prior, compatibility=approval)
         manifests, files = prepare()

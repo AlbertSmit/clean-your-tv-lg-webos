@@ -27,6 +27,10 @@ class SetupTests(unittest.TestCase):
             manifest=verify_bundle(out)
             self.assertIn('updater/core.py',manifest['files'])
             self.assertIn('root-updater.ipk',manifest['files'])
+            self.assertIn('updater/ca-bundle.crt',manifest['files'])
+            self.assertIn('updater/ca-LICENSE.txt',manifest['files'])
+            self.assertEqual((out/'updater/ca-bundle.crt').read_bytes(),
+                             (ROOT.parent/'renewal-service/ca-bundle.crt').read_bytes())
             import io, tarfile
             sys.path.insert(0, str(ROOT.parent))
             from cytv.package import read_ar

@@ -11,6 +11,7 @@ PYCLEAN
 mkdir -p build/updater-service dist
 cp updater-service/*.js updater-service/*.json build/updater-service/
 cp updater-service/release-public.pem build/updater-service/
+cp updater-service/ca-bundle.crt updater-service/ca-LICENSE.txt build/updater-service/
 cp launcher/user-data.js build/updater-service/user-data.js
 cp -R updater-app build/updater-app
 cp launcher/renewal-panel.css launcher/i18n.js launcher/catalogs.js launcher/i18n.css root-edition/ui/root-locales.js build/updater-app/

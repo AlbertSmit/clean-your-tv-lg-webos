@@ -61,6 +61,28 @@ class SetupTests(unittest.TestCase):
 
 
 class DeployTests(unittest.TestCase):
+    def test_device_node_probe_rejects_legacy_runtime(self):
+        import subprocess
+        deploy = load('deploy')
+        real_run = subprocess.run
+        for version, supported in [('0.12.14', False), ('8.12.0', True), ('10.24.1', True)]:
+            def execute(args, **kwargs):
+                self.assertEqual(args[:2], ['/usr/bin/node', '-e'])
+                return real_run(['node', '-e',
+                    "Object.defineProperty(process.versions,'node',{value:"+json.dumps(version)+"});"+args[2]], **kwargs)
+            with self.subTest(version=version), patch.object(deploy.subprocess, 'run', side_effect=execute):
+                if supported: deploy.require_node()
+                else:
+                    with self.assertRaisesRegex(RuntimeError, 'Node.js 8'): deploy.require_node()
+
+    def test_old_python_is_rejected_before_install_mutations(self):
+        deploy = load('deploy')
+        with patch.object(deploy.sys, 'version_info', (3, 8, 10)), \
+             patch.object(deploy, 'verify_bundle', side_effect=AssertionError('must reject runtime before bundle/mutations')) as verify:
+            with self.assertRaisesRegex(RuntimeError, 'Python 3.9'):
+                deploy.install(Path('/unused'))
+            verify.assert_not_called()
+
     def test_recovery_commands_allow_the_bounded_recovery_deadline(self):
         deploy = load('deploy')
         from types import SimpleNamespace

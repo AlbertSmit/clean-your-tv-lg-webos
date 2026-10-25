@@ -74,6 +74,11 @@ Check these on the remote, recording pass/fail and any LG Home flash:
 6. Standby/wake. Test a normal restart next; test cold power only after basic
    controls and recovery pass and while no installation/update is running.
 
+During a supervised startup check, open an ordinary app as soon as Home is
+usable and leave it open through the first minute. Boot protection must finish
+without reopening Home over that app. Then verify short Home still returns
+normally. Record early-start focus separately from later successful app launches.
+
 Record observations per path. One successful launch does not certify cold boot,
 all models or every rollback path.
 

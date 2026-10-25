@@ -35,6 +35,47 @@ An issue describes work; its implementation enters through a PR. Metadata-only
 commits such as preparing the plan and selecting versions may be made directly
 on the preparation branch. Product changes should enter through reviewed PRs.
 
+## Maintain the release candidate PR description
+
+Every `release/next` → `main` release candidate must maintain a current release
+record in its PR description, starting when the draft is opened. Use the
+[release PR template](../.github/PULL_REQUEST_TEMPLATE/release.md). Updating
+`release-plan.json` alone does not update this record.
+
+The maintainer integrating an implementation PR must update both the release
+inventory and the candidate PR description as part of that integration. Refresh
+the description after scope changes, exclusions or reversions, version decisions,
+new validation results and candidate freeze. Do not leave this until publication.
+
+The description must contain:
+
+- **Scope:** every included implementation PR and related issue, its resulting
+  behavior, and any exclusions or partial delivery. Keep it consistent with
+  `release-plan.json`.
+- **Version table:** the overall release and every component (Home, Home Helper,
+  cytv installer, Android installer, Root edition and independent updater). Show
+  the last published version, the version currently committed in the candidate,
+  the proposed/final target, the reason for changing or retaining it, and whether
+  the bump is proposed or committed. Include Android `versionCode`. Before a
+  target is selected, write `TBD`; never present a proposal as an applied bump.
+- **Packaging impact:** identify packages/installers that need rebuilding and
+  any pinned baseline that prevents source changes from shipping. In particular,
+  Helper source fixes do not reach users while builders reuse the published
+  package at the unchanged Helper version. Record the required version bump,
+  manifest synchronization, new source-package validation and rollback checks.
+- **Validation:** actual test/build results with links or reproducible commands
+  and the checked commit or PR revision. Distinguish checks on an earlier PR
+  from checks on the combined or frozen candidate; record pending and failed
+  checks. A version bump or package rebuild needs validation of the new artifacts.
+- **Acceptance and release gates:** physical-TV model/firmware and tested paths,
+  known limitations, untested behavior, rollback evidence and remaining work.
+  Keep the checklist current; automated checks are not hardware acceptance.
+
+At freeze, replace tentative version targets with the final values, verify them
+against release metadata and component manifests, link the release notes, and
+record validation of the exact frozen candidate. Until then, explicitly state
+that the PR is an unfrozen draft and which bumps have not been committed.
+
 ## Freeze and validate the candidate
 
 To collect device feedback before hardware acceptance is available, first prepare

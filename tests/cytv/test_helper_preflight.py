@@ -39,7 +39,7 @@ class HelperPreflightTests(unittest.TestCase):
                 if command.startswith('LC_ALL=C od '):
                     return '127 69 76 70 1 1 1 0 0 0 0 0 0 0 0 0 2 0 40 0'
                 if 'CYTV_ROOT_STATE' in command: return ''
-                script = command.replace(HELPER_STATE, str(state)).replace('/proc/', str(proc) + '/')
+                script = command.replace(HELPER_STATE, state.as_posix()).replace('/proc/', proc.as_posix() + '/')
                 return subprocess.check_output(['sh', '-c', script], text=True, env=env)
         self.messages = []
         return Installer(Remote(), None, {'edition': 'no-root'}, '.', {}, self.messages.append)

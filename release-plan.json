@@ -47,6 +47,11 @@
       "pr": 45,
       "issues": [],
       "summary": "Limit TV-only POSIX integration fixtures to compatible test hosts while retaining portable Windows installer checks"
+    },
+    {
+      "pr": 46,
+      "issues": [],
+      "summary": "Require a documentation pass for every release candidate, including affected guides, translations, commands, links and recorded verification"
     }
   ],
   "excluded": [],

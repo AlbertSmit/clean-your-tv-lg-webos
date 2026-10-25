@@ -37,6 +37,14 @@ on the preparation branch. Product changes should enter through reviewed PRs.
 
 ## Freeze and validate the candidate
 
+To collect device feedback before hardware acceptance is available, first prepare
+new version metadata and release notes, then explicitly dispatch **cytv standalone
+builds** on `release/next` with `test_build=true`. This produces installer artifacts
+without filling `acceptance`, publishing a release, or satisfying Release policy.
+Ordinary unfrozen pushes still skip platform builds. Keep the release PR in draft;
+test artifacts do not establish hardware acceptance or replace the final exact-head
+build after acceptance is recorded.
+
 Choose the final version based on the actual scope. Set it in `release-plan.json`
 and `release-versions.json`, update changed component manifests/versions, and
 write `docs/RELEASE-X.Y.Z.md`. Component versions are independent of the overall

@@ -14,3 +14,11 @@ class CliTests(CoreBase):
         except ModuleNotFoundError:self.fail('detached system worker is missing')
         with self.assertRaises(ValueError):cli.validate_request('install',{'edition':'root','release':'v1.1.0','profile':{},'path':'/tmp/evil'})
         with self.assertRaises(ValueError):cli.validate_request('check',{'edition':'unknown'})
+
+    def test_worker_keeps_the_actual_selected_interpreter(self):
+        import sys
+        from unittest.mock import patch
+        cli=importlib.import_module('system_updater.cli')
+        with patch.object(cli.subprocess,'Popen') as spawn:
+            cli.spawn_worker()
+        self.assertEqual(spawn.call_args.args[0][0],sys.executable)

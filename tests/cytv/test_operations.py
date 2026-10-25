@@ -62,11 +62,12 @@ class Remote:
 
 
 class OperationTests(unittest.TestCase):
-    def test_old_tv_python_is_rejected_before_the_root_install_receipt(self):
+    def test_failed_python_provisioning_stops_before_the_root_install_receipt(self):
         import subprocess, sys
         remote = Remote()
         original_run = remote.run
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'CYTV_ROOT_READY' in command and 'version_info' in command:
                 args = shlex.split(command)
                 snippet = args[args.index('-c')+1]
@@ -76,16 +77,36 @@ class OperationTests(unittest.TestCase):
             return original_run(command, **kwargs)
         remote.run = run
         installer = self.installer(remote, 'root')
-        with self.assertRaisesRegex(RuntimeError, 'python-version'):
+        from unittest.mock import patch
+        with patch.object(installer,'_select_python',side_effect=RuntimeError('python-version unavailable')), self.assertRaisesRegex(RuntimeError,'python-version'):
             installer.install(self.inventory)
         self.assertIsNone(self.store.pending(installer.profile))
         self.assertFalse(any(c[0] == 'upload' for c in remote.calls))
+
+    def test_missing_python_root_install_uses_selected_python_through_activation(self):
+        from unittest.mock import patch
+        self.root_bundle()
+        remote=Remote();original=remote.run
+        selected='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
+        def run(command,**kwargs):
+            if 'CYTV_ROOT_READY' in command and '/usr/bin/python3' in command:return 'CYTV_ROOT_MISSING'
+            return original(command,**kwargs)
+        remote.run=run;installer=self.installer(remote,'root')
+        with patch.object(installer,'_select_python',return_value=selected) as select:
+            result=installer.install(self.inventory)
+        select.assert_called_once_with(provision=True)
+        self.assertTrue(result['updates_ready'])
+        commands=[call[1] for call in remote.calls if call[0]=='run' and any(marker in call[1] for marker in ('deploy.py','setup-updater.py','CYTV_UPDATER_VERIFIED','require_idle'))]
+        self.assertTrue(commands)
+        self.assertTrue(all(selected in command and 'PYTHONDONTWRITEBYTECODE=1' in command for command in commands))
+        self.assertIsNone(self.store.pending(installer.profile))
 
     def test_no_root_rejects_node8_before_creating_a_receipt(self):
         import subprocess
         remote = Remote()
         original_run = remote.run
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'CYTV_NODE_READY' in command:
                 args = shlex.split(command)
                 snippet = args[args.index('-e')+1]
@@ -113,6 +134,7 @@ class OperationTests(unittest.TestCase):
                                     input=data, capture_output=True, check=True)
             return result.stdout.decode()
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if '/media/developer/temp' in command:
                 return execute(command, **kwargs)
             return original_run(command, **kwargs)
@@ -223,6 +245,7 @@ class OperationTests(unittest.TestCase):
                          identity={'device':1, 'inode':2, 'journal':'b'*64})
         commands=[]
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             commands.append(command)
             args = shlex.split(command)
             if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
@@ -242,6 +265,7 @@ class OperationTests(unittest.TestCase):
         self.store.checkpoint(installer.profile, stage='removing', removals={operations.HELPER: 'terminal', operations.HOME: 'done'}, eim_registered=False)
         cleaned = []
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'rmdir ' + operations.BASE + '/packages/' + operations.HELPER in command:
                 cleaned.append(True)
             if 'CYTV_REMAINS' in command and operations.HELPER in command and not cleaned:
@@ -324,6 +348,7 @@ class OperationTests(unittest.TestCase):
         self.store.begin(installer.profile, 'install')
         self.store.checkpoint(installer.profile, release_sha='a' * 64, bundle_sha='b' * 64, migrate=False)
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'deploy.json' in command:
                 return '{"stage":"installed-recovery-only"}'
             if 'CYTV_ROOT_FILES_OK' in command:
@@ -337,6 +362,7 @@ class OperationTests(unittest.TestCase):
     def test_root_old_installation_does_not_certify_new_bundle(self):
         installer = self.installer(Remote(), 'root')
         self.store.begin(installer.profile, 'install')
+        installer._selected_python='/usr/bin/python3'
         installer.remote.run = lambda command, **kwargs: ('{"stage":"installed-recovery-only"}' if 'deploy.json' in command else '{"returnValue":true,"result":{"recovery":{"integrity_verified":true}}}')
         result = installer.status()
         self.assertIsNotNone(result['pending'])
@@ -597,6 +623,7 @@ class OperationTests(unittest.TestCase):
         original=remote.run
         attempts=[]
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'CYTV_HELPER_IDLE' in command:
                 attempts.append(command)
                 if len(attempts)==1: raise RuntimeError('relay still running')
@@ -615,6 +642,7 @@ class OperationTests(unittest.TestCase):
         remote=Remote()
         original=remote.run
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             if 'CYTV_HELPER_IDLE' in command: raise RuntimeError('busy')
             return original(command, **kwargs)
         remote.run=run
@@ -676,6 +704,7 @@ class OperationTests(unittest.TestCase):
         original = remote.run
         actions=[]
         def run(command, **kwargs):
+            if 'CYTV_PYTHON_BOUND' in command:return ''
             args = shlex.split(command)
             if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
                 action=args[3]
@@ -717,6 +746,7 @@ class OperationTests(unittest.TestCase):
                 remote = Remote()
                 original = remote.run
                 def run(command, **kwargs):
+                    if 'CYTV_PYTHON_BOUND' in command:return ''
                     if command == 'uname -m': return 'aarch64'
                     if command == 'LC_ALL=C od -An -v -t u1 -N 20 /bin/sh':
                         return ' '.join(map(str, data))

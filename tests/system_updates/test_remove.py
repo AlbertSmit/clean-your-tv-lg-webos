@@ -39,6 +39,20 @@ class RemovalTests(unittest.TestCase):
         hook=root/'boot';hook.write_text('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n')
         return dict(state=state,base=base,hook=hook,installed=installed,proc=proc,refresh=lambda:None,stop_processes=lambda _:None)
 
+
+    def test_managed_hook_requires_literal_owned_binding(self):
+        managed='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve())
+            state=args['state'];hook=args['hook']
+            launcher=state/'python-launcher'
+            launcher.write_text('#!/bin/sh\nunset PYTHONHOME PYTHONPATH\nexport PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\nexec '+managed+' "$@"\n');launcher.chmod(0o700)
+            (state/'python-runtime.json').write_text(json.dumps({'schema':1,'executable':managed,'archive_sha256':managed.split('/')[-3],'inventory_sha256':'a'*64}))
+            hook.write_text('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n')
+            self.assertTrue(namespace['operate']('status',**args))
+            launcher.write_text('#!/bin/sh\nexec /tmp/evil "$@"\n')
+            with self.assertRaises(ValueError):namespace['operate']('status',**args)
+
     def test_status_is_read_only_and_proves_bootstrap_code_and_baseline(self):
         with tempfile.TemporaryDirectory() as tmp:
             args=self.fixture(Path(tmp).resolve());root=Path(tmp)

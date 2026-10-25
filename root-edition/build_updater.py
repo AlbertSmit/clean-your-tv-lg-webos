@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parent
 UPDATER_FILES=('core.py','store.py','profile.py','device.py','package.py','cli.py','fetch.js','bridge.js','luna.py','bootstrap.py','ca-bundle.crt','ca-LICENSE.txt')
-SUPPORT=('observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py')
+SUPPORT=('observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js')
 APP='com.cleanyourtv.root.updater'
 
 

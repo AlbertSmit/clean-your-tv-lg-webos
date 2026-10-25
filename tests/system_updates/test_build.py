@@ -43,6 +43,11 @@ class BuildTests(unittest.TestCase):
             manifest=setup.verify_bundle(a)
             self.assertIn('system_updater/support/store.py',manifest['files'])
             self.assertIn('observed_install.py',manifest['files'])
+            self.assertIn('python_binding.py',manifest['files'])
+            self.assertIn('python_boot.js',manifest['files'])
+            inventory=json.loads((a/'infrastructure-paths.json').read_text())
+            self.assertIn('support/python_binding.py',inventory)
+            self.assertIn('support/python_boot.js',inventory)
             files=package.data_files((a/'system-updater.ipk').read_bytes())
             service='usr/palm/services/com.cleanyourtv.system.updater.service/'
             self.assertEqual(json.loads(files[service+'services.json'])['id'],'com.cleanyourtv.system.updater.service')
@@ -183,7 +188,7 @@ class BuildTests(unittest.TestCase):
             self.assertTrue(missing<=set(names))
             for name in names:
                 if name in missing:continue
-                kind,relative=name.split('/',1);path=roots[kind]/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(name.encode())
+                kind,relative=name.split('/',1);path=(roots['runtime'].parent if kind=='support' else roots[kind])/relative;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(name.encode())
             files,absent=setup.capture_infrastructure(names,**roots)
             self.assertEqual(set(absent),missing);self.assertEqual(set(files)|set(absent),set(names))
             installed=root/'installed'

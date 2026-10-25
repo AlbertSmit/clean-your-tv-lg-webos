@@ -63,6 +63,8 @@ class Device:
             path=PurePosixPath(name)
             if path.is_absolute() or '..' in path.parts or str(path)!=name or not re.fullmatch('[a-f0-9]{64}',expected):raise ValueError('Unsafe supervisor inventory')
             if digest(safe_bytes(self.code/name,limit=4*1024*1024,uid=self.uid))!=expected:raise ValueError('Supervisor infrastructure changed')
+        from python_binding import verify_binding
+        verify_binding(self.state)
         self.enforce_legacy_lockdown()
         return receipt
 
@@ -139,9 +141,10 @@ class Device:
         pinned=json.loads(safe_bytes(self.code/'infrastructure-paths.json',limit=65536,uid=self.uid))
         if not isinstance(pinned,list) or not pinned or len(set(pinned))!=len(pinned):raise ValueError('Invalid pinned infrastructure inventory')
         for name in pinned:
+            if isinstance(name,str) and name.startswith('support/') and name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
             if not isinstance(name,str):raise ValueError('Unsafe managed infrastructure path')
             path=PurePosixPath(name)
-            if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater'):raise ValueError('Unsafe managed infrastructure path')
+            if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater','support'):raise ValueError('Unsafe managed infrastructure path')
         baseline=self.store.read('baseline')
         if not baseline or baseline.get('edition')!='root':raise ValueError('Root infrastructure baseline unavailable')
         c=next((c for c in baseline['components'] if c['name']=='root-infrastructure'),None)
@@ -217,6 +220,9 @@ class Device:
     def _infra_path(self,name):
         if name not in self._infra_inventory():raise ValueError('Foreign infrastructure destination')
         kind,relative=name.split('/',1)
+        if kind=='support':
+            if name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
+            return self.root_state/relative
         return (self.root_updater/'code' if kind=='updater' else self.root_state/kind)/relative
 
     def _refresh_root_receipts(self,hashes):
@@ -225,7 +231,7 @@ class Device:
         inventory=self._infra_inventory()
         if set(hashes)-inventory:raise ValueError('Foreign infrastructure receipt path')
         for name in inventory:
-            if name.startswith(('runtime/','service/')):
+            if name.startswith(('runtime/','service/','support/')):
                 path=str(self._infra_path(name))
                 if name in hashes:proof['files'][path]=hashes[name]
                 else:proof['files'].pop(path,None)
@@ -292,7 +298,8 @@ class Device:
 
     def runtime(self,mode,transaction=None):
         if mode not in ('status','suspend-update','finish-update','abort-update'):raise ValueError('Foreign runtime operation')
-        args=['/usr/bin/python3',str(self.root_state/'runtime/cli.py'),mode]
+        from python_binding import command
+        args=[command(self.root_state),str(self.root_state/'runtime/cli.py'),mode]
         if transaction is not None:
             if not re.fullmatch('[a-f0-9]{32}',transaction):raise ValueError('Invalid transaction')
             args.append(transaction)
@@ -306,6 +313,8 @@ class Device:
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
 
     def _root_integrity(self):
+        from python_binding import verify_binding
+        verify_binding(self.root_state);verify_binding(self.root_updater)
         proof_raw=safe_bytes(self.root_state/'recovery-provision.json',limit=1024*1024,uid=self.uid);proof=json.loads(proof_raw)
         from .support.store import Store
         receipt=Store(self.root_updater,uid=self.uid).read('infrastructure')

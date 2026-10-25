@@ -59,6 +59,21 @@ def stop(code):
         time.sleep(.1)
     raise ValueError('Updater processes have not stopped')
 
+
+def python_command(state):
+    launcher=state/'python-launcher';receipt=state/'python-runtime.json'
+    if not os.path.lexists(launcher) and not os.path.lexists(receipt):return '/usr/bin/python3'
+    pinned='4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea'
+    executable='/var/lib/clean-your-tv-python/'+pinned+'/bin/python3.13'
+    value=json.loads(read(receipt))
+    if (not isinstance(value,dict) or set(value)!={'schema','executable','archive_sha256','inventory_sha256'} or value.get('schema')!=1
+            or value.get('executable')!=executable or value.get('archive_sha256')!=pinned
+            or not isinstance(value.get('inventory_sha256'),str) or not re.fullmatch('[a-f0-9]{64}',value['inventory_sha256'])
+            or read(launcher)!=('#!/bin/sh\nunset PYTHONHOME PYTHONPATH\nexport PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\nexec '+executable+' "$@"\n').encode()
+            or stat.S_IMODE(launcher.stat().st_mode)!=0o700):raise ValueError('Unknown updater Python binding')
+    return str(launcher)
+
+
 def operate(action, state, base, hook, installed, destination, refresh, stop_processes=stop):
     state, base, hook, installed = map(Path, (state, base, hook, installed))
     if action not in ('inspect','disable','finalize'): raise ValueError('Unsupported cleanup action')
@@ -95,7 +110,11 @@ def operate(action, state, base, hook, installed, destination, refresh, stop_pro
         registration=json.loads(read(state/'registration.json'))['files']
         if set(registration)!=set(map(str,paths.values())): raise ValueError('Unknown updater registration inventory')
         expected={key:registration[str(path)]['installed'].encode() for key,path in paths.items()}
-        expected['hook']=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        python=python_command(state)
+        expected['hook']=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        legacy_hook=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
+        retained_hook=hook if os.path.lexists(hook) else state/'removed-registration/hook'
+        if python=='/usr/bin/python3' and read(retained_hook)==legacy_hook:expected['hook']=legacy_hook
         paths['hook']=hook
         journal=state/'cytv-removal.json'
         record=json.loads(read(journal)) if os.path.lexists(journal) else None

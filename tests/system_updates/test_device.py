@@ -225,6 +225,18 @@ class SignedInfrastructureTests(DeviceBase):
         for name,data in old_files.items():
             p=self.device._infra_path(name);p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
         proof=self.root/'root/recovery-provision.json';proof.write_text(json.dumps({'mode':'recovery-only','files':{str(self.device._infra_path(n)):digest(v) for n,v in old_files.items() if not n.startswith('updater/')}}))
+        # A real binding fixture keeps runtime verification active through migration.
+        import python_binding
+        from unittest.mock import patch
+        original_directory=python_binding._directory
+        for context in (patch.object(python_binding,'MANAGED_ROOT',self.root/'python'),patch.object(python_binding,'EXPECTED_UID',os.getuid()),patch.object(python_binding,'_directory',side_effect=lambda path:original_directory(path) if path.is_relative_to(self.root) else None)):
+            context.start();self.addCleanup(context.stop)
+        executable=self.root/'python'/python_binding.ARCHIVE_SHA256/'bin/python3.13';executable.parent.mkdir(parents=True);executable.write_bytes(b'fixture interpreter');executable.chmod(0o755)
+        (executable.parents[1]/'.cytv-runtime.json').write_text(json.dumps({'schema':1,'archive_sha256':python_binding.ARCHIVE_SHA256,'files':{'bin/python3.13':digest(executable.read_bytes())}}))
+        retained={self.root/'root/python-launcher':python_binding.launcher_bytes(str(executable)),self.root/'root/python-runtime.json':json.dumps(python_binding._runtime(str(executable))).encode()}
+        for path,data in retained.items():path.write_bytes(data)
+        (self.root/'root/python-launcher').chmod(0o700)
+        original_proof=json.loads(proof.read_bytes());original_proof['files'].update({str(path):digest(data) for path,data in retained.items()});proof.write_text(json.dumps(original_proof))
         legacy=Store(self.root/'root-updater',uid=os.getuid());legacy.write('infrastructure',{'schema':1,'code':{'service.js':digest(old_files['updater/service.js'])},'recovery_sha256':digest(proof.read_bytes())})
         def local_verifier(method,payload=None,binary=False):
             result=subprocess.run(['node',str(code/'policy.js'),method],input=json.dumps(payload or {}).encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
@@ -238,6 +250,10 @@ class SignedInfrastructureTests(DeviceBase):
             for name,data in expected.items():self.assertEqual(self.device._infra_path(name).read_bytes(),data)
             if c is previous:
                 for name in set(new_files)-set(old_files):self.assertFalse(os.path.lexists(self.device._infra_path(name)))
+            for path,data in retained.items():
+                self.assertEqual(path.read_bytes(),data)
+                self.assertEqual(json.loads(proof.read_bytes())['files'][str(path)],digest(data))
+            if 'support/python_binding.py' in expected:self.assertEqual(json.loads(proof.read_bytes())['files'][str(self.root/'root/python_binding.py')],digest(expected['support/python_binding.py']))
             updater_hashes={n.split('/',1)[1]:digest(b) for n,b in expected.items() if n.startswith('updater/')}
             self.assertEqual(legacy.read('infrastructure')['code'],updater_hashes)
             self.assertEqual(json.loads(proof.read_bytes())['files'][str(self.root/'root/service/service.js')],digest(expected['service/service.js']));self.assertEqual(legacy.read('infrastructure')['recovery_sha256'],digest(proof.read_bytes()))
@@ -268,3 +284,6 @@ class ComponentOfferTests(DeviceBase):
         prior=release('2.0.0');prior['release']='v0.0.0';candidate=release('2.1.0');candidate['components'][1]['version']='1.9.0'
         self.device.integrity=lambda:None;self.device.fetch=lambda method,payload:{'candidate':candidate};self.device._verify_release=lambda value,edition:value;self.device._baseline=lambda edition:prior;self.device.installed=lambda app:'2.0.0'
         offer=self.device.offer('no-root');self.assertFalse(offer['canInstall']);self.assertEqual(offer['reason'],'component-downgrade')
+
+class SignedPythonBindingMigrationTests(SignedInfrastructureTests):
+    extra_candidate_files={'support/python_binding.py':b'pinned binding helper','support/python_boot.js':b'pinned boot helper'}

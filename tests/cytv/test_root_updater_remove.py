@@ -30,6 +30,20 @@ class UpdaterRemovalTests(unittest.TestCase):
         hook.write_text('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n')
         return state,base,hook,installed,str(state)+'.archive-'+'a'*32
 
+
+    def test_managed_hook_requires_literal_owned_binding(self):
+        managed='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve())
+            state,base,hook,_,_=args
+            launcher=state/'python-launcher'
+            launcher.write_text('#!/bin/sh\nunset PYTHONHOME PYTHONPATH\nexport PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1\nexec '+managed+' "$@"\n');launcher.chmod(0o700)
+            (state/'python-runtime.json').write_text(json.dumps({'schema':1,'executable':managed,'archive_sha256':managed.split('/')[-3],'inventory_sha256':'a'*64}))
+            hook.write_text('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n')
+            self.assertTrue(namespace['operate']('inspect',*args,lambda:None,lambda _:None))
+            launcher.write_text('#!/bin/sh\nexec /tmp/evil "$@"\n')
+            with self.assertRaises(ValueError):namespace['operate']('inspect',*args,lambda:None,lambda _:None)
+
     def test_disable_is_repeatable_then_archives_only_after_package_absence(self):
         with tempfile.TemporaryDirectory() as tmp:
             args=self.fixture(Path(tmp).resolve());calls=[]

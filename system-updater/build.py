@@ -36,7 +36,7 @@ def build(output):
         code['system_updater/'+name]=source(ROOT/'system-updater'/name)
     for name in ('store.py','package.py','profile.py','luna.py'):
         code['system_updater/support/'+name]=source(ROOT/'root-edition/updater'/name)
-    for name in ('observed_install.py','installer_status.py'):
+    for name in ('observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
         code[name]=source(ROOT/'root-edition'/name)
     for name in ('release-public.pem','ca-bundle.crt','ca-LICENSE.txt'):
         code['system_updater/'+name]=source(ROOT/'updater-service'/name)
@@ -44,7 +44,7 @@ def build(output):
     updater=assigned(ROOT/'root-edition/build_updater.py','UPDATER_FILES')
     support=assigned(ROOT/'root-edition/build_updater.py','SUPPORT')
     private=assigned(ROOT/'root-edition/provision.py','PRIVATE_FILES')
-    infra=['service/'+n for n in private]+['runtime/'+n for n in runtime]+['updater/updater/'+n for n in updater]+['updater/'+n for n in support]+['updater/updater/release-public.pem','updater/service.js','updater/run-updater.py','updater/services.json','updater/package.json']
+    infra=['support/python_binding.py','support/python_boot.js']+['service/'+n for n in private]+['runtime/'+n for n in runtime]+['updater/updater/'+n for n in updater]+['updater/'+n for n in support]+['updater/updater/release-public.pem','updater/service.js','updater/run-updater.py','updater/services.json','updater/package.json']
     code['infrastructure-paths.json']=(json.dumps(sorted(infra))+'\n').encode()
     code['service.js']=source(ROOT/'system-updater/service.js')
     code['run-system-updater.py']=b'from system_updater.cli import entry\nentry()\n'
@@ -89,6 +89,10 @@ def infrastructure(payload):
             if digest(raw)!=expected:raise ValueError('Infrastructure bundle hash mismatch')
             files[prefix+name]=raw
     root=Path(payload)/'root';manifest=json.loads(source(root/'bundle.json'))
+    for name in ('python_binding.py','python_boot.js'):
+        binding=source(root/name)
+        if digest(binding)!=manifest['files'].get(name):raise ValueError('Root Python binding helper hash mismatch')
+        files['support/'+name]=binding
     raw=source(root/manifest['package'])
     if manifest['package'] in manifest['files'] and digest(raw)!=manifest['files'][manifest['package']]:raise ValueError('Root package hash mismatch')
     package_files=package.data_files(raw)

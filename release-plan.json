@@ -8,6 +8,13 @@
         59
       ],
       "summary": "Allow confirmed Helper start when firmware denies status"
+    },
+    {
+      "pr": 61,
+      "issues": [
+        55
+      ],
+      "summary": "Validate Root migration early and recover pre-provision removal"
     }
   ],
   "excluded": [],

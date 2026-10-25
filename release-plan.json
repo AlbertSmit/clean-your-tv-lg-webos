@@ -57,6 +57,11 @@
       "pr": 48,
       "issues": [],
       "summary": "Refresh 1.1.0 candidate guides and all ten translations, clarify legacy Root migration boundaries and provide staged macOS/TV test instructions with a dated documentation audit"
+    },
+    {
+      "pr": 49,
+      "issues": [],
+      "summary": "Accept macOS packaged payload root aliases during System Updater setup while retaining interior symlink rejection and file hash validation"
     }
   ],
   "excluded": [],

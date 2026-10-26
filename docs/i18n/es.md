@@ -175,3 +175,5 @@ El inicio usa archivos privados respaldados por comprobantes de propiedad y comp
 
 
 Para este candidato de código fuente, una instalación Root existente necesita recuperación verificada y una nueva configuración para recibir el entorno privado corregido. Actualizar solo Installer no lo sustituye. Conserve los registros de recuperación y active Home únicamente desde la configuración habitual.
+
+**Aún no publicado, #82:** si falta el ajuste Home, la instalación Root iniciada explícitamente puede establecer LG Home y verificar su lectura antes de completar la preparación de recuperación. Status/doctor no escribe nada. Una escritura de resultado incierto no se repite; conserva los datos de recuperación. El ajuste explícito de LG Home permanece tras la desinstalación. Faltan pruebas en esta versión del firmware.

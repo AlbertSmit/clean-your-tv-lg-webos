@@ -175,3 +175,5 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 
 Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.
+
+**Noch nicht veröffentlicht, #82:** Fehlt die Home-Einstellung, kann die ausdrücklich gestartete Root-Einrichtung LG Home eintragen und den Wert vor Abschluss der Wiederherstellungseinrichtung zurücklesen. Status/doctor schreibt nichts. Ein Schreibvorgang mit unklarem Ergebnis wird nicht wiederholt; Wiederherstellungsdaten behalten. Die ausdrückliche LG-Home-Einstellung bleibt nach der Deinstallation erhalten. Gerätetests für diese Firmware stehen aus.

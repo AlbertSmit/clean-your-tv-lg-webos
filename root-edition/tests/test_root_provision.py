@@ -10,6 +10,11 @@ p = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(p)
 
 class ProvisionTests(unittest.TestCase):
+    def setUp(self):
+        # Stock-route initialization has its own real journal/readback fixture.
+        context=patch.object(p,'prepare_stock_home')
+        context.start();self.addCleanup(context.stop)
+
     def original(self):
         return {'service':'[D-BUS Service]\nName='+p.NAME+'\nExec=/usr/bin/run-js-service -n '+str(p.SERVICE)+'\n',
                 'role':json.dumps({'appId':p.NAME,'allowedNames':['*'],'permissions':[{'outbound':['*']}]}),
@@ -77,6 +82,22 @@ class ProvisionTests(unittest.TestCase):
         with patch.object(p.Path,'is_file',return_value=True),patch.object(p.subprocess,'run') as run:
             self.assertTrue(p.refresh()['returnValue'])
             self.assertEqual(run.call_args.args[0],['/usr/bin/ls-control','scan-services'])
+
+    def test_home_rpcs_have_fixed_uris_and_payloads(self):
+        cases = (
+            ('home-read','com.webos.settingsservice/getSystemSettings',{'category':'general','keys':['defaultApps']}),
+            ('home-profiles','com.webos.service.systemprofile/getProfiles',{'names':['defaultApps','idleApp'],'subscribe':False}),
+            ('home-stock','com.webos.service.applicationmanager/setDefaultApp',{'category':'home','appId':'com.webos.app.home'}),
+        )
+        for method,uri,payload in cases:
+            child=MagicMock();child.poll.return_value=None
+            with self.subTest(method=method), patch.object(p.subprocess,'Popen',return_value=child) as popen, patch.object(p.select,'select',return_value=([child.stdout],[],[])), patch.object(p.os,'read',return_value=b'{"returnValue":true}'):
+                p.rpc(method)
+                argv=popen.call_args.args[0]
+                self.assertEqual(argv[:4],['/usr/bin/luna-send','-n','1','luna://'+uri])
+                self.assertEqual(json.loads(argv[4]),payload)
+        with patch.object(p.subprocess,'Popen') as popen, self.assertRaises(ValueError): p.rpc('setDefaultApp')
+        popen.assert_not_called()
 
     def test_repeated_rollback_checks_restored_hashes_without_rpc(self):
         entries={str(path):{'original':'x','original_sha256':p.sha(b'x'),'installed_sha256':p.sha(b'y'),'mode':0o644,'uid':0,'gid':0} for path in p.FILES.values()}

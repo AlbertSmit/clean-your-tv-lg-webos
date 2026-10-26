@@ -170,3 +170,5 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 
 For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+**Unreleased, #82:** when the Home setting is absent, explicit Root setup can initialize it to LG Home and verify the readback before enabling recovery. Status/doctor never writes it. An uncertain write is not repeated; keep recovery data. The explicit LG Home setting remains after removal. This firmware still needs device testing.

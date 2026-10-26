@@ -164,3 +164,5 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 
 W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego odzyskiwania i nowej konfiguracji, aby otrzymać poprawione prywatne środowisko. Aktualizacja samego Installer go nie zastępuje. Zachowaj dane odzyskiwania i włącz Home tylko w zwykłej konfiguracji lub ustawieniach.
+
+**Jeszcze niewydane, #82:** gdy brakuje ustawienia Home, jawnie uruchomiona instalacja Root może ustawić LG Home i potwierdzić odczyt przed zakończeniem przygotowania odzyskiwania. Status/doctor niczego nie zapisuje. Zapis o niepewnym wyniku nie jest powtarzany; zachowaj dane odzyskiwania. Jawne ustawienie LG Home pozostaje po odinstalowaniu. Testy na urządzeniu z tym firmware są nadal wymagane.

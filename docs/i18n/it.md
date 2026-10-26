@@ -165,3 +165,5 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 
 Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.
+
+**Non ancora pubblicato, #82:** se manca la voce Home, la configurazione Root avviata esplicitamente può impostare LG Home e rileggere il valore prima di completare la preparazione del ripristino. Status/doctor non modifica nulla. Una scrittura con esito incerto non viene ripetuta; conserva i dati di ripristino. La voce esplicita LG Home rimane dopo la disinstallazione. Servono ancora prove su questo firmware.

@@ -147,3 +147,5 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 
 
 此源码候选版中，现有 Root 安装需要经过验证的恢复和重新设置，才能获得修正后的私有运行环境。仅更新 Installer 不会替换它。请保留恢复记录，并且只通过正常设置流程或设置页面启用 Home。
+
+**尚未发布，#82：** 如果缺少 Home 设置，明确启动的 Root 安装可以将其设为 LG Home，并重新读取验证，然后完成恢复准备。Status/doctor 不会写入设置。结果不确定的写入不会重复，请保留恢复数据。卸载后显式的 LG Home 设置仍会保留。此固件仍需真机测试。

@@ -10,10 +10,15 @@ import unittest
 from unittest.mock import MagicMock, patch
 from types import SimpleNamespace
 from cytv import diagnostics, operations, state
-from cytv.errors import TVCommandError
+from cytv.errors import TVCommandError, root_recovery_details
 
 
 class RootRecoveryDiagnosticsTests(unittest.TestCase):
+    def test_stock_home_phase_exports_only_safe_categories(self):
+        self.assertEqual(root_recovery_details({'schema':1,'phase':'stock-home',
+            'reason':'failed','defaultApps':{'private':'data'},'profiles':{'private':'data'}}),
+            {'phase':'stock-home','reason':'failed'})
+
     def test_failed_install_collects_only_allowlisted_evidence_and_keeps_original_error(self):
         for extra in ({'reason':'negative-reply','luna_error_code':-1},
                       {'reason':'timeout','startup_state':'exited','startup_exit_status':1,

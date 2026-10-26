@@ -9,12 +9,18 @@ do not substitute a missing system interpreter or change global PATH.
 never by status, restore or removal; referenced runtime slots remain retained.
 
 - `status`: read actual system profiles and independent Home setting, journal and recovery integrity.
+
 - `trial`: activate **com.cleanyourtv.root.preview** for at most 60 seconds using a detached rollback guardian. Refuses any unresolved journal, unexpected baseline, missing Home registration or missing recovery provisioning.
 - `restore`: conflict-checked removal of only the owned override, rescan, restore stock Home and verify the full original profiles. Retries bounded transport failures. Exit 2 means recovery is unresolved; preserve state for retry/investigation.
 - `boot`: restore the previous routing transaction first. A confirmed active intent may then start a fresh protected transaction and open the candidate. Failsafe or interrupted startup disables intent; duplicate callbacks preserve only a healthy matching guardian.
 - `enable`: activate persistently after automatic input, guardian and routing checks; requires the old helper to be stopped. Failed readiness restores LG Home. No user confirmation or timed session.
 - `confirm TRANSACTION`: diagnostic promotion of that exact live trial. Requires fresh input/guardian heartbeats, effective candidate routing and at least five seconds before rollback. No confirmation means automatic rollback.
 - `intent-trial`: diagnostic intent-bound trial, useful for regression checks; separate from user activation.
+
+An absent Settings Service Home key remains an incomplete runtime readback.
+Only explicit setup can initialize an absent override to stock LG Home, after
+recording intent and checking unchanged profiles and independent readback;
+runtime commands never do so. See [setup-only initialization](../../docs/development/ROOT-HOME-READBACK.md).
 
 The independent updater uses root-only internal commands `suspend-update TX`,
 `finish-update TX` and `abort-update TX` with its exact 32-character transaction

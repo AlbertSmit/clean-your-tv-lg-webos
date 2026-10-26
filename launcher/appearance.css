@@ -23,8 +23,8 @@ html.home-tvos #leftBlock { display: none; }
 #homeShelf, #homeStatus { display: none; }
 html.home-tvos #homeShelf { display: block; position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; }
 .shelf-backdrop, .shelf-backdrop-soft, .shelf-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
-.shelf-backdrop { background: #12252a url('assets/cinema-backdrop.jpg') center 62% / cover no-repeat; opacity: 0; transition: opacity 240ms ease; }
-.shelf-backdrop-soft { background: #12252a url('assets/cinema-backdrop-soft.jpg') center 62% / cover no-repeat; opacity: 1; transition: opacity 240ms ease; }
+.shelf-backdrop { will-change: opacity; background: #12252a url('assets/cinema-backdrop.jpg') center 62% / cover no-repeat; opacity: 0; transition: opacity 240ms ease; }
+.shelf-backdrop-soft { will-change: opacity; background: #12252a url('assets/cinema-backdrop-soft.jpg') center 62% / cover no-repeat; opacity: 1; transition: opacity 240ms ease; }
 .shelf-shade { background: linear-gradient(180deg, rgba(0,0,0,.04) 35%, rgba(0,0,0,.2) 100%); }
 .shelf-visible .shelf-backdrop { opacity: 1; }
 .shelf-visible .shelf-backdrop-soft { opacity: 0; }
@@ -68,9 +68,9 @@ html.home-tvos #dockBand {
 #dockTexture { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: .58; background-size: 1920px 1080px; background-repeat: no-repeat; background-position: -40px -784px; }
 html.home-tvos #dockTexture { display: block; }
 html.reduced-effects #dockTexture { display: none !important; }
-html.home-tvos #stage { transition: transform 260ms cubic-bezier(.23,1,.32,1); }
-html.home-tvos .item { width: 250px; transition: opacity 180ms ease, transform 180ms ease; }
-html.home-tvos .card { width: 250px; height: 150px; border-radius: 28px; background: #333441; box-shadow: 0 8px 13px rgba(0,0,0,.15); transition: transform 180ms cubic-bezier(.23,1,.32,1), border-radius 180ms cubic-bezier(.23,1,.32,1); }
+html.home-tvos #stage { will-change: transform; transition: transform 260ms cubic-bezier(.23,1,.32,1); }
+html.home-tvos .item { will-change: transform; width: 250px; transition: opacity 180ms ease, transform 180ms ease; }
+html.home-tvos .card { width: 250px; height: 150px; border-radius: 28px; background: #333441; box-shadow: 0 8px 13px rgba(0,0,0,.15); will-change: transform; transition: transform 180ms cubic-bezier(.23,1,.32,1); }
 html.home-tvos .card::before {
   content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1;
   border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0) 65%); pointer-events: none;

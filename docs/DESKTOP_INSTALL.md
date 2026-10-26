@@ -203,3 +203,12 @@ With desktop dependencies installed, `python scripts/preview-installer.py --lang
 saves screenshots of the real Qt widgets to `build/installer-preview/`. These use
 sample TV data and do not discover, connect to, or modify a TV. Add `--all-locales`
 to capture every supported language at the minimum window size.
+
+## Unreleased: optional WAM cleanup
+
+A matching development desktop build adds **Maintenance → Clear WAM session data
+and caches (root required)**. Review the selected folders and session-data warning,
+then explicitly confirm cleanup; reboot is a second default-No choice. It uses
+existing Root SSH without TV Python. See [WAM cleanup](WAM-CLEANUP.md) for failure
+recovery, limitations and required device acceptance. Published downloads do not
+yet include this action.

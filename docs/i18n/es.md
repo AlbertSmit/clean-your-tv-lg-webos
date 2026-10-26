@@ -1,5 +1,7 @@
 # Clean Your TV — guía de uso
 
+Sin publicar: la limpieza opcional de WAM en Root es una acción de mantenimiento separada con confirmación explícita. Puede perder el estado de sesiones. Después reinicia realmente el TV, comprueba el espacio y reintenta la instalación. Consulta [instrucciones y límites](../WAM-CLEANUP.md).
+
 No-root y Root son opciones equivalentes para distintas configuraciones del televisor. Elige No-root para LG Developer Mode o Root si ya tienes acceso root por SSH. La compatibilidad y las pruebas realizadas son específicas de cada edición.
 
 ## Requisitos

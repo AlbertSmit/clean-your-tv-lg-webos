@@ -449,3 +449,11 @@ Next-candidate Home settings (not published v1.2.0): a failed status read is sho
 as unknown, with Change Home hidden until a valid response. This avoids showing
 an unconfirmed off switch. It does not repair a firmware denial or unavailable
 request-file transport, prove that Helper stopped, or automatically start it.
+
+## Unreleased: optional WAM cleanup
+
+`cytv clean-wam-cache --edition root` reviews four fixed WAM session/cache
+folders and requires separate default-No consent to delete them and to request a
+reboot. `--yes` does not bypass consent; noninteractive mode is refused. This can
+lose app session state. See [scope, guards and recovery](WAM-CLEANUP.md). The action
+never resumes installation and is not present in published installers yet.

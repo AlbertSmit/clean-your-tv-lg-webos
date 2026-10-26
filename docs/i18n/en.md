@@ -1,5 +1,7 @@
 # Clean Your TV — user guide
 
+Unreleased: optional Root WAM cleanup is a separate maintenance action. It requires explicit confirmation, may lose app session state and requires a real TV restart before checking space and retrying setup. See [instructions and limits](../WAM-CLEANUP.md).
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 ## Before installation

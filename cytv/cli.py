@@ -42,7 +42,7 @@ def parser():
     result._positionals.title = i18n.translate('positional arguments')
     result._optionals.title = i18n.translate('options')
     result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
-    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall', 'enable-system-updates'))
+    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall', 'enable-system-updates', 'clean-wam-cache'))
     result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
     result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
     result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
@@ -167,6 +167,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             raise UserError('--migrate-home applies only to Root installation.')
         if args.report and args.command != 'doctor':
             raise UserError('--report is available with cytv doctor.')
+        if args.command == 'clean-wam-cache' and args.non_interactive:
+            raise UserError('WAM cleanup requires interactive confirmation; --yes does not authorize it.')
         if args.non_interactive:
             def no_ask(_):
                 raise UserError('Non-interactive mode needs --host and --edition or one saved profile; pairing and SSH trust must already be completed.')
@@ -184,6 +186,11 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             return info
 
         profile = choose_profile(args, store, ask, write, search or discovery.find_tvs, inspect_connection)
+        if args.command == 'clean-wam-cache':
+            if profile['edition'] != 'root':
+                raise UserError('WAM cleanup requires an existing Root SSH connection.')
+            if store.pending(profile):
+                raise UserError('Resolve the pending installation or removal before clearing WAM data. Keep recovery records.')
         if args.command == 'install':
             phase = 'prepare-payload'
             write.step(3, 'Prepare the TV connection')
@@ -250,6 +257,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
 
         from .transport import SSH
         with store.lock(profile):
+            if args.command == 'clean-wam-cache' and store.pending(profile):
+                raise UserError('Resolve the pending installation or removal before clearing WAM data. Keep recovery records.')
             phase = 'ssh-connect'
             write('Connecting to the TV…')
             if connect:
@@ -397,6 +406,23 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     return 0
                 report = diagnostics.collect_home_report(remote, store, profile, write)
                 write.report(report)
+            elif args.command == 'clean-wam-cache':
+                from . import wam_cleanup
+                phase = 'clean-wam-cache'
+                snapshot = wam_cleanup.inspect(remote)
+                write.heading('Clear WAM session data and caches')
+                write.raw('Session Storage, Cache, Code Cache, GPUCache')
+                write('Close TV apps first. This deletes app session state and may sign you out or lose unsaved work.')
+                write('Local Storage, Service Worker and databases are excluded.')
+                write('Selected WAM files: {size} MiB. Space may remain occupied until a real TV reboot.'.format(size=format(snapshot['bytes']/1048576, '.1f')))
+                if not prompts.confirm('Clear these four WAM folders?', ask, write):
+                    write('Cancelled. No WAM files were removed.')
+                    return 0
+                wam_cleanup.clean(remote, snapshot['token'])
+                write('WAM cleanup completed. Reboot the TV, recheck free space, then start installation again.')
+                if prompts.confirm('Reboot the TV now?', ask, write):
+                    wam_cleanup.reboot(remote)
+                    write('Reboot completion is unverified. Do not repeat automatically; check the TV and restart it manually if needed.')
             elif args.command == 'doctor':
                 phase = 'doctor'
                 installer.preflight()

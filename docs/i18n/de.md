@@ -1,5 +1,7 @@
 # Clean Your TV — Benutzeranleitung
 
+Noch nicht veröffentlicht: optionale Root-WAM-Bereinigung als separate Wartungsaktion mit ausdrücklicher Bestätigung. App-Sitzungszustand kann verloren gehen. Danach TV wirklich neu starten, Platz prüfen und Einrichtung erneut starten. Siehe [Anleitung und Grenzen](../WAM-CLEANUP.md).
+
 No-root und Root sind gleichwertige Optionen für unterschiedliche TV-Konfigurationen. Wählen Sie No-root für LG Developer Mode oder Root für vorhandenen Root-Zugriff per SSH. Kompatibilität und Testumfang hängen von der jeweiligen Edition ab.
 
 ## Voraussetzungen

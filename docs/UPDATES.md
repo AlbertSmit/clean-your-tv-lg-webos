@@ -2,6 +2,25 @@
 
 Use [v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
 
+## Candidate: Installer updates and product updates
+
+**Unreleased source candidate:** CYTV Installer adds Root setup through Homebrew
+Channel; no public catalog availability is established. Homebrew updates only
+`com.cleanyourtv.installer`. Its embedded component versions are independent of
+later product releases: upgrading Installer does not update Root Home or either
+updater. Existing Root/System Updaters retain recovery and signed complete-set
+product updates. Optional System Updater preparation must be explicitly chosen.
+
+Verified current installations share profiles, ownership and recovery with cytv
+without reinstalling. Unknown older infrastructure still requires its matching
+recovery/migration review; fresh packaged-preference migration is not an
+infrastructure upgrade. After interruption inspect status first, preserve records
+and use only a proven continuation. Installer-only deletion leaves the installed
+product; complete removal restores LG Home and cleans only owned components,
+registrations and startup hooks while retaining independent recovery and runtime
+slots. [Setup contract](INSTALL.md#candidate-on-tv-root-installation) ·
+[pending physical acceptance](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+
 ## Updating every component from the TV
 
 The independent System Updater adds **Update all** to Software updates. It uses

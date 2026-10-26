@@ -131,3 +131,37 @@ This is next-candidate behavior, not part of the published v1.2.0 installer. Aft
 Unreleased preparation: Android Tools keeps the selected TV, edition and SSH port after returning to the start screen; No-root normally uses 9922. If Home settings cannot verify Home control, they show an unknown status and hide Change Home until a valid reply. This does not mean Helper stopped and does not restart it. These changes are not in the published v1.2.0 packages.
 
 Next-candidate Root diagnostics (#55): after a failed setup, save the diagnostic report from that attempt. It can include categorized recovery-service startup failures; keep recovery state and retained drivers. This does not yet confirm a fix on OLED Flex.
+
+## Unreleased candidate: Root setup through Homebrew
+
+This source candidate adds the separate **CYTV Installer** app for **Root only**.
+It is not yet published in the Homebrew catalog. cytv keeps No-root and Root on
+Windows, macOS, Linux and Android; existing download links remain published cytv.
+
+Installer requires existing root, Homebrew Channel with root exec, Node.js **8+**
+and working Python **3.9+**. For supported ARMv7/`armv8l` 32-bit userspace it
+embeds a pinned private Python offline. Opening/status is read-only: explicitly
+prepare missing Python, inspect again, then review installation. Runtime setup
+needs **320 MiB free after Installer installation**, plus TV package staging space
+which has not been measured. No new model/firmware compatibility is established.
+
+Setup installs Root Home and Root Updater; System Updater preparation is an
+explicit optional choice. Enable Change Home separately after verification;
+setup never clears emergency/off. Current verified installations share profiles
+and recovery across cytv/TV without reinstall or reset. Unknown older infrastructure
+needs diagnosis; packaged-preference import is only for fresh setup, not browser
+storage or infrastructure migration.
+
+After interruption inspect status first. Continue appears only with the original
+snapshot/lease and proven final readback. Other stages need status, restore or
+diagnosis; the source CLI can explicitly resume additional recognized stages.
+cytv's Finish Root setup does not restart an incomplete worker. Never delete
+journals or blindly retry. Homebrew updates Installer only; existing updaters own
+product updates/signed complete sets. Deleting Installer leaves the product.
+Explicit complete removal restores LG Home and cleans owned startup hooks while
+retaining independent recovery/archive evidence and referenced Python slots.
+All physical checks for this path remain pending; the historical Root 0.2.0 C3
+results above do not validate Homebrew setup.
+
+[Candidate setup and recovery (English)](../INSTALL.md#candidate-on-tv-root-installation) ·
+[Pending physical acceptance (English)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

@@ -60,6 +60,28 @@ without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
 [Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.2.0.md)
 
+## Candidate: install Root from the TV
+
+**Unreleased candidate:** a separate **CYTV Installer** (`com.cleanyourtv.installer`)
+adds an on-TV Root setup path alongside cytv. It is not yet available through a
+published Homebrew catalog listing. cytv keeps No-root and Root on Windows,
+macOS, Linux and Android. Published download buttons above do not include this
+new path.
+
+The candidate needs existing root, Homebrew Channel with root exec, Node.js 8+
+and usable Python 3.9+. Supported ARMv7/`armv8l` 32-bit userspace can explicitly
+prepare the bundled pinned private Python offline, then inspect again and review
+installation. Setup leaves Home activation separate and never clears emergency
+off. Existing verified installations share profiles and recovery with cytv;
+unknown older infrastructure requires diagnosis, not automatic migration.
+
+Homebrew updates **Installer only**; existing Root/System Updaters own product
+updates and complete signed sets. Removing Installer leaves the product installed.
+Use explicit complete-product removal to restore LG Home and clean owned startup
+hooks; required recovery evidence and interpreter slots remain. See the
+[candidate setup and recovery contract](docs/INSTALL.md#candidate-on-tv-root-installation)
+and [pending physical acceptance](docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+
 ## Choose your edition
 
 | Edition | Status | Start here |
@@ -260,8 +282,8 @@ app inventories are included. Please redact logs before opening an issue.
 The 1.1.0 release introduces **Update all** in **Settings → Software updates**
 for rooted TVs with Homebrew Channel and a separately provisioned System Updater.
 Its signed release set updates Home/Helper/Home Updater for No-root edition on a
-rooted TV, or Root Home/runtime/Root Updater for Root edition. Initial installation
-and supervisor setup require the computer installer; installing a launcher IPK or
+rooted TV, or Root Home/runtime/Root Updater for Root edition. In the published setup flow, initial installation
+and supervisor setup use the computer installer; installing a launcher IPK or
 using legacy Home-only OTA does not install that infrastructure. Unrooted TVs
 continue updating from their computer. Updates preserve the profile and retain a
 verified previous component set for recovery; explicit emergency stops stay off.

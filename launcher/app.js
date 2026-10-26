@@ -652,19 +652,29 @@
         card: card,
         color: null
       };
-    var color = app.dominantColor || cachedColor(app.id);
-    var cardBackground;
-    if (!color && app.iconColor) {
-      cardBackground = tileBackground(app.iconColor);
-      color = parseHexColor(app.iconColor) || [68, 68, 68];
-    }
-    if (!color) {
-      computeColorOnload(tile, image);
+    var color = null, cardBackground;
+    // Apple TV's icon is a black tile; mirror its background so the artwork
+    // blends into the card instead of sitting on a derived gray field.
+    if (app.id === 'com.apple.appletv') {
+      color = [0, 0, 0];
+      cardBackground = 'rgb(0, 0, 0)';
     } else {
-      cardBackground = cardBackground || "rgb(" + color.join(",") + ")";
-      card.style.background = cardBackground;
-      tile.color = color;
+      color = app.dominantColor || cachedColor(app.id);
+      if (!color && app.iconColor) {
+        cardBackground = tileBackground(app.iconColor);
+        color = parseHexColor(app.iconColor) || [68, 68, 68];
+      }
+      if (!color) {
+        computeColorOnload(tile, image);
+      }
     }
+    if (color && !cardBackground) {
+      cardBackground = "rgb(" + color.join(",") + ")";
+    }
+    if (cardBackground) {
+      card.style.background = cardBackground;
+    }
+    tile.color = color;
     image.onerror = function () {
       image.style.display = "none";
       card.classList.add("missing-icon");

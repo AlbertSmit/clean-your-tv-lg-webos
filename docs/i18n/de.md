@@ -208,3 +208,17 @@ Nur im nächsten Kandidaten: No-root Einstellungen → Entwicklermodus → Diagn
 Der Bericht erhält den Fernbedienungsfokus. Auf/Ab scrollt; Links/Rechts oder OK führt zu den benachbarten Aktionen, Zurück zu den Home-Einstellungen.
 
 **Noch nicht veröffentlicht, #82:** Fehlt die Home-Einstellung, kann die ausdrücklich gestartete Root-Einrichtung LG Home eintragen und den Wert vor Abschluss der Wiederherstellungseinrichtung zurücklesen. Status/doctor schreibt nichts. Ein Schreibvorgang mit unklarem Ergebnis wird nicht wiederholt; Wiederherstellungsdaten behalten. Die ausdrückliche LG-Home-Einstellung bleibt nach der Deinstallation erhalten. Gerätetests für diese Firmware stehen aus.
+
+## Unveröffentlichter Kandidat: HDMI-Ton wiederherstellen (Root)
+
+Home-Einstellungen → HDMI-Ton bietet eARC-Neuverbindung und bestätigte
+HDMI-Ausgabewiederherstellung. ARC-only, kombinierte/WOW-Orchestra- und unbekannte
+Modi werden übersprungen. Automatik nach Einschalten/Aufwachen ist experimentell,
+standardmäßig aus, benötigt ein Stromstatus-Abonnement und kann funktionierenden
+Ton unterbrechen. Zurück schließt während der Bereinigung. Nach Unterbrechung
+Status prüfen; gespeichertes eARC nur wiederherstellen, wenn es eingeschaltet sein
+soll. Home-Wiederherstellung/Not-Aus deaktiviert die Automatik bis zur ausdrücklichen
+Aktivierung. Alte private Runtimes brauchen geprüfte Neueinrichtung. TV-Kompatibilität
+und schnellerer Ton sind unbestätigt.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

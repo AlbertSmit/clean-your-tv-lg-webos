@@ -198,3 +198,16 @@ Solo nel prossimo candidato: No-root Impostazioni → Modalità sviluppatore →
 Il rapporto riceve il focus del telecomando. Su/Giù scorre; Sinistra/Destra o OK torna alle azioni vicine e Indietro alle impostazioni Home.
 
 **Non ancora pubblicato, #82:** se manca la voce Home, la configurazione Root avviata esplicitamente può impostare LG Home e rileggere il valore prima di completare la preparazione del ripristino. Status/doctor non modifica nulla. Una scrittura con esito incerto non viene ripetuta; conserva i dati di ripristino. La voce esplicita LG Home rimane dopo la disinstallazione. Servono ancora prove su questo firmware.
+
+## Candidato non pubblicato: ripristino audio HDMI (Root)
+
+Impostazioni Home → Audio HDMI offre riconnessione eARC e ripristino HDMI confermato.
+ARC-only, combinati/WOW Orchestra e modalità sconosciute sono escluse. L’automazione
+all’accensione/risveglio è sperimentale, inizialmente disattivata; richiede una
+sottoscrizione di alimentazione supportata e può interrompere audio funzionante.
+Indietro chiude durante la pulizia. Dopo interruzione controlla lo stato; ripristina
+solo se desideri eARC attivo. Ripristino Home/arresto di emergenza disattiva l’automazione
+fino ad attivazione esplicita. Vecchi runtime privati richiedono nuova configurazione
+verificata. Compatibilità e minore ritardo non confermati.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

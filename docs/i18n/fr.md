@@ -209,3 +209,16 @@ Uniquement dans le prochain candidat : No-root Paramètres → Mode développeur
 Le rapport reçoit le focus de la télécommande. Haut/Bas fait défiler ; Gauche/Droite ou OK revient aux actions voisines, Retour aux paramètres Home.
 
 **Non publié, #82 :** si le réglage Home est absent, une installation Root explicitement lancée peut définir LG Home et relire la valeur avant de terminer la préparation de la récupération. Status/doctor ne modifie rien. Une écriture au résultat incertain ne sera pas répétée ; conservez les données de récupération. Le réglage explicite LG Home reste après la désinstallation. Les tests sur ce firmware restent à effectuer.
+
+## Candidat non publié : récupération du son HDMI (Root)
+
+Réglages Home → Son HDMI propose reconnexion eARC et rétablissement HDMI confirmé.
+Les modes ARC seul, combinés/WOW Orchestra et inconnus sont ignorés. L’automatisation
+après allumage/veille est expérimentale, désactivée par défaut ; elle nécessite un
+abonnement d’alimentation pris en charge et peut interrompre un son normal. Retour
+ferme pendant le nettoyage. Après interruption, vérifiez l’état ; rétablissez le
+réglage uniquement si vous souhaitez activer eARC. Restauration Home/arrêt d’urgence
+désactive l’automatisation jusqu’à activation explicite. Anciens runtimes privés :
+nouvelle configuration vérifiée nécessaire. Compatibilité et délai réduit non confirmés.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

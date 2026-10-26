@@ -175,3 +175,13 @@ existing recovery archives and unknown-operation records. Updating Installer
 alone does not replace retained private product code. Root remains disabled until
 an explicit activation through the normal setup/settings flow. See the
 [candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).
+
+## Unreleased HDMI sound recovery
+
+Root settings → HDMI sound provides manual eARC restart and confirmed HDMI-route
+fallback recovery. Experimental boot/standby recovery is off by default and may
+interrupt healthy audio. Unsupported/combined modes are skipped. Interrupted
+transactions require explicit setting restoration. Home restoration/emergency
+off inhibits automation until explicit enable. Existing private runtimes need
+checked fresh setup. No physical compatibility or faster acquisition is claimed.
+See [runtime and pending acceptance](../docs/development/ROOT-AUDIO-RECOVERY.md).

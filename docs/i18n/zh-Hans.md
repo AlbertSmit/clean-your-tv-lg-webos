@@ -180,3 +180,14 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 报告会获得遥控器焦点。上/下键滚动，左/右键或 OK 返回相邻操作，返回键回到 Home 设置。
 
 **尚未发布，#82：** 如果缺少 Home 设置，明确启动的 Root 安装可以将其设为 LG Home，并重新读取验证，然后完成恢复准备。Status/doctor 不会写入设置。结果不确定的写入不会重复，请保留恢复数据。卸载后显式的 LG Home 设置仍会保留。此固件仍需真机测试。
+
+## 未发布候选版本：HDMI 声音恢复（Root）
+
+Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出恢复。仅 ARC、
+组合/WOW Orchestra 及未知模式会跳过。开机/待机唤醒自动恢复是实验功能，默认关闭；
+需要支持的电源订阅，可能中断正常声音。返回可关闭面板，清理仍会继续。中断后
+请检查状态，仅在希望开启 eARC 时恢复已保存的设置。恢复 Home 或紧急停止会关闭
+自动恢复，必须明确重新开启。旧私有运行时需要经过验证的重新设置。尚未确认
+电视兼容性或声音开始时间缩短。
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

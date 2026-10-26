@@ -197,3 +197,16 @@ Tylko w następnym kandydacie: No-root Ustawienia → Tryb programisty → Poka�
 Raport otrzymuje fokus pilota. Góra/Dół przewija; Lewo/Prawo lub OK wraca do pobliskich działań, a Wstecz do ustawień Home.
 
 **Jeszcze niewydane, #82:** gdy brakuje ustawienia Home, jawnie uruchomiona instalacja Root może ustawić LG Home i potwierdzić odczyt przed zakończeniem przygotowania odzyskiwania. Status/doctor niczego nie zapisuje. Zapis o niepewnym wyniku nie jest powtarzany; zachowaj dane odzyskiwania. Jawne ustawienie LG Home pozostaje po odinstalowaniu. Testy na urządzeniu z tym firmware są nadal wymagane.
+
+## Nieopublikowany kandydat: odzyskiwanie dźwięku HDMI (Root)
+
+Ustawienia Home → Dźwięk HDMI oferuje ponowne łączenie eARC i potwierdzone przywrócenie
+HDMI. ARC-only, łączone/WOW Orchestra i nieznane tryby są pomijane. Automatyka po
+włączeniu/wybudzeniu jest eksperymentalna, domyślnie wyłączona, wymaga obsługiwanej
+subskrypcji zasilania i może przerywać sprawny dźwięk. Wstecz zamyka podczas porządkowania.
+Po przerwaniu sprawdź stan; przywróć ustawienie tylko, jeśli chcesz włączyć eARC.
+Przywrócenie Home/zatrzymanie awaryjne wyłącza automatykę do jawnego włączenia.
+Starsze prywatne runtime wymagają sprawdzonej ponownej konfiguracji. Zgodność i krótsze
+opóźnienie niepotwierdzone.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -208,3 +208,16 @@ Solo en el próximo candidato: No-root Ajustes → Modo de desarrollador → Mos
 El informe recibe el foco del mando. Arriba/Abajo desplaza; Izquierda/Derecha u OK vuelve a las acciones cercanas y Atrás a los ajustes de Home.
 
 **Aún no publicado, #82:** si falta el ajuste Home, la instalación Root iniciada explícitamente puede establecer LG Home y verificar su lectura antes de completar la preparación de recuperación. Status/doctor no escribe nada. Una escritura de resultado incierto no se repite; conserva los datos de recuperación. El ajuste explícito de LG Home permanece tras la desinstalación. Faltan pruebas en esta versión del firmware.
+
+## Candidato sin publicar: recuperación de sonido HDMI (Root)
+
+Ajustes de Home → Sonido por HDMI ofrece reconexión eARC y recuperación de salida
+HDMI confirmada. Se omiten ARC-only, combinados/WOW Orchestra y modos desconocidos.
+La recuperación al encender/salir del reposo es experimental, desactivada por defecto;
+requiere suscripción de energía compatible y puede interrumpir audio correcto.
+Atrás cierra durante la limpieza. Tras interrupción, comprueba el estado; restaura
+el ajuste solo si quieres eARC activado. Restaurar Home/parada de emergencia desactiva
+la automatización hasta activación explícita. Runtimes privados antiguos necesitan
+nueva configuración verificada. Compatibilidad y menor demora sin confirmar.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -203,3 +203,16 @@ Next candidate only: No-root Settings → Developer Mode → Show diagnostics in
 The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.
 
 **Unreleased, #82:** when the Home setting is absent, explicit Root setup can initialize it to LG Home and verify the readback before enabling recovery. Status/doctor never writes it. An uncertain write is not repeated; keep recovery data. The explicit LG Home setting remains after removal. This firmware still needs device testing.
+
+## Unreleased candidate: HDMI sound recovery (Root)
+
+Home settings → HDMI sound offers Reconnect eARC and confirmed HDMI-route fallback
+recovery. ARC-only, combined/WOW Orchestra and unknown modes are skipped.
+Recover after power-on is experimental, off by default; it may interrupt healthy
+audio after power-on/standby and requires a supported power subscription. Back can
+close the panel during cleanup. After interruption, check status; restore the saved
+setting only if you want eARC on. Home restoration/emergency stop disables automation
+until explicit enable. Older private runtimes need checked fresh setup. TV compatibility
+and faster audio acquisition remain unconfirmed.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

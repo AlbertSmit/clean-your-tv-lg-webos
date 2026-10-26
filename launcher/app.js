@@ -206,6 +206,19 @@
     }
     focusTile(nextFocus);
   }
+  // Insert a single app tile at a given index without re-rendering the
+  // rest of the grid. Used by picker-add and hide-undo paths.
+  function insertTileAt(app, index) {
+    var tile = createTile(app);
+    tiles.splice(index, 0, tile);
+    var next = tiles[index + 1];
+    if (next && next.el) {
+      tilesContainer.insertBefore(tile.el, next.el);
+    }
+    layoutTiles();
+    tile.el.classList.add('shown');
+    return tile;
+  }
   function activateTile(item) {
     if (item.add) {
       openPicker();
@@ -324,7 +337,8 @@
         return tile.app.id;
       }),
       hidden: oldHidden,
-      id: item.app.id
+      id: item.app.id,
+      app: item.app
     };
     undoBar.hidden = false;
     undoButton.focus();
@@ -342,10 +356,14 @@
       return;
     }
     try {
-      var id = undoState.id;
-      library.save(undoState.ids, undoState.hidden);
+      var state = undoState;
+      var id = state.id;
+      library.save(state.ids, state.hidden);
       dismissUndo();
-      rebuild(id);
+      var app = state.app || { id: id };
+      var insertIndex = Math.max(0, Math.min(state.ids.indexOf(id), tiles.length - 1));
+      var tile = insertTileAt(app, insertIndex);
+      focusTile(tiles.indexOf(tile));
     } catch (error) {
       showToast(tr("Couldn't restore app. Please try again."));
     }
@@ -392,7 +410,8 @@
         try {
           library.add(app.id);
           closePicker();
-          rebuild(app.id);
+          var tile = insertTileAt(app, tiles.length - 1);
+          focusTile(tiles.indexOf(tile));
           showToast(tr('{app} added', {
             app: app.title
           }));

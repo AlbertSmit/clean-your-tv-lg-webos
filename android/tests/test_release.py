@@ -90,8 +90,13 @@ class ReleaseTests(unittest.TestCase):
         self.assertEqual(report, {'schema': 1, 'source_commit': 'a' * 40, 'versions': VERSIONS,
                                  'android_version_name': '0.1.3-preview', 'android_version_code': 4,
                                  'package': 'com.cleanyourtv.android', 'abi': 'arm64-v8a',
-                                 'min_sdk': 24, 'target_sdk': 35, 'signer_sha256': CERT,
+                                 'min_sdk': 24, 'target_sdk': 35, 'debuggable': False, 'signer_sha256': CERT,
                                  'sha256': hashlib.sha256(self.apk.read_bytes()).hexdigest()})
+
+    def test_rejects_debuggable_apk_even_with_trusted_signer_and_payload(self):
+        self.badging = BADGING + 'application-debuggable\n'
+        with self.assertRaisesRegex(ValueError, 'debuggable'):
+            self.verify()
 
     def test_rejects_wrong_package_versions_sdk_and_abi(self):
         for before, after in [('com.cleanyourtv.android', 'example.other'),

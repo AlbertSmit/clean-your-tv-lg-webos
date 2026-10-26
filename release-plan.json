@@ -8,6 +8,21 @@
         65
       ],
       "summary": "Guide desktop recovery and save failed-attempt diagnostics"
+    },
+    {
+      "pr": 67,
+      "issues": [
+        24
+      ],
+      "summary": "Prepare non-debuggable Android builds and preserve pending prompts"
+    },
+    {
+      "pr": 70,
+      "issues": [
+        12,
+        68
+      ],
+      "summary": "Parse source-installer TV Node output without CLI banners and preserve failed probes; Android diagnostics, fonts and Helper availability in #12/#68 remain unresolved"
     }
   ],
   "excluded": [],

@@ -68,7 +68,11 @@ def tgz(files, executable=(), helper_state=False, directories=True):
             entry.mtime = IPK_MTIME
             entry.size, entry.mode = len(data), 0o755 if name in executable else 0o644
             archive.addfile(entry, io.BytesIO(data))
-    return gzip.compress(raw.getvalue(), mtime=0)
+    compressed = io.BytesIO()
+    # GzipFile keeps the OS byte canonical across Python/zlib build hosts.
+    with gzip.GzipFile(filename='', fileobj=compressed, mode='wb', compresslevel=9, mtime=0) as packed:
+        packed.write(raw.getvalue())
+    return compressed.getvalue()
 
 
 def ipk(app, version, files, executable=(), helper_state=False, architecture='all'):

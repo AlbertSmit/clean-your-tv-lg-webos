@@ -17,6 +17,12 @@ or Homebrew catalog availability is claimed.
 
 ## Included behavior
 
+- #85: keep the TV-only updater binding fixture on POSIX while retaining native
+  Windows build/smoke coverage. Canonical gzip metadata removes the measured
+  Python/host OS header difference from package hashes. Tar/ownership/modes,
+  published Helper pin and runtime guards remain unchanged. Rebuild the private
+  package-writer copies and their enclosing inventories.
+
 - #79: tolerate the measured shared package-metadata directory owner only at
   that platform container; package leaves and private execution remain guarded.
 - #83: authenticate observed SDK0777 DATA through phase-selected private hashes,

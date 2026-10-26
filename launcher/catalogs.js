@@ -1487,7 +1487,13 @@ HomeI18n.add({
     "Could not open Home.": "Не удалось открыть Home.",
     "If Home stops working after an update, use this app to restore the previous version. For regular updates, open Home settings.": "Если Home перестал работать после обновления, здесь можно восстановить предыдущую версию. Обычные обновления доступны в настройках Home.",
     "Open Home": "Открыть Home",
-    "Refresh status": "Обновить состояние"
+    "Refresh status": "Обновить состояние",
+    "Theme": "Theme",
+    "Classic": "Classic",
+    "Midnight": "Midnight",
+    "Pixel": "Pixel",
+    "Bloom": "Bloom",
+    "Amber": "Amber"
   }
 });
 

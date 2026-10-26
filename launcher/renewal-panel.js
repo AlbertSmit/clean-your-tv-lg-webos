@@ -5,16 +5,18 @@
  var panel=document.createElement('section');panel.id='renewalPanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Home settings'));
  panel.setAttribute('aria-modal','true');
  panel.innerHTML=ht([
-  "<div id=\"settingsMain\" class=\"renewal-card settings-main\"><div class=\"settings-heading\"><h2>Home settings</h2><span class=\"settings-edition\">No-root Edition</span></div><section class=\"settings-home\"><h3>Your Home screen</h3><p id=\"homeRoutingStatus\" class=\"settings-status\" aria-live=\"polite\">Checking Home control…</p>",
-  "<div class=\"renewal-actions home-routing-actions\"><button id=\"homeRoutingToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\" disabled>Change Home</button><button id=\"homeVisit\" class=\"home-visit-button\" aria-describedby=\"homeVisitHint\">Open LG Home</button></div><p id=\"homeVisitHint\" class=\"home-visit-hint\">Open LG Home once, keeping your Home choice.</p>",
-  "</section>",
-  "<div class=\"renewal-actions settings-links settings-section\"><button id=\"homeLanguage\">Language<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalUpdates\">Software updates<span class=\"settings-update-dot\" aria-hidden=\"true\"></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalTV\">TV settings<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"renewal-actions settings-developer\"><button id=\"developerOpen\" aria-controls=\"developerSettings\" aria-describedby=\"renewalSummary\"><span><span>Developer Mode</span> <span class=\"settings-beta\">Beta</span><span id=\"renewalSummary\" class=\"renewal-summary\" aria-live=\"polite\">Checking auto-renewal…</span></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"settings-footer\"><p>Hold Back for 1.2 seconds to open LG Home.</p>",
-  "<div class=\"renewal-actions\"><button id=\"renewalClose\">Back to Home</button></div></div>",
-  "</div><div id=\"developerSettings\" class=\"renewal-card hidden\"><div class=\"settings-heading\"><h2>Developer Mode</h2><span class=\"settings-edition\">Beta</span></div><p>Developer Mode keeps Home installed. Auto-renewal tries to extend its session while your TV is on and online.</p>",
-  "<div class=\"renewal-actions\"><button id=\"renewalToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\">Turn on auto-renewal</button></div><p class=\"renewal-warning\">Beta: renewal is not yet verified on no-root TVs. Keep checking the timer in the Developer Mode app.</p>",
-  "<div id=\"renewalStatus\" aria-live=\"polite\">Checking auto-renewal…</div><div class=\"renewal-actions\"><button id=\"renewalCheck\">Check session</button><button id=\"renewalDiagnostics\" aria-expanded=\"false\" aria-controls=\"renewalDetails\">Show diagnostics</button></div><pre id=\"renewalDetails\" class=\"hidden\"></pre><div class=\"settings-footer\"><div class=\"renewal-actions\"><button id=\"developerBack\">Back</button></div></div>",
-  "</div>"
- ].join(''));
+   "<div id=\"settingsMain\" class=\"renewal-card settings-main\"><div class=\"settings-heading\"><h2>Home settings</h2><span class=\"settings-edition\">No-root Edition</span></div><section class=\"settings-home\"><h3>Your Home screen</h3><p id=\"homeRoutingStatus\" class=\"settings-status\" aria-live=\"polite\">Checking Home control…</p>",
+   "<div class=\"renewal-actions home-routing-actions\"><button id=\"homeRoutingToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\" disabled>Change Home</button><button id=\"homeVisit\" class=\"home-visit-button\" aria-describedby=\"homeVisitHint\">Open LG Home</button></div><p id=\"homeVisitHint\" class=\"home-visit-hint\">Open LG Home once, keeping your Home choice.</p>",
+   "</section>",
+   "<div class=\"renewal-actions settings-links settings-section\"><button id=\"homeLanguage\">Language<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalUpdates\">Software updates<span class=\"settings-update-dot\" aria-hidden=\"true\"></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalTV\">TV settings<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div>",
+   "<div id=\"themeSection\" class=\"settings-section theme-panel-container\"></div>",
+   "<div class=\"renewal-actions settings-developer\"><button id=\"developerOpen\" aria-controls=\"developerSettings\" aria-describedby=\"renewalSummary\"><span><span>Developer Mode</span> <span class=\"settings-beta\">Beta</span><span id=\"renewalSummary\" class=\"renewal-summary\" aria-live=\"polite\">Checking auto-renewal…</span></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"settings-footer\"><p>Hold Back for 1.2 seconds to open LG Home.</p>",
+   "<div class=\"renewal-actions\"><button id=\"renewalClose\">Back to Home</button></div></div>",
+   "</div><div id=\"developerSettings\" class=\"renewal-card hidden\"><div class=\"settings-heading\"><h2>Developer Mode</h2><span class=\"settings-edition\">Beta</span></div><p>Developer Mode keeps Home installed. Auto-renewal tries to extend its session while your TV is on and online.</p>",
+   "<div class=\"renewal-actions\"><button id=\"renewalToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\">Turn on auto-renewal</button></div><p class=\"renewal-warning\">Beta: renewal is not yet verified on no-root TVs. Keep checking the timer in the Developer Mode app.</p>",
+   "<div id=\"renewalStatus\" aria-live=\"polite\">Checking auto-renewal…</div><div class=\"renewal-actions\"><button id=\"renewalCheck\">Check session</button><button id=\"renewalDiagnostics\" aria-expanded=\"false\" aria-controls=\"renewalDetails\">Show diagnostics</button></div><pre id=\"renewalDetails\" class=\"hidden\"></pre><div class=\"settings-footer\"><div class=\"renewal-actions\"><button id=\"developerBack\">Back</button></div></div>",
+   "</div>"
+  ].join(''));
  document.body.appendChild(panel);
  var status=document.getElementById('renewalStatus'),toggle=document.getElementById('renewalToggle'),check=document.getElementById('renewalCheck'),details=document.getElementById('renewalDetails');
  var previous,developerOpen=false;
@@ -70,7 +72,7 @@
   });
  };
  function date(v){return typeof v==='number'?(window.HomeI18n?HomeI18n.formatDateTime(v):new Date(v).toLocaleString()):tr('Not yet');}
- var labels={healthy:tr('Session checked'),renewed:tr('Renewal confirmed'),retry:tr('Connection failed — retry scheduled'),unverified:tr('LG response could not confirm renewal'),expired:tr('Session expired — open Developer Mode'),unavailable:tr('No readable Developer Mode session'), 'session-changed':tr('Session changed — retry scheduled'),'storage-error':tr('Could not save state'),'internal-error':tr('Check failed')};
+ var labels={healthy:tr('Session checked'),renewed:tr('Renewal confirmed'),retry:tr('Connection failed — retry scheduled'),unverified:tr('LG response could not confirm renewal'),expired:tr('Session expired — open Developer Mode'),unavailable:tr('No readable Developer Mode session'),'session-changed':tr('Session changed — retry scheduled'),'storage-error':tr('Could not save state'),'internal-error':tr('Check failed')};
  function render(){
   toggle.setAttribute('aria-checked',String(!!(state&&state.enabled)));
   toggle.textContent=state&&state.enabled?tr('Turn off auto-renewal'):tr('Turn on auto-renewal');
@@ -122,6 +124,13 @@
   if(k===461||k===27){if(developerOpen)showDeveloper(false);else close();}else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
  window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
+ // Mount theme panel after panel is in DOM
+ setTimeout(function(){
+  var container=document.getElementById('themeSection');
+  if(container && window.ThemePanel && window.ThemePanel.mount){
+   window.ThemePanel.mount(container);
+  }
+ }, 0);
  // No session request, token access or scheduler setup happens on launcher startup.
 }());
 

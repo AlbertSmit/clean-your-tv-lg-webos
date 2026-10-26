@@ -26,22 +26,32 @@ function javascript(code, filename) {
 }
 
 async function stylesheet(code, filename) {
-  const transformed = await postcss([presetEnv({browsers: targets, stage: 3, preserve: false,
-    features: {'logical-properties-and-values': true, 'hexadecimal-alpha-notation': true}})]).process(code, {from: filename, map: false});
+  // First, compile CSS custom properties (variables) for Chrome 38 compatibility
+  // Stage 0 + explicit feature enables custom-properties transformation
+  const compiled = await postcss([
+    presetEnv({browsers: targets, stage: 0, preserve: false,
+      features: {
+        'custom-properties': { preserve: false },
+        'logical-properties-and-values': true,
+        'hexadecimal-alpha-notation': true
+      }})
+  ]).process(code, {from: filename, map: false});
+
   const unsupported = [];
-  transformed.root.walkDecls(/^(overflow-wrap|word-wrap)$/, declaration => {
+  compiled.root.walkDecls(/^(overflow-wrap|word-wrap)$/, declaration => {
     if (declaration.value === 'anywhere') unsupported.push(filename + ': ' + declaration.prop + ': anywhere requires a legacy break-word value');
   });
   await postcss([doiuse({browsers: targets, onFeatureUsage: usage => {
-    // doiuse groups legacy overflow values with newer clip/overlay features.
-    // Only the four original values are accepted, not the entire feature family.
+    // Ignore css-variables since we transform them via preset-env stage 0
+    if (usage.feature === 'css-variables') return;
+    // Allow legacy overflow values
     if (usage.feature === 'css-overflow' && /^overflow(?:-[xy])?$/.test(usage.usage.prop) &&
         /^(auto|hidden|scroll|visible)$/.test(usage.usage.value)) return;
     unsupported.push(usage.message);
   }})])
-    .process(transformed.css, {from: filename, map: false});
+    .process(compiled.css, {from: filename, map: false});
   if (unsupported.length) throw Error(filename + ': unsupported CSS after PostCSS:\n' + unsupported.join('\n'));
-  return transformed.css;
+  return compiled.css;
 }
 
 async function document(code, filename) {

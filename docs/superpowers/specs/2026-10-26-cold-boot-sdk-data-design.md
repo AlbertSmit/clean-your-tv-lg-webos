@@ -122,3 +122,24 @@ The DATA directory reader permits sticky only on its already allowlisted shared
 ancestors (including a real temporary container); shared setid, own SDK special
 bits and all private readers remain strict. This preserves legitimate Linux
 `/tmp` traversal rather than redirecting tests to a less representative location.
+
+
+The System adapter's internal install interface accepts a synchronous `on_intent`
+callback in addition to its original submission/terminal callbacks. On an original
+install it first observes every required owner, strictly verifies private code and
+Python binding without enforcing lockdown, and checks the original release/cache
+and any bounded local infrastructure transition. It then invokes `on_intent` once;
+the original Manager durably saves intent before lockdown enforcement, mutable
+snapshot, local writes or SDK transport. Default `integrity()` still performs the
+existing lockdown enforcement; only this read-only preflight defers that effect.
+The adapter freshly verifies its pinned policy before executing the release
+verifier. Failure after intent, including lockdown failure before SDK transport,
+remains conservatively unknown. No identity selector can bypass unknown evidence.
+
+The Manager rejects submission/terminal callbacks before this invocation's intent
+callback, and rejects duplicate intent callbacks. Rollback retains its preexisting
+durable proof/admission order; its callback only acknowledges the already saved
+intent. A resumed local infrastructure leg retains its explicitly bounded
+reconciliation rule. Fresh SDK calls with existing intent still stop in the
+Manager before the adapter, and direct adapter calls still fail their owner
+preflight on unknown intent. No durable field or user-facing control changes.

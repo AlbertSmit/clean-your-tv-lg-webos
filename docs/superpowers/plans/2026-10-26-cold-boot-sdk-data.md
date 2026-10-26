@@ -62,6 +62,18 @@ This is one trust contract: separating resolver/writers from consumers would lea
 - [ ] Update affected docs and record twelve-guide review. Do not claim hardware success or public Homebrew approval.
 - [ ] Run meaningful affected suites/actual Node8, diff check, self-review and commit. Save exact RED/GREEN/commands/known gaps in the plan workspace report. Do not run a duplicate full suite; parent owns final aggregate.
 
+## Task 1b — Original System submission after durable intent
+
+A separately reproduced functional defect remains after the scoped final-fix review: System Manager._apply persists installEvidence.intent before Device.install; Device.install's ordinary require_components then resolves worker identity and rejects that same intent as unknown before any transport submission. The existing Manager must still refuse every resumed unknown attempt. Fix the original synchronous submission contract without loosening background worker, startup, normal rearm or unknown-outcome authority.
+
+- Reproduce with actual private identity fixtures, System Manager and Device, not an adapter stub. Read final-fix-review.md for the independent focused probe/evidence. Trace all callers before choosing a minimal existing-interface fix.
+- Original known first invocation must submit exactly once, record real terminal evidence and proceed through candidate readback/health. Keep all required owners checked and missing/corrupt untouched owners blocking. Infrastructure-local continuation retains its separate bounded rules.
+- After interruption before or after transport with intent but no terminal, a fresh Manager/worker must never replay or roll back an uncertain SDK submission. Do not clear/replace intent, synthesize outcomes, adopt writable SDK metadata or grant a general unknown bypass.
+- Write failing regression first, then the smallest standard-library/existing-helper correction. Preserve emergency/off, profile and original package/cache evidence; no new privilege, durable schema, network endpoint or user flow.
+- Cover original Root and Root-Updater System legs and uncertainty/owner refusal. Check No-root manager behavior if the shared call interface changes, without broad unrelated refactoring.
+- Update the authority spec only for the actual internal contract; no localized user-flow change is expected. Run affected System/identity/worker suites and committed-HEAD emitted closure checks; parent owns a fresh aggregate and exact installer/native/platform builds after source freeze.
+- No TV, remote network/GitHub mutation, subagents or extra worktrees. Sole source writer; commit and freeze explicitly before parent builds. Report RED/GREEN commands/output, exact commit, interface decisions/costs and remaining limits in task-1b-report.md.
+
 ## Task 2 — Review and stable artifacts (parent)
 
 - [ ] Save one complete task diff; read-only spec/quality review against the written contract and counterevidence. Fix Critical/Important findings in one integrated wave; scoped rereview only.

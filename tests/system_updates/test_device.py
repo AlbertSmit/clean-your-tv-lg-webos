@@ -269,7 +269,7 @@ class SignedInfrastructureTests(DeviceBase):
         # Actual Node signature verification, bounded archive parsing, fixed-file
         # replacement and root-owned receipt writes run; only TV bus/process IO is substituted.
         for c,expected in ((candidate,new_files),(previous,old_files)):
-            terminal=[];self.device.install(c,lambda value:None,terminal.append);self.assertTrue(terminal[0]['success'])
+            terminal=[];self.device.install(c,lambda value:None,terminal.append,lambda:None);self.assertTrue(terminal[0]['success'])
             for name,data in expected.items():self.assertEqual(self.device._infra_path(name).read_bytes(),data)
             if c is previous:
                 for name in set(new_files)-set(old_files):self.assertFalse(os.path.lexists(self.device._infra_path(name)))
@@ -384,7 +384,7 @@ class RootRollbackDataTests(DeviceBase):
         # real self-cache/terminal authentication has separate all-owner coverage.
         checked=[];self.device.owner_identity=lambda owner,**kw:checked.append(owner) or {'id':owner}
         self.device.require_components=lambda:self.mod.Device.require_components(self.device)
-        self.device.integrity=lambda:None;self.device.routing_safe=lambda:True;self.device.now=lambda:1000;self.device.launch=lambda edition:None
+        self.device.integrity=lambda **kw:None;self.device.routing_safe=lambda:True;self.device.now=lambda:1000;self.device.launch=lambda edition:None
         self.device.snapshot_mutable=lambda:None;self.device.restore_mutable=lambda:None;self.device.repair_registrations=lambda:None
         actual=self.device.verify_installed
         self.device.verify_installed=lambda c:actual(c) if c['name']=='root' else True
@@ -400,3 +400,18 @@ class RootRollbackDataTests(DeviceBase):
             self.assertEqual(manager.run()['phase'],'verifying-rollback')
             manager.healthy('root',tx['id'],'1.0.0');self.assertEqual(manager.run()['phase'],'rolled-back')
             self.assertEqual(submit.call_count,1);self.assertEqual(set(checked),{'com.cleanyourtv.system.updater','com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'})
+
+class OriginalPreflightOrderTests(DeviceBase):
+    def test_changed_private_supervisor_blocks_before_executing_release_verifier(self):
+        from test_core import release
+        from unittest.mock import patch
+        candidate=release('1.1.0');candidate['proof']={'original':'fixture-signature'}
+        c=candidate['components'][0];raw=ipk();c.update(version='1.0.0',sha256=digest(raw),size=len(raw))
+        self.store.write('transaction',{'edition':'no-root','candidate':candidate,'prior':candidate})
+        (self.root/'code/policy.js').write_bytes(b'original verifier')
+        self.store.write('infrastructure',{'schema':1,'code':{'policy.js':digest(b'original verifier')}})
+        (self.root/'code/policy.js').write_bytes(b'changed verifier')
+        with patch.object(self.device,'fetch',side_effect=AssertionError('unverified policy executed')) as verifier,patch.object(self.device,'enforce_legacy_lockdown') as lockdown,patch('observed_install.install') as submit:
+            with self.assertRaisesRegex(ValueError,'Supervisor infrastructure changed'):
+                self.device.install(c,self.fail,self.fail,self.fail)
+            self.assertEqual(verifier.call_count,0);self.assertEqual(lockdown.call_count,0);self.assertEqual(submit.call_count,0)

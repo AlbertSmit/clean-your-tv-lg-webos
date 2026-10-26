@@ -77,7 +77,7 @@ class Device:
     def require_components(self):
         if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
 
-    def integrity(self):
+    def integrity(self,*,enforce=True):
         if os.path.lexists(self.state/'cytv-removal.json'):raise ValueError('System updater removal is in progress. Continue removal from the computer.')
         receipt=self.store.read('infrastructure')
         if not isinstance(receipt,dict) or receipt.get('schema')!=1 or not isinstance(receipt.get('code'),dict) or not receipt['code']:raise ValueError('One-time System Updater setup required')
@@ -87,7 +87,7 @@ class Device:
             if digest(safe_bytes(self.code/name,limit=4*1024*1024,uid=self.uid))!=expected:raise ValueError('Supervisor infrastructure changed')
         from python_binding import verify_binding
         verify_binding(self.state)
-        self.enforce_legacy_lockdown()
+        if enforce:self.enforce_legacy_lockdown()
         return receipt
 
     def fetch(self,method,payload=None,binary=False):
@@ -298,7 +298,7 @@ class Device:
             if any(saved==c for saved in release['components']):self._verify_release(release,tx['edition']);return
         raise ValueError('Component outside reserved release')
 
-    def install(self,c,on_submit,on_terminal):
+    def install(self,c,on_submit,on_terminal,on_intent):
         tx=self.store.read('transaction')
         rollback=isinstance(tx,dict) and tx.get('phase')=='rolling-back' and tx.get('rollbackAttempted') is True
         if rollback:
@@ -313,11 +313,16 @@ class Device:
             try:self.require_components()
             except TransitionUnknown:pass  # Complete owner observation; only this original rollback may proceed.
         else:self.require_components()
-        self.integrity();self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
+        self.integrity(enforce=False)
+        self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
+        if c['kind']=='infrastructure':self.validate_infrastructure_transition()
+        # Only the original synchronous Manager call can persist this intent.
+        # All preflight is read-only; lockdown and other effects follow intent.
+        on_intent()
+        self.enforce_legacy_lockdown()
         if c['kind']=='infrastructure':
             # Infrastructure writes have a durable intent in core and per-file
             # atomic replacement. Restart reconciles only known before/after bytes.
-            self.validate_infrastructure_transition()
             self._stop_service_processes(str(self.root_state/'service'))
             on_submit({'component':c['name'],'sha256':c['sha256']})
             files=archive(raw)

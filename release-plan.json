@@ -59,6 +59,16 @@
       "pr": 76,
       "issues": [],
       "summary": "Add complete Simplified/Traditional Chinese to Home, Root, updaters and all installer interfaces with static offline fonts and guides; physical Chinese-language TV acceptance pending"
+    },
+    {
+      "pr": 77,
+      "issues": [],
+      "summary": "Correct standard webOS package-data/ARM32-on-aarch64 handling, anchored private execution and receipt-owned startup guards; retain fail-closed recovery and portable host tests"
+    },
+    {
+      "pr": 78,
+      "issues": [],
+      "summary": "Record combined Homebrew correction validation, artifact identities and limited isolated Installer evidence; keep final hardware/platform/publication gates pending"
     }
   ],
   "excluded": [],

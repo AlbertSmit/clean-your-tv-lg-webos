@@ -290,3 +290,24 @@ Unrelated releases carry an approved older Installer's bytes/metadata unchanged,
 with honest embedded versions and original immutable URL. See
 [packaging/release contract](../../homebrew/README.md) and
 [release flow](../RELEASE-FLOW.md#homebrew-installer-candidate-and-promotion-gate).
+
+## Combined correction verification
+
+Source `cb1c789a` includes Chinese #76 and correction #77. Full local suite passed
+1,178 Python cases (two isolated-Linux-root skips), with Qt enabled, JS/native/
+compatibility, twelve-locale browser checks and actual Helper Node0.12.2. Actual
+Node8 runtime/bridge checks passed. Required Linux/macOS/optional-runtime CI passed
+in run40315333002. macOS console/desktop embedded155-file payload and frozen GUI/
+package smoke passed. Two Installer0.1.0 builds were byte-identical: SHA256
+`f29e4975537735e53527a1296326e2fd46428393eac88eeb07a55e099d814c2b`,
+61,228,554 bytes; payload manifest
+`54d4c78d93d21f1e128223eeb4fe858e4e222008e2eeb37989a7fe08e327e964`.
+
+The combined isolated TV test passed installation, actual file hashes and fixed
+HBC read-only inspection. Bounded foreground observation after one launch
+confirmed Installer on the third sample; the earlier immediate read was premature.
+Exact Installer-only terminal removal/absence and unchanged prior-product baseline
+passed. This proves application foreground identity, not manual screen/remote
+acceptance. Supervised product transition was subsequently authorized; its results
+are still pending. All-platform integrated builds and final publication acceptance
+remain separate. No Homebrew public approval record is added.

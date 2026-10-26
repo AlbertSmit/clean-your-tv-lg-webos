@@ -115,6 +115,10 @@ python3 -m unittest discover -s tests/cytv -p 'test_root_preflight.py'
 
 ## Task 2 — Make startup ownership and direct removal safe
 
+Implemented and reviewed in `4117979d` (Root 541, System 92, cytv 315 tests
+with 23 existing skips). Physical-TV acceptance remains Task 8. Existing updater
+state is not silently reprovisioned; supported migration remains Task 4.
+
 **Modify:** `root-edition/startup_hook.py`, `root-edition/service/boot-recover.sh`,
 `root-edition/runtime/persistent_lifecycle.py`,
 `root-edition/runtime/persistent_recovery.py`,
@@ -131,24 +135,24 @@ Introduce receipt schema 2 with exact `path`, `target`, `owner_app`, `target_sha
 alongside `version`. Read schema 1 only for verified migration/removal. Store the
 previous receipt so failure does not lose ownership evidence.
 
-- [ ] Test missing target, foreign symlink, changed target bytes, writable parent,
+- [x] Test missing target, foreign symlink, changed target bytes, writable parent,
   wrong owner, copied legacy hook, interrupted migration and repeated removal.
   Use `lstat`/`readlink` to inspect a link itself, not a permissive `resolve` check.
-- [ ] Package startup scripts under the three owning packages. Atomically replace
+- [x] Package startup scripts under the three owning packages. Atomically replace
   only a previously verified owned hook with the exact intended symlink. The
   link allowance must not change general `secure`/`safe_bytes` semantics.
-- [ ] Add bounded package-presence checks to already-running lifecycle workers:
+- [x] Add bounded package-presence checks to already-running lifecycle workers:
   disappearance of Root Home restores LG routing and leaves activation disabled.
   Disappearance of an updater blocks new work and resolves only safely recoverable
   existing work using retained verified code. Do not remove its rollback data.
-- [ ] Simulate each package disappearing during idle, active Home and each update
+- [x] Simulate each package disappearing during idle, active Home and each update
   phase. Assert no further routing activation, no update replay and preserved
   recovery evidence. Distinguish the temporary replacement window of an owned
   update transaction from external package deletion.
-- [ ] Update the existing cytv removal helpers to verify/archive both exact legacy
+- [x] Update the existing cytv removal helpers to verify/archive both exact legacy
   copied hooks and new receipt-owned symlinks without following foreign links.
   Include interrupted removal and retained-registration compatibility tests.
-- [ ] Run lifecycle/update regression and commit. This task gates Homebrew
+- [x] Run lifecycle/update regression and commit. This task gates Homebrew
   publication even though the installer itself is a separate package.
 
 ```sh

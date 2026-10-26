@@ -192,6 +192,7 @@ export function createWidgets(dataSource) {
   }
 
   let lastNP = null;
+  let npEntered = false;
 
   function applyNowPlayingVisibility() {
     npEl.classList.toggle('w-np-hidden', !(cfg.enabled.nowPlaying && hasMusic(snapshot && snapshot.nowPlaying)));
@@ -217,6 +218,11 @@ export function createWidgets(dataSource) {
 
   function setNowPlaying(snap) {
     applyNowPlayingVisibility();
+    if (cfg.enabled.nowPlaying && hasMusic(snap) && !npEntered) {
+      npEntered = true;
+      npEl.classList.add('entering');
+      setTimeout(function () { npEl.classList.remove('entering'); }, 700);
+    }
     if (!hasMusic(snap)) {
       applyArtwork(null);
       titleEl.textContent = '';

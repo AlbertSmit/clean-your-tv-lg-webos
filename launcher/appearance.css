@@ -168,18 +168,24 @@ html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display:
 .w-np-badge { position: absolute; top: -8px; right: 0; width: 30px; height: 30px; opacity: .8; }
 .w-np-badge svg { display: block; width: 30px; height: 30px; fill: currentColor; }
 .w-np-badge path { fill: none; stroke: currentColor; stroke-width: 2; }
-.w-np { transition: opacity 260ms ease, transform 260ms ease, visibility 260ms; }
-.w-np.w-np-hidden { opacity: 0; transform: translateY(16px) scale(.985); visibility: hidden; }
+.w-np { will-change: transform, opacity; transition: opacity 240ms cubic-bezier(.4,0,.2,1), transform 300ms cubic-bezier(.25,1,.4,1), visibility 240ms; }
+.w-np.w-np-hidden { opacity: 0; transform: translateY(18px) scale(.985); visibility: hidden; }
+.w-np.entering { animation: wNpCardIn 560ms cubic-bezier(.22,.61,.36,1) both; }
+@keyframes wNpCardIn {
+  0% { opacity: 0; transform: translateY(26px) scale(.955); }
+  60% { opacity: 1; transform: translateY(-5px) scale(1.02); }
+  100% { opacity: 1; transform: none; }
+}
 @keyframes wNpTextIn {
   from { opacity: 0; transform: translateY(9px); }
   to { opacity: 1; transform: none; }
 }
-.w-np-animate { animation: wNpTextIn 440ms cubic-bezier(.22,.61,.36,1) both; }
+.w-np-animate { animation: wNpTextIn 440ms cubic-bezier(.28,1.22,.45,1) both; }
 @keyframes wNpArtIn {
   from { opacity: 0; transform: scale(1.07); }
   to { opacity: 1; transform: none; }
 }
-.w-np-art-animate { animation: wNpArtIn 480ms cubic-bezier(.22,.61,.36,1) both; }
+.w-np-art-animate { animation: wNpArtIn 500ms cubic-bezier(.28,1.22,.45,1) both; }
 html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { animation: none !important; }
 /* LQIP blur-up for album art: a pre-blurred miniature, then a sharp crossfade. */
 .w-np-art { position: relative; }

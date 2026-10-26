@@ -38,7 +38,8 @@ class InstallTests(unittest.TestCase):
                 os.close(slave)
 
     def run_installer(self, fault='', existing=False, host='192.0.2.10',
-                      external_zig=False, path_zig=False, termux=False, zig_version='0.14.1'):
+                      external_zig=False, path_zig=False, termux=False, zig_version='0.14.1',
+                      tv_node_output=None, tv_node_exit=0):
         with tempfile.TemporaryDirectory(prefix='tv install ') as tmp:
             root = Path(tmp)
             installer = ROOT / 'install.sh'
@@ -67,7 +68,8 @@ if name=='ares-setup-device' and '--listfull' in sys.argv:
 if name=='ares-novacom' and '--getkey' in sys.argv and os.environ['FAULT']=='pair': sys.exit(1)
 if name=='ares-novacom' and '--run' in sys.argv:
     if 'process.versions.node' in sys.argv[-1]:
-        print('0.10.48' if os.environ['FAULT']=='tv-node' else '0.12.2')
+        sys.stdout.write(os.environ['TV_NODE_OUTPUT'])
+        sys.exit(int(os.environ['TV_NODE_EXIT']))
     else: print('no confirmation' if os.environ['FAULT']=='ssh' else 'CYTV_SSH_OK')
 if name=='ares-install' and os.environ['FAULT']=='install': sys.exit(1)
 '''); cli.chmod(0o755)
@@ -115,7 +117,10 @@ printf '["configure"]\\n' >> calls.jsonl
 ''')
             env = dict(os.environ, PATH=str(bindir),
                        PYTHONPATH=str(root), FAULT=fault, EXISTING='1' if existing else '0',
-                       DEVICE='test-tv', PROFILE_HOST='192.0.2.99' if fault=='profile' else host)
+                       DEVICE='test-tv', PROFILE_HOST='192.0.2.99' if fault=='profile' else host,
+                       TV_NODE_OUTPUT=tv_node_output if tv_node_output is not None else
+                           ('0.10.48\n' if fault=='tv-node' else '0.12.2\n'),
+                       TV_NODE_EXIT=str(tv_node_exit))
             env.pop('ZIG', None); env.pop('TV_HOST', None)
             env.pop('TERMUX_VERSION', None); env.pop('PREFIX', None)
             if termux:
@@ -147,6 +152,43 @@ printf '["configure"]\\n' >> calls.jsonl
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('TV Node.js 0.12.2', result.stdout+result.stderr)
         self.assertFalse(any(c[0] in ('sync', 'ares-install', 'configure', 'ares-launch') for c in calls))
+
+    def test_supported_tv_node_with_cli_banners_reaches_install_and_launch(self):
+        for output in (
+            '0.12.2\n',
+            '[Info] Set target device : test-tv\n0.12.2\n',
+            '[Info] Set target device : test-tv\r\n20.12.2\r\n',
+            '8.12.0\n[Info] Command complete\n',
+            '\n[Info] Set target device : test-tv\n0.12.2\n\n',
+        ):
+            with self.subTest(output=output):
+                result, calls = self.run_installer(tv_node_output=output)
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                self.assertEqual(sum(c[0]=='ares-install' for c in calls), 2)
+                self.assertEqual(calls[-1][0], 'ares-launch')
+
+    def test_invalid_tv_node_output_stops_before_inventory_and_package_install(self):
+        for output in (
+            '',
+            '[Info] Set target device : test-tv\n',
+            '[Info] Set target device : test-tv\n0.10.48\n',
+            '0.12.1\n',
+            '0.12\n',
+            'Warning: command failed\n0.12.2\n',
+            '0.12.2\n20.12.2\n',
+        ):
+            with self.subTest(output=output):
+                result, calls = self.run_installer(tv_node_output=output)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('TV Node.js 0.12.2', result.stdout+result.stderr)
+                self.assertFalse(any(c[0] in ('sync', 'ares-install', 'configure', 'ares-launch') for c in calls))
+
+    def test_failed_tv_node_probe_preserves_exit_status_and_stops_installation(self):
+        for output in ('', '[Info] Set target device : test-tv\n0.12.2\n'):
+            with self.subTest(output=output):
+                result, calls = self.run_installer(tv_node_output=output, tv_node_exit=7)
+                self.assertEqual(result.returncode, 7, result.stdout+result.stderr)
+                self.assertFalse(any(c[0] in ('sync', 'ares-install', 'configure', 'ares-launch') for c in calls))
 
     def test_default_bootstrap_installs_pinned_zig_distribution(self):
         result, calls = self.run_installer()

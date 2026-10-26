@@ -165,6 +165,11 @@ python3 -m unittest discover -s tests/system_updates
 
 ## Task 3 — Prepare a reproducible offline bootstrap payload
 
+Implemented in `85d9219b` + ABI correction `618c69e5`; scoped reviews passed.
+Node 8.12/current and source-free tests passed. Two builds matched 109 files
+and 59,862,509 bytes; diagnostic IPK 58,123,938 bytes. This is not the final
+installer IPK or physical-TV acceptance.
+
 **Create:** `homebrew/build.py`, `homebrew/payload.py`,
 `homebrew/runtime.js`, `homebrew/tests/test_payload.py`,
 `homebrew/tests/runtime.cjs`.
@@ -177,23 +182,23 @@ component inventories and SHA-256/size per regular file. No recursive wildcard
 trust and no network calls during device execution. Runtime JS exports
 `inspect(payloadRoot)` and `prepare(payloadRoot)`; inspect never mutates.
 
-- [ ] Add tests proving an omitted/extra file, wrong size/hash, unsafe relative
+- [x] Add tests proving an omitted/extra file, wrong size/hash, unsafe relative
   path, symlink, duplicate archive member, mismatched component baseline and
   invalid runtime binding are rejected before executing payload code.
-- [ ] Reuse the current Root, Root Updater and System Updater builders as inputs.
+- [x] Reuse the current Root, Root Updater and System Updater builders as inputs.
   Normalize the currently pinned Python archive during build and include its
   license/provenance. Reuse existing limits and compatible ABI predicates.
-- [ ] Implement Node 8-compatible streaming verification and constrained runtime
+- [x] Implement Node 8-compatible streaming verification and constrained runtime
   extraction. Require root-owned parents, exclusive staging, resource limits,
   exact output inventory and smoke/readback checks before selecting an interpreter.
   A valid installed system Python skips private runtime installation.
-- [ ] Test without Python or a computer-side installer, using only Node and
+- [x] Test without Python or a computer-side installer, using only Node and
   existing verified TV utilities. Unsupported ABI and
   inadequate storage return actionable errors with zero installation submissions.
-- [ ] Build twice in distinct output directories; compare hashes and report IPK
+- [x] Build twice in distinct output directories; compare hashes and report IPK
   and temporary-space requirements. If measured limits invalidate offline delivery,
   revise the design before introducing a downloaded bootstrap.
-- [ ] Register tests in the existing suite/scope selector and commit.
+- [x] Register tests in the existing suite/scope selector and commit.
 
 ```sh
 python3 -m unittest discover -s homebrew/tests -p 'test_payload.py'

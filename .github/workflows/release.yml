@@ -115,7 +115,7 @@ jobs:
         with:
           run-id: ${{ needs.plan.outputs.build_run }}
           github-token: ${{ github.token }}
-          pattern: cytv-*
+          pattern: '{cytv-*,homebrew-candidate}'
           path: ${{ runner.temp }}/release-builds
       - name: Verify desktop and Android installers and assemble final public bundles
         env:

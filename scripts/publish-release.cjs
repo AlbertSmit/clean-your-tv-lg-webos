@@ -32,6 +32,21 @@ function verifySystemRelease(feed,build,assets,key=fs.readFileSync(path.join(__d
  }
  return manifest;
 }
+function verifyHomebrewRelease(folder,build){
+ const file=path.join(folder,'homebrew-manifest.json');
+ if(!build.homebrew){if(fs.existsSync(file))throw Error('unaccepted-homebrew-asset');return null;}
+ const manifest=JSON.parse(fs.readFileSync(file));
+ const match=/^https:\/\/github\.com\/Razdva122\/clean-your-tv-lg-webos\/releases\/download\/(v\d{1,4}\.\d{1,4}\.\d{1,4})\/(com\.cleanyourtv\.installer_\d+\.\d+\.\d+_all\.ipk)$/.exec(manifest.ipkUrl);
+ if(!match)throw Error('invalid-homebrew-url');
+ // Repository-owned verifier reads archive data only, including the embedded offline inventory.
+ execFileSync('python3',[path.join(__dirname,'homebrew-manifest.py'),'--ipk',path.join(folder,match[2]),'--verify',file,'--build',path.join(folder,'BUILD-INFO.json'),'--sums',path.join(folder,'SHA256SUMS')],{stdio:'pipe'});
+ return {tag:match[1],filename:match[2],sha256:manifest.ipkHash.sha256};
+}
+function verifyHomebrewOrigin(installer,folder,download){
+ const origin=path.join(folder,'homebrew-origin');fs.mkdirSync(origin,{recursive:true});
+ download(['release','download',installer.tag,'--pattern',installer.filename,'--dir',origin]);
+ if(crypto.createHash('sha256').update(fs.readFileSync(path.join(origin,installer.filename))).digest('hex')!==installer.sha256)throw Error('homebrew-origin-package-mismatch');
+}
 function main(args){
  const [tag,option]=args;
  if(!/^v\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(tag||'')||args.length>2||(option&&!['--check-only','--publish-verified'].includes(option)))throw Error('Usage: node scripts/publish-release.cjs vX.Y.Z [--check-only|--publish-verified]');
@@ -44,10 +59,21 @@ function main(args){
  const folder=fs.mkdtempSync(path.join(os.tmpdir(),'cytv-release-'));
  const gh=argv=>execFileSync('gh',argv,{encoding:'utf8',maxBuffer:1024*1024,stdio:['ignore','pipe','pipe']});
  try{
-  gh(['release','download',tag,'--pattern','root-update.json','--pattern','BUILD-INFO.json','--pattern','update.json','--pattern','previous-update.json','--pattern','system-update-root.json','--pattern','system-update-no-root.json','--dir',folder]);
+  gh(['release','download',tag,'--pattern','root-update.json','--pattern','BUILD-INFO.json','--pattern','SHA256SUMS','--pattern','update.json','--pattern','previous-update.json','--pattern','system-update-root.json','--pattern','system-update-no-root.json','--dir',folder]);
   const feed=JSON.parse(fs.readFileSync(path.join(folder,'root-update.json')));
   const build=JSON.parse(fs.readFileSync(path.join(folder,'BUILD-INFO.json')));
   if(build.tag!==tag)throw Error('release-tag-mismatch');
+  const releaseAssets=JSON.parse(gh(['release','view',tag,'--json','assets'])).assets;
+  const homebrewAssets=releaseAssets.filter(a=>a.name==='homebrew-manifest.json'||a.name.startsWith('com.cleanyourtv.installer_'));
+  if(!build.homebrew&&homebrewAssets.length)throw Error('unaccepted-homebrew-asset');
+  if(build.homebrew){
+   gh(['release','download',tag,'--pattern','homebrew-manifest.json','--pattern','com.cleanyourtv.installer_*.ipk','--dir',folder]);
+   const installer=verifyHomebrewRelease(folder,build);
+   if(homebrewAssets.length!==2||!homebrewAssets.some(a=>a.name===installer.filename))throw Error('unexpected-homebrew-assets');
+   // Also verify the immutable URL retained by a carried manifest, not just the latest copy.
+   verifyHomebrewOrigin(installer,folder,gh);
+  }
+
   const candidate=policy.verify(feed,fs.readFileSync(path.join(__dirname,'../updater-service/release-public.pem')));
   const filename=path.basename(new URL(candidate.url).pathname);
   gh(['release','download',candidate.release,'--pattern',filename,'--dir',folder]);
@@ -79,5 +105,5 @@ function main(args){
   if(option!=='--check-only')process.stdout.write(gh(['release','edit',tag,'--draft=false','--latest']));
  }finally{fs.rmSync(folder,{recursive:true,force:true});}
 }
-module.exports={verifyRootRelease,verifyHomeRelease,verifySystemRelease};
+module.exports={verifyRootRelease,verifyHomeRelease,verifySystemRelease,verifyHomebrewRelease,verifyHomebrewOrigin};
 if(require.main===module){try{main(process.argv.slice(2));}catch(error){process.stderr.write(String(error.message)+'\n');process.exitCode=1;}}

@@ -6,10 +6,7 @@ record; even a dead worker cannot authorize replay of an uncertain submission.
 """
 import re
 
-BUNDLED_FILES=('install_driver.py','install_device.py','system_setup.py','root_package.py','app-inventory.js',
- 'cleanup_root_updater.py','cleanup_system_updater.py','cleanup_legacy_permissions.py','cleanup_app_permissions.py','cleanup_root_archive.py',
- 'system_updater/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/support/__init__.py',
- 'system_updater/support/package.py','system_updater/support/store.py','system_updater/support/profile.py','system_updater/support/luna.py')
+from coordinator_inventory import BUNDLED_FILES
 from installation import Busy, Ownership, _optional_record, pending_journals, read_journal
 
 
@@ -59,11 +56,11 @@ class Coordinator:
             if existing['state']!='unknown': raise _Recorded(existing)
             pending_journals('product',self.read)
         try:
-            with self.ownership.operation('product', 'product.json', check=check) as lease:
+            with self.ownership.operation('product', 'product-'+identifier+'.json', check=check) as lease:
                 # Check under the lock too: two clients can race their first status.
                 previous=self.status(identifier)
                 if previous['state']!='unknown': return previous
-                record=dict(operation=identifier,action=action,stage='reserved',state='pending',code='operation_pending',home_changed=False)
+                record=dict(operation=identifier,lease=lease['id'],action=action,stage='reserved',state='pending',code='operation_pending',home_changed=False)
                 submission=_optional_record(self.store,'submission-'+identifier)
                 if submission is not None: record['candidate_sha256']=submission['candidate_sha256']
                 def checkpoint(stage):
@@ -122,6 +119,75 @@ class Coordinator:
         return self._run(identifier,'remove',perform)
 
 
+    def resume(self, identifier, payload):
+        """Explicit continuation: same request/lease, verified snapshot, no replay."""
+        identifier=operation_id(identifier)
+        submission=_optional_record(self.store,'submission-'+identifier)
+        if submission is None: raise ValueError('verified_worker_snapshot_required')
+        options=self.device.verify_resume(payload,submission)
+        previous=self.status(identifier)
+        if previous['state']=='unknown' or (not previous.get('lease') and previous.get('stage')=='blocked'):
+            current=self.ownership.status()
+            journal='product-'+identifier+'.json'
+            if current is not None and current['owner']=='product' and current['journal']==journal:
+                if current['terminal']:raise ValueError('completed_request_record_required')
+                # The lease itself durably names the request before its first
+                # checkpoint. Effects are forbidden until that checkpoint exists.
+                with self.ownership.operation('product',journal,resume=current['id']) as lease:
+                    if self.status(identifier)['state']=='unknown' or not self.status(identifier).get('lease'):
+                        self.store.write('request-'+identifier,dict(operation=identifier,lease=lease['id'],action=submission['action'],stage='reserved',state='pending',code='operation_pending',home_changed=False,candidate_sha256=submission.get('candidate_sha256')))
+                previous=self.status(identifier)
+            elif previous['state']!='unknown':
+                # A blocked record without a reservation is a proved failure
+                # before the kernel's first checkpoint, not a package attempt.
+                with self.ownership.operation('product',journal,check=lambda:pending_journals('product',self.read)) as lease:
+                    self.store.write('request-'+identifier,dict(operation=identifier,lease=lease['id'],action=submission['action'],stage='reserved',state='pending',code='operation_pending',home_changed=False,candidate_sha256=submission.get('candidate_sha256')))
+                previous=self.status(identifier)
+        if previous['state']=='unknown':
+            # Before the first reservation no product effect is possible. The
+            # normal kernel atomically deduplicates even a late original worker.
+            if submission['action']=='install': return self.install(identifier,payload,**options)
+            return self.remove(identifier)
+        if previous.get('action')!=submission['action'] or not previous.get('lease'):
+            raise ValueError('original_product_lease_required')
+        def check():
+            current=self.ownership.status()
+            if current is None or current['id']!=previous['lease']: raise Busy()
+            from installation import JOURNALS
+            updates={JOURNALS[name][0] for name in ('root-update','system-update')}
+            pending_journals('product',lambda path:self.read(path) if path in updates else None)
+        with self.ownership.operation('product','product-'+identifier+'.json',resume=previous['lease'],check=check) as lease:
+            record=self.status(identifier)
+            self.device.operation=lease;self.device.ownership=self.ownership
+            if lease['terminal']:
+                # Historical completion is not remaining work. Revalidate only;
+                # external drift must not retroactively create a mutation lease.
+                try:
+                    if not self.device.validate_completion(record['action'],record['lease']):raise ValueError('historical_completion_is_not_current')
+                    result=self.device.readback() if record['action']=='install' else record['result']
+                    return dict(record,current=True,result=result)
+                except Exception as error:
+                    if hasattr(self.device,'log'):self.device.log(error)
+                    return dict(record,state='recovery_required',code='historical_completion_is_not_current',current=False)
+            def checkpoint(stage):
+                record.update(stage=stage,state='pending',code='operation_pending')
+                self.store.write('request-'+identifier,record);self.ownership.stage(lease,stage)
+            try:
+                if record['action']=='install':
+                    result=self.device.resume_install(payload,options,record['stage'],checkpoint)
+                else:
+                    result=self.device.remove(checkpoint,resume=True)
+                record.update(stage='complete',state='complete',code='verified',result=result)
+                self.store.write('request-'+identifier,record)
+                self.ownership.stage(lease,'complete',terminal=True)
+            except Exception as error:
+                if hasattr(self.device,'log'):self.device.log(error)
+                self.ownership.stage(lease,record['stage'],terminal=False)
+                record.update(state='recovery_required',code='continuation_requires_recovery')
+                self.store.write('request-'+identifier,record)
+            return record
+
+
 def _verified_payload(payload, prepare_supervisor):
     """Copy only authoritative verified component inventories; omit runtime.
 
@@ -149,6 +215,23 @@ def candidate_digest(payload, inventories):
     from deploy import checked_file
     value={name:hashlib.sha256(checked_file(Path(payload)/name,'bundle.json')).hexdigest() for name in inventories}
     return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+
+
+def root_review_binding(payload, inventories):
+    import hashlib,json
+    from pathlib import Path
+    from updater.package import inspect_package
+    from deploy import checked_file,APP
+    root=Path(payload)/'root';manifest=inventories['root'];release=json.loads(checked_file(root,'release.json'))
+    raw=checked_file(root,manifest['package'])
+    hashes=inspect_package(raw,{'version':release['version'],'sha256':hashlib.sha256(raw).hexdigest(),'size':len(raw),'local':True})
+    prefix='usr/palm/applications/'+APP+'/'
+    def mutable(name):
+        if name in (prefix+'apps.js',prefix+'config.js'):return True
+        relative=name[len(prefix):] if name.startswith(prefix) else ''
+        return relative.startswith('icons/') and relative.count('/')==1 and relative.lower().endswith(('.png','.jpg','.jpeg','.webp'))
+    return {'identity':{'package':manifest['package'],'version':release['version'],'application_id':release['application_id']},
+            'code':{name:digest for name,digest in hashes.items() if not mutable(name)}}
 
 
 def submit(identifier, payload, migrate=False, prepare_supervisor=False, action='install', candidate=None, ownership=None):
@@ -181,7 +264,7 @@ def submit(identifier, payload, migrate=False, prepare_supervisor=False, action=
         actual_candidate=candidate_digest(payload,inventories)
         if candidate is not None and candidate!=actual_candidate: raise ValueError('reviewed_candidate_changed')
         device=LocalDevice();device.preflight(payload,dict(migrate=migrate,prepare_supervisor=prepare_supervisor))
-        receipt=dict(operation=identifier,stage='preparing',state='pending',code='operation_pending',action=action,home_changed=False,candidate_sha256=actual_candidate)
+        receipt=dict(operation=identifier,stage='preparing',state='pending',code='operation_pending',action=action,home_changed=False,candidate_sha256=actual_candidate,options=dict(migrate=migrate,prepare_supervisor=prepare_supervisor),worker_sha256=hashlib.sha256((__import__('pathlib').Path(payload)/'root-updater/bundle.json').read_bytes()).hexdigest(),root_binding=root_review_binding(payload,inventories),root_static={n:d for n,d in inventories['root']['files'].items() if n not in (inventories['root'].get('package'),'release.json','SHA256SUMS')})
         store.write('submission-'+identifier,receipt)
         try:
             root=Path(store.root)/('request-'+identifier)
@@ -220,6 +303,24 @@ def submit(identifier, payload, migrate=False, prepare_supervisor=False, action=
         return receipt
 
 
+def resume_submit(identifier, ownership=None, action=None):
+    import os,subprocess,sys
+    from pathlib import Path
+    from install_device import LocalDevice
+    identifier=operation_id(identifier)
+    ownership=ownership if ownership is not None else Ownership()
+    submission=_optional_record(ownership.store,'submission-'+identifier)
+    if submission is None:raise ValueError('verified_worker_snapshot_required')
+    if action is not None and submission.get('action')!=action:raise ValueError('operation_action_conflict')
+    root=Path(ownership.store.root)/('request-'+identifier)
+    LocalDevice().verify_resume(root,submission)
+    args=[sys.executable,'-B',str(root/'root-updater/install_driver.py'),submission['action'],'--operation',identifier,'--payload',str(root),'--worker','--resume']
+    with (root/'worker.log').open('ab') as output:
+        subprocess.Popen(args,stdin=subprocess.DEVNULL,stdout=output,stderr=output,start_new_session=True,close_fds=True,
+          env={**{k:v for k,v in os.environ.items() if k not in ('PYTHONPATH','PYTHONHOME')},'PYTHONDONTWRITEBYTECODE':'1','PYTHONNOUSERSITE':'1'})
+    return dict(request_status(identifier,ownership.store),state='pending',stage='resume-submitted',code='continuation_pending')
+
+
 def request_status(identifier, store):
     from install_device import LocalDevice
     ownership=Ownership.__new__(Ownership);ownership.store=store
@@ -241,6 +342,8 @@ def main():
     parser.add_argument('--candidate',help='SHA-256 of the reviewed component bundle manifests')
     parser.add_argument('--migrate-packaged-home',action='store_true')
     parser.add_argument('--prepare-supervisor',action='store_true')
+    parser.add_argument('--verify-current',action='store_true',help='Read current completion proof without replay')
+    parser.add_argument('--resume',action='store_true',help='Explicitly continue the original verified request; never replay unknown submissions')
     parser.add_argument('--worker',action='store_true',help=argparse.SUPPRESS)
     args=parser.parse_args()
     if args.action in ('install','remove','status'): operation_id(args.operation)
@@ -251,7 +354,11 @@ def main():
     else: ownership=Ownership()
     coordinator=Coordinator(device,ownership)
     try:
-        if args.action=='install':
+        if args.resume:
+            if args.action not in ('install','remove'):parser.error('--resume requires install or remove')
+            if args.worker:result=coordinator.resume(args.operation,args.payload)
+            else:result=resume_submit(args.operation,ownership,action=args.action)
+        elif args.action=='install':
             if args.payload is None: parser.error('install requires a verified local payload')
             if args.worker:
                 result=coordinator.install(args.operation,args.payload,migrate=args.migrate_packaged_home,prepare_supervisor=args.prepare_supervisor)
@@ -262,17 +369,28 @@ def main():
             else:
                 if args.payload is None: parser.error('remove requires a verified local payload')
                 result=submit(args.operation,args.payload,action='remove',candidate=args.candidate)
-        elif args.action=='status': result=request_status(args.operation,ownership.store)
+        elif args.action=='status':
+            result=request_status(args.operation,ownership.store)
+            if args.verify_current:
+                result=dict(result,current=False)
+                if result['state']=='complete':
+                    try:result['current']=device.validate_completion(result['action'],result.get('lease'))
+                    except (OSError,ValueError,RuntimeError,KeyError):pass
         elif args.action=='inspect':
             inspected=device.inspect()
             result=dict(operation=None,stage='inspect',state=inspected['state'],code='inspected',installation=inspected)
+            try:
+                active=ownership.status()
+                match=re.fullmatch(r'product-([0-9a-f]{32})\.json',active['journal']) if active and active['owner']=='product' and not active['terminal'] else None
+                result['active_operation']=request_status(match.group(1),ownership.store) if match else None
+            except (OSError,ValueError):result['active_operation']=None
             if args.payload:
                 result['candidate_sha256']=candidate_digest(args.payload,_verified_payload(args.payload,args.prepare_supervisor))
         else: result=dict(operation=None,stage='restore',state='complete',code='restored',result=coordinator.restore())
     except Exception as error:
         device.log(error)
         result=dict(operation=args.operation,stage='blocked',state='recovery_required',code='operation_requires_recovery',home_changed=False)
-        if args.action in ('install','remove'):
+        if args.action in ('install','remove') and not isinstance(error,Busy):
             result['action']=args.action
             if _optional_record(ownership.store,'request-'+args.operation) is None:
                 ownership.store.write('request-'+args.operation,result)

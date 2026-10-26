@@ -31,7 +31,7 @@ class FullUninstallTests(unittest.TestCase):
             operation=words[words.index('--operation')+1];calls.append((action,operation))
             if terminal=='lost' and action=='remove':raise RuntimeError('lost SSH reply')
             return json.dumps({'operation':operation,'stage':'complete' if terminal=='complete' else 'package-remove-submitting',
-                               'state':'complete' if terminal=='complete' else 'recovery_required','code':'verified',
+                               'state':'complete' if terminal=='complete' else 'recovery_required','code':'verified','current':terminal=='complete',
                                'result':{'removed':True,'applications_services_startup_removed':True,'updater_archive':'saved','system_updater_archive':'system-saved'}})
         remote.run.side_effect=run
         inst=Installer(remote,store,profile,root,{},lambda *_:None);inst._selected_python='/usr/bin/python3'
@@ -41,7 +41,7 @@ class FullUninstallTests(unittest.TestCase):
         inst,remote,store,profile,calls=self.fixture()
         result=inst.uninstall(full_project=True)
         self.assertTrue(result['removed']);self.assertEqual(result['system_updater_archive'],'system-saved')
-        self.assertEqual([action for action,_ in calls],['remove'])
+        self.assertEqual([action for action,_ in calls],['remove','status'])
         remote.luna.assert_not_called();self.assertIsNone(store.pending(profile))
 
     def test_uncertain_shared_remove_is_status_only_even_when_packages_are_absent(self):
@@ -58,7 +58,7 @@ class FullUninstallTests(unittest.TestCase):
         inst,remote,store,profile,calls=self.fixture()
         store.begin(profile,'uninstall',full_project=True,product_operation='a'*32)
         self.assertTrue(inst.uninstall(full_project=True)['removed'])
-        self.assertEqual(calls,[('status','a'*32)]);self.assertIsNone(store.pending(profile));remote.luna.assert_not_called()
+        self.assertEqual(calls,[('status','a'*32),('status','a'*32)]);self.assertIsNone(store.pending(profile));remote.luna.assert_not_called()
 
     def test_ambiguous_legacy_host_receipts_are_retained_without_package_requests(self):
         for extra in ({'root_submitted':True},{'removals':{UPDATER_APP:'submitted'}},{'removals':{UPDATER_APP:'done'}}):
@@ -87,3 +87,18 @@ class FullUninstallTests(unittest.TestCase):
             store.begin(profile,'uninstall',full_project=True)
             self.assertIsNotNone(inst.status()['pending'])
             self.assertIsNotNone(store.pending(profile))
+
+    def test_package_reappearance_does_not_clear_historical_removal_or_replay(self):
+        inst,remote,store,profile,calls=self.fixture()
+        original=remote.run.side_effect
+        def stale(command,**kwargs):
+            raw=original(command,**kwargs)
+            if '/install_driver.py ' in command:
+                event=json.loads(raw);event['current']=False;return json.dumps(event)
+            return raw
+        remote.run.side_effect=stale
+        store.begin(profile,'uninstall',full_project=True,product_operation='a'*32)
+        self.assertIsNotNone(inst.status()['pending'])
+        with self.assertRaisesRegex(RuntimeError,'unknown'):inst.uninstall(full_project=True)
+        self.assertEqual([action for action,_ in calls],['status','status'])
+        self.assertIsNotNone(store.pending(profile));remote.luna.assert_not_called()

@@ -15,6 +15,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--bundle',type=Path,required=True);parser.add_argument('--baseline',type=Path,required=True)
     parser.add_argument('--ssh');parser.add_argument('--identity',type=Path);parser.add_argument('--apply',action='store_true')
+    parser.add_argument('--component-only',action='store_true',help='Deliberate low-level updater bootstrap recovery only')
+    parser.add_argument('--operation',help='Shared product UUID')
+    parser.add_argument('--resume',action='store_true',help='Explicitly continue that shared request')
     parser.add_argument('--device',action='store_true',help=argparse.SUPPRESS)
     parser.add_argument('--python',default='/usr/bin/python3',choices=('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'))
     args=parser.parse_args()
@@ -26,12 +29,17 @@ def main():
         return
     from updater.bootstrap import verify_bundle,permission_plan
     from deploy import verify_bundle as verify_root
-    updater=verify_bundle(args.bundle);baseline=verify_root(args.baseline)
-    plan={'operation':'one-time-root-updater-setup','replaces_root_runtime':False,'baseline':baseline['package'],
+    from setup import bundle_bytes
+    updater=verify_bundle(args.bundle,reader=bundle_bytes);baseline=verify_root(args.baseline)
+    plan={'operation':'one-time-root-updater-setup' if args.component_only else 'shared-root-product-setup','component_only':args.component_only,'product_components':['root-updater'] if args.component_only else ['root','root-updater'],'replaces_root_runtime':False,'baseline':baseline['package'],
           'permissions':permission_plan(),'requires_root_mode_disabled':True,'hardware_validated':False}
     print(json.dumps(plan,indent=2))
     if not args.apply:return
     if not args.ssh:parser.error('--apply requires --ssh')
+    if not args.component_only:
+        from setup import execute_product
+        execute_product('install',args.ssh,args.baseline,args.bundle,args.identity,operation=args.operation,python=args.python,resume=args.resume)
+        return
     from setup import ssh_options
     options=ssh_options(args.ssh,args.identity);remote='/tmp/cytv-root-updater-'+uuid.uuid4().hex
     subprocess.run(['ssh',*options,'umask 077; test "$(id -u)" = 0 && mkdir '+shlex.quote(remote)],check=True,stdin=subprocess.DEVNULL)

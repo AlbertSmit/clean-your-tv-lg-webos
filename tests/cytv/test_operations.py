@@ -34,11 +34,11 @@ class Remote:
             if action=='inspect': return json.dumps({'operation':None,'state':'fresh','installation':{'state':'fresh','can_maintain':False}})
             if self.fail=='deploy': raise RuntimeError('connection interrupted')
             if self.fail=='updater': return json.dumps({'operation':operation,'state':'recovery_required','stage':'root-updater','code':'installation_requires_recovery'})
-            payload=words[words.index('--payload')+1]
+            payload=words[words.index('--payload')+1] if '--payload' in words else next(path[:-len('/root/bundle.json')] for path in self.uploads if path.endswith('/root/bundle.json'))
             manifest=json.loads(self.uploads[payload+'/root/bundle.json'])
             import hashlib
             baseline=hashlib.sha256(self.uploads[payload+'/root/'+manifest['package']]).hexdigest()
-            return json.dumps({'operation':operation,'state':'complete','stage':'complete','code':'verified','result':{'installed':package.ROOT_APP,'home_changed':False,'verified':True,'baseline_sha':baseline}})
+            return json.dumps({'operation':operation,'current':True,'state':'complete','stage':'complete','code':'verified','result':{'installed':package.ROOT_APP,'home_changed':False,'verified':True,'baseline_sha':baseline}})
         if 'setup-updater.py' in command:
             if self.fail == 'updater': raise RuntimeError('updater setup interrupted')
             return json.dumps({'installed': True})

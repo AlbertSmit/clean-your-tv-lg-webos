@@ -200,7 +200,7 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         self._coordinator_code=stage
         return stage
 
-    def product_action(self, action, operation=None, payload=None, migrate=False):
+    def product_action(self, action, operation=None, payload=None, migrate=False, verify_current=False):
         if action not in ('inspect','install','status','remove'): raise ValueError('Unsupported product action')
         if action!='inspect' and (not isinstance(operation,str) or not re.fullmatch('[a-f0-9]{32}',operation)):
             raise ValueError('Invalid product operation')
@@ -212,6 +212,7 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
             candidate=getattr(self,'_product_candidates',{}).get(payload)
             if candidate: args+=['--candidate',candidate]
         if migrate: args.append('--migrate-packaged-home')
+        if verify_current:args.append('--verify-current')
         reply=json.loads(self.remote.run(self._python_command(args),timeout=90))
         if (not isinstance(reply,dict) or reply.get('operation')!=operation
                 or reply.get('state') not in ('pending','complete','recovery_required','unknown','fresh','installed','unsupported','conflict','migration_required')):
@@ -521,7 +522,9 @@ print('CYTV_UPDATER_VERIFIED')
         if self.remote.run(self._python_command([self._python(), '-c', script, baseline_sha]), timeout=60).strip() != 'CYTV_UPDATER_VERIFIED':
             raise UserError('Root updater recovery verification failed. Keep recovery state and run cytv status.')
         reply = self.remote.luna(UPDATER_APP + '.service/status', {}, app_id=package.ROOT_APP, timeout=110)
-        if reply.get('returnValue') is not True or 'result' not in reply or reply['result'] is not None:
+        transaction=reply.get('result')
+        healthy=(transaction is None or (isinstance(transaction,dict) and transaction.get('schema')==1 and isinstance(transaction.get('id'),str) and re.fullmatch('[a-f0-9]{32}',transaction['id']) and transaction.get('phase') in ('complete','rolled-back','aborted') and transaction.get('homeResumePhase')==transaction.get('phase')))
+        if reply.get('returnValue') is not True or 'result' not in reply or not healthy:
             raise UserError('Root updater service is not ready. Keep recovery state and run cytv status.')
 
     @staticmethod
@@ -535,6 +538,11 @@ print('CYTV_UPDATER_VERIFIED')
                 and result.get('effective', {}).get('profiles', {}).get('defaultApps', {}).get('categories', {}).get('home') == package.ROOT_APP)
 
     def activate_root(self):
+        pending=self.store.pending(self.profile) or {}
+        if pending.get('product_operation'):
+            current=self.product_action('status',pending['product_operation'],verify_current=True)
+            if current.get('current') is not True:
+                raise UserError('Root setup could not be verified for continuation. Recovery data was kept.')
         self.progress('Checking Root recovery…')
         if self.root_action('status').get('result', {}).get('recovery', {}).get('integrity_verified') is not True:
             raise UserError('Root is installed, but recovery could not be verified. Run cytv status; activation has not started.')
@@ -615,14 +623,28 @@ print('CYTV_UPDATER_VERIFIED')
         pending = self.store.pending(self.profile)
         reconciled = None
         can_resume = False
+        if not pending and self.profile['edition']=='root':
+            try:
+                inspected=self.product_action('inspect')
+                active=inspected.get('active_operation')
+                if isinstance(active,dict):
+                    return {'device':{'product':active},'pending':None,'reconciled':None,'can_resume_root_setup':False,'active_operation':active.get('operation')}
+            except (OSError,RuntimeError,ValueError,KeyError):pass
         if pending and pending.get('product_operation') and pending.get('action') in ('install','uninstall'):
-            event=self.product_action('status',pending['product_operation'])
-            complete=event['state']=='complete'
+            event=self.product_action('status',pending['product_operation'],verify_current=True)
+            complete=event['state']=='complete' and event.get('current') is True
+            can_resume=False
+            if complete and pending['action']=='install':
+                try:
+                    device=self.root_action('status').get('result',{})
+                    if self.root_setup_inactive(device):
+                        self.verify_root_updater(event['result']['baseline_sha']);can_resume=True
+                except (RuntimeError,ValueError,KeyError,TypeError):pass
             if complete and pending['action']=='uninstall':
                 self.store.finish(self.profile)
                 reconciled='product-removal-verified'
             return {'device':{'product':event},'pending':self.store.pending(self.profile),'reconciled':reconciled,
-                    'can_resume_root_setup':complete and pending['action']=='install'}
+                    'can_resume_root_setup':can_resume}
         if pending and pending.get('action') == 'enable-system-updates':
             report = self.system_updater_cleanup('status')
             if report.get('present') is False:
@@ -964,8 +986,8 @@ print('CYTV_PROJECT_REMOVED')
         if pending:
             if pending.get('action')!='uninstall' or pending.get('full_project') is not True or not pending.get('product_operation'):
                 raise UserError('An earlier operation needs recovery before full removal. Recovery data was kept.')
-            event=self.product_action('status',pending['product_operation'])
-            if event['state']!='complete':
+            event=self.product_action('status',pending['product_operation'],verify_current=True)
+            if event['state']!='complete' or event.get('current') is not True:
                 raise UserError('Previous package removal outcome is unknown or the app reappeared; it was not submitted again.')
             result=event['result']
         else:
@@ -976,6 +998,9 @@ print('CYTV_PROJECT_REMOVED')
             stage=self.upload_product(self.payload/'root')
             self.store.checkpoint(self.profile,stage='coordinator-submitted',product_payload=stage)
             result=self.await_product('remove',operation,stage)
+        proof=self.product_action('status',(self.store.pending(self.profile) or {})['product_operation'],verify_current=True)
+        if proof.get('current') is not True:
+            raise UserError('Project startup or service registrations remain. Removal is not complete.')
         if result.get('removed') is not True or result.get('applications_services_startup_removed') is not True:
             raise UserError('Project startup or service registrations remain. Removal is not complete.')
         self.store.finish(self.profile)

@@ -137,3 +137,16 @@ class ProvisionTests(unittest.TestCase):
         with patch.object(p.os.path,'lexists',return_value=True),patch.object(p,'write') as write:
             with self.assertRaises(ValueError):p.repair_pending()
             write.assert_not_called()
+
+    def test_explicit_pending_resume_accepts_only_recorded_original_or_owned_partial_writes(self):
+        original=self.original();updated=p.plan(original)
+        files=list(p.FILES.items())
+        saved={'version':1,'service':p.NAME,'files':{str(path):{'original':original[key],'original_sha256':p.sha(original[key].encode()),'installed_sha256':p.sha(updated[key]),'mode':0o644,'uid':0,'gid':0} for key,path in files}}
+        snapshot=p.STATE/'ls2-provision-snapshot.json';data={path:(original[key].encode() if i%2 else updated[key]) for i,(key,path) in enumerate(files)};data[snapshot]=p.encoded(saved)
+        def write(path,raw,mode=0o600):data[path]=raw
+        with patch.object(p,'secure',side_effect=lambda path:data[path]),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'manifest',return_value={'version':1,'mode':'recovery-only'}),patch.object(p,'write',side_effect=write),patch.object(p.os,'chown'):
+            self.assertTrue(p.resume_pending()['repaired_pending'])
+            self.assertTrue(all(data[path]==updated[key] for key,path in files))
+            self.assertIn(p.STATE/'recovery-provision.pending.json',data)
+            data[files[0][1]]=b'foreign edit'
+            with self.assertRaisesRegex(ValueError,'drift'):p.resume_pending()

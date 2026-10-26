@@ -121,7 +121,7 @@ class Ownership:
             except BlockingIOError: raise Busy() from None
             if check is not None: check()
             previous = self.status()
-            if previous and not previous['terminal']:
+            if previous and (not previous['terminal'] or resume is not None):
                 if (previous['id'], previous['owner'], previous['journal']) != (resume, owner, journal):
                     raise Busy()
                 record = previous
@@ -283,3 +283,24 @@ def device_snapshot(supported=True, read=read_journal, owned_operation=None):
         operation = None
     if operation and not operation['terminal'] and operation['id'] != owned_operation: values['pending'] = True
     return values
+
+
+def terminal_install(value, application):
+    """Validate an exact saved independent completion; never use package absence."""
+    if not isinstance(value,dict) or value.get('completed') is not True:return False
+    event=value.get('event');details=event.get('details') if isinstance(event,dict) else None
+    return (isinstance(details,dict) and event.get('id')==application and type(event.get('statusValue')) is int
+            and event['statusValue']==30 and event.get('returnValue') is not False and 'errorCode' not in event
+            and details.get('packageId')==application and 'errorCode' not in details
+            and isinstance(details.get('client'),str) and re.fullmatch(r'com.webos.lunasend-[0-9]+',details['client']) is not None
+            and isinstance(details.get('ipkFile'),str) and re.fullmatch(r'/var/lib/clean-your-tv-installer/cytv-root-install-[A-Za-z0-9_-]+/package.ipk',details['ipkFile']) is not None)
+
+
+def terminal_removal(value, application):
+    """Saved bound-request completion, including firmware replies omitting IDs."""
+    if not isinstance(value,dict) or value.get('completed') is not True:return False
+    event=value.get('event');details=event.get('details') if isinstance(event,dict) else None
+    return (isinstance(details,dict) and event.get('returnValue') is not False and 'errorCode' not in event
+            and 'errorCode' not in details and event.get('id',application)==application
+            and details.get('packageId',application)==application
+            and isinstance(details.get('state'),str) and details['state'].lower() in ('removed','success'))

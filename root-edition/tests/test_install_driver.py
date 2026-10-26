@@ -1,4 +1,6 @@
 import os
+import io
+from contextlib import redirect_stderr,redirect_stdout
 from pathlib import Path
 import sys
 import tempfile
@@ -111,15 +113,20 @@ class ActivationTests(unittest.TestCase):
                     with ownership.operation('product','product.json'): pass
 
 class LocalRemovalTests(unittest.TestCase):
-    def run_device(self, fail=None, apps=None, busy=None):
+    def run_device(self, fail=None, apps=None, busy=None, resume_after=False):
         from unittest.mock import patch
         import install_device
         temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
         base=Path(temp.name).resolve();root=base/'root';root.mkdir()
         owner=Ownership(Store(base/'ownership',uid=os.getuid()))
+        errors=[];owner.fixture_errors=errors
         calls=[];present=set(apps if apps is not None else (install_device.APP,'com.cleanyourtv.root.updater','com.cleanyourtv.updater','com.local.nativehome','com.gathin.tvhome','com.cleanyourtv.system.updater'))
         class Model(install_device.LocalDevice):
-            def log(self,error): pass
+            def log(self,error):errors.append(type(error).__name__+': '+str(error))
+            def verify_resume(self,payload,submission):return {'migrate':False,'prepare_supervisor':False}
+            def root_journal(self):return {'stage':'installed-recovery-only'}
+            def archive_proof(self,path):return False
+            def legacy_status(self):return self.rpc('com.cleanyourtv.updater.service/status',{})
             def validate_root_driver(self): self.boundary('validate-root-driver')
             def boundary(self,name):
                 self.assert_lease()
@@ -161,7 +168,12 @@ class LocalRemovalTests(unittest.TestCase):
         elapsed=[0]
         def sleep(seconds):elapsed[0]+=seconds
         with patch.object(install_device,'ROOT',root),patch.object(install_device,'SUPERVISOR',base/'supervisor'),patch('deploy.uninstall',root_remove),patch('observed_install.remove',package_remove),patch('time.monotonic',lambda:elapsed[0]),patch('time.sleep',sleep):
-            result=install_driver.Coordinator(device,owner,read=lambda p:None).remove('a'*32)
+            driver=install_driver.Coordinator(device,owner,read=lambda p:None)
+            result=driver.remove('a'*32)
+            if resume_after:
+                fail=None
+                owner.store.write('submission-'+'a'*32,{'action':'remove','candidate_sha256':'0'*64})
+                result=driver.resume('a'*32,'/verified')
         return result,owner,calls,present,elapsed
 
     def test_complete_sequence_retains_exact_terminals_and_global_ownership(self):
@@ -221,18 +233,16 @@ class CurrentByteReadbackTests(unittest.TestCase):
             target=installed/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data);target.chmod(0o755 if name.endswith('startup.sh') else 0o644)
         return root,updater,installed,store,files
 
-    def test_both_entry_points_validate_exact_bytes_and_leave_profile_and_off_latch(self):
+    def test_exact_byte_readback_leaves_profile_and_off_latch(self):
         from unittest.mock import patch
         import install_device
         root,updater,installed,store,files=self.fixture()
         marker=root/'emergency-off';marker.write_bytes(b'off')
         before={name:(installed/name).read_bytes() for name in files}
         with patch('updater.device.Device.integrity',return_value={}):
-            for origin in ('cytv','homebrew'):
-                with self.subTest(origin=origin):
-                    result=install_device.current_root(root,updater,installed,uid=os.getuid())
-                    self.assertTrue(result['local']);self.assertEqual(marker.read_bytes(),b'off')
-                    self.assertEqual({n:(installed/n).read_bytes() for n in files},before)
+            result=install_device.current_root(root,updater,installed,uid=os.getuid())
+            self.assertTrue(result['local']);self.assertEqual(marker.read_bytes(),b'off')
+            self.assertEqual({n:(installed/n).read_bytes() for n in files},before)
         startup=next(n for n in files if n.endswith('startup.sh'))
         self.assertEqual((installed/startup).stat().st_mode & 0o777,0o755)
 
@@ -309,7 +319,7 @@ Coordinator(Device(),Ownership(Store(sys.argv[2],uid=os.getuid())),read=lambda p
         from unittest.mock import patch
         import install_device
         root,payload,inventories,owner=self.submission_fixture()
-        with patch('install_driver._verified_payload',return_value=inventories),patch.object(install_device.LocalDevice,'preflight'),patch('subprocess.Popen') as spawn:
+        with patch('install_driver._verified_payload',return_value=inventories),patch('install_driver.root_review_binding',return_value={'identity':{},'code':{}}),patch.object(install_device.LocalDevice,'preflight'),patch('subprocess.Popen') as spawn:
             record=install_driver.submit('a'*32,payload,ownership=owner)
             self.assertEqual(record['state'],'pending');self.assertTrue(spawn.call_args.kwargs['start_new_session'])
             (payload/'root-updater/install_driver.py').write_bytes(b'replaced installer v2')
@@ -322,7 +332,7 @@ Coordinator(Device(),Ownership(Store(sys.argv[2],uid=os.getuid())),read=lambda p
         from unittest.mock import patch
         import install_device
         _,payload,inventories,owner=self.submission_fixture()
-        with patch('install_driver._verified_payload',return_value=inventories),patch.object(install_device.LocalDevice,'preflight'),patch('subprocess.Popen',side_effect=OSError('private')) as spawn:
+        with patch('install_driver._verified_payload',return_value=inventories),patch('install_driver.root_review_binding',return_value={'identity':{},'code':{}}),patch.object(install_device.LocalDevice,'preflight'),patch('subprocess.Popen',side_effect=OSError('private')) as spawn:
             self.assertEqual(install_driver.submit('a'*32,payload,ownership=owner)['state'],'recovery_required')
             self.assertEqual(install_driver.submit('a'*32,payload,ownership=owner)['state'],'recovery_required')
             self.assertEqual(spawn.call_count,1)
@@ -330,7 +340,7 @@ Coordinator(Device(),Ownership(Store(sys.argv[2],uid=os.getuid())),read=lambda p
     def test_changed_reviewed_candidate_never_stages_or_spawns(self):
         from unittest.mock import patch
         _,payload,inventories,owner=self.submission_fixture()
-        with patch('install_driver._verified_payload',return_value=inventories),patch('subprocess.Popen') as spawn:
+        with patch('install_driver._verified_payload',return_value=inventories),patch('install_driver.root_review_binding',return_value={'identity':{},'code':{}}),patch('subprocess.Popen') as spawn:
             with self.assertRaisesRegex(ValueError,'candidate_changed'):
                 install_driver.submit('a'*32,payload,candidate='0'*64,ownership=owner)
             spawn.assert_not_called()
@@ -351,3 +361,253 @@ class ReservationRaceTests(unittest.TestCase):
         result=install_driver.Coordinator(Device(),owner,read=lambda path:None).install('a'*32,'/verified')
         self.assertEqual(result,completed)
         self.assertIsNone(owner.status())
+
+class RealHandoffTests(unittest.TestCase):
+    def test_current_protocol_through_local_inspection_and_maintenance(self):
+        from install_fixture import CurrentInstallation
+        import install_device
+        with CurrentInstallation() as fixture:
+            device=install_device.LocalDevice()
+            self.assertEqual(device.inspect()['state'],'installed')
+            result=install_driver.Coordinator(device,fixture.owner).install('c'*32,fixture.payload)
+            self.assertEqual(result['state'],'complete')
+            fixture.assert_preserved(self)
+
+class ExplicitRecoveryTests(unittest.TestCase):
+    def test_terminal_then_readback_failure_resumes_original_request_without_submission(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            device=LocalDevice();driver=install_driver.Coordinator(device,fixture.owner)
+            original=device.readback
+            errors=io.StringIO()
+            with redirect_stderr(errors),patch.object(device,'readback',side_effect=ValueError('transient readback')):
+                failed=driver.install('a'*32,fixture.payload)
+            self.assertIn('transient readback',errors.getvalue())
+            lease=fixture.owner.status()['id'];snapshot=fixture.snapshot('a'*32)
+            self.assertEqual(failed['state'],'recovery_required')
+            self.assertEqual(driver.install('a'*32,fixture.payload),failed)
+            completed=driver.resume('a'*32,snapshot)
+            self.assertEqual(completed['state'],'complete');self.assertEqual(completed['lease'],lease)
+            self.assertTrue(fixture.owner.status()['terminal']);fixture.assert_preserved(self)
+
+    def test_completed_terminal_request_can_fail_and_resume_without_changing_lease(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            device=LocalDevice();driver=install_driver.Coordinator(device,fixture.owner)
+            complete=driver.install('a'*32,fixture.payload);snapshot=fixture.snapshot('a'*32)
+            errors=io.StringIO()
+            with redirect_stderr(errors),patch.object(device,'readback',side_effect=ValueError('fresh readback failed')):
+                failed=driver.resume('a'*32,snapshot)
+            self.assertIn('fresh readback failed',errors.getvalue())
+            self.assertEqual(failed['state'],'recovery_required')
+            self.assertEqual(fixture.owner.status()['id'],complete['lease']);self.assertTrue(fixture.owner.status()['terminal'])
+            self.assertEqual(driver.status('a'*32)['state'],'complete')
+            self.assertEqual(driver.resume('a'*32,snapshot)['state'],'complete')
+            self.assertEqual(fixture.owner.status()['id'],complete['lease'])
+            driver.install('b'*32,fixture.payload)
+            with self.assertRaises(Busy):driver.resume('a'*32,snapshot)
+
+    def test_request_completion_before_ownership_completion_is_reconciled(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            device=LocalDevice();driver=install_driver.Coordinator(device,fixture.owner)
+            original=fixture.owner.stage
+            def crash(record,stage,terminal=False):
+                if terminal:raise OSError('crash before ownership completion')
+                return original(record,stage,terminal)
+            errors=io.StringIO()
+            with redirect_stderr(errors),patch.object(fixture.owner,'stage',side_effect=crash):driver.install('a'*32,fixture.payload)
+            self.assertIn('crash before ownership completion',errors.getvalue())
+            record=driver.status('a'*32);record.update(state='complete',stage='complete',code='verified')
+            fixture.owner.store.write('request-'+'a'*32,record)
+            self.assertFalse(fixture.owner.status()['terminal'])
+            self.assertEqual(driver.resume('a'*32,fixture.snapshot('a'*32))['state'],'complete')
+            self.assertTrue(fixture.owner.status()['terminal'])
+
+    def test_explicit_pre_submission_continuation_is_bounded_and_unknown_submission_is_not_replayed(self):
+        from install_device import LocalDevice
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
+        owner=Ownership(Store(Path(temp.name).resolve()/'state',uid=os.getuid()))
+        class BeforeSubmission(Device):
+            resume_install=LocalDevice.resume_install
+            def verify_resume(self,*args):return {'migrate':False,'prepare_supervisor':False}
+            def absent(self,*args):pass
+        device=BeforeSubmission('deploy');driver=install_driver.Coordinator(device,owner,read=lambda p:None)
+        driver.install('a'*32,'/verified');owner.store.write('submission-'+'a'*32,{'action':'install','candidate_sha256':'0'*64})
+        device.fail=None
+        self.assertEqual(driver.resume('a'*32,'/verified')['state'],'complete')
+        model=LocalRemovalTests();self.addCleanup(model.doCleanups)
+        result,owner,calls,_,_=model.run_device(fail='remove-com.cleanyourtv.root.updater',resume_after=True)
+        self.assertEqual(result['state'],'recovery_required');self.assertFalse(owner.status()['terminal'])
+        self.assertEqual(calls.count('remove-com.cleanyourtv.root.updater'),1)
+
+    def test_package_terminal_and_final_readback_continuation_do_not_resubmit(self):
+        model=LocalRemovalTests();self.addCleanup(model.doCleanups)
+        for boundary in ('absent-com.cleanyourtv.root.updater','verify-removed'):
+            with self.subTest(boundary=boundary):
+                result,owner,calls,_,_=model.run_device(fail=boundary,resume_after=True)
+                self.assertEqual(result['state'],'complete',owner.fixture_errors);self.assertTrue(owner.status()['terminal'])
+                self.assertEqual(calls.count('remove-com.cleanyourtv.root.updater'),1)
+
+    def test_retained_legacy_status_emits_fixed_authorized_luna_identity(self):
+        from unittest.mock import patch
+        from test_observed_install import Fake
+        from install_device import LocalDevice
+        client=Fake(99);client.send({'returnValue':True,'result':{'transaction':None}})
+        try:
+            with patch('updater.luna.subprocess.Popen',return_value=client) as start:
+                self.assertEqual(LocalDevice.legacy_status()['result']['transaction'],None)
+            args=start.call_args.args[0]
+            self.assertEqual(args[:7],['/usr/bin/luna-send','-a','com.gathin.tvhome','-m','com.gathin.tvhome-cytv','-n','1'])
+            self.assertEqual(args[-2],'luna://com.cleanyourtv.updater.service/status')
+        finally:client.close()
+
+class ComponentTerminalRecoveryTests(unittest.TestCase):
+    @staticmethod
+    def terminal(app):
+        return {'completed':True,'event':{'id':app,'statusValue':30,'returnValue':True,'details':{'packageId':app,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}
+
+    def test_root_terminal_continues_provisioning_without_reinstall_or_reapplying_ready_registration(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from unittest.mock import patch
+        import deploy
+        with CurrentInstallation() as fixture:
+            driver=install_driver.Coordinator(LocalDevice(),fixture.owner)
+            driver.install('a'*32,fixture.payload);snapshot=fixture.snapshot('a'*32)
+            fixture.retain('a'*32)
+            fixture.root_store.write('install-terminal',self.terminal('com.cleanyourtv.root.preview'))
+            fixture.root_store.write('deploy',{'app':'com.cleanyourtv.root.preview','stage':'provision-finalize-starting'})
+            with patch.object(deploy,'command',return_value={'returnValue':True}) as command:
+                result=driver.resume('a'*32,snapshot)
+            self.assertEqual(result['state'],'complete')
+            self.assertEqual([call.args[0][-1] for call in command.call_args_list],['refresh','finalize'])
+            fixture.assert_preserved(self)
+
+    def test_updater_terminal_and_interrupted_registration_resume_exact_owned_writes(self):
+        from install_fixture import CurrentInstallation
+        from updater import bootstrap,device as updater_device,store as updater_store
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            provision=fixture.provision
+            uid=os.getuid();real_store=updater_store.Store;real_device=updater_device.Device
+            class FixtureStore(real_store):
+                def __init__(self,root,uid=0):super().__init__(root,uid=os.getuid())
+            class FixtureDevice(real_device):
+                def __init__(self,store,code=None,**kwargs):super().__init__(store,code,root_state=fixture.root,installed=fixture.installed)
+            base=fixture.base/'ls2';hook=fixture.base/'hooks/51-updater';hook.parent.mkdir()
+            service=bootstrap.SERVICE
+            originals={'service':('[D-BUS Service]\nName='+service+'\nExec=/usr/bin/run-js-service -n /media/developer/apps/usr/palm/services/'+service+'\n').encode(),
+                       'role':('{"appId":"'+service+'"}').encode(),'client':b'{}','api':b'{}'}
+            for key,folder,suffix in (('service','services.d','.service'),('role','roles.d','.service.json'),('client','client-permissions.d','.service.json'),('api','api-permissions.d','.api.json')):
+                target=base/folder/(service+suffix);target.parent.mkdir(parents=True);target.write_bytes(originals[key])
+            def atomic(path,raw,mode=0o600):
+                if isinstance(raw,str):raw=raw.encode()
+                path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw);path.chmod(mode)
+            fixture.up_store.write('bootstrap',{'phase':'provisioning'})
+            fixture.up_store.write('installed-terminal',self.terminal('com.cleanyourtv.root.updater'))
+            with patch.object(bootstrap,'STATE',fixture.updater),patch.object(bootstrap,'ROOT_STATE',fixture.root),patch.object(bootstrap,'INSTALLED',fixture.installed),patch.object(bootstrap,'BASE',base),patch.object(bootstrap,'HOOK',hook),patch.object(bootstrap,'safe_bytes',fixture.device_module.safe_bytes),patch.object(bootstrap,'atomic',atomic),patch.object(updater_store,'Store',FixtureStore),patch.object(updater_device,'Device',FixtureDevice),patch('startup_hook.install_link'),patch.object(provision,'refresh',side_effect=[RuntimeError('transient scanner failure'),None]):
+                with self.assertRaisesRegex(RuntimeError,'transient'):bootstrap.resume(fixture.payload/'root-updater')
+                saved=fixture.up_store.read('registration')
+                self.assertTrue(bootstrap.resume(fixture.payload/'root-updater')['installed'])
+                self.assertEqual(fixture.up_store.read('registration'),saved)
+                self.assertEqual(fixture.up_store.read('bootstrap')['phase'],'complete')
+                (fixture.updater/'installed-terminal.json').unlink()
+                fixture.up_store.write('bootstrap',{'phase':'accepted-updater'})
+                with self.assertRaisesRegex(ValueError,'outcome unknown'):bootstrap.resume(fixture.payload/'root-updater')
+            fixture.assert_preserved(self)
+
+class ChildOwnershipRecoveryTests(unittest.TestCase):
+    def test_live_provision_child_blocks_continuation_even_after_worker_lease_released(self):
+        import subprocess
+        from unittest.mock import patch
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        import deploy
+        executable=sys.executable
+        with CurrentInstallation() as fixture:
+            provision=fixture.provision
+            driver=install_driver.Coordinator(LocalDevice(),fixture.owner)
+            driver.install('a'*32,fixture.payload);snapshot=fixture.snapshot('a'*32)
+            fixture.retain('a'*32)
+            fixture.root_store.write('install-terminal',ComponentTerminalRecoveryTests.terminal('com.cleanyourtv.root.preview'))
+            fixture.root_store.write('deploy',{'app':'com.cleanyourtv.root.preview','stage':'provision-finalize-starting'})
+            code="import fcntl,sys;f=open(sys.argv[1],'a');fcntl.flock(f,fcntl.LOCK_EX);print('locked',flush=True);sys.stdin.read()"
+            child=subprocess.Popen([executable,'-c',code,str(fixture.root/'provision.lock')],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+            try:
+                self.assertEqual(child.stdout.readline().strip(),'locked')
+                def command(args):
+                    with patch.object(provision,'STATE',fixture.root),patch.object(provision.os,'geteuid',return_value=0),patch.object(sys,'argv',['provision',args[-1]]):provision.main()
+                    return {'returnValue':True}
+                errors=io.StringIO()
+                with redirect_stderr(errors),patch.object(deploy,'command',side_effect=command),patch.object(provision,'refresh') as refresh:
+                    result=driver.resume('a'*32,snapshot)
+                self.assertIn('BlockingIOError',errors.getvalue())
+                self.assertEqual(result['state'],'recovery_required');self.assertFalse(fixture.owner.status()['terminal'])
+                refresh.assert_not_called();self.assertIsNone(child.poll())
+            finally:
+                child.stdin.close();child.wait(timeout=5);child.stdout.close()
+
+    def test_changed_snapshot_root_code_is_rejected_before_any_continuation(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from cytv import package
+        import hashlib,json,io,tarfile
+        with CurrentInstallation() as fixture:
+            driver=install_driver.Coordinator(LocalDevice(),fixture.owner)
+            original=driver.install('a'*32,fixture.payload);snapshot=fixture.snapshot('a'*32)
+            manifest=json.loads((snapshot/'root/bundle.json').read_text());path=snapshot/'root'/manifest['package'];parts=package.read_ar(path.read_bytes());files=package.data_files(path.read_bytes())
+            files['usr/palm/applications/com.cleanyourtv.root.preview/index.html']=b'unreviewed replacement'
+            with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']),mode='r:gz') as archive:executable={m.name for m in archive if m.isfile() and m.mode&0o111}
+            parts['data.tar.gz']=package.tgz(files,executable,directories=False);path.write_bytes(package.ar(parts))
+            manifest['files'][manifest['package']]=hashlib.sha256(path.read_bytes()).hexdigest();(snapshot/'root/bundle.json').write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError,'root_code_changed'):driver.resume('a'*32,snapshot)
+            self.assertEqual(fixture.owner.status()['id'],original['lease']);self.assertTrue(fixture.owner.status()['terminal'])
+
+class ReservationCheckpointRecoveryTests(unittest.TestCase):
+    def test_affined_lease_before_first_checkpoint_can_continue_original_request_only(self):
+        from install_device import LocalDevice
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
+        owner=Ownership(Store(Path(temp.name).resolve()/'ownership',uid=os.getuid()))
+        class BeforeSubmission(Device):
+            resume_install=LocalDevice.resume_install
+            def verify_resume(self,*args):return {'migrate':False,'prepare_supervisor':False}
+            def absent(self,*args):pass
+        device=BeforeSubmission();driver=install_driver.Coordinator(device,owner,read=lambda p:None)
+        with owner.operation('product','product-'+'a'*32+'.json') as lease:identifier=lease['id']
+        owner.store.write('submission-'+'a'*32,{'operation':'a'*32,'action':'install','candidate_sha256':'0'*64})
+        result=driver.resume('a'*32,'/verified')
+        self.assertEqual(result['state'],'complete');self.assertEqual(owner.status()['id'],identifier)
+        self.assertEqual(device.calls.count('deploy'),1)
+        self.assertEqual(driver.install('a'*32,'/verified'),result)
+
+    def test_busy_duplicate_before_checkpoint_does_not_poison_original_request(self):
+        from install_fixture import CurrentInstallation
+        from install_device import LocalDevice
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            identifier='a'*32;snapshot=fixture.snapshot(identifier)
+            with fixture.owner.operation('product','product-'+identifier+'.json') as lease:
+                lease_id=lease['id'];output=io.StringIO();errors=io.StringIO()
+                with patch.object(sys,'argv',['install_driver','install','--operation',identifier,'--payload',str(snapshot),'--worker','--resume']),redirect_stdout(output),redirect_stderr(errors):
+                    install_driver.main()
+                self.assertIn('installation_operation_retained',errors.getvalue())
+                self.assertIsNone(fixture.owner.store.read('request-'+identifier))
+            completed=install_driver.Coordinator(LocalDevice(),fixture.owner).resume(identifier,snapshot)
+            self.assertEqual(completed['state'],'complete');self.assertEqual(completed['lease'],lease_id)
+
+class SavedRemovalTerminalTests(unittest.TestCase):
+    def test_saved_terminal_requires_actual_error_free_bound_reply_not_absence(self):
+        from installation import terminal_removal
+        app='com.cleanyourtv.root.preview'
+        for value in ({},None,{'completed':True},{'completed':True,'event':{'details':{}}},
+          {'completed':True,'event':{'id':'other','details':{'state':'removed'}}},
+          {'completed':True,'event':{'details':{'state':'removed','errorCode':1}}}):
+            with self.subTest(value=value):self.assertFalse(terminal_removal(value,app))
+        self.assertTrue(terminal_removal({'completed':True,'event':{'details':{'state':'removed'}}},app))

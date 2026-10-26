@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 UPDATER_FILES=('core.py','store.py','profile.py','device.py','package.py','cli.py','fetch.js','bridge.js','luna.py','bootstrap.py','ca-bundle.crt','ca-LICENSE.txt')
 SUPPORT=('installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js')
-COORDINATOR_FILES=('install_driver.py', 'install_device.py', 'system_setup.py', 'root_package.py', 'app-inventory.js', 'cleanup_root_updater.py', 'cleanup_system_updater.py', 'cleanup_legacy_permissions.py', 'cleanup_app_permissions.py', 'cleanup_root_archive.py', 'system_updater/__init__.py', 'system_updater/core.py', 'system_updater/device.py', 'system_updater/support/__init__.py', 'system_updater/support/package.py', 'system_updater/support/store.py', 'system_updater/support/profile.py', 'system_updater/support/luna.py')
+COORDINATOR_FILES=('coordinator_inventory.py', 'install_driver.py', 'install_device.py', 'system_setup.py', 'root_package.py', 'app-inventory.js', 'cleanup_root_updater.py', 'cleanup_system_updater.py', 'cleanup_legacy_permissions.py', 'cleanup_app_permissions.py', 'cleanup_root_archive.py', 'system_updater/__init__.py', 'system_updater/core.py', 'system_updater/device.py', 'system_updater/support/__init__.py', 'system_updater/support/package.py', 'system_updater/support/store.py', 'system_updater/support/profile.py', 'system_updater/support/luna.py')
 APP='com.cleanyourtv.root.updater'
 
 
@@ -26,7 +26,7 @@ def build(output):
     builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
     code={'updater/'+name:source(ROOT/'updater'/name) for name in UPDATER_FILES}
     code.update({name:source(ROOT/name) for name in SUPPORT})
-    for name in ('install_driver.py','install_device.py'):
+    for name in ('coordinator_inventory.py','install_driver.py','install_device.py'):
         code[name]=source(ROOT/name)
     code['system_setup.py']=source(ROOT.parent/'system-updater/setup.py')
     code['root_package.py']=source(ROOT.parent/'cytv/package.py')

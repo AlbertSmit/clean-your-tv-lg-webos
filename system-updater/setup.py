@@ -299,18 +299,33 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     record('bootstrap',{'phase':'installing-supervisor'})
     terminal=install(APP,str(bundle/'system-updater.ipk'),timeout=180,on_ready=lambda:record('bootstrap',{'phase':'submitting-supervisor'}),on_accepted=lambda evidence:record('bootstrap',{'phase':'accepted-supervisor','evidence':evidence}))
     if terminal is not None:record('installed-terminal',terminal)
+    return finish_registration(bundle,baseline,state,installed,base,hook,refresh)
+
+
+def finish_registration(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=None):
+    bundle=Path(bundle);baseline=Path(baseline);state=Path(state);code=state/'code'
+    verify_bundle(bundle);current=verify_baseline(baseline,bundle)
+    def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
     for name,data in package_files(safe(bundle/'system-updater.ipk')).items():
         if safe(Path(installed)/name)!=data:raise ValueError('Installed supervisor payload mismatch')
     record('bootstrap',{'phase':'provisioning'})
     paths={'service':Path(base)/'services.d'/(SERVICE+'.service'),'role':Path(base)/'roles.d'/(SERVICE+'.service.json'),'client':Path(base)/'client-permissions.d'/(SERVICE+'.service.json'),'api':Path(base)/'api-permissions.d'/(SERVICE+'.api.json')}
-    original={key:safe(path,os.geteuid()) for key,path in paths.items()}
+    saved=json.loads(safe(state/'registration.json',os.geteuid())) if os.path.lexists(state/'registration.json') else None
+    if saved is not None:
+        if not isinstance(saved,dict) or set(saved.get('files',{}))!=set(map(str,paths.values())):raise ValueError('Unknown supervisor registration inventory')
+        original={key:saved['files'][str(path)]['original'].encode() for key,path in paths.items()}
+    else:original={key:safe(path,os.geteuid()) for key,path in paths.items()}
     expected='Exec=/usr/bin/run-js-service -n '+str(Path(installed)/'usr/palm/services'/SERVICE)
     if original['service'].decode().splitlines().count(expected)!=1 or json.loads(original['role']).get('appId')!=SERVICE:raise ValueError('Unexpected supervisor registration')
     runner=state/'run-service'
     atomic(runner,'#!/bin/sh\nset -eu\n[ "$#" -eq 0 ] || exit 2\ncd '+str(code)+'\nexport NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules\nexec /usr/bin/node /usr/palm/services/jsservicelauncher/bootstrap-node.js -- '+str(state/'bootstrap.pid')+' /var/palm/ls2-dev '+str(code)+'\n',0o700)
     plan=permission_plan();role=json.loads(original['role']);role.update(plan['role.json'])
     updated={'service':original['service'].decode().replace(expected,'Exec='+str(runner)).encode(),'role':json.dumps(role).encode(),'client':json.dumps(plan['client.json']).encode(),'api':json.dumps(plan['api.json']).encode()}
-    record('registration',{'files':{str(paths[k]):{'original':original[k].decode(),'installed':v.decode()} for k,v in updated.items()}})
+    expected={'files':{str(paths[k]):{'original':original[k].decode(),'installed':v.decode()} for k,v in updated.items()}}
+    if saved is not None and saved!=expected:raise ValueError('Supervisor registration receipt mismatch')
+    for key,path in paths.items():
+        if safe(path,os.geteuid()) not in (original[key],updated[key]):raise ValueError('Supervisor registration changed')
+    record('registration',expected)
     for key,path in paths.items():atomic(path,updated[key],stat.S_IMODE(path.stat().st_mode))
     apply_legacy_lockdown(state)
     import startup_hook
@@ -328,6 +343,33 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         else:infrastructure_readback(item,safe(baseline/'cache'/item['sha256']))
     record('bootstrap',{'phase':'complete','edition':current['edition'],'hardware_validated':False})
     return {'installed':True,'edition':current['edition'],'hardware_validated':False}
+
+def resume(bundle,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=None):
+    """Bounded explicit bootstrap continuation, using original cached baseline."""
+    from installation import terminal_install
+    from python_binding import verify_binding
+    state=Path(state);bundle=Path(bundle);manifest=verify_bundle(bundle)
+    verify_binding(state)
+    receipt=json.loads(safe(state/'infrastructure.json',os.geteuid()))
+    expected={name:manifest['files'][name] for name in sorted(CODE)}
+    if receipt!={'schema':1,'code':expected}:raise ValueError('Unknown supervisor bootstrap infrastructure')
+    for name,digest_value in expected.items():
+        if digest(safe(state/'code'/name,os.geteuid()))!=digest_value:raise ValueError('Supervisor bootstrap code changed')
+    current=verify_baseline(state,bundle)
+    if current['edition']!='root':raise ValueError('Root product continuation required')
+    require_legacy_idle()
+    phase=json.loads(safe(state/'bootstrap.json',os.geteuid())).get('phase')
+    terminal=json.loads(safe(state/'installed-terminal.json',os.geteuid())) if os.path.lexists(state/'installed-terminal.json') else None
+    def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
+    if not terminal_install(terminal,APP):
+        if phase not in ('prepared','installing-supervisor'):raise ValueError('Supervisor submission outcome unknown')
+        if any(os.path.lexists(Path(installed)/'usr/palm'/folder/name) for folder,name in (('applications',APP),('packages',APP),('services',SERVICE))) or os.path.lexists(hook):raise ValueError('Supervisor artifacts without terminal proof')
+        from observed_install import install
+        terminal=install(APP,str(bundle/'system-updater.ipk'),timeout=180,on_ready=lambda:record('bootstrap',{'phase':'submitting-supervisor'}),on_accepted=lambda evidence:record('bootstrap',{'phase':'accepted-supervisor','evidence':evidence}))
+        record('installed-terminal',terminal)
+        if not terminal_install(terminal,APP):raise ValueError('Exact supervisor terminal required')
+    return finish_registration(bundle,state,state,installed,base,hook,refresh)
+
 
 def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,python='/usr/bin/python3'):
     if python not in ('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'):raise ValueError('Unapproved Python executable')

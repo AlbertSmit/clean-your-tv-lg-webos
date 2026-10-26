@@ -11,6 +11,7 @@ from updater.package import APP, inspect_package, safe_bytes
 SERVICE='com.cleanyourtv.root.updater.service'
 STATE=Path('/var/lib/clean-your-tv-root-updater')
 ROOT_STATE=Path('/var/lib/clean-your-tv-root')
+INSTALLED=Path('/media/developer/apps')
 BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater')
 
@@ -30,20 +31,20 @@ def permission_plan():
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
 
-def verify_bundle(bundle):
-    bundle=Path(bundle)
-    manifest=json.loads(safe_bytes(bundle/'bundle.json',limit=65536))
+def verify_bundle(bundle,reader=None):
+    bundle=Path(bundle);reader=safe_bytes if reader is None else reader
+    manifest=json.loads(reader(bundle/'bundle.json',limit=65536))
     if manifest.get('schema')!=1 or not isinstance(manifest.get('files'),dict):raise ValueError('Invalid updater bundle')
     required={'root-updater.ipk','run-updater.py','service.js','services.json','package.json','setup-updater.py',
               'updater/core.py','updater/store.py','updater/profile.py','updater/device.py','updater/package.py','updater/cli.py',
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
               'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
               'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js'}
-    from install_driver import BUNDLED_FILES
+    from coordinator_inventory import BUNDLED_FILES
     required.update(BUNDLED_FILES)
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')
     for name,sha in manifest['files'].items():
-        if digest(safe_bytes(bundle/name))!=sha:raise ValueError('Updater bundle hash mismatch: '+name)
+        if digest(reader(bundle/name))!=sha:raise ValueError('Updater bundle hash mismatch: '+name)
     return manifest
 
 
@@ -89,7 +90,7 @@ def apply(bundle,baseline):
             raise ValueError('Updater-compatible Root infrastructure required; migrate from computer first')
     from updater.device import Device
     Device.require_home_resume_runtime(ROOT_STATE)
-    current=json.loads(safe_bytes(Path('/media/developer/apps/usr/palm/applications')/APP/'appinfo.json'))
+    current=json.loads(safe_bytes(INSTALLED/'usr/palm/applications'/APP/'appinfo.json'))
     if current.get('version')!=descriptor['version']:raise ValueError('Baseline must match installed Root version')
     if STATE.exists() or STATE.is_symlink():raise FileExistsError('Updater setup exists; inspect retained state')
     if os.path.lexists(HOOK):raise FileExistsError('Updater boot hook collision')
@@ -117,9 +118,15 @@ def apply(bundle,baseline):
             on_ready=lambda:store.write('bootstrap',{'phase':'submitting-updater'}),
             on_accepted=lambda event:store.write('bootstrap',{'phase':'accepted-updater','evidence':event}))
     if terminal is not None: store.write('installed-terminal',terminal)
+    return finish_registration(bundle)
+
+
+def finish_registration(bundle):
+    from updater.store import Store
+    bundle=Path(bundle);verify_bundle(bundle);store=Store(STATE);code=STATE/'code'
     from updater.package import members,archive,verify_payload
     payload=archive(members(safe_bytes(bundle/'root-updater.ipk'))['data.tar.gz'])
-    verify_payload(Path('/media/developer/apps'),{name:digest(raw) for name,raw in payload.items()})
+    verify_payload(INSTALLED,{name:digest(raw) for name,raw in payload.items()})
     import io, tarfile
     with tarfile.open(fileobj=io.BytesIO(members(safe_bytes(bundle/'root-updater.ipk'))['data.tar.gz']),mode='r:gz') as stream:
         executable=sorted(member.name for member in stream if member.isfile() and member.mode & 0o111)
@@ -127,7 +134,11 @@ def apply(bundle,baseline):
     store.write('bootstrap',{'phase':'provisioning'})
     paths={'service':BASE/'services.d'/(SERVICE+'.service'),'role':BASE/'roles.d'/(SERVICE+'.service.json'),
            'client':BASE/'client-permissions.d'/(SERVICE+'.service.json'),'api':BASE/'api-permissions.d'/(SERVICE+'.api.json')}
-    original={key:safe_bytes(path,uid=0) for key,path in paths.items()}
+    saved=store.read('registration')
+    if saved is not None:
+        if not isinstance(saved,dict) or set(saved.get('files',{}))!=set(map(str,paths.values())):raise ValueError('Unknown updater registration inventory')
+        original={key:saved['files'][str(path)]['original'].encode() for key,path in paths.items()}
+    else:original={key:safe_bytes(path,uid=0) for key,path in paths.items()}
     expected='Exec=/usr/bin/run-js-service -n /media/developer/apps/usr/palm/services/'+SERVICE
     if original['service'].decode().splitlines().count(expected)!=1:raise ValueError('Unexpected updater service registration')
     plan=permission_plan();role=json.loads(original['role'])
@@ -138,7 +149,11 @@ def apply(bundle,baseline):
     atomic(runner,runner_bytes,0o700)
     updated={'service':original['service'].decode().replace(expected,'Exec='+str(runner)).encode(),
              'role':json.dumps(role).encode(),'client':json.dumps(plan['client.json']).encode(),'api':json.dumps(plan['api.json']).encode()}
-    store.write('registration',{'files':{str(paths[k]):{'original':v.decode(),'installed':updated[k].decode()} for k,v in original.items()}})
+    expected={'files':{str(paths[k]):{'original':v.decode(),'installed':updated[k].decode()} for k,v in original.items()}}
+    if saved is not None and saved!=expected:raise ValueError('Updater registration receipt mismatch')
+    for key,path in paths.items():
+        if safe_bytes(path,uid=0) not in (original[key],updated[key]):raise ValueError('Updater registration changed')
+    store.write('registration',expected)
     for key,path in paths.items():
         mode=stat.S_IMODE(path.stat().st_mode);atomic(path,updated[key],mode)
     import startup_hook
@@ -147,3 +162,27 @@ def apply(bundle,baseline):
     provision.refresh()
     store.write('bootstrap',{'phase':'complete','hardware_validated':False})
     return {'installed':True,'hardware_validated':False,'instruction':'Open Root Updater and verify the service on the TV before enabling Root.'}
+
+
+def resume(bundle):
+    """Continue the owned bootstrap only with pre-submission or exact terminal proof."""
+    from updater.store import Store
+    from updater.device import Device
+    from installation import terminal_install
+    store=Store(STATE);bundle=Path(bundle);verify_bundle(bundle)
+    Device(store,code=STATE/'code').integrity()
+    phase=store.read('bootstrap').get('phase')
+    terminal=store.read('installed-terminal')
+    if not terminal_install(terminal,'com.cleanyourtv.root.updater'):
+        if phase not in ('prepared','installing-updater'):raise ValueError('Updater submission outcome unknown')
+        if os.path.lexists(HOOK):raise ValueError('Updater startup already retained')
+        base=INSTALLED/'usr/palm'
+        if any(os.path.lexists(base/folder/name) for folder,name in (('applications','com.cleanyourtv.root.updater'),('packages','com.cleanyourtv.root.updater'),('services','com.cleanyourtv.root.updater.service'))):raise ValueError('Updater artifacts without terminal proof')
+        routing=Device(store,code=STATE/'code').routing_status()
+        if routing['active'] or not routing['safe']:raise ValueError('Verify LG Home before bootstrap continuation')
+        from observed_install import install
+        terminal=install('com.cleanyourtv.root.updater',str(bundle/'root-updater.ipk'),timeout=180,
+          on_ready=lambda:store.write('bootstrap',{'phase':'submitting-updater'}),on_accepted=lambda event:store.write('bootstrap',{'phase':'accepted-updater','evidence':event}))
+        store.write('installed-terminal',terminal)
+        if not terminal_install(terminal,'com.cleanyourtv.root.updater'):raise ValueError('Exact updater terminal required')
+    return finish_registration(bundle)

@@ -82,3 +82,45 @@ class SetupTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class HostBoundaryTests(unittest.TestCase):
+    def test_distributed_host_product_entrypoints_verify_without_posix_device_modules(self):
+        def source(name):
+            spec=importlib.util.spec_from_file_location('host_boundary_'+name,ROOT/(name+'.py'))
+            module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();updater=root/'updater';baseline=root/'root'
+            source('build').build(baseline);source('build_updater').build(updater)
+            code='''import sys,builtins,subprocess,runpy
+sys.path.insert(0,sys.argv[1])
+original=builtins.__import__
+def importing(name,*args,**kwargs):
+ if name in ('fcntl','termios'):raise ImportError('device-only POSIX module on Windows-like host')
+ return original(name,*args,**kwargs)
+builtins.__import__=importing
+calls=[]
+def transport(args,**kwargs):calls.append(args)
+subprocess.run=transport
+from updater.bootstrap import verify_bundle
+import setup
+import updater.package as device_package
+real_os=device_package.os
+class NoDeviceFlags:
+ def __getattr__(self,name):
+  if name in ('O_NOFOLLOW','O_NONBLOCK'):raise AttributeError(name)
+  return getattr(real_os,name)
+device_package.os=NoDeviceFlags()
+verify_bundle(sys.argv[1],reader=setup.bundle_bytes)
+setup.execute('install','living-room',sys.argv[2],updater_bundle=sys.argv[1],operation='a'*32,run=transport)
+assert 'install_driver.py install' in calls[-1][-1]
+assert not any('deploy.py install' in str(call) for call in calls)
+updater=sys.argv[1];baseline=sys.argv[2]
+controller=runpy.run_path(updater+'/setup-updater.py')
+sys.argv=['setup-updater','--bundle',updater,'--baseline',baseline,'--ssh','living-room','--apply','--operation','b'*32]
+controller['main']()
+assert '--operation '+('b'*32) in calls[-1][-1]
+print('host setup product verification without fcntl/termios: OK')
+'''
+            result=subprocess.run([sys.executable,'-I','-B','-c',code,str(updater),str(baseline)],cwd=root,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('without fcntl/termios: OK',result.stdout)

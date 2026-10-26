@@ -1,6 +1,6 @@
 # Install cytv without a terminal
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -99,8 +99,8 @@ The installer chooses the computer’s language automatically.
 Use the language selector to save another language, or choose **Auto** to follow
 system settings. On the TV, use **Settings → Language**; this is a separate preference.
 These language controls are included in v0.10.3 and later downloads.
-The unreleased 1.3.0 candidate adds Simplified and Traditional Chinese with
-script-specific bundled fonts; current v1.2.0 downloads retain ten languages.
+Version 1.3.0 adds Simplified and Traditional Chinese with script-specific
+bundled fonts; earlier v1.2.0 downloads retain ten languages.
 See the [twelve localized installation, use and recovery guides](LANGUAGES.md).
 
 ## In the wizard
@@ -134,9 +134,9 @@ save the diagnostic report instead of deleting recovery files.
 The start page also offers status, diagnostics, return to LG Home and uninstall.
 Existing console commands remain available in the separately distributed CLI.
 
-### Next candidate: guided No-root recovery and reinstallation
+### Guided No-root recovery and reinstallation in 1.3.0
 
-This section describes the next candidate, not the published v1.2.0 downloads.
+This recovery flow is included in 1.3.0; it is absent from earlier v1.2.0 downloads.
 If a No-root removal remains unfinished after **Check TV status**, connection
 diagnostics or **Return to LG Home**, click **Recover and reinstall**. The wizard
 keeps the same TV, edition and SSH port, even when several connections are saved.

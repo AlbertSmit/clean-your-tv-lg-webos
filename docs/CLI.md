@@ -1,6 +1,6 @@
 # cytv standalone installer
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -71,7 +71,7 @@ keeps recovery data. Non-interactive installation stops with instructions to
 use the interactive installer or `cytv uninstall` for the same saved TV/profile.
 If recovery fails, attach the new diagnostic report for the `uninstall` phase.
 
-Next-candidate desktop behavior (not the published v1.2.0 installer): successful
+Desktop behavior in 1.3.0 (absent from earlier v1.2.0 installers): successful
 status, doctor or restore checks with an unfinished No-root removal offer
 **Recover and reinstall** for the same saved connection. This uses the existing
 interactive install/removal flow and preserves its separate default-No recovery

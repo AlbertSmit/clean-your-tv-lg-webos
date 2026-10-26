@@ -1,18 +1,18 @@
-# CYTV for Android — 0.2.1-preview candidate (versionCode 10)
+# CYTV for Android — 0.3.0-preview (versionCode 11)
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** includes cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0** and both edition Updaters **0.2.1**, and Android **0.2.1-preview / code 10**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.2.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** includes cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0** and both edition Updaters **0.3.0**, and Android **0.3.0-preview / code 11**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.3.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 
 The interface uses the approved B1 house mark in its original colours, with quiet warm charcoal surfaces and muted controls. Orange is confined to the identity rather than large button/background fills.
 
-A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The published v1.2.0 interface supports the original ten desktop languages: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. The optional TV Python runtime archive is a separate
+A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. Historical v1.2.0 supports the original ten desktop languages: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. The optional TV Python runtime archive is a separate
 verified on-demand download, rather than part of the APK. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
 
-The unreleased 1.3.0 candidate adds Simplified Chinese (`zh-Hans`, 简体中文) and
+Version 1.3.0 adds Simplified Chinese (`zh-Hans`, 简体中文) and
 Traditional Chinese (`zh-Hant`, 繁體中文), including native operation notifications
 and WebView guidance. Explicit script tags override regional defaults; CN/SG
-use Simplified and TW/HK/MO use Traditional. This is not in current stable APKs.
+use Simplified and TW/HK/MO use Traditional. Earlier v1.2.0 APKs do not include this support.
 
 ## Install and connect
 
@@ -28,7 +28,7 @@ use Simplified and TW/HK/MO use Traditional. This is not in current stable APKs.
    a compatible TV loader/libc is still required. Working system Python skips this download.
    See [runtime limits](../docs/OPTIONAL-PYTHON.md). CYTV does not root or flash the TV.
 
-The published **v1.2.0 APK remains a preview/debug build**. A user confirmed successful Android setup with v1.1.0 after the operation-receipt fix in [issue #24](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/24#issuecomment-6400650506). The comment does not identify the phone, Android version or TV configuration; do not attribute the original issue author's TV to this separate reporter. Full physical-phone acceptance for **both editions**, including recovery, remains outstanding. The next candidate uses a non-debuggable release build with the existing pinned signing identity; [stable readiness and evidence](STABLE-READINESS.md) governs removal of the preview suffix. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Compatible whole-edition TV updates require separate computer-assisted System
+The historical **v1.2.0 APK was a preview/debug build**. A user confirmed successful Android setup with v1.1.0 after the operation-receipt fix in [issue #24](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/24#issuecomment-6400650506). The comment does not identify the phone, Android version or TV configuration; do not attribute the original issue author's TV to this separate reporter. Full physical-phone acceptance for **both editions**, including recovery, remains outstanding. The 1.3.0 preview uses a non-debuggable release build with the existing pinned signing identity; [stable readiness and evidence](STABLE-READINESS.md) governs removal of the preview suffix. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Compatible whole-edition TV updates require separate computer-assisted System
 Updater bootstrap with root/Homebrew services. Unrooted TVs use the installer.
 The APK does not expose that bootstrap action; see [updates](../root-edition/UPDATES.md).
 
@@ -113,9 +113,9 @@ Files `screenshots/android-*` are screenshots of the actual debug APK on an Andr
 
 For native smoke tests, forward the APK's debug WebView socket (`adb shell cat /proc/net/unix` identifies `webview_devtools_remote_PID`) with `adb forward tcp:9228 localabstract:webview_devtools_remote_PID`. Run `node android/tests/emulator.cjs` with `CYTV_ADB` set to adb's path. For the Root negative fixture, run `python android/tests/root-handshake.py` first, then set `CYTV_TEST_ROOT=1` for the Node command. To avoid an older fixture’s remembered host key, set a fresh `CYTV_TEST_SSH_PORT` in both commands. Start the app on its Russian welcome screen with no operation running. WebView debugging is enabled only in debug builds; it is disabled in release builds.
 
-## Next candidate: maintenance connection continuity (issue #12)
+## Maintenance connection continuity in 1.3.0 (issue #12)
 
-Unreleased preparation: after Done returns to the start screen, Tools retains the
+Since 1.3.0: after Done returns to the start screen, Tools retains the
 selected TV, edition and SSH port. No-root keeps port 9922; a custom Root port is
 also retained. Status, restore and Home button diagnostics no longer inherit the
 start screen's old hard-coded port 22. Home Helper recording remains No-root only.

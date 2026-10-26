@@ -1,6 +1,6 @@
 # Root Edition release acceptance
 
-Distribution references reviewed 2026-10-24; hardware records below are dated 2026-10-23. Target: LG OLED55C3RLA, firmware 43.21.71.
+Current distribution references reviewed 2026-10-26. Historical records below retain their own dates and artifact scope. Target: LG OLED55C3RLA, firmware 43.21.71.
 
 ## 1.0.0 bounded verification
 
@@ -22,17 +22,18 @@ can still be treated as an input fault and disable Home control.
 
 ## Current release boundary
 
-The implementation supports protected trials and explicit permanent activation.
-The published v1.0.3 distribution contains **Root 0.1.12**; the unpublished
-1.1.0 candidate contains **Root 0.2.0 / Root Updater 0.2.0**, optional Python
-bindings and the separate System Updater bootstrap. See
-[candidate notes](../docs/RELEASE-1.1.0.md) and
-[current test steps](../docs/RC-1.1.0-TESTING.md). New candidate hardware acceptance
-is pending. The 0.1.1 record describes earlier update evidence. See [scope and limitations](ROOT-0.1.1.md). Root Stable 0.1.0
-routing/lifecycle evidence below applies to its earlier fixed artifact.
-No blanket hardware certification is claimed for the final public artifact.
+The 1.3.0 distribution includes **Root 0.4.0 / Root Updater 0.3.0** and the
+separate **System Updater 1.1.0** bootstrap. See the
+[current acceptance record](../docs/RELEASE-1.3.0-ACCEPTANCE.md) for the supervised
+same-source setup, controls, triple-Home/off, repeated standby and AC-off Home-control
+results on OLED55C3RLA /43.21.71 /webOS11.2.0. One initial standby failed safely;
+[issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) remains open
+and deferred. These are limited observations, not blanket model certification.
+Homebrew Installer acceptance remains separate and no public approval is implied.
 
-Latest evidence (RC19 with atomic-read correction): actual launcher app selection,
+The older records below retain their exact artifact scope and untested paths.
+
+Earlier evidence (RC19 with atomic-read correction): actual launcher app selection,
 short Home and confirmed Back exit without observed LG flash; over eight minutes
 of active health; normal software reboot with automatic reactivation and fresh
 protections beyond the new trial deadline. User confirmed navigation and app exits

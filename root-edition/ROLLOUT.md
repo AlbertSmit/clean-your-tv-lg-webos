@@ -13,7 +13,7 @@ folder. Check its included instructions and bundle paths. The commands below use
 If those bundles are included, skip their build commands and verify checksums. Do not
 replace the bundled runtime with an untested build while following this release.
 
-To build the **unreleased Root 0.4.0 source candidate** instead (published archives retain their own versions and hardware record):
+To build the **Root 0.4.0 source bundle** (published archives retain their own versions and hardware record):
 
 On your computer, use Python 3.9+, OpenSSH, Node.js 20.19+ and npm. The full tests also need Bash,
 a C compiler and the project Python dependencies, including

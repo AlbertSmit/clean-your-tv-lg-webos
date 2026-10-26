@@ -1,6 +1,6 @@
 # Root Edition test plan
 
-For **[v1.2.0 stable / Root 0.3.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**, start with [installation](../docs/INSTALL.md), [supervisor setup](UPDATES.md) and [current acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md). The [candidate test guide](../docs/RC-1.1.0-TESTING.md) is superseded historical guidance. The bounded trials below are explicit developer tests, not a normal installer Keep/confirmation step. Historical acceptance remains tied to its original build.
+For **[v1.3.0 stable / Root 0.4.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**, start with [installation](../docs/INSTALL.md), [supervisor setup](UPDATES.md) and [current acceptance](../docs/RELEASE-1.3.0-ACCEPTANCE.md). The [candidate test guide](../docs/RC-1.1.0-TESTING.md) is superseded historical guidance. The bounded trials below are explicit developer tests, not a normal installer Keep/confirmation step. Historical acceptance remains tied to its original build.
 
 ## Local checks (no TV required)
 

@@ -4,10 +4,10 @@ Choose a complete user guide for installation, everyday controls, recovery,
 updates and removal. Technical/developer references remain in English and are
 linked at the end of each guide.
 
-These twelve guides describe **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**, with candidate-only behavior identified separately. Latest-download links follow the published release. Hardware evidence and outstanding tests remain scoped to the recorded devices and components; see [compatibility](COMPATIBILITY.md) and [release notes](RELEASE-1.2.0.md).
+These twelve guides describe **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**, with candidate-only behavior identified separately. Latest-download links follow the published release. Hardware evidence and outstanding tests remain scoped to the recorded devices and components; see [compatibility](COMPATIBILITY.md) and [release notes](RELEASE-1.3.0.md).
 
-Published v1.2.0 supports the original ten languages below. The unreleased 1.3.0
-candidate adds Simplified and Traditional Chinese across Home, Root Home, both
+The 1.3.0 release supports all twelve languages below, adding Simplified and
+Traditional Chinese across Home, Root Home, both
 updaters and the desktop/console, Android and Homebrew installers. The Android preview
 supports language selection. It follows the phone language on first launch (English fallback); tap the current language code at the top right to choose and save another language.
 
@@ -23,8 +23,8 @@ supports language selection. It follows the phone language on first launch (Engl
 | हिन्दी | `hi` | [हिन्दी](i18n/hi.md) |
 | Polski | `pl` | [Polski](i18n/pl.md) |
 | Русский | `ru` | [Русский](i18n/ru.md) |
-| 简体中文 (candidate) | `zh-Hans` | [简体中文](i18n/zh-Hans.md) |
-| 繁體中文 (candidate) | `zh-Hant` | [繁體中文](i18n/zh-Hant.md) |
+| 简体中文 | `zh-Hans` | [简体中文](i18n/zh-Hans.md) |
+| 繁體中文 | `zh-Hant` | [繁體中文](i18n/zh-Hant.md) |
 
 The installer starts with the computer's language; the TV interface starts with
 the TV's language. Each offers a saved language choice and an automatic/system

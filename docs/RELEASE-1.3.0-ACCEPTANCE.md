@@ -1,11 +1,12 @@
 # v1.3.0 candidate acceptance
 
-Status: **PREPARATION — NOT ACCEPTED FOR PUBLICATION**.
-Selected versions do not freeze or approve a release. The maintainer authorized
-preparation and release after verification. The supervised installed-source
-retest below records actual accepted paths and limitations. Final protected builds
-and meaningful Homebrew human review remain outstanding; failed observations
-remain recorded separately from later successful runs.
+Status: **SCOPED MAINTAINER ACCEPTANCE RECORDED — FINAL BUILD/PUBLICATION CHECKS PENDING**.
+The maintainer authorized 1.3.0 preparation and release after verification,
+supervised the installed-source tests below, and explicitly deferred the
+intermittent standby follow-up to issue #90. Acceptance covers the observed paths
+and stated limitations only. Final protected builds must pass before publication.
+Homebrew Installer human/artifact acceptance is absent, so it is not selected for
+public promotion. No failed observation or unperformed test is counted as a pass.
 
 ## Supervised installed-source retest — 2026-10-26
 
@@ -53,7 +54,26 @@ recovery/host safety review passed after an atomic-admission crash correction.
 PR #88 exact-head Linux/macOS and integration-policy checks passed. Homebrew
 Installer TV/human acceptance remains separate and no public approval is created.
 
-## Current portability correction
+## Final host correction and scope
+
+PR #91 uses POSIX TV parent paths on Windows for three ordinary upload routes and
+the internal recovery tool. Actual staging regressions reproduced all four
+failures before correction. The full installer suite with Qt passed 341 tests,
+with two isolated-platform skips; independent focused review passed. Linux/macOS
+CI at `c796c27f8255baaa3de28cfae39b83575068a7e5` passed before normal merge.
+A complete rebuild after this host-only change retained the same 159-file payload
+manifest and all three component bundle hashes listed above. Thus no private
+runtime substitution or new untested TV payload is inferred from host metadata.
+Native Windows and all final platform artifacts still require exact-head CI.
+
+The final documentation pass reviewed current README, setup/manual/CLI/desktop,
+Root update/recovery/testing, Android preview, compatibility and all twelve guides
+(en/ru/de/es/fr/it/pl/pt-BR/hi/ko/zh-Hans/zh-Hant). Current component/download
+references and twelve-language availability are synchronized for 1.3.0; the known
+standby fallback is included in every guide. Historical model records remain at
+their original versions and Homebrew-only sections remain explicitly unpublished.
+
+## Earlier portability correction — historical artifact identities
 
 PR #85 source `a4c020f0ae5c9c297fcbabcf279285d9f2290b2b` supersedes earlier private package-writer closures
 and candidate hashes below. Full local suite passed1,221 Python cases (two
@@ -63,7 +83,7 @@ GUI/package smoke passed. Independent portability-delta review passed without
 findings.
 
 Both actual Python3.12.14 and3.14.2 built the complete Installer0.1.0 twice;
-all four IPKs and both serialized manifests are byte-identical. Current IPK:
+all four IPKs and both serialized manifests were byte-identical. Historical IPK:
 61,270,588bytes, SHA256 `9f14ffb4f3f8e867592d048fcc47b0e5fa3455e4ba4efc8768d3248145f7e86b`;
 proposed manifest SHA256 `a88987c00e627129287058881ae703765e409550890e337c490173e702009dfe`;
 payload manifest SHA256 `0039f76bb5249884222fdfc94d0daebb95602edff07e1b043bed1b2f76a7ddd8`.
@@ -158,8 +178,9 @@ validate the final corrected source or versioned packages.
 
 ## Remaining supervised matrix
 
-- Final exact source, package/manifest identities, supervisor/Root private
-  inventories, peak staging space and free-space measurements: pending.
+- Installed-source package/private identities are recorded above; final platform
+  build provenance/checksums must match the frozen source. Peak staging/free-space
+  acceptance for the unpromoted Homebrew Installer remains unmeasured.
 - Fresh corrected Root setup reusing the verified private Python binding passed;
   system-Python and fresh offline-runtime preparation remain NOT RUN.
 - cytv→HBC and HBC→cytv maintenance, concurrent clients/original continuation,
@@ -175,7 +196,8 @@ validate the final corrected source or versioned packages.
 - Protected-signer Android upgrade, private-data/pending-receipt retention and
   physical use: NOT RUN; Android remains preview.
 - Simplified/Traditional Chinese glyphs, selection and remote focus on TV: NOT RUN.
-- Named supervising human and meaningful Homebrew code/artifact review: pending.
+- The repository maintainer supervised the recorded console tests. Meaningful
+  Homebrew code/artifact human review remains pending; no approval is fabricated.
 
 See the full [Homebrew matrix and state inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
 Do not repeat uncertain requests or delete retained evidence to obtain a success.
@@ -189,15 +211,16 @@ SDK/private-boundary guidance and Root0.4.0 source-build examples; historical
 published package/hardware statements stay separate. The internal original-intent
 callback does not change user setup or controls.
 
-- [ ] Final integrated source, versions, inventory and artifact identities agree.
-- [ ] Required Linux/macOS/ARM and exact Android/four desktop builds pass.
-- [ ] Combined-candidate local/native/package checks are recorded.
-- [ ] Final physical acceptance, limitations and human Homebrew review are real.
-- [ ] Supported transition, emergency/removal and signed rollback gates pass.
-- [ ] Exact Homebrew approval precedes any release.json/catalog promotion.
-- [ ] Candidate description, documentation, release notes and policy agree.
+- [x] Merged scope, selected versions and observed source/artifact identities recorded.
+- [x] Current source/host regression and private-payload equality evidence recorded.
+- [x] Real supervised console acceptance and unresolved issue #90 retained accurately.
+- [x] Tested recovery/emergency transitions and untested signed rollback paths distinguished.
+- [x] Homebrew public assets withheld until its separate exact human/TV approval.
+- [x] Current notes, user guides and known limitations reviewed for the frozen release.
+- [ ] Exact-head Linux/macOS and Android/four desktop builds and release policy pass.
 - [ ] Publication verifies assets/checksums/both signed feeds and provenance.
 - [ ] Existing shipping notices and issue statuses verified without duplicates.
 
-`release-plan.json` acceptance remains empty; `homebrew/release.json` is absent.
-PR #64 stays draft. Publication and issue closure do not follow from this record.
+`release-plan.json` records this limited acceptance; `homebrew/release.json` stays
+absent. PR #64 remains draft until exact-head builds and policy pass. Publication
+and issue closure are separate from source integration and this acceptance record.

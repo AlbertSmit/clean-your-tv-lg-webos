@@ -1,6 +1,6 @@
 # Install Clean Your TV — No-root and Root
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -10,7 +10,7 @@ so your computer can be switched off during everyday use.
 
 ## Candidate: on-TV Root installation
 
-**Unreleased source candidate; not a published Homebrew download or catalog
+**Unpublished Homebrew Installer candidate; not a published download or catalog
 listing.** The separate CYTV Installer is Root-only. The existing cytv choices
 for No-root and Root on Windows/macOS/Linux/Android remain available.
 
@@ -116,11 +116,11 @@ Download the matching package from the
 | macOS Apple Silicon / Intel | `cytv-macos-arm64.zip` / `cytv-macos-x64.zip`; extract, move `cytv.app` to Applications and open it |
 | Ubuntu 22.04+, Debian 12+, Mint 21+ x64 | Install `cytv-linux-x64.deb`, then open Clean Your TV from the applications menu |
 | Windows x64 | Extract `cytv-windows-x64-desktop.zip`, then open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it |
-| Android ARM64 | Install `cytv-android-arm64.apk`; this is a debug-signed preview |
+| Android ARM64 | Install `cytv-android-arm64.apk`; this is a non-debuggable preview with the retained signing identity |
 
 For Windows, use File Explorer **Extract All** and keep the complete folder.
 Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
-Android 0.2.1-preview requirements, APK installation and limitations are covered
+Android 0.3.0-preview requirements, APK installation and limitations are covered
 in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
 The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
 for the Linux graphical app.

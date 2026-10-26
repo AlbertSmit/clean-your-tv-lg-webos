@@ -1,8 +1,9 @@
-# v1.3.0 — Homebrew installation and shared recovery
+# v1.3.0 — shared recovery, installer fixes and Chinese support
 
-**Unreleased preparation candidate.** Version metadata is selected; physical
-acceptance and final protected builds are not complete. No new public download
-or Homebrew catalog availability is claimed.
+**Release 1.3.0.** Scoped console/Root acceptance and known limitations are
+recorded below. Publication follows the protected exact-source build and package/feed
+verification workflow; a source merge alone does not announce delivery. Homebrew
+Installer is not publicly promoted in this release.
 
 | Component | Published 1.2.0 | Selected candidate |
 | --- | --- | --- |
@@ -16,6 +17,10 @@ or Homebrew catalog availability is claimed.
 | Homebrew CYTV Installer | Not published | 0.1.0 proposed for exact acceptance; development CI remains 0.0.0 until approval |
 
 ## Included behavior
+
+- #91: preserve POSIX TV staging paths on Windows hosts for coordinator, Root
+  product, System Updater and internal recovery uploads; local filesystem paths
+  remain native to the computer.
 
 - #88: verify pinned package DATA through the observed shared services container
   owner without relaxing private execution. Add an internal, separately pinned

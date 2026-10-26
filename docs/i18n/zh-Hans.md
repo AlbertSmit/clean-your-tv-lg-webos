@@ -4,9 +4,11 @@ No-root 和 Root 是适用于不同电视配置的同等选项。使用 LG 开�
 
 ## 安装之前
 
-本指南涵盖 **[v1.2.0 稳定版](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**。最新下载链接指向已发布的稳定版。另请参阅[安装指南](../INSTALL.md)和[发行说明](../RELEASE-1.2.0.md)。
+本指南涵盖 **[v1.3.0 稳定版](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**。最新下载链接指向已发布的稳定版。另请参阅[安装指南](../INSTALL.md)和[发行说明](../RELEASE-1.3.0.md)。
 
-v1.2.0 包含 cytv **0.3.1**、Home **1.4.1**、Home Helper **0.6.19**、Root Edition **0.3.0**、Home Updater 和 Root Updater **0.2.1**、Android **0.2.1-preview**（版本代码 **10**），以及 System Updater supervisor **1.0.0**（协议 **1**）。
+v1.3.0 包含 cytv **0.4.0**、Home **1.4.2**、Home Helper **0.6.19**、Root Edition **0.4.0**、Home Updater 和 Root Updater **0.3.0**、Android **0.3.0-preview**（版本代码 **11**），以及 System Updater supervisor **1.1.0**（协议 **1**）。
+
+1.3.0 已知问题：待机唤醒后，Root 的 Home 控制可能关闭，按 Home 会打开 LG。请在 Clean Your TV 设置中明确重新开启 Home 控制；如果开启失败，请保留 LG Home 并保存诊断信息。参见 [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) 和[当前测试记录](../RELEASE-1.3.0-ACCEPTANCE.md)。
 
 安装期间保持电视开机，将电脑与电视连接到同一个可信本地网络。完成后无需电脑持续开机。兼容性取决于型号、固件和遥控器；Root 仍有待完成的实机检查。
 
@@ -117,17 +119,17 @@ Root 若在 supervisor 引导后立即显示 `Denied methods call status`，请�
 
 [LG 固件更新阻止](../LG-FIRMWARE-UPDATES.md) · [1.2.0 验收](../RELEASE-1.2.0-ACCEPTANCE.md)
 
-## 候选版：桌面引导恢复
+## 1.3.0 新增功能
 
-以下为下一候选版行为，**不属于已发布的 v1.2.0 安装程序**。检查电视状态、连接诊断或返回 LG Home 后，如有未完成的 No-root 移除，可对同一电视和连接选择**恢复并重新安装**。先检查并明确确认完成移除（默认：否），再检查内置版本并安装。“设置我的电视”也可直接提供此恢复。单独返回 LG Home 不会完成移除。
+1.3.0 新增功能。检查电视状态、连接诊断或返回 LG Home 后，如有未完成的 No-root 移除，可对同一电视和连接选择**恢复并重新安装**。先检查并明确确认完成移除（默认：否），再检查内置版本并安装。“设置我的电视”也可直接提供此恢复。单独返回 LG Home 不会完成移除。
 
 失败时使用**保存诊断报告…**保存本次失败的报告，并附到问题中，无需终端。如未能生成报告，请提供屏幕错误。保留恢复文件；失败或结果不明的操作不会自动重试。这尚不能证明 G5 / 固件 43.21.71 的报告问题（#65）已修复。
 
-## 下一候选版：连接与 Home 状态（#12）
+## 1.3.0 新增功能 — #12
 
-未发布准备：Android Tools 返回开始页后保留所选电视、版本和 SSH 端口；No-root 通常为 9922。如 Home 设置无法验证 Home 控制，将显示未知状态并隐藏 Change Home，直到收到有效响应。这不表示 Helper 停止，也不会重启它。这些更改不在已发布的 v1.2.0 包中。
+Android Tools 返回开始页后保留所选电视、版本和 SSH 端口；No-root 通常为 9922。如 Home 设置无法验证 Home 控制，将显示未知状态并隐藏 Change Home，直到收到有效响应。这不表示 Helper 停止，也不会重启它。这些更改不在已发布的 v1.2.0 包中。
 
-下一候选版 Root 诊断（#55）：设置失败后保存该次尝试的报告，其中可能包含分类后的恢复服务启动故障。保留恢复状态和旧驱动。尚未确认 OLED Flex 问题修复。
+1.3.0 Root 诊断（#55）：设置失败后保存该次尝试的报告，其中可能包含分类后的恢复服务启动故障。保留恢复状态和旧驱动。尚未确认 OLED Flex 问题修复。
 
 ## 未发布候选版：通过 Homebrew 设置 Root
 

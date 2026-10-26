@@ -1,6 +1,6 @@
 # Root software updates and recovery
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** updates a complete signed edition release set through
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** updates a complete signed edition release set through
 an independent fixed **System Updater supervisor**. Root's set includes Root Home,
 Root Updater and the compatible Root recovery infrastructure. No-root's separate
 set includes Home, Helper and Home Updater. The editions are not interchangeable;
@@ -10,7 +10,7 @@ Current C3 checks covered supervisor bootstrap, installed-version menus and frie
 
 ## Candidate: Homebrew setup is separate from updates
 
-**Unreleased source candidate:** CYTV Installer can install Root Home and Root
+**Unpublished Homebrew Installer candidate:** CYTV Installer can install Root Home and Root
 Updater on a compatible rooted TV, optionally preparing System Updater after
 explicit selection. It does not obtain root or activate Home during setup.
 Homebrew upgrades Installer only; the existing signed product update/recovery

@@ -4,9 +4,11 @@ No-root y Root son opciones equivalentes para distintas configuraciones del tele
 
 ## Requisitos
 
-Esta guía describe **[v1.2.0 estable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Los enlaces `releases/latest/download` entregan la versión estable publicada. Consulta [instalación](../INSTALL.md) y [notas de la versión](../RELEASE-1.2.0.md).
+Esta guía describe **[v1.3.0 estable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. Los enlaces `releases/latest/download` entregan la versión estable publicada. Consulta [instalación](../INSTALL.md) y [notas de la versión](../RELEASE-1.3.0.md).
 
-La versión incluye cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater y Root Updater **0.2.1**, Android **0.2.1-preview** (código de versión **10**) y el supervisor System Updater **1.0.0** (protocolo **1**). Estos son los componentes de v1.2.0.
+La versión incluye cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root Edition **0.4.0**, Home Updater y Root Updater **0.3.0**, Android **0.3.0-preview** (código de versión **11**) y el supervisor System Updater **1.1.0** (protocolo **1**). Estos son los componentes de v1.3.0.
+
+Problema conocido de 1.3.0: después del modo de espera, el control Home de Root puede desactivarse y Home vuelve a abrir LG. Actívalo de nuevo explícitamente en los ajustes de Clean Your TV; si falla, conserva LG Home y guarda el diagnóstico. Consulta [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) y las [pruebas actuales](../RELEASE-1.3.0-ACCEPTANCE.md).
 
 Root 0.2.0, Root Updater 0.2.0 y supervisor 1.0.0 se comprobaron en OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0 (`d344d92`, contenido idéntico a `4b66951`). Pasaron los controles, triple Home y reanudación, reposo/reactivación con Emby abierto durante 70 segundos, menús de versiones y aviso claro de canal no disponible. No se probaron el arranque en frío real, Helper 0.6.19 en TV, UK6540PTD ni actualización/restauración completa del sistema firmada. La publicación estable acepta estas pruebas limitadas; otros modelos no están validados.
 
@@ -38,7 +40,7 @@ Usa el mismo directorio privado de datos para instalar. Para trasladar la caché
 - **macOS 13+:** extrae `cytv-macos-arm64.zip` para Apple Silicon o `cytv-macos-x64.zip` para Intel, mueve `cytv.app` a Aplicaciones y ábrela. Permite el acceso a la red local. Si se bloquea una descarga de confianza, usa Privacidad y seguridad → Abrir igualmente; no desactives Gatekeeper. La aceptación en sistemas antiguos no está confirmada.
 - **Linux x64:** en Ubuntu 22.04+, Debian 12+ o Mint 21+, instala `cytv-linux-x64.deb` con el gestor gráfico de paquetes y abre Clean Your TV desde el menú de aplicaciones. Las bibliotecas pueden requerir Internet. No hay paquete Linux ARM. El ejecutable independiente `cytv-linux-x64` es la CLI; usa el `.deb` para la app gráfica.
 
-[Instalador Android](../../android/README.md): incluye los diez idiomas de la interfaz. El control superior derecho muestra el idioma actual; tócalo para elegir otro. La selección se guarda en el teléfono.
+[Instalador Android](../../android/README.md): incluye los doce idiomas de la interfaz. El control superior derecho muestra el idioma actual; tócalo para elegir otro. La selección se guarda en el teléfono.
 
 En Android, la acción de mantenimiento elegida sigue visible durante la conexión y muestra su propio progreso. Se usa la fuente del sistema del teléfono con etiquetas y ayudas más grandes.
 
@@ -126,15 +128,15 @@ Solo Root: Ajustes de Home → Actualizaciones de firmware de LG cambia el ajust
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
 
-## Candidato: recuperación guiada de escritorio
+## Novedades de 1.3.0: recuperación guiada de escritorio
 
-Este comportamiento pertenece al próximo candidato, no al instalador publicado v1.2.0. Después de comprobar el estado, diagnosticar la conexión o volver a LG Home, una desinstalación No-root incompleta ofrece **Recuperar y reinstalar** para el mismo TV y conexión. Confirma expresamente terminar la desinstalación (opción predeterminada: No) y revisa las versiones incluidas antes de instalar. **Configurar mi TV** también ofrece este recorrido. Volver a LG Home por sí solo no termina la desinstalación. Si falla, usa **Guardar informe de diagnóstico…** para guardar el informe de ese intento fallido y adjúntalo a tu incidencia; no necesitas terminal. Si no se pudo crear, incluye el error visible. Conserva los datos de recuperación; las operaciones fallidas o de resultado incierto no se repiten automáticamente. Esto aún no confirma una solución para el G5 con firmware 43.21.71 (#65).
+Novedades de 1.3.0. Después de comprobar el estado, diagnosticar la conexión o volver a LG Home, una desinstalación No-root incompleta ofrece **Recuperar y reinstalar** para el mismo TV y conexión. Confirma expresamente terminar la desinstalación (opción predeterminada: No) y revisa las versiones incluidas antes de instalar. **Configurar mi TV** también ofrece este recorrido. Volver a LG Home por sí solo no termina la desinstalación. Si falla, usa **Guardar informe de diagnóstico…** para guardar el informe de ese intento fallido y adjúntalo a tu incidencia; no necesitas terminal. Si no se pudo crear, incluye el error visible. Conserva los datos de recuperación; las operaciones fallidas o de resultado incierto no se repiten automáticamente. Esto aún no confirma una solución para el G5 con firmware 43.21.71 (#65).
 
-## Próximo candidato: conexión y estado de Home (issue #12)
+## Novedades de 1.3.0 — #12
 
-Preparación sin publicar: Herramientas de Android conserva el televisor, la edición y el puerto SSH al volver a la pantalla inicial; No-root usa normalmente 9922. Si los ajustes no pueden comprobar el control de Home, muestran un estado desconocido y ocultan Cambiar Home hasta recibir una respuesta válida. Esto no significa que Helper se haya detenido ni lo reinicia. Estos cambios no están en los paquetes publicados de v1.2.0.
+Herramientas de Android conserva el televisor, la edición y el puerto SSH al volver a la pantalla inicial; No-root usa normalmente 9922. Si los ajustes no pueden comprobar el control de Home, muestran un estado desconocido y ocultan Cambiar Home hasta recibir una respuesta válida. Esto no significa que Helper se haya detenido ni lo reinicia. Estos cambios no están en los paquetes publicados de v1.2.0.
 
-Diagnóstico Root del próximo candidato (#55): tras fallar la instalación, guarde el informe de ese intento. Puede incluir categorías de errores de inicio del servicio de recuperación; conserve los datos de recuperación y el controlador instalado. La solución en OLED Flex aún no está confirmada.
+Diagnóstico Root de 1.3.0 (#55): tras fallar la instalación, guarde el informe de ese intento. Puede incluir categorías de errores de inicio del servicio de recuperación; conserve los datos de recuperación y el controlador instalado. La solución en OLED Flex aún no está confirmada.
 
 ## Candidato sin publicar: instalar Root mediante Homebrew
 

@@ -5,11 +5,11 @@ uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
 is needed after setup. Published setup uses a computer for installation and recovery tools.
 
-[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) includes **Root Edition 0.3.0**, **Root Updater 0.2.1** and **System Updater supervisor 1.0.0**. Latest-download links follow the published release.
+[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0) includes **Root Edition 0.4.0**, **Root Updater 0.3.0** and **System Updater supervisor 1.1.0**. Latest-download links follow the published release.
 
-Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
+Historical Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
 
-See [current acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md). Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
+See [current 1.3.0 acceptance and known issue #90](../docs/RELEASE-1.3.0-ACCEPTANCE.md). Historical [1.2.0 acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md) remains scoped to its original artifacts. Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
 
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
 [Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)
@@ -22,7 +22,7 @@ See [operation, limitations and TV acceptance scope](../docs/LG-FIRMWARE-UPDATES
 
 ## Candidate: two setup clients, one installation
 
-**Unreleased source candidate:** CYTV Installer is a separate Root-only on-TV
+**Unpublished Homebrew Installer candidate:** CYTV Installer is a separate Root-only on-TV
 application alongside cytv. It has no published Homebrew catalog listing yet.
 cytv retains No-root and Root on all existing platforms. Root setup requires
 existing root, Homebrew exec, Node.js 8+ and working Python 3.9+; supported ARMv7
@@ -110,9 +110,9 @@ Historical research is retained in [STATUS.md](STATUS.md); older RC limitations
 are not the current usage instructions.
 
 
-## Recovery startup diagnostics (unreleased, issue #55)
+## Recovery startup diagnostics (1.3.0, issue #55)
 
-The next candidate preloads `service/startup-diagnostics.js` before the firmware's
+Version 1.3.0 preloads `service/startup-diagnostics.js` before the firmware's
 Node bootstrap. The runner still execs Node with the same PID and bootstrap
 arguments; registration formats and recovery behavior do not change. A private,
 root-owned mode-0600 `recovery-service.json` under `/var/lib/clean-your-tv-root`

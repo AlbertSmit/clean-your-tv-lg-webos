@@ -1,6 +1,6 @@
 # Manual installation of No-root and Root without cytv
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -314,7 +314,7 @@ python3 root-edition/build.py --output build/root-candidate --version 0.4.0
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-This unreleased source candidate bundle contains `com.cleanyourtv.root.preview_0.4.0_all.ipk`, `setup.py`,
+The 1.3.0 source bundle contains `com.cleanyourtv.root.preview_0.4.0_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.
@@ -335,7 +335,7 @@ Offline tests do not validate buttons or boot behavior on your TV.
 
 ### Candidate source versus published bundles
 
-The following shared-product commands are **unreleased source-candidate behavior**.
+The following shared-product commands are included in **1.3.0**. Homebrew Installer publication is separately gated.
 Use the complete matching bundles from this revision. Published tagged bundles
 retain their matching drivers and procedure; these new flags do not retrofit
 old retained infrastructure. No Homebrew catalog or new public assets are

@@ -4,9 +4,11 @@ No-root and Root are equal options for different TV setups. Choose No-root for L
 
 ## Before installation
 
-This guide covers **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.2.0.md).
+This guide covers **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.3.0.md).
 
-The release contains cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater and Root Updater **0.2.1**, Android **0.2.1-preview** (version code **10**) and System Updater supervisor **1.0.0** (protocol **1**). These are the v1.2.0 release components.
+The release contains cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root Edition **0.4.0**, Home Updater and Root Updater **0.3.0**, Android **0.3.0-preview** (version code **11**) and System Updater supervisor **1.1.0** (protocol **1**). These are the v1.3.0 release components.
+
+Known issue in 1.3.0: Root Home control can turn off after standby and return Home presses to LG. Turn Home control on again explicitly in Clean Your TV settings; if activation fails, keep LG Home and save diagnostics. See [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) and the [current acceptance record](../RELEASE-1.3.0-ACCEPTANCE.md).
 
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
@@ -36,7 +38,7 @@ Use the same private data directory for setup; when moving a cache, prepare a fr
 - **macOS 13+:** extract `cytv-macos-arm64.zip` (Apple Silicon) or `cytv-macos-x64.zip` (Intel), move `cytv.app` into Applications and open it. Allow Local Network access. If blocked, use Privacy & Security → Open Anyway only for a trusted project download; do not disable Gatekeeper. Older-system acceptance is not established.
 - **Linux x64:** on Ubuntu 22.04+, Debian 12+ or Mint 21+, open `cytv-linux-x64.deb` in the graphical package installer, install, then open Clean Your TV from the applications menu. Desktop libraries may require Internet access. Linux ARM is not included. The standalone `cytv-linux-x64` executable is the CLI; use the `.deb` for the graphical app.
 
-[Android installer](../../android/README.md): all ten interface languages are available. The top-right control shows the current language; tap it to choose another. Your selection is saved on the phone.
+[Android installer](../../android/README.md): all twelve interface languages are available. The top-right control shows the current language; tap it to choose another. Your selection is saved on the phone.
 
 Android status and recovery keep the selected action visible during connection and show its own progress. Text uses the phone’s system font with larger labels and help text.
 
@@ -122,15 +124,15 @@ Root only: Home settings → LG firmware updates changes the existing Homebrew C
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
 
-## Candidate: guided desktop recovery
+## New in 1.3.0: guided desktop recovery
 
-This is next-candidate behavior, not part of the published v1.2.0 installer. After Check TV status, connection diagnostics or Return to LG Home, an unfinished No-root removal offers **Recover and reinstall** for the same TV and connection. Review and explicitly confirm finishing removal (default: No), then review the bundled versions before installation. **Set up my TV** also offers this recovery directly. Returning to LG Home alone does not finish removal. On failure, use **Save diagnostic report…** to save the report from that failed attempt, then attach it to your issue; no terminal is needed. If no report could be created, include the visible error. Keep recovery files; failed or ambiguous operations are not retried automatically. This does not yet establish a fix for the reported G5/firmware 43.21.71 failure (#65).
+New in 1.3.0. After Check TV status, connection diagnostics or Return to LG Home, an unfinished No-root removal offers **Recover and reinstall** for the same TV and connection. Review and explicitly confirm finishing removal (default: No), then review the bundled versions before installation. **Set up my TV** also offers this recovery directly. Returning to LG Home alone does not finish removal. On failure, use **Save diagnostic report…** to save the report from that failed attempt, then attach it to your issue; no terminal is needed. If no report could be created, include the visible error. Keep recovery files; failed or ambiguous operations are not retried automatically. This does not yet establish a fix for the reported G5/firmware 43.21.71 failure (#65).
 
-## Next candidate: connection and Home status (issue #12)
+## New in 1.3.0 — #12
 
-Unreleased preparation: Android Tools keeps the selected TV, edition and SSH port after returning to the start screen; No-root normally uses 9922. If Home settings cannot verify Home control, they show an unknown status and hide Change Home until a valid reply. This does not mean Helper stopped and does not restart it. These changes are not in the published v1.2.0 packages.
+Android Tools keeps the selected TV, edition and SSH port after returning to the start screen; No-root normally uses 9922. If Home settings cannot verify Home control, they show an unknown status and hide Change Home until a valid reply. This does not mean Helper stopped and does not restart it. These changes are not in the published v1.2.0 packages.
 
-Next-candidate Root diagnostics (#55): after a failed setup, save the diagnostic report from that attempt. It can include categorized recovery-service startup failures; keep recovery state and retained drivers. This does not yet confirm a fix on OLED Flex.
+Root diagnostics in 1.3.0 (#55): after a failed setup, save the diagnostic report from that attempt. It can include categorized recovery-service startup failures; keep recovery state and retained drivers. This does not yet confirm a fix on OLED Flex.
 
 ## Unreleased candidate: Root setup through Homebrew
 

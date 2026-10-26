@@ -11,14 +11,14 @@ Status, restore and removal never download new Python; Root recovery uses its
 verified interpreter binding and retains referenced managed runtime slots.
 See [CLI interrupted operations](CLI.md#interrupted-operations).
 
-**Next candidate, desktop only:** an unfinished No-root removal found by status,
+**Since 1.3.0, desktop only:** an unfinished No-root removal found by status,
 connection diagnostics or Return to LG Home offers **Recover and reinstall** for
 the same TV. Complete the separate default-No recovery confirmation, then review
 the versions before installation. On error, **Save diagnostic report…** exports
 that failed attempt's report directly; a later doctor run is not a substitute for
 the original failure report. No terminal is needed. Existing removal guards and
 recovery evidence remain intact. This behavior is not in the published v1.2.0
-desktop downloads; see the [candidate desktop recovery flow](DESKTOP_INSTALL.md#next-candidate-guided-no-root-recovery-and-reinstallation).
+desktop downloads; see the [desktop recovery flow](DESKTOP_INSTALL.md#guided-no-root-recovery-and-reinstallation-in-130).
 
 For either edition installed with cytv, use its **Check TV status**, restore and
 diagnostics actions first; see [CLI recovery](CLI.md#interrupted-operations). Root

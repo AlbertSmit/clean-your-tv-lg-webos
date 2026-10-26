@@ -4,6 +4,15 @@ const path = require('node:path');
 const vm = require('node:vm');
 const acorn = require('acorn');
 
+function makeLocalStorage(initialConfig) {
+  const store = new Map();
+  store.set('cytv-widgets', JSON.stringify(initialConfig));
+  return {
+    getItem(key) {return store.has(key) ? store.get(key) : null;},
+    setItem(key, value) {store.set(key, value); if (key === 'cytv-widgets') initialConfig = JSON.parse(value);}
+  };
+}
+
 const source = fs.readFileSync(path.join(__dirname, '../launcher/widget-data.js'), 'utf8');
 acorn.parse(source, {ecmaVersion: 5});
 
@@ -25,10 +34,7 @@ function client(options = {}) {
       this.message = value => {if (this.onmessage) this.onmessage({data: JSON.stringify(value)});};
       sockets.push(this);
     },
-    localStorage: {
-      getItem() {return JSON.stringify(config);},
-      setItem(key, value) {config = JSON.parse(value);}
-    },
+    localStorage: options.localStorage || makeLocalStorage(config),
     document: {createElement() {
       let parsed;
       return {
@@ -147,6 +153,23 @@ for (const failure of ['status', 'error', 'timeout', 'reader']) {
   else if (failure === 'timeout') artwork.requests[1].ontimeout();
   else artwork.respond('image-bytes', failure === 'status' ? 403 : 200);
   assert.equal(artwork.snapshot.nowPlaying.artwork, null, 'failed artwork must not expose an authenticated URL');
+}
+
+// Persistent artwork cache: a later mount reuses the thumbnail+image without refetching.
+{
+  const shared = makeLocalStorage({ha: {url: 'https://ha.example.test', token: 'test-only'}});
+  const first = client({localStorage: shared});
+  first.refresh();
+  first.respond([media('kitchen', 'playing', {entity_picture: '/api/image/1'})]);
+  assert.equal(first.requests.filter(r => r.url && /\/api\/image\//.test(r.url)).length, 1, 'first mount must fetch artwork');
+  first.respond('image-bytes');
+
+  const second = client({localStorage: shared});
+  second.refresh();
+  second.respond([media('kitchen', 'playing', {entity_picture: '/api/image/1'})]);
+  assert.equal(second.requests.filter(r => r.url && /\/api\/image\//.test(r.url)).length, 0, 'second mount must reuse cached artwork');
+  assert.equal(second.snapshot.nowPlaying.artwork, 'data:image/png;base64,TEST');
+  assert.equal(second.snapshot.nowPlaying.artworkThumb, null);
 }
 
 for (const response of ['invalid json', '{}', 'null']) {

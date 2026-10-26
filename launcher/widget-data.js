@@ -7,7 +7,39 @@
 window.WidgetData = (function () {
   'use strict';
   var KEY = 'cytv-widgets';
+  var ART_CACHE_KEY = 'cytv-art-cache';
   var listeners = [];
+
+  function artCacheRead() {
+    try {
+      var raw = localStorage.getItem(ART_CACHE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  function artCacheWrite(box) {
+    try { localStorage.setItem(ART_CACHE_KEY, JSON.stringify(box)); } catch (_) {}
+  }
+
+  function trimArtCache(box) {
+    var keys = Object.keys(box).sort(function (a, b) {
+      return (box[a].t || 0) - (box[b].t || 0);
+    });
+    var total = 0;
+    for (var i = 0; i < keys.length; i++) {
+      total += (box[keys[i]].src || '').length + (box[keys[i]].thumb || '').length;
+    }
+    var maxTotal = 3200000;
+    while ((keys.length > 16 || (total > maxTotal && keys.length > 1)) && keys.length) {
+      var oldest = keys.shift();
+      total -= (box[oldest].src || '').length + (box[oldest].thumb || '').length;
+      delete box[oldest];
+    }
+  }
 
   function defaults() {
     return {
@@ -172,6 +204,24 @@ window.WidgetData = (function () {
     } catch (e) { done(null); }
   }
 
+  function loadArtwork(entity, haBase, auth, done) {
+    var key = artworkKey(entity);
+    var box = artCacheRead();
+    var hit = box[key];
+    if (hit && (hit.src || hit.thumb)) {
+      done({ src: hit.src || null, thumb: hit.thumb || null });
+      return;
+    }
+    artworkDataUrl(entity, haBase, auth, function (value) {
+      if (value && value.src) {
+        box[key] = { src: value.src, thumb: value.thumb || null, t: Date.now() };
+        trimArtCache(box);
+        artCacheWrite(box);
+      }
+      done(value);
+    });
+  }
+
   function model(list, cfg, weatherEnabled) {
     var out = { source: 'home-assistant', weather: null, nowPlaying: null };
     var wx = pick(list, 'weather.', cfg.ha.weatherEntity);
@@ -216,7 +266,7 @@ window.WidgetData = (function () {
     var np = pickMusic(list, cfg.ha.mediaEntity);
     if (np && np.attributes.entity_picture) {
       var completed = false;
-      (artworkLoader || artworkDataUrl)(np, cfg.ha.url, 'Bearer ' + cfg.ha.token, function (durl) {
+      (artworkLoader || loadArtwork)(np, cfg.ha.url, 'Bearer ' + cfg.ha.token, function (durl) {
         completed = true;
         if (durl) {
           out.nowPlaying.artwork = durl.src;
@@ -327,7 +377,7 @@ window.WidgetData = (function () {
         }
         var entry = {key: key, pending: true, value: null, callbacks: [done]};
         artworkCache = entry;
-        artworkDataUrl(entity, haBase, auth, function (value) {
+        loadArtwork(entity, haBase, auth, function (value) {
           entry.pending = false;
           entry.value = value;
           var callbacks = entry.callbacks;

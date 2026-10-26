@@ -10,14 +10,18 @@
     return window.HomeI18n ? HomeI18n.html(markup) : markup;
   }
   // Shared layout, focus and remote-control state.
-  var DOCK_TOP = 680,
-    DOCK_HEIGHT = 258,
-    CARD_HEIGHT = 202,
-    TILE_BASE = DOCK_TOP + Math.round((DOCK_HEIGHT - CARD_HEIGHT) / 2),
-    HERO_OFFSET = 176;
+  var layout = HomeUI.layoutFor(HomeUI.preferences().appearance, CONFIG.columns),
+    shelf = HomeUI.createShelf(),
+    dockGlass = HomeUI.createDockGlass(),
+    statusControl = HomeUI.createStatus(function () {
+      if (moveState || pickerOpen || undoState || focusZone === 'inputs') return false;
+      focusTopButton(2);
+      return true;
+    }),
+    headerBottom = 0;
   var toastTimer,
-    columnCount = Math.max(1, CONFIG.columns || 4),
-    columnWidth = 1696 / columnCount,
+    columnCount = layout.columns,
+    columnWidth = layout.columnWidth,
     KEY_OK = 13,
     KEY_BACK = 461,
     greetings = [[5, tr("Good night")], [12, tr("Good morning")], [17, tr("Good afternoon")], [22, tr("Good evening")], [24, tr("Good night")]],
@@ -167,11 +171,7 @@
   function rebuild(focusId) {
     tilesContainer.innerHTML = "";
     tiles = library.visible().map(createTile);
-    var el = document.createElement('div');
-    el.className = 'item add-app';
-    el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', tr('Add app'));
-    el.innerHTML = ht('<div class="card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 10v28M10 24h28"/></svg></div><div class="name">Add app</div>');
+    var el = HomeUI.createAddView(tr('Add app'));
     var item = {
       add: true,
       app: {
@@ -546,80 +546,103 @@
     });
   }
   // Tile rendering, icon colors and grid geometry.
+  // DOM colors are resolved cheapest-first: dominantColor baked into
+  // apps.js, then a persisted localStorage cache, then a one-time canvas
+  // computation cached for future launches. This avoids the 20-30 canvas
+  // readbacks (GPU->CPU sync) that used to stall launch.
+  function cachedColor(id) {
+    try {
+      var raw = localStorage.getItem('tvhome.color.' + id);
+      if (raw) {
+        var c = JSON.parse(raw);
+        if (Array.isArray(c) && c.length === 3) return c;
+      }
+    } catch (_) {}
+    return null;
+  }
+  function storeCachedColor(id, rgb) {
+    try { localStorage.setItem('tvhome.color.' + id, JSON.stringify(rgb)); } catch (_) {}
+  }
+  function dominantColorFromImage(image) {
+    try {
+      var sample = document.createElement('canvas');
+      sample.width = 12;
+      sample.height = 12;
+      var ctx = sample.getContext('2d');
+      ctx.drawImage(image, 0, 0, 12, 12);
+      var data = ctx.getImageData(0, 0, 12, 12).data;
+      var best = null, bestScore = -1;
+      var sum = [0, 0, 0], count = 0;
+      for (var i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 128) continue;
+        var r = data[i], g = data[i + 1], b = data[i + 2];
+        sum[0] += r; sum[1] += g; sum[2] += b; count++;
+        var hsv = rgbToHsv([r, g, b]);
+        var score = hsv[1] * Math.min(1, 1.4 * hsv[2]);
+        if (score > bestScore) { bestScore = score; best = [r, g, b]; }
+      }
+      if (!count) return null;
+      if (bestScore < 0.25) {
+        var avg = [sum[0] / count, sum[1] / count, sum[2] / count];
+        var h = rgbToHsv(avg);
+        h[2] = Math.max(h[2], 0.55);
+        return hsvToRgb(h);
+      }
+      var h2 = rgbToHsv(best);
+      h2[1] = Math.min(1, 1.1 * h2[1]);
+      h2[2] = Math.max(0.5, h2[2]);
+      return hsvToRgb(h2);
+    } catch (_) { return null; }
+  }
+  function computeColorOnload(tile, image) {
+    var done = false;
+    image.onload = function () {
+      if (done) return;
+      done = true;
+      var rgb = dominantColorFromImage(image);
+      if (rgb) {
+        storeCachedColor(tile.app.id, rgb);
+        tile.card.style.background = "rgb(" + rgb.join(",") + ")";
+        tile.color = rgb;
+        if (tiles[focusedTile] === tile) updateAmbient(rgb);
+      }
+    };
+    return null;
+  }
   function createTile(app) {
-    var element = document.createElement("div");
-    element.className = "item";
-    element.dataset.appId = app.id;
-    element.setAttribute("role", "button");
-    element.setAttribute("aria-label", app.title);
-    var card = document.createElement("div");
-    card.className = "card";
-    var image = document.createElement("img"),
+    var view = HomeUI.createTileView(app),
+      element = view.element,
+      card = view.card,
+      image = view.image,
       tile = {
         app: app,
         el: element,
         card: card,
         color: null
       };
-    image.onload = function () {
-      !function (e, t) {
-        var n = null,
-          a = null;
-        try {
-          var i = document.createElement("canvas");
-          i.width = 12;
-          i.height = 12;
-          var o = i.getContext("2d");
-          o.drawImage(t, 0, 0, 12, 12);
-          n = o.getImageData(0, 0, 12, 12).data;
-          a = function (e) {
-            var t = e.naturalWidth,
-              n = e.naturalHeight,
-              a = document.createElement("canvas");
-            a.width = t;
-            a.height = n;
-            var i = a.getContext("2d");
-            i.drawImage(e, 0, 0);
-            var o = i.getImageData(2, 2, 1, 1).data;
-            return o[3] > 200 ? o : i.getImageData(2, Math.floor(n / 2), 1, 1).data;
-          }(t);
-        } catch (e) {}
-        var r = null;
-        a && a[3] > 200 ? e.card.style.background = "rgb(" + a[0] + "," + a[1] + "," + a[2] + ")" : (e.card.classList.add("glyph"), e.card.style.background = tileBackground(e.app.iconColor), r = "#2c2c2e" === tileBackground(e.app.iconColor) ? null : parseHexColor(e.app.iconColor));
-        e.color = r || (n ? function (e) {
-          for (var t = null, n = -1, a = [0, 0, 0], i = 0, o = 0; o < e.length; o += 4) if (!(e[o + 3] < 128)) {
-            var r = [e[o], e[o + 1], e[o + 2]];
-            a[0] += r[0];
-            a[1] += r[1];
-            a[2] += r[2];
-            i++;
-            var s = rgbToHsv(r),
-              l = s[1] * Math.min(1, 1.4 * s[2]);
-            l > n && (n = l, t = r);
-          }
-          if (!i) {
-            return [68, 68, 68];
-          }
-          if (n < .25) {
-            var c = rgbToHsv([a[0] / i, a[1] / i, a[2] / i]);
-            return c[2] = Math.max(c[2], .55), hsvToRgb(c);
-          }
-          var u = rgbToHsv(t);
-          return u[1] = Math.min(1, 1.1 * u[1]), u[2] = Math.max(.5, u[2]), hsvToRgb(u);
-        }(n) : parseHexColor(e.app.iconColor));
-        tiles[focusedTile] === e && updateAmbient(e.color);
-      }(tile, image);
-    };
+    var color = app.dominantColor || cachedColor(app.id);
+    var cardBackground;
+    if (!color && app.iconColor) {
+      cardBackground = tileBackground(app.iconColor);
+      color = parseHexColor(app.iconColor) || [68, 68, 68];
+    }
+    if (!color) {
+      computeColorOnload(tile, image);
+    } else {
+      cardBackground = cardBackground || "rgb(" + color.join(",") + ")";
+      card.style.background = cardBackground;
+      tile.color = color;
+    }
     image.onerror = function () {
       image.style.display = "none";
       card.classList.add("missing-icon");
       card.setAttribute("data-initial", app.title.charAt(0));
     };
     image.src = app.icon || "missing-icon";
-    card.appendChild(image);
-    element.appendChild(card);
-    var label = document.createElement("div");
-    return label.className = "name", label.textContent = app.title, element.appendChild(label), element.addEventListener("mouseover", function () {
+    if (tiles[focusedTile] === tile) {
+      updateAmbient(tile.color);
+    }
+    return element.addEventListener("mouseover", function () {
       "inputs" === focusZone || pickerOpen || undoState || (moveState ? pointerMove(tile) : focusTile(tiles.indexOf(tile)));
     }), element.addEventListener("click", function () {
       tileClick(tile);
@@ -629,11 +652,10 @@
     return Math.floor(index / columnCount);
   }
   function tileLeft(index) {
-    return 112 + index % columnCount * columnWidth + (columnWidth - 360) / 2;
+    return HomeUI.positionFor(layout, index).left;
   }
   function tileTop(index) {
-    var row = rowFor(index);
-    return TILE_BASE + 292 * row + (row > 0 ? 36 : 0);
+    return HomeUI.positionFor(layout, index).top;
   }
   function layoutTiles() {
     tiles.forEach(function (e, t) {
@@ -645,10 +667,12 @@
     var dockBand = getElement("dockBand"),
       dockCount = Math.min(columnCount, tiles.length);
     dockBand.style.display = dockCount ? "block" : "none";
-    dockBand.style.left = tileLeft(0) - 28 + "px";
-    dockBand.style.top = DOCK_TOP + "px";
-    dockBand.style.width = (dockCount - 1) * columnWidth + 360 + 56 + "px";
-    dockBand.style.height = DOCK_HEIGHT + "px";
+    dockBand.style.left = (layout.tvos ? 40 : tileLeft(0) - 28) + "px";
+    dockBand.style.top = layout.dockTop + "px";
+    dockBand.style.width = (layout.tvos ? 1824 : (dockCount - 1) * columnWidth + layout.cardWidth + 56) + "px";
+    dockBand.style.height = layout.dockHeight + "px";
+    var header = document.querySelector("header");
+    headerBottom = header.offsetTop + header.offsetHeight;
   }
   function animateTiles() {
     tiles.forEach(function (e, t) {
@@ -702,24 +726,33 @@
       tiles[focusedTile] && tiles[focusedTile].el.classList.remove("focused");
       focusedTile = index;
       tiles[index].el.classList.add("focused");
-      var top = tileTop(index),
-        row = rowFor(index);
-      0 === row && !moveState ? scrollOffset = 0 : (top - scrollOffset + 202 + 70 > (moveState ? 850 : 1060) && (scrollOffset = top + 202 + 70 - (moveState ? 850 : 1060)), top - scrollOffset - 24 < 80 && (scrollOffset = top - 24 - 80));
+      var row = rowFor(index);
+      if (layout.tvos && layout.grid !== (row > 0)) {
+        layout.grid = row > 0;
+        layoutTiles();
+      }
+      var top = tileTop(index);
+      scrollOffset = HomeUI.scrollFor(layout, index, scrollOffset, !!moveState);
       stage.style.transform = "translateY(" + -scrollOffset + "px)";
-      var header = document.querySelector("header"),
-        headerBottom = header.offsetTop + header.offsetHeight;
-      document.body.classList.toggle("scrolled", DOCK_TOP - scrollOffset < headerBottom + 24);
-      var glassWidth = 1.1 * 360 + 24,
-        glassHeight = 1.1 * 202 + 24,
-        glassLeft = tileLeft(index) + 180 - glassWidth / 2,
-        glassTop = top + 101 - glassHeight / 2;
+      document.body.classList.toggle("app-grid", layout.tvos && scrollOffset > 0);
+      document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < headerBottom + 24);
+      shelf.update(layout.tvos && row === 0);
+      dockGlass.update(layout.tvos, layout.grid, HomeUI.preferences().reducedEffects);
+      if (layout.tvos) {
+        getElement('dockTexture').style.backgroundPosition = '-40px ' + (-layout.dockTop + scrollOffset) + 'px';
+        return;
+      }
+      var glassWidth = layout.focusScale * layout.cardWidth + layout.glassPadding,
+        glassHeight = layout.focusScale * layout.cardHeight + layout.glassPadding,
+        glassLeft = tileLeft(index) + layout.cardWidth / 2 - glassWidth / 2,
+        glassTop = top + layout.cardHeight / 2 - glassHeight / 2;
       focusGlass.style.width = glassWidth + "px";
       focusGlass.style.height = glassHeight + "px";
       focusGlass.style.transform = "translate(" + glassLeft + "px," + glassTop + "px)";
       focusGlassVisible || (focusGlass.style.transition = "none", focusGlass.offsetWidth, focusGlass.style.transition = "", focusGlass.style.opacity = "1", focusGlassVisible = true);
       0 === row ? function (e) {
         var t = e.app.title;
-        heroTitle.style.top = (TILE_BASE - HERO_OFFSET) + "px";
+        heroTitle.style.top = (layout.tileBase - layout.heroOffset) + "px";
         heroVisible ? heroTitle.textContent !== t && (heroTitle.style.opacity = "0", heroTitle.style.transform = "translateX(-24px)", clearTimeout(heroTitle.swap), heroTitle.swap = setTimeout(function () {
           heroTitle.textContent = t;
           heroTitle.style.transition = "none";
@@ -735,7 +768,7 @@
     }
   }
   function updateAmbient(rgb) {
-    if (rgb) {
+    if (rgb && !layout.tvos) {
       var color = rgb.join(",");
       if (color !== ambientColor) {
         ambientColor = color;
@@ -755,6 +788,9 @@
     topButtons[focusedTopButton].classList.add("focused");
   }
   function setFocusZone(zone) {
+    document.body.classList.toggle('controls-open', layout.tvos && zone === 'top');
+    statusControl.expanded(layout.tvos && zone === 'top');
+    if (zone === 'grid') statusControl.reset();
     focusZone !== zone && ("top" === focusZone && topButtons[focusedTopButton].classList.remove("focused"), "grid" === focusZone && (tiles[focusedTile] && tiles[focusedTile].el.classList.remove("focused"), focusGlassVisible = false, focusGlass.style.opacity = "0"), focusZone = zone);
   }
   function updateClock() {
@@ -773,6 +809,7 @@
       getElement("ampm").textContent = hour < 12 ? "am" : "pm";
       getElement("date").textContent = weekdays[now.getDay()] + "  " + now.getDate() + " " + months[now.getMonth()];
     }
+    statusControl.update(getElement('clock').textContent + getElement('ampm').textContent);
   }
   function activateTopButton(index) {
     0 === index ? function () {
@@ -930,6 +967,8 @@
           focusTile(0 === rowFor(focusedTile) ? focusedTile : 0);
         } else if (key === KEY_OK) {
           activateTopButton(focusedTopButton);
+        } else if (layout.tvos && (key === KEY_BACK || key === 27)) {
+          focusTile(focusedTile);
         } else if (key !== KEY_BACK) {
           return;
         }
@@ -941,7 +980,7 @@
         } else if (39 === key) {
           column < columnCount - 1 && focusedTile < lastIndex && focusTile(focusedTile + 1);
         } else if (38 === key) {
-          0 === rowFor(focusedTile) ? focusTopButton((tileCenter = tileLeft(focusedTile) + 180, nearestButton = 0, nearestDistance = 1 / 0, topButtons.forEach(function (e, t) {
+          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, topButtons.forEach(function (e, t) {
             var n = e.getBoundingClientRect(),
               a = Math.abs(n.left + n.width / 2 - tileCenter);
             a < nearestDistance && (nearestDistance = a, nearestButton = t);
@@ -961,6 +1000,16 @@
       event.preventDefault();
     }
   });
+  var lastWheel = 0;
+  getElement('viewport').addEventListener('wheel', function (event) {
+    if (!layout.tvos || !event.deltaY || moveState || pickerOpen || undoState || focusZone !== 'grid' ||
+        (window.RenewalPanel && window.RenewalPanel.isOpen())) return;
+    event.preventDefault();
+    var now = Date.now(), row = rowFor(focusedTile), lastRow = rowFor(tiles.length - 1);
+    if (now - lastWheel < 220 || (event.deltaY < 0 && row === 0) || (event.deltaY > 0 && row === lastRow)) return;
+    lastWheel = now;
+    focusTile(event.deltaY > 0 ? Math.min(focusedTile + columnCount, tiles.length - 1) : focusedTile - columnCount);
+  }, false);
   topButtons.forEach(function (e, t) {
     e.addEventListener("mouseover", function () {
       "inputs" !== focusZone && !moveState && !pickerOpen && !undoState && focusTopButton(t);
@@ -974,6 +1023,26 @@
   document.addEventListener("webOSRelaunch", restoreFocus);
   document.addEventListener("visibilitychange", function () {
     document.hidden || restoreFocus();
+  });
+  HomeUI.subscribe(function (preferences) {
+    var previousZone = focusZone;
+    cancelHold();
+    closePicker();
+    dismissUndo();
+    if (moveState) finishMoving(false);
+    clearTimeout(heroTitle.swap);
+    heroVisible = false;
+    heroTitle.style.opacity = "0";
+    layout = HomeUI.layoutFor(preferences.appearance, CONFIG.columns);
+    columnCount = layout.columns;
+    columnWidth = layout.columnWidth;
+    scrollOffset = 0;
+    focusGlassVisible = false;
+    focusGlass.style.opacity = "0";
+    layoutTiles();
+    focusZone = "none";
+    focusTile(focusedTile);
+    if (previousZone === "top") focusTopButton(focusedTopButton);
   });
   initializeApps();
   layoutTiles();

@@ -40,10 +40,13 @@ the real persistent-intent record, so those sentinel assertions do not establish
 emergency-intent acceptance. Existing real-runtime coverage is separate; hardware
 retest is still required.
 
-Final source CI run40340914902 and exact integrated all-platform test builds must
-finish and be recorded before candidate freeze. Prior37d47e27 Linux/macOS/ARM run
-40338324428 passed, but is historical after the subsequent private-code change.
-No source success establishes physical compatibility.
+Final source Linux/macOS/ARM CI run40340914902 passed. PR #83 merged as
+`28c6e280b4bef496b6d824c1df642f9d740ab45a`; this release-record update changes
+only documentation/inventory relative to reviewed sourceabf324e1. The exact
+integrated all-platform feedback-build run and artifact checks are maintained in
+release PR #64; those unpublished builds do not freeze acceptance. Prior37d47e27
+run40338324428 is historical after the private-code correction. No source or
+platform-build success establishes physical compatibility.
 
 ## Observed supervised session — older artifacts only
 

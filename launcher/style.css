@@ -382,18 +382,6 @@ body.editing #glass { opacity: 0 !important; }
   transform: translate(-50%, -50%);
 }
 
-/* Apple TV: the app icon is a black 130x130 tile whose logo only fills
-   ~71% x 36% of the canvas. Enlarge it with object-fit: cover so the logo
-   fills the card while cropping only the surrounding black padding - no
-   distortion, and the logo is not left small and centered. */
-.item[data-app-id="com.apple.appletv"] .card img {
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: none;
-}
-
 .name {
   height: 44px;
   margin-top: 14px;

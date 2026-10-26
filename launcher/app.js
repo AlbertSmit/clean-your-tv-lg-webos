@@ -210,8 +210,20 @@
   // Insert a single app tile at a given index without re-rendering the
   // rest of the grid. Used by picker-add and hide-undo paths.
   function insertTileAt(app, index) {
+    // Rebase focusedTile onto the same element after the splice, since a
+    // stale index would make the next focusTile() clear focus from the
+    // wrong tile (leaving two tiles with .focused).
+    var focusedEl = tiles[focusedTile] && tiles[focusedTile].el;
     var tile = createTile(app);
     tiles.splice(index, 0, tile);
+    if (focusedEl) {
+      for (var i = 0; i < tiles.length; i++) {
+        if (tiles[i].el === focusedEl) {
+          focusedTile = i;
+          break;
+        }
+      }
+    }
     var next = tiles[index + 1];
     if (next && next.el) {
       tilesContainer.insertBefore(tile.el, next.el);

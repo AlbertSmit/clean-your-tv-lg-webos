@@ -89,6 +89,11 @@
       "pr": 85,
       "issues": [],
       "summary": "Keep TV-only binding fixtures off Windows while retaining real host/package smoke; canonicalize gzip metadata across build hosts for exact candidate hashes and rebuild copied private package writers"
+    },
+    {
+      "pr": 88,
+      "issues": [],
+      "summary": "Fix pinned SDK services reads and recover stopped Root setup"
     }
   ],
   "excluded": [],

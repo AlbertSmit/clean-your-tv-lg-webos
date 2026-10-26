@@ -17,6 +17,11 @@ or Homebrew catalog availability is claimed.
 
 ## Included behavior
 
+- #88: verify pinned package DATA through the observed shared services container
+  owner without relaxing private execution. Add an internal, separately pinned
+  cancellation/removal path for a genuinely terminal, never-provisioned failed
+  Root install; preserve original evidence and never replay an unknown removal.
+
 - #85: keep the TV-only updater binding fixture on POSIX while retaining native
   Windows build/smoke coverage. Canonical gzip metadata removes the measured
   Python/host OS header difference from package hashes. Tar/ownership/modes,
@@ -96,14 +101,18 @@ Artifact integrity alone does not establish physical whole-edition rollback.
 
 See [1.3.0 candidate acceptance](RELEASE-1.3.0-ACCEPTANCE.md) and the detailed
 [Homebrew matrix and state inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
-Final-artifact physical rows remain NOT RUN. An earlier isolated Installer test
-passed install/hash inspection, bounded foreground observation and exact removal.
-A subsequent supervised rebootstrap passed controls, emergency release and standby
-on its recorded older private runtime, but true cold boot FAILED: broadcast TV
-started and Home opened LG Home. The corrected source has not been installed or
-accepted on the TV. Repeat supported final-artifact setup, controls/emergency,
-standby and true cold boot; cross-client maintenance, interruptions, missing-package
-cleanup, signed upgrade/rollback and Homebrew human review remain separate gates.
+The supervised corrected-source console session passed fresh Root/Root Updater
+setup, basic controls, triple-Home with persistent off, System bootstrap while off,
+explicit re-enable and Home/app-to-Home control after a separate true cold boot.
+The initial cold-boot screen was unconfigured channels; automatic foreground
+launch of Clean was not observed. One initial standby/wake safely disabled Root
+after emergency-input startup failed; an explicit UI re-enable and repeat passed.
+The maintainer deferred this intermittent failure to [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90)
+and requested continuing the release. It remains an unresolved known limitation.
+Earlier artifacts and failed tests remain historical evidence, not overwritten
+passes. Cross-client maintenance, interruptions, missing-package cleanup, signed
+whole-edition upgrade/rollback and Homebrew human review remain separate untested
+paths; this release record does not certify them.
 
 `homebrew/release.json` stays absent until exact nondevelopment Installer IPK and
 manifest hashes, immutable URLs and genuine TV/human acceptance are recorded.

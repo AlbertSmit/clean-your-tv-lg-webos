@@ -2,9 +2,56 @@
 
 Status: **PREPARATION — NOT ACCEPTED FOR PUBLICATION**.
 Selected versions do not freeze or approve a release. The maintainer authorized
-preparation and release after verification; final hardware acceptance and
-meaningful Homebrew human review remain outstanding. The maintainer is away;
-source work does not authorize unsupervised TV reactivation or erase a failed test.
+preparation and release after verification. The supervised installed-source
+retest below records actual accepted paths and limitations. Final protected builds
+and meaningful Homebrew human review remain outstanding; failed observations
+remain recorded separately from later successful runs.
+
+## Supervised installed-source retest — 2026-10-26
+
+The repository maintainer supervised this session on **OLED55C3RLA, firmware
+43.21.71, webOS 11.2.0**, re-read from the same TV. Source
+`1e6e92ce52a2df6c681ad711877936f0401e80ee` entered `release/next` through PR #88
+(merge `31c38c82e25c001fefb9d1db9b4a866df3cbea26`). Component versions were
+Root 0.4.0, Root Updater 0.3.0 and System Updater 1.1.0. The existing verified
+private Python binding was reused; this was not a fresh optional-Python or
+Homebrew Installer acceptance session.
+
+The rebuilt console payload contains 159 files; its serialized manifest SHA256
+is `2de2a6a8e262bffaad544b4b02575dc9de411772c997de1d9aaaa1cf279e5a32`.
+All three installed private package readers matched corrected source SHA256
+`7b3d97986aed1c4043eed11ed2bac76275219d38c3aca78268f64594ca2086f7`.
+The generic Root/Root Updater/System bundle manifest hashes were respectively
+`8df8d431e166d044c026b7052f9be07f654393b9b7dc4e4d4e96f6d7f9932126`,
+`6f17acbb29eaca371ea3f38f6181550cb13d838d1c3466f7eb7526c14f63b080` and
+`efa6e9558de9ea176d6fce3cd10d5c2a1a378e21644bb362f02f664e9f46974e`.
+Root personalization and its installed snapshot were independently checked;
+private inventories, operation identifiers, backups and raw logs are not public.
+
+| Check | Observed result |
+| --- | --- |
+| Original terminal, never-provisioned install cancellation | One genuine subscribed removal; original request/snapshot/install terminal retained; cancellation terminal preceded archival; host pending preserved in history then retired |
+| Ordinary CLI archive and fresh corrected setup | PASS; new operation, Root/Root Updater installed, recovery and rollback baseline verified, explicit activation succeeded |
+| Home, arrows, OK, Back, volume, app launch and app-to-Home | Maintainer confirmed PASS |
+| Triple-Home, wait and repeated Home | PASS; LG Home remained and Root did not automatically re-enable |
+| System Updater bootstrap while emergency-off | PASS; bootstrap complete and disabled Root/LG routing preserved |
+| Explicit re-enable | PASS; active intent, guardian and recovery verified |
+| First remote-off/30-second standby/wake | FAILED once: Clean opened automatically, but Emby → short Home returned LG; input observer startup failed and safely disabled Root |
+| Explicit UI re-enable and repeat standby/wake | PASS; Emby → Home returned Clean; active intent, guardian and recovery verified |
+| Separate remote-off/AC-off-30-second cold boot | Home control PASS: initial unconfigured-channels screen, then Home opened Clean and Emby → Home returned Clean; active intent, guardian and recovery verified |
+
+The intermittent standby failure is open as [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90),
+`bug` / `status:planned`. The maintainer requested that follow-up separately and
+asked to continue release preparation. It is an accepted known limitation, not
+an implemented fix. Automatic foreground launch of Clean after cold boot was
+not observed; no such claim follows from working Home control.
+
+The installed-source local checks collected 1,236 Python cases: 1,212 passed and
+24 optional environment cases were skipped; JS/native checks passed. The installer
+group was repeated with its required SSH/WebSocket dependencies. Independent
+recovery/host safety review passed after an atomic-admission crash correction.
+PR #88 exact-head Linux/macOS and integration-policy checks passed. Homebrew
+Installer TV/human acceptance remains separate and no public approval is created.
 
 ## Current portability correction
 
@@ -78,11 +125,13 @@ platform-build success establishes physical compatibility.
 
 ## Observed supervised session — older artifacts only
 
+This is the preserved pre-#88 record; current installed-source results are above.
+
 Detailed model/firmware/webOS/HBC/UID/ABI and device diagnostics remain in the
 maintainer's private record. Public source/package identities and generic outcomes
 are recorded here without addresses, credentials, app inventories or screenshots.
 
-| Check | Actual older-session result | Final corrected artifacts |
+| Check | Actual older-session result | At this earlier record, before #88 |
 | --- | --- | --- |
 | Isolated Installer install, on-TV hashes and fixed HBC inspect | PASS at correction sourcecb1c789a | NOT RUN |
 | One launch with bounded foreground observation | PASS on third sample; immediate read was premature | NOT RUN |
@@ -111,14 +160,17 @@ validate the final corrected source or versioned packages.
 
 - Final exact source, package/manifest identities, supervisor/Root private
   inventories, peak staging space and free-space measurements: pending.
-- Fresh Root setup with system Python and optional offline Python: final NOT RUN.
+- Fresh corrected Root setup reusing the verified private Python binding passed;
+  system-Python and fresh offline-runtime preparation remain NOT RUN.
 - cytv→HBC and HBC→cytv maintenance, concurrent clients/original continuation,
   interruptions and unknown outcomes: final NOT RUN.
 - Supported published1.2 infrastructure migration/rebootstrap, missing-package
   cleanup, full removal with LG recovery, signed whole-edition update/rollback
   and retained profile/recovery evidence: final NOT RUN.
-- Final controls/emergency, observer/frozen-UI recovery, standby and separate
-  true cold boot: NOT RUN; do not carry older successes into these rows.
+- Final corrected-source basic controls, emergency, standby repeats and separate
+  cold-boot Home control are recorded above. Standby is mixed with unresolved #90;
+  frozen-UI/observer fault injection, held arrows, pointer and wheel were not
+  repeated in this session. Do not count unperformed paths as passes.
 - No-root setup/maintenance/removal and Developer Mode renewal boundaries: NOT RUN.
 - Protected-signer Android upgrade, private-data/pending-receipt retention and
   physical use: NOT RUN; Android remains preview.

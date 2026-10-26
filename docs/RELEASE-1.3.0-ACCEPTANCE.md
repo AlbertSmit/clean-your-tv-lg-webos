@@ -6,6 +6,34 @@ preparation and release after verification; final hardware acceptance and
 meaningful Homebrew human review remain outstanding. The maintainer is away;
 source work does not authorize unsupervised TV reactivation or erase a failed test.
 
+## Current portability correction
+
+PR #85 source `a4c020f0ae5c9c297fcbabcf279285d9f2290b2b` supersedes earlier private package-writer closures
+and candidate hashes below. Full local suite passed1,221 Python cases (two
+isolated-Linux-root skips), Qt/JS/native/compatibility, twelve-locale browser and
+actual Helper Node0.12.2. Native macOS console/GUI,159-file payload and frozen
+GUI/package smoke passed. Independent portability-delta review passed without
+findings.
+
+Both actual Python3.12.14 and3.14.2 built the complete Installer0.1.0 twice;
+all four IPKs and both serialized manifests are byte-identical. Current IPK:
+61,270,588bytes, SHA256 `9f14ffb4f3f8e867592d048fcc47b0e5fa3455e4ba4efc8768d3248145f7e86b`;
+proposed manifest SHA256 `a88987c00e627129287058881ae703765e409550890e337c490173e702009dfe`;
+payload manifest SHA256 `0039f76bb5249884222fdfc94d0daebb95602edff07e1b043bed1b2f76a7ddd8`.
+These remain source-specific unpublished artifacts without human/TV acceptance.
+
+Integrated feedback build40344669122 ata97e779f passed Android, Linux, both
+macOS targets and Homebrew, but failed Windows before packaging: one TV runtime
+fixture imported POSIX fcntl. Its adjacent fixture already had a POSIX guard;
+#85 corrects that boundary while retaining portable host/native package checks.
+The downloaded APK's actual hash/embedded source/versions, non-debuggable report
+and retained pinned signer were verified. Local-versus-Linux Homebrew bytes had
+different nested gzip OS header metadata despite equal control/data/deflate
+bodies. #85 uses the existing stdlib GzipFile pattern instead. Exact rebuilt
+integrated Linux bytes and Windows native smoke still require a fresh feedback
+run; current results are maintained in PR #64. Do not count the old run as
+all-platform success or adopt its hashes for new private code.
+
 ## Candidate and exact source evidence
 
 Release1.3.0; cytv0.4.0; Home1.4.2; Helper0.6.19 unchanged exact archive pin;

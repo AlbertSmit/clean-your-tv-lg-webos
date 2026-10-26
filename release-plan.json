@@ -84,6 +84,11 @@
       "pr": 84,
       "issues": [],
       "summary": "Refresh candidate inventory and source-specific verification; separate prior controls/emergency/standby results and failed true cold boot from final pending hardware/publication acceptance"
+    },
+    {
+      "pr": 85,
+      "issues": [],
+      "summary": "Keep TV-only binding fixtures off Windows while retaining real host/package smoke; canonicalize gzip metadata across build hosts for exact candidate hashes and rebuild copied private package writers"
     }
   ],
   "excluded": [],

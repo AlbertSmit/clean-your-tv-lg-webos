@@ -13,7 +13,7 @@ ns = runpy.run_path(str(ROOT / 'scripts/build-cytv.py'))
 tracked_files = ns['tracked_files']
 pack_app = ns['pack_app']
 
-launcher = {n: b for n, b in tracked_files('launcher').items() if n != 'apps.js' and not n.startswith('icons/')}
+launcher = {n: b for n, b in tracked_files('launcher').items() if n != 'apps.js'}
 launcher['config.js'] = b'window.CONFIG = {columns:5,dockApps:[],hiddenApps:["com.gathin.tvhome","com.local.nativehome"]};\n'
 launcher['apps.js'] = b'window.TV_APPS = {apps:[],inputs:[]};\n'
 renewal = {n: b for n, b in tracked_files('renewal-service').items() if not n.startswith('state/')}

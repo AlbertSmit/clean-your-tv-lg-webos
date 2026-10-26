@@ -670,7 +670,10 @@
       card.classList.add("missing-icon");
       card.setAttribute("data-initial", app.title.charAt(0));
     };
-    image.src = app.icon || "missing-icon";
+    // Prefer the bundled static icon map (deterministic local assets); fall
+    // back to whatever icon the TV inventory supplied.
+    var iconPath = (window.TV_ICONS && TV_ICONS[app.id]) || app.icon;
+    image.src = iconPath || "missing-icon";
     if (tiles[focusedTile] === tile) {
       updateAmbient(tile.color);
     }

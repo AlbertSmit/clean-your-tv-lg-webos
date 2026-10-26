@@ -5,7 +5,6 @@
 *.key
 *.log
 launcher/apps.js
-launcher/icons/
 build/
 dist/
 node_modules/

@@ -78,7 +78,7 @@ fi
 ares-novacom -d "$DEVICE" --getkey
 reply=$(ares-novacom -d "$DEVICE" --run 'echo CYTV_SSH_OK')
 [[ "$reply" == *CYTV_SSH_OK* ]] || { echo 'SSH connection was not confirmed.' >&2; exit 1; }
-tv_node=$(ares-novacom -d "$DEVICE" --run '/usr/bin/node -p "process.versions.node"')
+tv_node=$(ares-novacom -d "$DEVICE" --run '/usr/bin/node -p "process.versions.node"' | tr -d '\r' | grep -v '^\[Info\]' | tail -n 1 || true)
 python3 - "$tv_node" <<'PY'
 import re, sys
 version = sys.argv[1].strip()

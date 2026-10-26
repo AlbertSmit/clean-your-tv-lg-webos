@@ -61,6 +61,9 @@ design and plan in a documentation-only commit on this branch.
 
 ## Task 1 — Define shared installation state and operation ownership
 
+Foundation reviewed in `85a9f1ae` + `110033d0`; complete current/migration
+observers and whole-product removal remain Task 4 dependencies.
+
 **Create:** `root-edition/installation.py`,
 `root-edition/tests/test_installation.py`.
 **Modify:** `root-edition/deploy.py`, `root-edition/build.py`,
@@ -75,7 +78,7 @@ design and plan in a documentation-only commit on this branch.
 `installed`, `migration_required`, `conflict`, `fresh`. Reason values are fixed
 machine codes, localized by the client. Do not include raw private paths/logs.
 
-- [ ] Add failing cases for every state, especially pending/retained state taking
+- [x] Add failing cases for every state, especially pending/retained state taking
   precedence over a matching package version:
 
 ```python
@@ -88,18 +91,21 @@ def test_pending_matching_packages_are_not_a_finished_install(self):
     self.assertFalse(result['can_maintain'])
 ```
 
-- [ ] Implement the classifier and a device-side snapshot adapter using existing
+- [x] Implement the classifier and a device-side snapshot adapter using existing
   installed-file, runtime-binding and receipt checks. Unknown fields/protocols
   cannot become `fresh`. A complete installation requires all expected components.
-- [ ] Introduce a shared device lock with operation UUID and durable stage record.
+- [x] Introduce a shared device lock with operation UUID and durable stage record.
   Bind it to existing updater/deployment journals instead of replacing them.
-  All entry points must reject a concurrent install/update/removal. Never infer
-  terminal completion from a stale lock or a dead process.
-- [ ] Add contention and restart tests with temporary directories and injected
+  Cover deploy and updater entry points in this foundation. Full-project cytv
+  removal spans multiple SSH sessions with host-local terminal receipts; Task 4
+  must integrate its complete device-side coordination before cross-entrypoint
+  exclusion can be marked complete. Never infer terminal completion from a stale
+  lock, absent package or dead process.
+- [x] Add contention and restart tests with temporary directories and injected
   package observers. One client starts an operation; the second gets status only.
-- [ ] Package the new module through explicit support inventories; update tests
+- [x] Package the new module through explicit support inventories; update tests
   that verify those inventories, preserving strict extra-file rejection.
-- [ ] Run focused tests, inspect diff, commit this tested contract.
+- [x] Run focused tests, inspect diff, commit this tested contract.
 
 ```sh
 python3 -m unittest discover -s root-edition/tests -p 'test_installation.py'
@@ -113,7 +119,8 @@ python3 -m unittest discover -s tests/cytv -p 'test_root_preflight.py'
 `root-edition/runtime/persistent_lifecycle.py`,
 `root-edition/runtime/persistent_recovery.py`,
 `root-edition/updater/bootstrap.py`, `system-updater/setup.py`,
-`root-edition/build.py`, `root-edition/build_updater.py`, `system-updater/build.py`.
+`root-edition/build.py`, `root-edition/build_updater.py`, `system-updater/build.py`,
+`cytv/root_updater_remove.py`, `cytv/system_updater_remove.py`.
 **Tests:** extend `root-edition/tests/test_startup_hook.py`,
 `root-edition/tests/test_persistent_recovery.py`,
 `root-edition/tests/test_update_setup.py`; create
@@ -138,6 +145,9 @@ previous receipt so failure does not lose ownership evidence.
   phase. Assert no further routing activation, no update replay and preserved
   recovery evidence. Distinguish the temporary replacement window of an owned
   update transaction from external package deletion.
+- [ ] Update the existing cytv removal helpers to verify/archive both exact legacy
+  copied hooks and new receipt-owned symlinks without following foreign links.
+  Include interrupted removal and retained-registration compatibility tests.
 - [ ] Run lifecycle/update regression and commit. This task gates Homebrew
   publication even though the installer itself is a separate package.
 
@@ -203,6 +213,9 @@ in private logs. Retain existing terminal package-observer evidence underneath.
 - [ ] Factor existing local device functions into this orchestration. Keep SSH
   transport and UI-specific host inventory work outside it; use the current
   local service inventory path for TV installation.
+- [ ] Move the complete Root product removal sequence under the shared device
+  coordinator, retaining the existing exact terminal receipts and ownership checks;
+  host-local package-absence readback must not unlock a reservation.
 - [ ] Make cytv invoke the shared coordinator and consume its operation records.
   Preserve its existing status/doctor/recovery interfaces and current safe refusals.
 - [ ] Test HBC-origin install inspected/maintained by cytv and cytv-origin install

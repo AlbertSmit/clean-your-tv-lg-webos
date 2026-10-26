@@ -1,0 +1,88 @@
+@font-face { font-family: 'Inter Display'; src: url('fonts/InterDisplay-Regular.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'Inter Display'; src: url('fonts/InterDisplay-Medium.woff2') format('woff2'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'Inter Display'; src: url('fonts/InterDisplay-SemiBold.woff2') format('woff2'); font-weight: 600; font-style: normal; }
+
+html.home-tvos, html.home-tvos body, html.home-tvos button {
+  color: #f6f6f8;
+  font-family: 'Inter Display', 'CYTV NotoSans', 'CYTV NotoSansDevanagari', 'CYTV NotoSansKR', sans-serif;
+}
+html.home-tvos, html.home-tvos body { background: #12252a; }
+html.home-tvos #hero, html.home-tvos #glass, html.home-tvos .ambient,
+html.home-tvos #leftBlock { display: none; }
+
+/* Local stills and a preblurred copy give the TV a bounded rendering cost. */
+#homeShelf, #homeStatus { display: none; }
+html.home-tvos #homeShelf { display: block; position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; }
+.shelf-backdrop, .shelf-backdrop-soft, .shelf-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
+.shelf-backdrop { background: #12252a url('assets/cinema-backdrop.jpg') center center / cover no-repeat; opacity: 0; transition: opacity 240ms ease; }
+.shelf-backdrop-soft { background: #12252a url('assets/cinema-backdrop-soft.jpg') center center / cover no-repeat; opacity: 1; transition: opacity 240ms ease; }
+.shelf-shade { background: linear-gradient(180deg, rgba(0,0,0,.04) 35%, rgba(0,0,0,.2) 100%); }
+.shelf-visible .shelf-backdrop { opacity: 1; }
+.shelf-visible .shelf-backdrop-soft { opacity: 0; }
+.shelf-copy { position: absolute; left: 88px; top: 62px; opacity: 0; transition: opacity 180ms ease; }
+.shelf-title { font: italic 600 106px/1.1 Georgia, 'Times New Roman', serif; letter-spacing: -5px; text-shadow: 0 2px 12px rgba(0,0,0,.14); }
+.shelf-visible .shelf-copy { opacity: 1; }
+
+/* The normal Home header is a compact status control. Up reveals LG actions. */
+html.home-tvos #homeStatus {
+  display: flex; position: absolute; top: 50px; right: 56px; z-index: 4;
+  width: 176px; height: 60px; align-items: center; justify-content: flex-end;
+  padding: 5px 5px 5px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 32px;
+  background: linear-gradient(140deg, rgba(255,255,255,.14), rgba(255,255,255,.03));
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.15), 0 4px 12px rgba(0,0,0,.08);
+  cursor: pointer; transition: opacity 180ms ease;
+}
+.status-time { white-space: nowrap; font-size: 24px; font-weight: 500; letter-spacing: -.6px; }
+.status-avatar { position: relative; width: 48px; height: 48px; flex-shrink: 0; overflow: hidden; margin-left: 10px; border: 3px solid #dfd7f4; border-radius: 50%; background: linear-gradient(160deg, #ab9bb9, #515574); }
+.avatar-head { position: absolute; top: 7px; left: 13px; width: 16px; height: 16px; border-radius: 50%; background: #e8e0f2; }
+.avatar-body { position: absolute; top: 26px; left: 7px; width: 28px; height: 24px; border-radius: 50%; background: #e8e0f2; }
+html.home-tvos #homeStatus:focus { outline: 3px solid rgba(255,255,255,.65); outline-offset: 3px; }
+html.home-tvos .app-grid #homeStatus { opacity: 0; pointer-events: none; }
+html.home-tvos header { top: 128px; right: 56px; left: auto; z-index: 5; opacity: 0; visibility: hidden; transform: none; pointer-events: none; transition: opacity 140ms ease; }
+html.home-tvos .controls-open header { opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
+html.home-tvos #topButtons { margin-bottom: 0; padding: 14px; border: 1px solid rgba(255,255,255,.25); border-radius: 36px; background: rgba(24,32,38,.94); box-shadow: 0 12px 28px rgba(0,0,0,.25); }
+html.home-tvos .pill { height: 66px; margin-left: 8px; padding: 0 24px; font-size: 25px; border-radius: 26px; background: transparent; color: #f6f6fa; border: 1px solid transparent; }
+html.home-tvos .pill:first-child { margin-left: 0; }
+html.home-tvos .pill svg { width: 30px; height: 30px; margin-right: 12px; }
+html.home-tvos .pill.focused { background: #f1f1f6; color: #171721; transform: none; }
+
+/* The dock uses a crop of the static soft backdrop beneath a translucent fill. */
+html.home-tvos #dockBand {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.24); border-top-color: rgba(255,255,255,.52);
+  border-radius: 72px;
+  background: linear-gradient(145deg, rgba(235,242,245,.18), rgba(130,155,160,.12));
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.1);
+  pointer-events: none;
+}
+#dockTexture { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: .58; background-size: 1920px 1080px; background-repeat: no-repeat; background-position: -40px -784px; }
+html.home-tvos #dockTexture { display: block; }
+html.reduced-effects #dockTexture { display: none !important; }
+html.home-tvos #stage { transition: transform 260ms cubic-bezier(.23,1,.32,1); }
+html.home-tvos .item { width: 250px; transition: opacity 180ms ease, transform 180ms ease, left 220ms ease, top 220ms ease; }
+html.home-tvos .card { width: 250px; height: 150px; border-radius: 28px; background: #333441; box-shadow: 0 8px 13px rgba(0,0,0,.15); transition: transform 180ms cubic-bezier(.23,1,.32,1), border-radius 180ms cubic-bezier(.23,1,.32,1); }
+html.home-tvos .card::before {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1;
+  border-radius: inherit; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0) 65%); pointer-events: none;
+}
+html.home-tvos .card::after { z-index: 2; border-radius: inherit; box-shadow: inset 0 1px 1px rgba(255,255,255,.35), inset 0 -1px 1px rgba(0,0,0,.1), inset 0 0 0 1px rgba(255,255,255,.08); pointer-events: none; }
+/* At 1.2×, 40px becomes 48px: dock radius 72px minus the ~24px inset. */
+html.home-tvos .item.focused .card { transform: scale(1.2); border-radius: 40px; box-shadow: 0 16px 24px rgba(0,0,0,.32); }
+html.home-tvos .item.focused .card::after { box-shadow: inset 0 1px 1px rgba(255,255,255,.6), inset 0 0 0 1px rgba(255,255,255,.22); }
+html.home-tvos .item.dock .name { display: none; }
+html.home-tvos .name { margin-top: 21px; font-size: 29px; font-weight: 500; line-height: 40px; color: #fff; letter-spacing: -.4px; text-shadow: 0 2px 6px rgba(0,0,0,.25); }
+html.home-tvos .item.focused .name { transform: translateY(6px); }
+html.home-tvos .item.moving .card { animation: tvos-wiggle 240ms ease-in-out infinite alternate; }
+@keyframes tvos-wiggle { from { transform: scale(1.2) rotate(-.6deg); } to { transform: scale(1.2) rotate(.6deg); } }
+
+.appearance-panel h3 { margin-bottom: 14px; }
+.appearance-options button[aria-pressed='true'], .appearance-options button[aria-checked='true'] { border-color: #b8d3ff; }
+.appearance-error { color: #ffd1bd; }
+.appearance-error:empty { display: none; }
+html.reduced-effects #stage, html.reduced-effects .item, html.reduced-effects .card,
+html.reduced-effects .name, html.reduced-effects #glass, html.reduced-effects #hero,
+html.reduced-effects header, html.reduced-effects .ambient, html.reduced-effects #homeShelf,
+html.reduced-effects .shelf-backdrop, html.reduced-effects .shelf-backdrop-soft,
+html.reduced-effects .shelf-copy, html.reduced-effects .pill, html.reduced-effects #homeStatus {
+  transition: none !important; animation: none !important;
+}

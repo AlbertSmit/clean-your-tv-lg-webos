@@ -14,13 +14,14 @@ import webbrowser
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_FILES = {
     'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'app-library.js', 'config.js',
-    'user-data.js', 'release-notes.js', 'system-updates.js', 'update-panel.js', 'renewal-panel.js', 'helper-control.js', 'profile-bootstrap.js',
+    'user-data.js', 'widget-data.js', 'release-notes.js', 'system-updates.js', 'update-panel.js', 'renewal-panel.js', 'helper-control.js', 'profile-bootstrap.js',
     'native-bootstrap.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'theme-panel.js',
     'appearance.css', 'home-ui.js', 'home-ui-LICENSE.txt',
     'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
     'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
+    'assets/profile.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 }
@@ -37,7 +38,7 @@ DEMO_APPS = [
     ('hbomax', 'HBO Max', '#5822b4'),
 ]
 ROOT_LAUNCHER_FILES = {
-    'index.html', 'app.js', 'app-library.js', 'style.css', 'config.js', 'apps.js',
+    'index.html', 'app.js', 'app-library.js', 'widget-data.js', 'style.css', 'config.js', 'apps.js',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
     'i18n.js', 'catalogs.js', 'i18n.css', 'root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css',
     'root-profile-data.js', 'root-profile.js', 'release-notes.js', 'system-updates.js', 'root-updates.js',
@@ -46,6 +47,7 @@ ROOT_LAUNCHER_FILES = {
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
     'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
+    'assets/profile.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
 }
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}
@@ -101,7 +103,8 @@ def revision():
 
 def launcher_html():
     return (ROOT / 'launcher/index.html').read_text().replace(
-        '<head>', '<head>\n  <script src="../preview/bridge.js"></script>', 1)
+        '<head>', '<head>\n  <script src="../preview/bridge.js"></script>', 1).replace(
+        '<script src="icon-map.js"></script>', '')  # Demo inventory supplies preview icons.
 
 
 def root_launcher():

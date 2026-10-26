@@ -20,6 +20,7 @@ class UpdateUiPackageTests(unittest.TestCase):
             for name in ('tv_web_build.py', 'compile-tv-web.cjs', 'bundle-home-ui.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
+            shutil.copy(ROOT/'.browserslistrc', root/'.browserslistrc')
             for name in ('system-updates.js', 'release-notes.js', 'renewal-panel.css', 'i18n.js', 'i18n.css', 'catalogs.js', 'user-data.js'):
                 shutil.copy(ROOT/'launcher'/name, root/'launcher'/name)
             for name in ('service.js', 'permissions.js', 'services.json', 'release-public.pem', 'ca-bundle.crt', 'ca-LICENSE.txt'):

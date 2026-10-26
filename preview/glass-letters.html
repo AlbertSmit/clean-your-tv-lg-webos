@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glass Letters — bake experiment</title>
+<style>
+  :root {
+    --hl: .55;   /* top sheen strength */
+    --fringe: .12; /* chromatic aberration opacity */
+    --frost: .5;  /* body frost opacity */
+    --bevel: .22; /* edge stroke */
+    --shadow: .28;
+    --tint: 0;    /* hue shift for fringe */
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px system-ui, -apple-system, sans-serif; background: #0a0e12; color: #dce4ea; height: 100vh; display: flex; flex-direction: column; }
+  header { display: flex; align-items: baseline; gap: 16px; padding: 12px 18px; border-bottom: 1px solid #22303a; background: #0f151b; }
+  header strong { font-size: 15px; color: #fff; }
+  header span { color: #7e8c96; font-size: 13px; }
+  main { flex: 1; display: flex; min-height: 0; }
+
+  /* Wallpaper preview pane (the "glass" only makes sense over art). */
+  .stage { flex: 1; position: relative; overflow: hidden; background: #2b3b44 url('../launcher/assets/cinema-backdrop.jpg') center/cover no-repeat; }
+  .stage::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,14,18,.05), rgba(8,14,18,.35)); }
+  .scene { position: absolute; top: 56px; left: 0; right: 0; display: flex; flex-direction: column; gap: 44px; padding: 0 72px; }
+  .row { display: flex; flex-direction: column; gap: 6px; }
+  .row .caption { font: 12px system-ui, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.55); }
+  .glass { line-height: 1; }
+
+  /* Controls */
+  .controls { width: 320px; flex-shrink: 0; padding: 16px; background: #0f151b; border-left: 1px solid #22303a; overflow: auto; }
+  .controls h2 { font-size: 13px; letter-spacing: 1.6px; text-transform: uppercase; color: #7e8c96; margin: 0 0 12px; }
+  .ctl { margin-bottom: 16px; }
+  .ctl label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: #b6c2cc; }
+  .ctl label output { color: #fff; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: #6ea8ff; }
+  .words { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .words button { border: 1px solid #2c3a45; background: #16212a; color: #cfe0ec; border-radius: 9px; padding: 7px 11px; font: 13px system-ui, sans-serif; cursor: pointer; }
+  .words button[aria-pressed=true] { border-color: #6ea8ff; background: #1c2c3a; color: #fff; }
+  .note { font-size: 12px; color: #7e8c96; line-height: 1.5; }
+  .note b { color: #bfd3e1; }
+</style>
+</head>
+<body>
+<header><strong>Glass letters</strong><span>Experiment · baked SVG layer stack (Chrome 38-safe, no backdrop-filter) · font: Inter Display (SF Pro–like fallback)</span></header>
+<main>
+  <div class="stage">
+    <div class="scene" id="scene"></div>
+  </div>
+  <aside class="controls">
+    <h2>Bake parameters</h2>
+    <div class="words" id="words">
+      <button type="button" data-w="Sundown" aria-pressed="true">Sundown</button>
+      <button type="button" data-w="12:34">12:34</button>
+      <button type="button" data-w="Now Playing">Now Playing</button>
+      <button type="button" data-w="Partly Cloudy  21°">Weather</button>
+    </div>
+    <div class="ctl"><label>Top sheen <output id="outHl">0.55</output></label><input id="hl" type="range" min="0" max="1" step="0.01" value="0.55"></div>
+    <div class="ctl"><label>Chromatic fringe <output id="outFringe">0.12</output></label><input id="fringe" type="range" min="0" max="0.5" step="0.01" value="0.12"></div>
+    <div class="ctl"><label>Frost body <output id="outFrost">0.50</output></label><input id="frost" type="range" min="0" max="1" step="0.01" value="0.50"></div>
+    <div class="ctl"><label>Edge bevel <output id="outBevel">0.22</output></label><input id="bevel" type="range" min="0" max="0.6" step="0.01" value="0.22"></div>
+    <div class="ctl"><label>Drop shadow <output id="outShadow">0.28</output></label><input id="shadow" type="range" min="0" max="0.6" step="0.01" value="0.28"></div>
+    <div class="ctl"><label>Fringe tint (0=red/cyan, 1=magenta/green) <output id="outTint">0.00</output></label><input id="tint" type="range" min="0" max="1" step="0.01" value="0"></div>
+    <p class="note"><b>+</b> This is the runtime technique we can ship (SVG layer stack). To <b>pre-bake into a PNG/SVG sprite</b> at build time, we can screenshot these layers with a headless browser (see repo scripts) and ship fixed glyphs — best for the clock digits so the TV does zero per-frame work.</p>
+  </aside>
+</main>
+<script>
+(function () {
+  'use strict';
+  var scene = document.getElementById('scene');
+  var defsCache = null;
+  var fontStack = "'Inter Display', 'CYTV NotoSans', 'CYTV NotoSansDevanagari', 'CYTV NotoSansKR', system-ui, sans-serif";
+
+  function o(name) { return { id: name, value: parseFloat(document.getElementById(name).value) }; }
+
+  function svgFor(word, px) {
+    // measure text to size the baked box
+    var m = document.createElement('canvas').getContext('2d');
+    m.font = '600 ' + px + 'px ' + fontStack;
+    var w = m.measureText(word).width;
+    var h = Math.round(px * 1.28);
+    var pad = Math.round(px * 0.35);
+    var W = Math.ceil(w) + pad * 2;
+    var H = h + pad * 2;
+    var opts = {
+      hl: o('hl'), fringe: o('fringe'), frost: o('frost'),
+      bevel: o('bevel'), shadow: o('shadow'), tint: o('tint')
+    };
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    svg.classList.add('glass');
+
+    // defs (gradients + blur filter)
+    var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+    function lin(id, stops) {
+      var g = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      g.setAttribute('id', id); g.setAttribute('x1', '0'); g.setAttribute('y1', '0');
+      g.setAttribute('x2', '0'); g.setAttribute('y2', '1');
+      stops.forEach(function (s) {
+        var st = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        st.setAttribute('offset', s[0]);
+        st.setAttribute('stop-color', s[1]);
+        st.setAttribute('stop-opacity', String(s[2]));
+        g.appendChild(st);
+      });
+      defs.appendChild(g);
+    }
+
+    var bl = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    bl.setAttribute('id', 'gblur'); bl.setAttribute('x', '-40%'); bl.setAttribute('y', '-40%');
+    bl.setAttribute('width', '180%'); bl.setAttribute('height', '180%');
+    var blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+    blur.setAttribute('stdDeviation', Math.max(2, px * 0.05));
+    bl.appendChild(blur);
+    defs.appendChild(bl);
+
+    var frostFade = 0.55 + opts.frost.value * 0.25;
+    lin('gFrost', [
+      ['0', '#ffffff', 0.15 + opts.frost.value * 0.60],
+      ['0.46', '#ffffff', opts.frost.value * 0.55],
+      ['0.62', '#ffffff', 0.10 + opts.frost.value * 0.45],
+      ['1', '#9db2c2', 0.12 + opts.frost.value * 0.25]
+    ]);
+    lin('gSheen', [
+      ['0', '#ffffff', opts.hl.value],
+      ['0.34', '#ffffff', opts.hl.value * 0.45],
+      ['0.7', '#ffffff', 0],
+      ['1', '#ffffff', 0]
+    ]);
+    svg.appendChild(defs);
+
+    function textEl(fill, stroke, sw, tx, ty, useFilter) {
+      var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', pad); t.setAttribute('y', pad + h * 0.78);
+      t.setAttribute('font-family', fontStack);
+      t.setAttribute('font-size', px);
+      t.setAttribute('font-weight', '600');
+      t.setAttribute('fill', fill || 'none');
+      if (stroke) { t.setAttribute('stroke', stroke); t.setAttribute('stroke-width', String(sw)); }
+      if (tx || ty) t.setAttribute('transform', 'translate(' + (tx || 0) + ' ' + (ty || 0) + ')');
+      if (useFilter) t.setAttribute('filter', 'url(#gblur)');
+      t.textContent = word;
+      return t;
+    }
+
+    // 1) soft drop shadow
+    svg.appendChild(textEl('rgba(0,0,0,' + opts.shadow.value + ')', null, 0, 0, Math.round(px * 0.08), true));
+    // 2) chromatic fringe copies
+    var c1 = 'rgba(255,59,48,' + opts.fringe.value + ')';
+    var c2 = 'rgba(10,132,255,' + opts.fringe.value + ')';
+    if (opts.tint.value > 0.5) { c1 = 'rgba(255,45,85,' + opts.fringe.value + ')'; c2 = 'rgba(48,209,88,' + opts.fringe.value + ')'; }
+    var fr = Math.max(0.5, px * 0.012);
+    svg.appendChild(textEl(c1, null, 0, -fr, 0));
+    svg.appendChild(textEl(c2, null, 0, fr, 0));
+    // 3) frosted body
+    svg.appendChild(textEl('url(#gFrost)', 'rgba(255,255,255,' + opts.bevel.value + ')', Math.max(0.5, px * 0.02)));
+    // 4) top sheen band
+    svg.appendChild(textEl('url(#gSheen)'));
+
+    return svg;
+  }
+
+  function paint() {
+    scene.innerHTML = '';
+    var preset = document.querySelector('.words button[aria-pressed="true"]').dataset.w;
+    var rows = [
+      { label: 'Hero — glass headline', word: preset, px: 120 },
+      { label: 'Clock — glass digits', word: '04:15 PM', px: 96 },
+      { label: 'Now Playing — glass subtitle', word: 'Midnight City · M83', px: 44 }
+    ];
+    rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      var cap = document.createElement('div'); cap.className = 'caption'; cap.textContent = r.label;
+      row.appendChild(cap);
+      row.appendChild(svgFor(r.word, r.px));
+      scene.appendChild(row);
+    });
+  }
+
+  var ids = ['hl', 'fringe', 'frost', 'bevel', 'shadow', 'tint'];
+  ids.forEach(function (id) {
+    var input = document.getElementById(id);
+    var out = document.getElementById('out' + id.charAt(0).toUpperCase() + id.slice(1));
+    input.addEventListener('input', function () { out.textContent = input.value; paint(); });
+  });
+
+  document.querySelectorAll('.words button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.words button').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      paint();
+    });
+  });
+
+  paint();
+})();
+</script>
+</body>
+</html>

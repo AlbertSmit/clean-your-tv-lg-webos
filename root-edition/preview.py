@@ -12,10 +12,12 @@ SOURCE = Path(__file__).resolve().parents[1] / 'launcher'
 # Explicit public-source inventory: never recursively copy a developer workspace.
 FILES = (
     'appinfo.json', 'release-notes.js', 'system-updates.js', 'index.html', 'app.js', 'app-library.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'style.css',
-    'appearance.css', 'theme-panel.js', 'ui/index.jsx', 'ui/layouts.js', 'ui/preferences.js',
+    'appearance.css', 'theme-panel.js', 'widget-data.js', 'ui/index.jsx', 'ui/widgets.jsx', 'ui/layouts.js', 'ui/preferences.js',
     'ui/tile.jsx', 'ui/shelf.jsx', 'ui/appearance-panel.jsx',
-    'ui/status.jsx', 'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'ui/status.jsx', 'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg', 'assets/shelf-mark.svg',
     'ui/dock-glass.js', 'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
+    'assets/profile.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
@@ -46,6 +48,8 @@ def prepare(version='0.0.1'):
         if info.get(field) not in files:
             raise ValueError('Unpackaged manifest resource: ' + field)
     html = files['index.html'].decode()
+    # Root inventory supplies its own icon URLs; the No-root icon map is not staged.
+    html = html.replace('<script src="icon-map.js"></script>', '')
     # Older launcher sources may still include the now-inert compatibility entry.
     html = html.replace('<script src="native-bootstrap.js"></script>', '').replace('<script src="helper-control.js"></script>', '')
     tags = ['<script src="' + name + '"></script>' for name in (

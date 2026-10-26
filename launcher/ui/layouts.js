@@ -44,3 +44,26 @@ export function scrollFor(layout, index, offset, editing) {
   if (position.top - offset - 24 < 80) offset = position.top - 104;
   return offset;
 }
+
+// Six shared dock tracks. The logo owns the upper left two tracks; widgets
+// occupy named regions without entering that exclusion zone or the dock.
+// upper: [ logo ][ logo ][ . ][ weather ][ nowPlaying ][ nowPlaying ]
+// lower: [ clock ][  .   ][ . ][    .    ][     .      ][     .      ]
+export function widgetLayoutFor() {
+  const layout = layoutFor('tvos');
+  const square = layout.cardWidth;
+  const span = layout.columnWidth + square;
+  const top = 170;
+  const baseline = top + span;
+  return {
+    columns: layout.columns,
+    columnWidth: layout.columnWidth,
+    cardWidth: square,
+    regions: {
+      logo: { left: 88, top: 62, width: span, height: 358 },
+      clock: { left: layout.left, top: baseline - square, width: square, height: square },
+      weather: { left: layout.left + layout.columnWidth * 3, top, width: square, height: square },
+      nowPlaying: { left: layout.left + layout.columnWidth * 4, top, width: span, height: span / 2 }
+    }
+  };
+}

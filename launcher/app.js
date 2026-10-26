@@ -17,6 +17,10 @@
       if (moveState || pickerOpen || undoState || focusZone === 'inputs') return false;
       focusTopButton(2);
       return true;
+    }, function () {
+      if (!layout.tvos || moveState || pickerOpen || undoState || focusZone === 'inputs') return false;
+      focusTopButton(3);
+      return true;
     }),
     headerBottom = 0;
   var toastTimer,
@@ -37,7 +41,7 @@
     ambientLayers = [getElement("ambientA"), getElement("ambientB")],
     ambientIndex = 0,
     ambientColor = null,
-    topButtons = [getElement("btnInputs"), getElement("btnWifi"), getElement("btnSettings")],
+    topButtons = [getElement("btnInputs"), getElement("btnWifi"), getElement("btnSettings"), getElement("btnWidgets")],
     inputsPanel = getElement("inputsPanel"),
     tiles = [],
     focusZone = "grid",
@@ -750,6 +754,31 @@
       }, 60 + 40 * Math.min(t, 16));
     });
   }
+  // Widgets are decorative tvOS-style surfaces fed by WidgetData (Home Assistant
+  // in production, a fake provider in the browser preview). They are not part
+  // of the remote-focus grid and never intercept input.
+  var widgets = null;
+  var stopWidgetWatch = null;
+  var widgetRefreshGeneration = 0;
+  function ensureWidgets() {
+    if (typeof window.WidgetData === 'undefined' || !HomeUI.createWidgets || widgets) return;
+    widgets = HomeUI.createWidgets(window.WidgetData);
+    window.WidgetData.subscribe(refreshWidgets);
+  }
+  function refreshWidgets() {
+    if (stopWidgetWatch) stopWidgetWatch();
+    stopWidgetWatch = null;
+    var generation = ++widgetRefreshGeneration;
+    if (!widgets || typeof window.WidgetData === 'undefined') return;
+    var preferences = HomeUI.preferences();
+    widgets.show(preferences.appearance === 'tvos' && preferences.widgetsVisible);
+    widgets.update(null);
+    if (document.hidden || preferences.appearance !== 'tvos' || !preferences.widgetsVisible) return;
+    stopWidgetWatch = window.WidgetData.watch(function (snap) {
+      if (generation !== widgetRefreshGeneration) return;
+      widgets.update(snap);
+    });
+  }
   function tileBackground(hex) {
     var rgb = parseHexColor(hex);
     if (!rgb) {
@@ -852,7 +881,7 @@
     setFocusZone("top");
     document.body.classList.remove("scrolled");
     topButtons[focusedTopButton].classList.remove("focused");
-    focusedTopButton = Math.max(0, Math.min(index, topButtons.length - 1));
+    focusedTopButton = Math.max(0, Math.min(index, layout.tvos ? topButtons.length - 1 : 2));
     topButtons[focusedTopButton].classList.add("focused");
   }
   function setFocusZone(zone) {
@@ -880,6 +909,15 @@
     statusControl.update(getElement('clock').textContent + getElement('ampm').textContent);
   }
   function activateTopButton(index) {
+    if (index === 3) {
+      if (!layout.tvos || moveState || pickerOpen || undoState || focusZone === 'inputs') return;
+      if (!HomeUI.setPreference('widgetsVisible', !HomeUI.preferences().widgetsVisible)) {
+        showToast(tr("Couldn't save changes"));
+        return;
+      }
+      focusTile(focusedTile);
+      return;
+    }
     0 === index ? function () {
       if (inputsPanel.innerHTML = "", inputRows = [], (window.TV_APPS && TV_APPS.inputs || []).forEach(function (e) {
         addInputRow("M18,7V4c0,-1.1 -0.9,-2 -2,-2H8C6.9,2 6,2.9 6,4v3H5v6l3,6v3h8v-3l3,-6V7H18zM8,4h8v3h-2V5h-1v2h-2V5h-1v2H8V4z", e.label, e.appId);
@@ -1048,7 +1086,7 @@
         } else if (39 === key) {
           column < columnCount - 1 && focusedTile < lastIndex && focusTile(focusedTile + 1);
         } else if (38 === key) {
-          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, (topButtonRects || (topButtonRects = topButtons.map(function (e) {
+          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, (topButtonRects || (topButtonRects = topButtons.slice(0, 3).map(function (e) {
             var n = e.getBoundingClientRect();
             return n.left + n.width / 2;
           }))).forEach(function (center, t) {
@@ -1094,7 +1132,16 @@
   document.addEventListener("visibilitychange", function () {
     document.hidden || restoreFocus();
   });
+  var previousPreferences = HomeUI.preferences();
   HomeUI.subscribe(function (preferences) {
+    var layoutUnchanged = preferences.appearance === previousPreferences.appearance &&
+      preferences.reducedEffects === previousPreferences.reducedEffects;
+    previousPreferences = preferences;
+    if (layoutUnchanged) {
+      refreshWidgets();
+      return;
+    }
+    topButtonRects = null;
     var previousZone = focusZone;
     cancelHold();
     closePicker();
@@ -1113,12 +1160,18 @@
     focusZone = "none";
     focusTile(focusedTile);
     if (previousZone === "top") focusTopButton(focusedTopButton);
+    if (widgets) widgets.show(preferences.appearance === 'tvos' && preferences.widgetsVisible);
+    refreshWidgets();
   });
   initializeApps();
   layoutTiles();
   updateClock();
+  ensureWidgets();
+  refreshWidgets();
+  if (widgets) widgets.show(layout.tvos && HomeUI.preferences().widgetsVisible);
   var clockTimer = setInterval(updateClock, 1e4);
   document.addEventListener("visibilitychange", function () {
+    refreshWidgets();
     if (document.hidden) {
       clearInterval(clockTimer);
     } else {

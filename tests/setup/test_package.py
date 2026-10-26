@@ -20,6 +20,7 @@ class PackageTests(unittest.TestCase):
             for name in ('build.sh', 'build-cytv.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'bundle-home-ui.cjs', 'helper_build.py', 'compile-helper.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
+            shutil.copy(ROOT/'.browserslistrc', root/'.browserslistrc')
             helper = 'com.local.nativehome_0.6.17_arm.ipk'
             shutil.copy(ROOT/'native/published'/helper, root/'native/published'/helper)
             (root/'native/app/appinfo.json').write_text(json.dumps({'id':'com.local.nativehome','version':'0.6.17'}))
@@ -43,6 +44,7 @@ class PackageTests(unittest.TestCase):
             for name in ('build.sh', 'build-cytv.py', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'bundle-home-ui.cjs', 'helper_build.py', 'compile-helper.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
+            shutil.copy(ROOT/'.browserslistrc', root/'.browserslistrc')
             for directory in ('native/app', 'native/service', 'launcher'):
                 path = root/directory
                 path.mkdir(parents=True)

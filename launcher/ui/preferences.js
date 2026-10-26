@@ -1,5 +1,6 @@
 const appearanceKey = 'cytv-appearance';
 const effectsKey = 'cytv-reduced-effects';
+const widgetsKey = 'cytv-widgets-visible';
 const listeners = [];
 
 function read(key) {
@@ -8,9 +9,10 @@ function read(key) {
 
 let appearance = read(appearanceKey) === 'tvos' ? 'tvos' : 'existing';
 let reducedEffects = read(effectsKey) === 'true';
+let widgetsVisible = read(widgetsKey) !== 'false';
 
 export function preferences() {
-  return { appearance, reducedEffects };
+  return { appearance, reducedEffects, widgetsVisible };
 }
 
 export function applyPreferences() {
@@ -20,12 +22,13 @@ export function applyPreferences() {
 
 export function setPreference(key, value) {
   if (key === 'appearance' && value !== 'existing' && value !== 'tvos') return false;
-  if (key === 'reducedEffects' && typeof value !== 'boolean') return false;
-  if (key !== 'appearance' && key !== 'reducedEffects') return false;
+  if ((key === 'reducedEffects' || key === 'widgetsVisible') && typeof value !== 'boolean') return false;
+  if (key !== 'appearance' && key !== 'reducedEffects' && key !== 'widgetsVisible') return false;
   try {
-    localStorage.setItem(key === 'appearance' ? appearanceKey : effectsKey, String(value));
+    localStorage.setItem(key === 'appearance' ? appearanceKey : key === 'widgetsVisible' ? widgetsKey : effectsKey, String(value));
   } catch (_) { return false; }
   if (key === 'appearance') appearance = value;
+  else if (key === 'widgetsVisible') widgetsVisible = value;
   else reducedEffects = value;
   applyPreferences();
   listeners.forEach(listener => listener(preferences()));

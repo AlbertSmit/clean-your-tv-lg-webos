@@ -2,9 +2,18 @@
 @font-face { font-family: 'Inter Display'; src: url('fonts/InterDisplay-Medium.woff2') format('woff2'); font-weight: 500; font-style: normal; }
 @font-face { font-family: 'Inter Display'; src: url('fonts/InterDisplay-SemiBold.woff2') format('woff2'); font-weight: 600; font-style: normal; }
 
+/* Supplied local SF Pro faces; keep the existing multilingual fallback fonts. */
+@font-face { font-family: 'SF Pro Display'; src: url('fonts/sf-pro-display_regular.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'SF Pro Display'; src: url('fonts/sf-pro-display_medium.woff2') format('woff2'); font-weight: 500; font-style: normal; }
+@font-face { font-family: 'SF Pro Display'; src: url('fonts/sf-pro-display_semibold.woff2') format('woff2'); font-weight: 600; font-style: normal; }
+@font-face { font-family: 'SF Pro Display'; src: url('fonts/sf-pro-display_bold.woff2') format('woff2'); font-weight: 700; font-style: normal; }
+@font-face { font-family: 'SF Pro Text'; src: url('fonts/sf-pro-text_light.woff') format('woff'); font-weight: 300; font-style: normal; }
+@font-face { font-family: 'SF Pro Text'; src: url('fonts/sf-pro-text_regular.woff2') format('woff2'); font-weight: 400; font-style: normal; }
+@font-face { font-family: 'SF Pro Text'; src: url('fonts/sf-pro-text_semibold.woff2') format('woff2'); font-weight: 600; font-style: normal; }
+
 html.home-tvos, html.home-tvos body, html.home-tvos button {
   color: #f6f6f8;
-  font-family: 'Inter Display', 'CYTV NotoSans', 'CYTV NotoSansDevanagari', 'CYTV NotoSansKR', sans-serif;
+  font-family: 'SF Pro Display', 'Inter Display', 'CYTV NotoSans', 'CYTV NotoSansDevanagari', 'CYTV NotoSansKR', sans-serif;
 }
 html.home-tvos, html.home-tvos body { background: #12252a; }
 html.home-tvos #hero, html.home-tvos #glass, html.home-tvos .ambient,
@@ -34,6 +43,7 @@ html.home-tvos #homeStatus {
 }
 .status-time { white-space: nowrap; font-size: 24px; font-weight: 500; letter-spacing: -.6px; }
 .status-avatar { position: relative; width: 48px; height: 48px; flex-shrink: 0; overflow: hidden; margin-left: 10px; border: 3px solid #dfd7f4; border-radius: 50%; background: linear-gradient(160deg, #ab9bb9, #515574); }
+.status-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 58% 42%; }
 .avatar-head { position: absolute; top: 7px; left: 13px; width: 16px; height: 16px; border-radius: 50%; background: #e8e0f2; }
 .avatar-body { position: absolute; top: 26px; left: 7px; width: 28px; height: 24px; border-radius: 50%; background: #e8e0f2; }
 html.home-tvos #homeStatus:focus { outline: 3px solid rgba(255,255,255,.65); outline-offset: 3px; }
@@ -77,8 +87,8 @@ html.home-tvos .item.moving .card { animation: tvos-wiggle 240ms ease-in-out inf
 
 .appearance-panel h3 { margin-bottom: 14px; }
 .appearance-options button[aria-pressed='true'], .appearance-options button[aria-checked='true'] { border-color: #b8d3ff; }
-.appearance-error { color: #ffd1bd; }
-.appearance-error:empty { display: none; }
+.appearance-error, .widget-error { color: #ffd1bd; }
+.appearance-error:empty, .widget-error:empty { display: none; }
 html.reduced-effects #stage, html.reduced-effects .item, html.reduced-effects .card,
 html.reduced-effects .name, html.reduced-effects #glass, html.reduced-effects #hero,
 html.reduced-effects header, html.reduced-effects .ambient, html.reduced-effects #homeShelf,
@@ -86,3 +96,107 @@ html.reduced-effects .shelf-backdrop, html.reduced-effects .shelf-backdrop-soft,
 html.reduced-effects .shelf-copy, html.reduced-effects .pill, html.reduced-effects #homeStatus {
   transition: none !important; animation: none !important;
 }
+
+/* Widgets share the dock's six tracks; placements live in widgetLayoutFor. */
+.widgets { display: none; }
+html.home-tvos .widgets {
+  display: block; position: absolute; left: 0; top: 0; width: 1920px;
+  pointer-events: none; z-index: 3;
+  visibility: hidden; opacity: 0; transform: translateY(-10px);
+  transition: opacity 220ms ease, transform 220ms ease, visibility 220ms;
+}
+html.home-tvos .widgets.widgets-visible { visibility: visible; opacity: 1; transform: none; }
+html.home-tvos body.app-grid .widgets,
+html.home-tvos body.controls-open .widgets,
+html.home-tvos body.editing .widgets { visibility: hidden; opacity: 0; transition: none; }
+html.reduced-effects .widgets, html.reduced-effects .widgets .glass-cell {
+  transition: none !important; animation: none !important;
+}
+.glass-cell {
+  position: absolute; box-sizing: border-box; border-radius: 32px; overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 12px 30px rgba(0,0,0,.16);
+}
+
+/* A quiet green clock face with oversized numerals and live analog hands. */
+.w-clock { background: #40945e; color: #082b17; }
+.w-clock-face { display: block; width: 250px; height: 250px; }
+.w-clock-face text { fill: #071b0c; font-family: 'SF Pro Text','Inter Display',sans-serif; font-size: 122px; font-weight: 300; letter-spacing: -10px; }
+.w-clock-face .w-clock-twelve { font-size: 125px; letter-spacing: -15px; }
+.w-clock-hour, .w-clock-minute { stroke: #fffdf2; stroke-width: 7; stroke-linecap: round; }
+.w-clock-minute { stroke-width: 5; }
+.w-clock-pivot { fill: #40945e; stroke: #fffdf2; stroke-width: 2; }
+.w-clock-date { position: absolute; left: 15px; width: 69px; bottom: 13px; font-size: 11px; font-weight: 600; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Weather keeps one clear reading order within a square sky-blue tile. */
+.w-wx { padding: 23px; background: linear-gradient(155deg, #547ea6, #245f9b 65%, #2776aa); color: #fff; }
+.w-wx-icon { position: absolute; top: 23px; right: 20px; width: 58px; height: 58px; fill: #ffdf81; stroke: #ffdf81; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.w-wx-copy { padding-top: 30px; }
+.w-wx-temp { font-size: 70px; font-weight: 300; letter-spacing: -4px; line-height: 1.15; }
+.w-wx-label { font-size: 20px; margin-top: 8px; }
+.w-wx-meta { font-size: 14px; opacity: .85; margin-top: 18px; line-height: 20px; }
+
+/* The compact music card spans two dock tracks with a 2:1 aspect ratio. */
+.w-np {
+  padding: 30px 23px; color: #f7fbff; border-radius: 48px;
+  border: 1px solid rgba(255,255,255,.24); border-top-color: rgba(255,255,255,.52);
+  background: linear-gradient(145deg, rgba(235,242,245,.18), rgba(130,155,160,.12));
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.1);
+}
+.w-np-texture {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: .58;
+  background-image: url('assets/dock-glass-home.jpg'); background-size: 1920px 1080px; background-repeat: no-repeat;
+}
+.w-np::after {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background: rgba(89,68,73,.82); pointer-events: none;
+}
+.w-np-content { position: relative; z-index: 1; display: flex; align-items: flex-end; height: 100%; }
+html.reduced-effects .w-np { background: #303e47; }
+html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display: none; }
+.w-np-art {
+  width: 212px; height: 212px; flex-shrink: 0; margin-right: 18px; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(145deg, #80929c, #5b737e 45%, #33454e);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.2), 0 8px 18px rgba(0,0,0,.2);
+}
+.w-np-art svg { width: 64px; height: 64px; fill: #dfe6ea; }
+.w-np-art img { width: 100%; height: 100%; object-fit: cover; }
+.w-np-copy { flex: 1; min-width: 0; }
+.w-np-label { font-size: 13px; font-weight: 500; letter-spacing: .7px; line-height: 18px; text-transform: uppercase; opacity: .7; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-np-title { font-size: 24px; font-weight: 500; letter-spacing: -.3px; line-height: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-np-artist { font-size: 22px; line-height: 27px; font-weight: 400; opacity: .7; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-np-badge { position: absolute; top: -8px; right: 0; width: 30px; height: 30px; opacity: .8; }
+.w-np-badge svg { display: block; width: 30px; height: 30px; fill: currentColor; }
+.w-np-badge path { fill: none; stroke: currentColor; stroke-width: 2; }
+
+/* The master widget switch belongs to status navigation, outside decoration. */
+.status-widgets { display: none; }
+html.home-tvos .status-widgets {
+  display: flex; position: absolute; top: 50px; right: 248px; width: 60px; height: 60px; z-index: 4;
+  align-items: center; justify-content: center; padding: 0; border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.25); color: #fff;
+  background: rgba(30,42,48,.38); box-shadow: inset 0 1px 1px rgba(255,255,255,.15);
+}
+.status-complications { display: flex; flex-wrap: wrap; width: 28px; height: 28px; }
+.status-complications i { display: block; box-sizing: border-box; width: 11px; height: 11px; margin: 1px; border: 1px solid currentColor; border-radius: 4px; }
+.status-complications i:first-child { border-radius: 50%; }
+.status-complications i:last-child { background: currentColor; }
+.status-widgets[aria-checked='false'] { opacity: .55; }
+html.home-tvos .status-widgets.focused, html.home-tvos .status-widgets:focus { outline: 3px solid #fff; outline-offset: 3px; opacity: 1; }
+html.home-tvos body.app-grid .status-widgets, html.home-tvos body.editing .status-widgets { visibility: hidden; }
+
+/* Widget settings inside Home settings */
+.widget-settings { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); }
+.widget-settings h3 { margin-bottom: 14px; }
+.widget-fields { margin: 16px 0; }
+.widget-field-row { display: flex; flex-direction: column; margin-bottom: 12px; font-size: 18px; }
+.widget-field {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25);
+  border-radius: 14px; color: #f6f6fa; font-size: 19px; padding: 10px 14px; font-family: inherit;
+}
+.widget-field:focus { outline: 3px solid rgba(255,255,255,.55); outline-offset: 2px; }
+.widget-save { border-color: #b8d3ff; }
+.widget-toggle { min-width: 120px; }
+.widget-toggle[aria-checked='true'] { border-color: #b8d3ff; }
+
+.status-time, .w-clock-date, .w-np-source, .w-np-artist { font-family: 'SF Pro Text','SF Pro Display','Inter Display','CYTV NotoSans','CYTV NotoSansDevanagari','CYTV NotoSansKR',sans-serif; }

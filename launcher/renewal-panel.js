@@ -135,6 +135,12 @@
    buttons=Array.prototype.slice.call(panel.querySelectorAll('button'));
    bindButtons();
   }
+  if(container && window.HomeUI && HomeUI.mountWidgetSettings){
+   HomeUI.mountWidgetSettings(container);
+   // Rebuild buttons array to include widget settings controls
+   buttons=Array.prototype.slice.call(panel.querySelectorAll('button'));
+   bindButtons();
+  }
  }, 0);
  // No session request, token access or scheduler setup happens on launcher startup.
 }());

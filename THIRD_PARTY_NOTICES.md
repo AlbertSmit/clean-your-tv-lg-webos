@@ -63,7 +63,17 @@ SemiBold, from the [official Inter 4.1 release archive](https://github.com/rsms/
 `InterDisplay-SemiBold.woff2`. Copyright (c) 2016 The Inter Project Authors;
 distributed under SIL Open Font License 1.1, retained as
 `launcher/fonts/Inter-OFL.txt`. [Inter source](https://github.com/rsms/inter).
-Apple SF fonts are not embedded; see [Apple's font license, section 2B](https://developer.apple.com/fonts/).
+The local candidate also contains seven user-supplied proprietary Apple SF Pro
+files, retaining their supplied names: `sf-pro-display_regular.woff2`,
+`sf-pro-display_medium.woff2`, `sf-pro-display_semibold.woff2`,
+`sf-pro-display_bold.woff2`, `sf-pro-text_light.woff`,
+`sf-pro-text_regular.woff2`, and `sf-pro-text_semibold.woff2`.
+These are not covered by the repository MIT license; no redistribution license
+is asserted. [Apple font information](https://developer.apple.com/fonts/).
+
+`launcher/assets/profile.jpg` is an unchanged user-supplied portrait used by the
+local candidate. It is not covered by the repository MIT license, and no
+redistribution license is asserted. No publication is part of this asset update.
 
 The candidate **Sundown** backdrop is original fictional artwork generated with
 the built-in image-generation tool on 2026-10-26, with a local preblurred derivative.

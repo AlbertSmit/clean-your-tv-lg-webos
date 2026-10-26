@@ -5,9 +5,11 @@ import { createShelf } from './shelf.jsx';
 import { mountAppearance } from './appearance-panel.jsx';
 import { createStatus } from './status.jsx';
 import { createDockGlass } from './dock-glass.js';
+import { createWidgets, mountWidgetSettings } from './widgets.jsx';
 
 applyPreferences();
 window.HomeUI = {
   layoutFor, positionFor, scrollFor, preferences, setPreference, subscribe,
-  createTileView, createAddView, createShelf, createStatus, createDockGlass, mountAppearance
+  createTileView, createAddView, createShelf, createStatus, createDockGlass, mountAppearance,
+  createWidgets, mountWidgetSettings
 };

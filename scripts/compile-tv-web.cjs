@@ -9,8 +9,9 @@ const presetEnv = require('postcss-preset-env');
 const doiuse = require('doiuse');
 const html = require('parse5');
 const {bundleHomeUI, isModule} = require('./bundle-home-ui.cjs');
-const targets = require('../package.json').browserslist;
 const root = path.resolve(__dirname, '..');
+const targets = require('browserslist').loadConfig({path: root});
+if (!targets) throw Error('Missing TV browser targets in .browserslistrc');
 const polyfillsName = 'compat-polyfills.js';
 
 function javascript(code, filename) {

@@ -1,5 +1,7 @@
 HomeI18n.add({
   "en": {
+    "Now Playing": "Now Playing",
+    "Widgets": "Widgets",
     "A signed Home update is available.": "A signed Home update is available.",
     "Add app": "Add app",
     "All installed apps are already on Home.": "All installed apps are already on Home.",
@@ -149,6 +151,8 @@ HomeI18n.add({
     "Refresh status": "Refresh status"
   },
   "de": {
+    "Now Playing": "Aktuelle Wiedergabe",
+    "Widgets": "Widgets",
     "A signed Home update is available.": "Ein signiertes Home-Update ist verfügbar.",
     "Add app": "App hinzufügen",
     "All installed apps are already on Home.": "Alle installierten Apps sind bereits auf Home.",
@@ -298,6 +302,8 @@ HomeI18n.add({
     "Refresh status": "Status aktualisieren"
   },
   "es": {
+    "Now Playing": "En reproducción",
+    "Widgets": "Widgets",
     "A signed Home update is available.": "Hay una actualización firmada de Home disponible.",
     "Add app": "Añadir aplicación",
     "All installed apps are already on Home.": "Todas las aplicaciones instaladas ya están en Home.",
@@ -447,6 +453,8 @@ HomeI18n.add({
     "Refresh status": "Actualizar estado"
   },
   "pt-BR": {
+    "Now Playing": "Reproduzindo agora",
+    "Widgets": "Widgets",
     "A signed Home update is available.": "Uma atualização assinada do Home está disponível.",
     "Add app": "Adicionar aplicativo",
     "All installed apps are already on Home.": "Todos os aplicativos instalados já estão no Home.",
@@ -596,6 +604,8 @@ HomeI18n.add({
     "Refresh status": "Atualizar status"
   },
   "fr": {
+    "Now Playing": "À l’écoute",
+    "Widgets": "Widgets",
     "A signed Home update is available.": "Une mise à jour signée de Home est disponible.",
     "Add app": "Ajouter une application",
     "All installed apps are already on Home.": "Toutes les applications installées sont déjà sur Home.",
@@ -745,6 +755,8 @@ HomeI18n.add({
     "Refresh status": "Actualiser l’état"
   },
   "it": {
+    "Now Playing": "In riproduzione",
+    "Widgets": "Widget",
     "A signed Home update is available.": "È disponibile un aggiornamento firmato di Home.",
     "Add app": "Aggiungi app",
     "All installed apps are already on Home.": "Tutte le app installate sono già su Home.",
@@ -894,6 +906,8 @@ HomeI18n.add({
     "Refresh status": "Aggiorna stato"
   },
   "ko": {
+    "Now Playing": "지금 재생 중",
+    "Widgets": "위젯",
     "A signed Home update is available.": "서명된 Home 업데이트가 있습니다.",
     "Add app": "앱 추가",
     "All installed apps are already on Home.": "설치된 모든 앱이 이미 Home에 있습니다.",
@@ -1043,6 +1057,8 @@ HomeI18n.add({
     "Refresh status": "상태 새로 고침"
   },
   "hi": {
+    "Now Playing": "अभी चल रहा है",
+    "Widgets": "विजेट",
     "A signed Home update is available.": "Home का हस्ताक्षरित अपडेट उपलब्ध है।",
     "Add app": "ऐप जोड़ें",
     "All installed apps are already on Home.": "सभी इंस्टॉल किए ऐप पहले से Home पर हैं।",
@@ -1192,6 +1208,8 @@ HomeI18n.add({
     "Refresh status": "स्थिति ताज़ा करें"
   },
   "pl": {
+    "Now Playing": "Teraz odtwarzane",
+    "Widgets": "Widżety",
     "A signed Home update is available.": "Dostępna jest podpisana aktualizacja Home.",
     "Add app": "Dodaj aplikację",
     "All installed apps are already on Home.": "Wszystkie zainstalowane aplikacje są już na Home.",
@@ -1341,6 +1359,8 @@ HomeI18n.add({
     "Refresh status": "Odśwież stan"
   },
   "ru": {
+    "Now Playing": "Сейчас играет",
+    "Widgets": "Виджеты",
     "A signed Home update is available.": "Доступно подписанное обновление Home.",
     "Add app": "Добавить приложение",
     "All installed apps are already on Home.": "Все установленные приложения уже на Home.",

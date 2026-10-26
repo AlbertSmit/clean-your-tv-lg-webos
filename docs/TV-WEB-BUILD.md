@@ -9,6 +9,7 @@ Source builds require Node.js **20.19+** (Node 22 is used in CI) and npm:
 
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
+npm run lint
 npm run lint:compat
 npm run test:compat
 ```
@@ -22,13 +23,23 @@ The installed cytv apps do not require Node/npm on the user's computer.
 
 ## Processing and validation
 
+- The root `.browserslistrc` defines `Chrome 38` for ESLint, Babel, PostCSS and
+  doiuse. `npm run lint` runs ESLint's browser API compatibility rule on TV web
+  JavaScript and JSX in `launcher/`, `root-edition/ui/` and `updater-app/`.
+  Conditional feature checks do not suppress unsupported API errors
+  (`ignoreConditionalChecks: true`); use a compatible implementation instead.
+  Node services, build/test tooling and desktop preview code have separate
+  runtimes and are excluded. Browser APIs in inline HTML scripts are not checked
+  by ESLint; those scripts still pass the build's syntax gate.
 - Babel preset-env transforms modern JavaScript syntax into ES5. Acorn checks
   every emitted script against ES5, including scripts embedded in HTML.
 - A bundled core-js runtime loads before application scripts and supplies missing
   ECMAScript built-ins. It is packaged locally, with licenses, without a CDN.
   It does not supply platform-specific Luna APIs or every modern browser API.
+  ESLint's optional ECMAScript built-in checks remain off because the bundled
+  core-js runtime supplies those APIs; browser API checks remain enabled.
 - PostCSS preset-env/Autoprefixer target the same Browserslist entry in
-  `package.json`. For example, `inset` becomes physical offsets and alpha hex
+  `.browserslistrc`. For example, `inset` becomes physical offsets and alpha hex
   colors become compatible color notation. CSS files, `<style>` elements and
   `style` attributes all pass through this step.
 - doiuse checks the **transformed** CSS. Unsupported features left after PostCSS,
@@ -42,6 +53,22 @@ partial-support warning; an optional `prefers-reduced-motion` override has a
 scoped source comment because older engines safely ignore that media query.
 Newer overflow values are still rejected. The linter uses compatibility data;
 it is not an exhaustive proof of browser behavior.
+
+Use these boundaries when choosing features:
+
+| Feature | TV build policy |
+| --- | --- |
+| Modern syntax and JSX in Home UI modules | Author in source; Babel emits ES5 and Acorn verifies it. |
+| ECMAScript built-ins such as `Object.assign`, `Array.from` and `Promise` | Supplied by the packaged core-js bundle. |
+| Browser APIs such as `fetch` and `AbortController` | Unsupported in Chrome 38; ESLint rejects them. Use XHR for requests. |
+| CSS custom properties and `inset` | Allowed in source when PostCSS converts them successfully. |
+| CSS Grid, flexbox `gap`, `backdrop-filter` | Unsupported; use compatible layouts, margins and static effects. |
+
+Run `npm run lint:compat` to check both browser APIs and the transformed assets.
+API detection is static and cannot reliably cover aliases, computed property
+access or dependency internals. CORS, TLS, firmware APIs and performance still
+need device testing. See the [compatibility rule documentation](https://github.com/amilajack/eslint-plugin-compat)
+for the ESLint check's configuration and scope.
 
 Legacy scripts remain separate classic scripts so their existing globals and UMD
 wrappers keep their behavior. Compatible ES5 sources keep their original bytes.
@@ -92,19 +119,44 @@ the existing Inputs, network and Settings actions; Back or Down returns to the
 grid. Down scrolls the grid with a muted backdrop, and mouse-wheel navigation is
 supported. All five Existing themes remain available.
 
-The candidate bundles static Inter Display **4.1** Regular, Medium and SemiBold
-WOFF2 files, under the SIL Open Font License in `launcher/fonts/Inter-OFL.txt`.
-These are substitutes for Apple's fonts, not a claim of exact font matching.
-See [third-party notices](../THIRD_PARTY_NOTICES.md) for the official archive and
-Apple font-license restriction.
+The tvOS header also exposes a Widgets switch (`#btnWidgets`, role `switch`).
+From the dock, Up selects Settings, Right selects Widgets and OK toggles it,
+then returns focus to the dock; the pointer can toggle it too. The separate
+`cytv-widgets-visible` preference defaults to true and persists across restarts.
+Turning it off disconnects widget HA live updates without rewriting individual widget
+settings. It does not change the Existing appearance. Now Playing uses a compact
+548×274 card aligned to the six-column dock: 212px artwork at x24/y31,
+bottom-aligned copy at x254 (localized Now Playing label 13px, title 24px,
+artist 22px; no album), a 30px upper-corner glyph and no transport controls.
+Its dock-glass texture has a taupe tint and refraction overlay. Weather defaults
+to off for new installations; a saved explicit enabled choice remains respected.
+The ES5 data watcher uses native WebSocket `/api/websocket`, authenticates with
+the HA token, subscribes to `state_changed`, loads `get_states` and applies later
+updates incrementally. The watch is disposed while the master is off, the
+document is hidden or Existing is selected. Transient failures retry with 1–30s
+exponential backoff; invalid authentication stops automatic retries until a new
+watch/configuration. One-shot REST `refresh()` remains a helper, not the normal
+launcher update loop. Artwork still uses authorized same-origin XHR.
+HA connection steps and metadata requirements are in [Widgets](WIDGETS.md).
+
+The local candidate includes user-supplied SF Pro Display (400/500/600/700) and
+SF Pro Text (300/400/600), with Inter Display and Noto fallbacks. The seven font
+files retain their supplied names under `launcher/fonts/`; obsolete optional
+`SFProDisplay-*.woff2` references are removed. Inter Display 4.1 remains covered
+by its retained SIL Open Font License. The supplied SF fonts and
+`launcher/assets/profile.jpg` portrait are proprietary/user-supplied assets;
+the repository MIT license does not cover them, and no redistribution license
+is asserted. See [third-party notices](../THIRD_PARTY_NOTICES.md).
 Browser/build verification does not establish performance or visual fidelity on
 LG 50UP77006LB; physical-TV acceptance remains pending.
 
 ## Regression checks
 
-`npm run test:compat` verifies syntax conversion, missing built-ins, polyfill
+`npm run test:compat` verifies the ESLint configuration (including rejected browser
+APIs, allowed polyfilled built-ins and source scope), syntax conversion, missing built-ins, polyfill
 ordering, inline assets, rejected unsupported CSS and repeatable HTML injection.
-`scripts/test.sh` runs it and the compatibility linter. CI also runs the browser
+`npm run lint:compat` runs ESLint before compiling and checking the TV web assets.
+`scripts/test.sh` runs the regression and compatibility linter. CI also runs the browser
 regression on the compiled Home frontend:
 
 ```sh

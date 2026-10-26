@@ -13,13 +13,14 @@ The user requested planning first and **GPT-6.1 Sol** for implementation.
 The current assistant has no tool for changing its own model. Select that model
 in this task before executing the implementation plan.
 
-Use only the maintained project-root checkout. Branch `codex/homebrew-install`
-was created from local `release/next` at `39dd72c5`; it is not checked out.
-At planning time a different active task is editing and testing
-`codex/android-stable-preparation` in this same checkout. Do not switch its
-branch, stash its changes, or add its files to this work. Wait for a coordinated
-handoff with that work saved; then switch to the Homebrew branch and refresh the
-integration base if needed. No second checkout or worktree is authorized.
+Implementation uses branch `codex/homebrew-install`. The user authorized temporary
+managed worktrees on 2026-10-26 to avoid interference between parallel tasks and
+requires deleting them after work. This supersedes the earlier single-checkout
+constraint. Save changes/commits and any needed PR or artifacts before removing
+the worktree. Do not remove another task's active checkout.
+
+The initial shared-checkout handoffs were completed and all Homebrew changes were
+saved before moving this task to its isolated managed worktree.
 
 ## Findings from the current code
 

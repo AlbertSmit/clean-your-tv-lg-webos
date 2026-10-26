@@ -19,7 +19,9 @@ web build, reproducible IPK tooling and GitHub release pipeline.
 
 ## Global constraints
 
-- Use only `/Users/pridannikov-d/Documents/Codex/clean-your-tv-lg-webos` as checkout.
+- Use the temporary managed Homebrew worktree authorized by the user on
+  2026-10-26. Save results in Git/PR and remove this worktree after work; preserve
+  necessary artifacts separately. Do not switch another task's checkout.
 - Implementation branch: `codex/homebrew-install`; PR base: `release/next`.
 - Exclusive checkout handoff confirmed on 2026-10-26 by both adjacent tasks.
   Branch `codex/homebrew-install` is checked out from `39dd72c5`.

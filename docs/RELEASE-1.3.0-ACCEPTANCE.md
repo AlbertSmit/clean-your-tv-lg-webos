@@ -18,7 +18,7 @@ Root 0.4.0, Root Updater 0.3.0 and System Updater 1.1.0. The existing verified
 private Python binding was reused; this was not a fresh optional-Python or
 Homebrew Installer acceptance session.
 
-The rebuilt console payload contains 159 files; its serialized manifest SHA256
+The installed-source rebuild contained 159 files; its historical serialized manifest SHA256
 is `2de2a6a8e262bffaad544b4b02575dc9de411772c997de1d9aaaa1cf279e5a32`.
 All three installed private package readers matched corrected source SHA256
 `7b3d97986aed1c4043eed11ed2bac76275219d38c3aca78268f64594ca2086f7`.
@@ -64,7 +64,28 @@ CI at `c796c27f8255baaa3de28cfae39b83575068a7e5` passed before normal merge.
 A complete rebuild after this host-only change retained the same 159-file payload
 manifest and all three component bundle hashes listed above. Thus no private
 runtime substitution or new untested TV payload is inferred from host metadata.
-Native Windows and all final platform artifacts still require exact-head CI.
+All five platform jobs (Android, Windows, Linux, macOS ARM64/x64) passed at
+finalization source `112d8dfe` in build run 40380605534. Those artifacts are
+superseded by the packaging correction below and are not the final release proof.
+
+PR #92 preserves the exact SHA256SUMS-verified published v1.2.0 Helper 0.6.19
+package through the existing hash-pinned baseline mechanism. The current source
+package writer changes gzip headers and omits five historical parent-directory
+entries; file contents and their metadata are unchanged. Keeping the published
+archive satisfies the strict same-version package guard without weakening it.
+Helper SHA256 remains
+`52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b`.
+
+The final 159-file payload manifest SHA256 is
+`97d01249f7b4524835334a026baa2b456fdf89b01a41360e7cb41969ac93f084`.
+All three Root/Root Updater/System bundle manifest hashes still match the
+TV-tested hashes listed above. This component-level identity is the basis for
+retaining Root acceptance; the outer payload is not claimed identical after the
+published Helper baseline was restored. Strict `prepare_manifests` preflight
+against real v1.2.0 packages passed, as did 6 build-asset tests, 341 Installer
+tests (two isolated-platform skips), 10 release-feed tests and the system release
+test. Independent focused review found no blockers. The new final candidate
+still requires exact-head protected checks and artifact/publication verification.
 
 The final documentation pass reviewed current README, setup/manual/CLI/desktop,
 Root update/recovery/testing, Android preview, compatibility and all twelve guides

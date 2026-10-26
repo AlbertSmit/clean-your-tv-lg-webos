@@ -99,8 +99,13 @@
       "pr": 91,
       "issues": [],
       "summary": "Keep POSIX TV staging parents on Windows hosts for coordinator, Root product, System Updater and internal recovery uploads; preserve local filesystem paths"
+    },
+    {
+      "pr": 92,
+      "issues": [],
+      "summary": "Preserve published Helper 0.6.19 bytes for release packaging"
     }
   ],
   "excluded": [],
-  "acceptance": "2026-10-26, repository-maintainer-supervised OLED55C3RLA / firmware43.21.71 / webOS11.2.0: corrected private source1e6e92ce; fresh console Root0.4.0/RootUpdater0.3.0 setup, Home/arrows/OK/Back/volume/app-to-Home, triple-Home persistent-off, System1.1.0 bootstrap while off, explicit UI re-enable, repeated30s standby and separate AC-off30s cold-boot Home control passed with device readback. First standby safely disabled control after observer startup failed; maintainer deferred unresolved issue90 and requested continuing release. Initial cold-boot screen was unconfigured channels, not automatic foreground Clean. Host-only Windows fix91 rebuild retains the exact TV-tested159-file payload and three component manifests. Published1.2.0 rollback packages/feeds retained with verified integrity; signed whole-edition physical rollback, No-root final-device/Android physical upgrade and Homebrew full matrix remain untested. Android stays preview; homebrew/release.json absent, no public Homebrew promotion. Detailed source hashes, exact observations and remaining limits: docs/RELEASE-1.3.0-ACCEPTANCE.md."
+  "acceptance": "2026-10-26, repository-maintainer-supervised OLED55C3RLA / firmware43.21.71 / webOS11.2.0: corrected private source1e6e92ce; fresh console Root0.4.0/RootUpdater0.3.0 setup, Home/arrows/OK/Back/volume/app-to-Home, triple-Home persistent-off, System1.1.0 bootstrap while off, explicit UI re-enable, repeated30s standby and separate AC-off30s cold-boot Home control passed with device readback. First standby safely disabled control after observer startup failed; maintainer deferred unresolved issue90 and requested continuing release. Initial cold-boot screen was unconfigured channels, not automatic foreground Clean. Host-only Windows fix91 and published-Helper packaging fix92 retain all three TV-tested Root/RootUpdater/System bundle manifests. Final outer159-file payload differs only by restoring exact published Helper0.6.19 bytes; strict feed preflight against real1.2.0 packages passed. Published1.2.0 rollback packages/feeds retained with verified integrity; signed whole-edition physical rollback, No-root final-device/Android physical upgrade and Homebrew full matrix remain untested. Android stays preview; homebrew/release.json absent, no public Homebrew promotion. Detailed source hashes, exact observations and remaining limits: docs/RELEASE-1.3.0-ACCEPTANCE.md."
 }

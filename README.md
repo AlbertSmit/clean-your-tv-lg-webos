@@ -1,4 +1,6 @@
 ![Clean Your TV — for LG webOS](assets/brand/readme-logo.png#gh-light-mode-only)
+
+Unpublished 1.4.0 candidate: [test artifacts, device matrix and recovery gates](docs/RC-1.4.0-TESTING.md). Stable download links below still refer to v1.3.0.
 ![Clean Your TV — for LG webOS](assets/brand/readme-logo-dark.png#gh-dark-mode-only)
 
 # Clean Your TV — LG webOS

@@ -1,7 +1,47 @@
 {
   "schema": 1,
-  "version": null,
-  "changes": [],
+  "version": "1.4.0",
+  "changes": [
+    {
+      "pr": 80,
+      "issues": [
+        12,
+        59
+      ],
+      "summary": "Expose safe Home/settings and renewal diagnostics; underlying firmware transport and reporter acceptance remain unresolved"
+    },
+    {
+      "pr": 81,
+      "issues": [],
+      "summary": "Guide first-time desktop/Android setup with focused steps and bundled LG screen examples"
+    },
+    {
+      "pr": 87,
+      "issues": [
+        82
+      ],
+      "summary": "Initialize an absent Root Home key only during explicit setup with durable intent and independent stock readback; original finalize/device result still needs acceptance"
+    },
+    {
+      "pr": 89,
+      "issues": [],
+      "summary": "Add experimental opt-in Root eARC recovery, disabled by default; Bluetooth/microphone scope of PR27 excluded; all audio hardware acceptance pending"
+    },
+    {
+      "pr": 97,
+      "issues": [
+        93
+      ],
+      "summary": "Use binary cryptography wheels and exercise both frozen installer entrypoints before TV connection; published Intel device confirmation pending"
+    },
+    {
+      "pr": 99,
+      "issues": [
+        95
+      ],
+      "summary": "Explain failed private-Python ABI/ownership/storage checks with bounded diagnostics; no WAM cleanup, original installation outcome remains unconfirmed"
+    }
+  ],
   "excluded": [],
   "acceptance": ""
 }

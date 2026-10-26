@@ -266,23 +266,23 @@ blocked rather than migrated implicitly. Physical-TV acceptance is still Task 8.
 command is the fixed installed bootstrap path with enumerated action and validated
 UUID. Backend options are validated again, independently of UI validation.
 
-- [ ] Verify the documented Homebrew `exec`/`spawn` behavior against its current
+- [x] Verify the documented Homebrew `exec`/`spawn` behavior against its current
   source and fixtures. Lack of HBC, root UID or required methods blocks setup.
   Do not assume a successful LS2 reply establishes root or installation success.
-- [ ] Test that options containing shell syntax, arbitrary paths/URLs or invalid
+- [x] Test that options containing shell syntax, arbitrary paths/URLs or invalid
   UUIDs never reach exec/spawn. Reopening the UI calls inspect/status only.
-- [ ] Implement remote navigation and screens for prerequisites, install review,
+- [x] Implement remote navigation and screens for prerequisites, install review,
   progress, installed state, recovery-required and unsupported devices. Show the
   existing product/version when present and offer maintenance rather than reinstall.
-- [ ] Run the worker independently from the UI and reconnect through the saved
+- [x] Run the worker independently from the UI and reconnect through the saved
   operation ID. Cancel before submission is supported; after submission the UI
   explains the operation continues and offers status, never blind retry.
-- [ ] Add explicit Home activation and complete-product removal controls through
+- [x] Add explicit Home activation and complete-product removal controls through
   existing guarded flows. Removing the installer package itself is not presented
   as removing the separately installed product.
-- [ ] Add all ten locales, focus/Back behavior and long-message tests. Reuse
+- [x] Add all ten locales, focus/Back behavior and long-message tests. Reuse
   project icons with provenance; no generated store art is needed for this task.
-- [ ] Compile through existing compatibility tooling; inspect a packaged preview
+- [x] Compile through existing compatibility tooling; inspect a packaged preview
   with keyboard/remote-equivalent controls and commit verified changes.
 
 ```sh
@@ -291,6 +291,15 @@ node homebrew/tests/ui.cjs
 npm run test:compat
 npm run lint:compat
 ```
+
+Reviewed implementation: `6936b26f` + `049edcaa`. Real installer IPK is
+59,594,044 bytes; two builds match SHA256
+`b45dd5a06c63eb3cdd8431c5cff4f538c15d90410fde4408bd6efac1883ee91f`.
+Node 8/current, compatibility, source-free and packaged UI gates passed;
+Homebrew Python 17 and focused coordinator 60 tests passed. Explicit TV
+continuation currently covers only backend-proven final-readback cases; earlier
+uncertain stages retain status/restore/cytv diagnosis. This remains an automated
+UI/package result, not physical-TV acceptance or catalog availability.
 
 ## Task 6 — Add release metadata and a reviewable catalog submission
 

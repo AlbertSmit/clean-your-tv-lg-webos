@@ -16,6 +16,7 @@ class UpdaterBindingTests(unittest.TestCase):
         with patch.object(sys,'executable',selected),patch.object(cli.subprocess,'Popen') as spawn:
             cli.spawn_worker()
         self.assertEqual(spawn.call_args.args[0][0],selected)
+    @unittest.skipUnless(os.name == 'posix', 'TV updater requires fcntl')
     def test_root_device_runtime_uses_persisted_launcher(self):
         from updater.device import Device
         from types import SimpleNamespace

@@ -11,9 +11,18 @@ from test_root_runtime_profile_plan import response
 
 class IntegrationTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.root.chmod(0o700)
+  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name).resolve();self.root.chmod(0o700)
+  self.apps=self.root/'apps/usr/palm/applications';self.apps.mkdir(parents=True);
+  for shared in (self.apps,self.apps.parent,self.apps.parent.parent,self.apps.parents[2]):shared.chmod(0o777)
+  (self.apps/CANDIDATE).mkdir();(self.apps/CANDIDATE/'appinfo.json').write_text(json.dumps({'id':CANDIDATE,'type':'web'}))
+  import package_identity
+  meta=self.apps/CANDIDATE/'appinfo.json'
+  meta.write_text(json.dumps({'id':CANDIDATE,'type':'web','version':'1.0.0'}))
+  pkg=self.apps.parents[0]/'packages'/CANDIDATE/'packageinfo.json';pkg.parent.mkdir(parents=True)
+  pkg.write_text(json.dumps({'id':CANDIDATE,'app':CANDIDATE,'version':'1.0.0'}))
+  original={'usr/palm/applications/'+CANDIDATE+'/appinfo.json':package_identity.digest(meta.read_bytes()),'usr/palm/packages/'+CANDIDATE+'/packageinfo.json':package_identity.digest(pkg.read_bytes())}
   self.target=self.root/'profile';self.home=STOCK;self.baseline=snapshot(response(),STOCK)
-  self.patches=[patch.object(d,'STATE',self.root),patch.object(d,'TARGET',self.target),patch.object(d,'EXPECTED_UID',os.getuid()),patch.object(d,'read',side_effect=self.read),patch.object(d,'sam_transport',return_value=self)]
+  self.patches=[patch.object(package_identity,'inventory',return_value=original),patch.object(d,'APPLICATIONS',self.apps),patch.object(d,'STATE',self.root),patch.object(d,'TARGET',self.target),patch.object(d,'EXPECTED_UID',os.getuid()),patch.object(d,'read',side_effect=self.read),patch.object(d,'sam_transport',return_value=self)]
   for p in self.patches:p.start()
   self.store=Store(self.root);self.c=Coordinator(self.store)
   s=self.store.read();self.intent,_=self.store.apply(s,dict(kind='enable',generation=0,boot='boot-a',token='attempt-a'))
@@ -42,6 +51,26 @@ class IntegrationTests(unittest.TestCase):
   self.assertEqual(seen,[False]);self.assertEqual(r['effect'],'none')
   self.assertEqual(self.read(),self.baseline);self.assertFalse(self.target.exists())
   self.assertEqual(self.store.read()['phase'],'disabled')
+ def test_package_loss_during_recovery_or_before_restart_never_leaves_enabled_intent(self):
+  starting=self.c.boot(self.intent,'boot-b','attempt-b',False)['intent']
+  with patch.object(d,'home_present',return_value=False):
+   with self.assertRaises(ValueError):self.c.restart(starting)
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+ def test_dispatch_same_boot_shutdown_recovers_when_package_disappears(self):
+  import intent_runtime
+  self.store.apply(self.intent,dict(kind='shutdown',generation=1,token='attempt-a'))
+  with patch.object(d,'home_present',return_value=False),patch.object(intent_runtime,'boot_identity',return_value='boot-a'):
+   self.assertEqual(intent_runtime._boot(),'restored')
+  self.assertEqual(self.store.read()['phase'],'disabled');self.assertEqual(self.read(),self.baseline)
+ def test_package_loss_disables_even_a_shutdown_and_restores_routing(self):
+  from persistent_recovery import bound_exit
+  stopping,_=self.store.apply(self.intent,dict(kind='shutdown',generation=1,token='attempt-a'))
+  with patch.object(d,'home_present',return_value=False):
+   self.assertTrue(bound_exit('route-a'))
+  self.assertEqual(self.store.read()['phase'],'disabled');self.assertEqual(self.read(),self.baseline)
+ def test_package_loss_on_same_boot_cannot_preserve_or_rearm_home(self):
+  with patch.object(d,'home_present',return_value=False):r=self.c.boot(self.intent,'boot-a','attempt-b',False)
+  self.assertEqual(r['effect'],'none');self.assertFalse(r['intent']['enabled']);self.assertEqual(self.read(),self.baseline)
  def test_normal_boot_requests_restart_only_after_exact_restore(self):
   r=self.c.boot(self.intent,'boot-b','attempt-b',False)
   self.assertEqual(r['effect'],'start_guarded');self.assertEqual(self.read(),self.baseline)

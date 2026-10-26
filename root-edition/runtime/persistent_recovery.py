@@ -95,7 +95,7 @@ class Coordinator:
 
     def boot(self, expected, boot, token, failsafe):
         with self.locked(expected):
-            intent, effect = self.event(expected, 'boot', boot=boot, token=token, failsafe=failsafe)
+            intent, effect = self.event(expected, 'boot', boot=boot, token=token, failsafe=failsafe or not d.home_present())
             return self._recover(intent) if effect == 'recover' else dict(intent=intent,effect=effect)
 
     def resume_recovery(self, expected):
@@ -104,6 +104,7 @@ class Coordinator:
             return self._recover(expected)
 
     def _recover(self, intent):
+        if intent['enabled'] and not d.home_present():intent,_=self.event(intent,'fault')
         try:
             if not os.path.lexists(self.binding) and not intent['enabled']:
                 # A start may fail before any routing journal/binding was made.
@@ -149,6 +150,8 @@ class Coordinator:
         # makes LG Home the first app on the next boot. Boot recovery still
         # restores the old transaction before arming a fresh guarded route.
         with self.locked(expected):
+            if not d.home_present(purpose='live'):
+                intent,_=self.event(expected,'fault');self._recover(intent);return True
             if expected['phase'] not in ('active','stopping') or not expected['enabled']:
                 raise ValueError('Shutdown cannot promote unconfirmed intent')
             # Persist classification before any RPC can stall or shutdown kills us.
@@ -196,6 +199,7 @@ class Coordinator:
         with self.locked(expected):
             if expected['phase'] != 'starting': raise ValueError('No verified boot recovery')
             try:
+                d.require_home()
                 result = emergency_trial.start(before_publish=lambda tx:self._bind(expected,tx))
                 import time
                 from persistent_health import require_fresh
@@ -238,6 +242,7 @@ class Coordinator:
         # The existing independent 60-second deadline is never removed here.
         import emergency_trial
         with self.locked(expected):
+            d.require_home()
             intent, effect = self.event(expected, 'enable', boot=boot, token=token)
             try:
                 result = emergency_trial.start(before_publish=lambda tx:self._bind(intent, tx))
@@ -265,7 +270,7 @@ def bound_exit(transaction, reason=None):
             c.exit(intent, reason='fault')
             raise
     from shutdown_state import stopping
-    shutdown = reason != 'escape' and intent['enabled'] and (
+    shutdown = d.home_present(purpose='live') and reason != 'escape' and intent['enabled'] and (
         intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))
     print(json.dumps(dict(event='bound-exit-decision',transaction=transaction,reason=reason,
                          phase=intent['phase'],enabled=intent['enabled'],shutdown=shutdown)),flush=True)

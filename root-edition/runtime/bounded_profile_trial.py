@@ -28,6 +28,7 @@ def begin(spawn, candidate=CANDIDATE, before_publish=None):
         # check alone could race removal after it had reported readiness.
         verify()
         require_idle()
+        d.require_home()
         before=d.read()
         journal=prepare({'returnValue':True,'profiles':before['profiles']},before['sam_home'], candidate)
         # Fail closed if an old transaction is unresolved.
@@ -57,6 +58,7 @@ def begin(spawn, candidate=CANDIDATE, before_publish=None):
             time.sleep(.1)
         else: raise RuntimeError('Guardian did not acknowledge readiness')
         def remaining():
+            d.require_home()
             if time.monotonic()>journal['deadline']-20 or child.poll() is not None:
                 raise RuntimeError('Insufficient guarded time')
         def save_identity(identity):

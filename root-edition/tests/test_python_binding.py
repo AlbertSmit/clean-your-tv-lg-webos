@@ -124,11 +124,11 @@ class RuntimeBindingTests(unittest.TestCase):
             state=Path(tmp); target=state/'boot-hook'
             def write(path,raw,mode=0o600):
                 path.write_bytes(raw.encode() if isinstance(raw,str) else raw);path.chmod(mode)
-            with patch.object(hook,'STATE',state),patch.object(hook,'HOOK',target),patch.object(hook,'python_command',return_value=str(state/'python-launcher')):
-                # Ownership checks on host ancestors are already tested by binding tests.
-                with patch.object(hook,'trusted_hook_directory'):
-                    hook.install(Path.read_bytes,write)
-                self.assertIn((str(state/'service/boot-recover.sh')+' mark').encode(),target.read_bytes())
+            # Schema 1 retains the exact historical interpreter-bound bytes for removal.
+            target.write_bytes(hook.managed_content().replace(str(hook.STATE).encode(),str(state).encode()));target.chmod(0o700)
+            receipt={'version':1,'path':str(target),'content':target.read_text()}
+            (state/'startup-hook.json').write_text(json.dumps(receipt))
+            with patch.object(hook,'STATE',state),patch.object(hook,'HOOK',target),patch.object(hook,'trusted_directory'),patch.object(hook,'EXPECTED_UID',os.getuid()):
                 hook.remove(Path.read_bytes)
                 self.assertFalse(target.exists())
                 self.assertTrue((state/'startup-hook.json').exists())

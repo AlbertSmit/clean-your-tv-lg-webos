@@ -1,6 +1,6 @@
 # Manual installation of No-root and Root without cytv
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -11,7 +11,7 @@ The addresses and names below are examples; replace them with your own.
 
 Root has separate hardware validation. The main hardware
 checks used an LG OLED55C3RLA with firmware 43.21.71; they do not establish
-compatibility with other models. The current Root 0.2.0 check passed standby/wake and everyday controls. True cold boot and complete signed upgrade/rollback remain untested: [validation scope](../root-edition/RELEASE-ACCEPTANCE.md).
+compatibility with other models. The historical Root 0.2.0 check passed standby/wake and everyday controls. True cold boot and complete signed upgrade/rollback remain untested: [validation scope](../root-edition/RELEASE-ACCEPTANCE.md).
 
 ## 1. Choose a path and prepare the tools
 
@@ -309,12 +309,12 @@ From the source root; this operation does not connect to the TV:
 ```bash
 mkdir -p build
 npm ci --ignore-scripts --no-audit --no-fund
-python3 root-edition/build.py --output build/root-candidate --version 0.3.0
+python3 root-edition/build.py --output build/root-candidate --version 0.4.0
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-The bundle contains `com.cleanyourtv.root.preview_0.2.0_all.ipk`, `setup.py`,
+The 1.3.0 source bundle contains `com.cleanyourtv.root.preview_0.4.0_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.
@@ -333,57 +333,97 @@ For the Root Python checks alone, run
 `python3 -m unittest discover -s root-edition/tests`.
 Offline tests do not validate buttons or boot behavior on your TV.
 
+### Candidate source versus published bundles
+
+The following shared-product commands are included in **1.3.0**. Homebrew Installer publication is separately gated.
+Use the complete matching bundles from this revision. Published tagged bundles
+retain their matching drivers and procedure; these new flags do not retrofit
+old retained infrastructure. No Homebrew catalog or new public assets are
+available from these commands. Historical Root 0.2.0 C3 acceptance above remains
+limited to those original artifacts.
+
 ### Where Root gets its app inventory
 
-A Root build always contains an **empty** inventory. Running `sync-apps.py`
-locally before `root-edition/build.py` does not add apps to the Root IPK.
-The built-in personalization path is `install --migrate-packaged-home`:
+A source build contains an empty generic inventory. Normal shared-product setup
+uses the fixed on-TV app discovery module to personalize it locally before
+installation. cytv can instead supply its existing host-personalized inventory.
 
-1. If the TV has an installed Home Updater profile, its validated JSON
-   (`inventory`/`config`) is imported. An invalid profile causes a refusal.
-2. Otherwise, the installer reads `apps.js`, `config.js` and referenced icons
-   from the already installed ordinary `com.gathin.tvhome`.
-
-The source is unchanged. Arbitrary browser/localStorage settings are not
-migrated. Hashes of the migrated files are recorded in the private
-`/var/lib/clean-your-tv-root/personalization.json` on the TV.
-
-If ordinary Home or its profile is not installed, you can install Root
-**without** the migration flag, but the menu will remain empty. The Root tools
-currently have no ready-made manual app-discovery wizard or `--apps` option.
-Useful personalization first requires a prepared ordinary Home or valid profile,
-installed through your existing trusted method for the rooted TV. **Do not enable
-Developer Mode for this purpose.** This guide does not promise automatic setup
-of an empty Root installation from scratch or suggest bypassing bundle integrity
-by editing the IPK manually.
+For a **fresh installation**, `--migrate-packaged-home` explicitly imports a
+validated Home Updater profile or installed ordinary Home's packaged
+`apps.js`, `config.js` and icons. It does not migrate browser/localStorage or
+unknown retained infrastructure. The source is read-only; installed preference
+hashes are retained in `/var/lib/clean-your-tv-root/personalization.json`.
+Invalid/missing migration data stops before product mutation. Do not edit an IPK
+or bypass bundle checks to personalize it.
 
 ## 7. Root: first installation, checks and persistent activation
 
-Only for a first installation, with no existing candidate or retained Root state:
+Only for a first compatible installation without unknown/retained state, build
+Root Updater as well as Root. Use fresh output directories and record an explicit
+32-character hexadecimal operation identifier so later status can find the request:
 
 ```bash
-python3 build/root-candidate/setup.py install --ssh my-tv --bundle build/root-candidate --migrate-packaged-home
-python3 build/root-candidate/setup.py status --ssh my-tv
+python3 root-edition/build_updater.py --output build/root-updater
+export CYTV_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
+python3 build/root-candidate/setup.py install --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_OPERATION"
+python3 build/root-candidate/setup.py status --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_OPERATION"
 ```
 
-Without a migration source, omit `--migrate-packaged-home`, understanding the
-empty-menu limitation above. `--bundle` is required for `install`;
-`--migrate-packaged-home` is allowed **only** with `install`. Installation verifies
-the delivered files, waits for an independent terminal installation event,
-provisions permissions, the recovery service/activity and its integrity manifest.
-**It does not enable Root Home.**
+The install command returns a pending receipt from a detached worker. Repeat the
+same shared `status` command until **`state: complete` and `current: true`** before
+System Updater preparation or activation below. While `pending`, wait and inspect;
+`recovery_required`, `conflict` or `current: false` stops the sequence for diagnosis.
+Do not rerun install automatically or replace the original operation UUID.
 
-Since 1.2.0 (#55): the device driver validates the migration source and reads
-the exact preference bytes before creating Root state or installing the package.
-A missing or invalid source stops installation without changing the active Root
-state. Host-side temporary bundle staging may already exist.
+Retain the actual operation ID privately; do not generate another to retry an
+uncertain request. Add `--migrate-packaged-home` only for the deliberate fresh
+preference import above. Normal `install` requires **both** `--bundle` and
+`--updater-bundle`, installs Root Home/recovery and Root Updater, and captures the
+matching baseline. Package completion requires exact terminal evidence and
+verified installed bytes. **Setup does not enable Home or clear emergency/off.**
+
+An alternative source entry point reviews the same full-product request:
+
+```bash
+python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv
+```
+
+Without `--apply` it prints the plan without TV mutation. With `--apply --operation "$CYTV_OPERATION"` it submits shared Root + Root
+Updater setup; do **not** run both entry points to install twice. The
+`--component-only` flag on either setup tool is explicitly advanced component
+recovery, not normal setup, a reinstall shortcut or infrastructure migration.
+System Updater preparation is a separate explicit optional action, described in
+[Root updates](../root-edition/UPDATES.md).
+
+### Candidate: shared product continuation
+
+After interruption, inspect status first and preserve the original request,
+lease, snapshots, logs and interpreter binding. Switching between cytv and the
+TV installer requires no reset. cytv's Finish Root setup only verifies completed
+setup and activates Home; it does not restart an incomplete worker. The TV UI
+offers Continue only for proven final-readback installation/removal states.
+
+For additional recognized stages, the **same source setup CLI** can explicitly
+continue the original verified snapshot using its operation ID:
+
+```bash
+python3 build/root-candidate/setup.py install --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_OPERATION" --resume
+```
+
+This reuses the original stored worker snapshot and lease, validates its binding,
+and continues only recognized proofs. It does not authorize a new operation or
+replay a package submission whose outcome is unknown. Removal continuation uses
+`uninstall` with both bundles, its original removal operation ID and `--resume`.
+Status/restore/diagnosis remain the next steps when proof is insufficient. Never
+delete journals, clear locks or overwrite recovery files to force progress.
 
 If the old No-root Helper is running, press Home three times within two seconds to stop
 **that helper**, then release all buttons. Root refuses activation while Helper
 is active or an ambiguous old PID marker exists. Do not manually delete its
 `blocked` or PID files, or run two input handlers together.
 
-For persistent mode, open **Home Root → Home settings** and turn **Change Home** on, or run:
+After the original shared setup status confirms `state: complete` and `current: true`,
+for persistent mode, open **Home Root → Home settings** and turn **Change Home** on, or run:
 
 ```bash
 python3 build/root-candidate/setup.py enable --ssh my-tv
@@ -472,19 +512,40 @@ Home and your Quick Access assignment. See [No-root maintenance](MAINTENANCE.md)
 
 ### Root
 
-Root supports compatible signed edition release sets through Settings after the
-[one-time Root Updater setup](../root-edition/UPDATES.md). Manual installations
-require that separate setup with the exact installed rollback baseline; cytv
-performs Root Updater setup automatically for fresh installations. The independent
-System Updater requires a separate explicit computer bootstrap; follow the linked
-guide before using whole-edition updates. `setup.py` has no manual
+Root supports compatible signed edition release sets through Settings after
+[updater setup](../root-edition/UPDATES.md). The unreleased normal source setup
+above includes Root Updater; published tagged bundles retain their own matching
+separate procedure. System Updater is optional and requires explicit preparation
+before whole-edition updates. Homebrew upgrades CYTV Installer only, not product
+components. `setup.py` has no manual
 `reinstall` command. Do not install a new IPK over a live runtime: the package,
 recovery files, manifests and journals must match. Retain the original bundle
 and private backups outside the TV.
 
+For the unreleased shared-product flow, complete removal uses both verified
+bundles and a new removal operation ID (distinct from the install ID):
+
+```bash
+export CYTV_REMOVE_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
+python3 build/root-candidate/setup.py uninstall --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_REMOVE_OPERATION"
+python3 build/root-candidate/setup.py status --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_REMOVE_OPERATION"
+```
+
+Removal also returns a detached pending receipt. Repeat only the shared status
+command with the original removal UUID until `state: complete` and `current: true`.
+Pending/recovery/conflict stops any subsequent setup; do not submit removal again
+automatically or infer completion from package/process absence.
+
+It restores LG Home, verifies ownership and removes the project product packages,
+owned registrations and private startup wrappers. Recovery/archive evidence and referenced
+Python slots remain independently retained. Deleting CYTV Installer itself from
+LG/Homebrew removes only Installer; it does not perform complete-product removal.
+Direct component deletion is also distinct and still needs physical acceptance.
+The following older/component recovery details do not replace this full request.
+
 If Root Updater is installed, retain its state and follow the
 [Root update/recovery guide](../root-edition/UPDATES.md) before replacing its
-pinned recovery runtime. The Root Home removal sequence is:
+pinned recovery runtime. The advanced Root Home component-only removal sequence is:
 
 ```bash
 python3 build/root-candidate/setup.py restore --ssh my-tv

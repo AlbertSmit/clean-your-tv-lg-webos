@@ -7,6 +7,11 @@ on:
         type: boolean
         required: false
         default: false
+      homebrew_candidate:
+        description: 'Build an unpublished Homebrew installer for review and TV acceptance'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [release/next]
 permissions:
@@ -20,6 +25,7 @@ jobs:
     outputs:
       candidate: ${{ steps.scope.outputs.candidate }}
       installers: ${{ steps.scope.outputs.installers }}
+      homebrew_required: ${{ steps.scope.outputs.homebrew_required }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,7 +34,14 @@ jobs:
         with:
           python-version: '3.12'
       - id: scope
-        run: python scripts/ci-scope.py
+        run: |
+          python scripts/ci-scope.py
+          python - <<'PY'
+          import os, runpy
+          selected=runpy.run_path('scripts/assemble-release.py')['selected_homebrew_approval']() is not None
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('homebrew_required='+str(selected).lower()+'\n')
+          PY
   android:
     needs: scope
     if: needs.scope.outputs.installers == 'true'
@@ -57,7 +70,8 @@ jobs:
           python -m pip install -r cytv/requirements.txt ziglang==0.14.1
           python scripts/build-cytv.py --payload-only
           python -m unittest discover -s android/tests
-      - name: Restore the persistent preview signer
+      # Preserve the published APK identity so upgrades retain private recovery data.
+      - name: Restore the persistent Android signer
         env:
           CYTV_PREVIEW_KEYSTORE: ${{ secrets.CYTV_ANDROID_PREVIEW_KEYSTORE_B64 }}
         run: |
@@ -73,12 +87,12 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write('CYTV_ANDROID_KEYSTORE=' + str(path) + '\n')
           PY
-      - name: Build and verify the Android preview
+      - name: Build and verify the Android release APK
         run: |
           export CYTV_BUILD_PYTHON="$(command -v python)"
-          android/gradlew -p android :app:assembleDebug :app:lintDebug --no-daemon
+          android/gradlew -p android :app:assembleRelease :app:lintRelease :app:assembleDebugAndroidTest --no-daemon
           mkdir -p dist/android
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/android/cytv-android-arm64.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/android/cytv-android-arm64.apk
           python android/verify_release.py dist/android/cytv-android-arm64.apk --output dist/android/cytv-android-arm64.build.json
       - name: Remove the signing material
         if: always()
@@ -155,4 +169,53 @@ jobs:
             dist/cytv-macos-*.zip
             dist/cytv-linux-x64.deb
             dist/cytv-windows-x64-desktop.zip
+          if-no-files-found: error
+
+  homebrew:
+    needs: scope
+    continue-on-error: ${{ needs.scope.outputs.homebrew_required != 'true' }}
+    if: needs.scope.outputs.installers == 'true' || (github.event_name == 'workflow_dispatch' && inputs.homebrew_candidate)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build offline candidate without publishing
+        run: |
+          python - <<'PYTHON'
+          import json, os, runpy, subprocess, sys
+          from pathlib import Path
+          from cytv.python_runtime import prime_cache
+          from homebrew.build import build_payload, build_installer
+          approval_path=Path('homebrew/release.json')
+          versions=json.loads(Path('release-versions.json').read_text())
+          tag='v'+versions['release']
+          Path('build').mkdir(exist_ok=True)
+          Path('dist').mkdir(exist_ok=True)
+          subprocess.run([sys.executable,'root-edition/build.py','--output','build/homebrew-root','--version',versions['root']],check=True)
+          subprocess.run([sys.executable,'root-edition/build_updater.py','--output','build/homebrew-updater'],check=True)
+          subprocess.run([sys.executable,'system-updater/build.py','--output','build/homebrew-supervisor'],check=True)
+          approval=json.loads(approval_path.read_text()) if approval_path.exists() else {}
+          if approval.get('release') != tag: approval={}
+          runtime=prime_cache(Path(os.environ['RUNNER_TEMP'])/'homebrew-python', print)
+          build_payload('build/homebrew-root','build/homebrew-updater','build/homebrew-supervisor',runtime,'build/homebrew-payload')
+          ipk=build_installer('build/homebrew-payload','dist/homebrew-candidate',approval.get('version','0.0.0'))
+          gate=runpy.run_path('scripts/homebrew-manifest.py')
+          ipk_url=approval.get('ipk_url',gate['ASSETS']+tag+'/'+ipk.name)
+          icon_url=approval.get('icon_url','https://raw.githubusercontent.com/'+os.environ['GITHUB_REPOSITORY']+'/'+os.environ['GITHUB_SHA']+'/assets/icons/installer-256.png')
+          value=gate['manifest'](ipk.read_bytes(),ipk_url,icon_url,approval.get('source_url',gate['REPOSITORY']))
+          manifest=ipk.parent/gate['MANIFEST_NAME']
+          manifest.write_text(json.dumps(value,sort_keys=True,indent=2)+'\n')
+          if approval: gate['verify_accepted'](ipk.read_bytes(),manifest.read_bytes(),approval)
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        with:
+          name: homebrew-candidate
+          path: dist/homebrew-candidate/
           if-no-files-found: error

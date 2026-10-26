@@ -63,6 +63,38 @@ let browser;
       await page.close();
     }
   }
+  for (const [edition, port] of [['no-root', 9922], ['root', 2222]]) {
+    for (const action of ['status', 'restore', 'home-diagnostics']) {
+      const page = await browser.newPage({locale:'en'});
+      await page.addInitScript(edition => {
+        window.requests = [];
+        window.CYTV = {
+          hasKey:()=>false, snapshot:()=> '[]', answer:()=>{},
+          inspect:config=>receiveNative({kind:'inspection', host:JSON.parse(config).host,
+            root_ssh:edition==='root', developer_ssh:edition==='no-root', root_port:22}),
+          start:config=>requests.push(JSON.parse(config)),
+        };
+      }, edition);
+      await page.goto('file://' + path.join(ui, 'index.html'));
+      await page.locator('#host').fill('192.0.2.10');
+      await page.locator('[data-action=inspect]').click();
+      await page.locator('[data-action=connect]').click();
+      if (edition==='root') await page.locator('#port').fill(String(port));
+      await page.locator('[data-action=start]').click();
+      await page.evaluate(()=>receiveNative({kind:'finished', code:0}));
+      await page.locator('[data-action=home]').click();
+      await page.locator('[data-action=tools]').click();
+      await page.locator(`[data-action=choose-${action==='home-diagnostics'?'diagnostics':action}]`).click();
+      assert.equal(await page.locator('#port').inputValue(), String(port), 'Tools must preserve the chosen SSH port after Done');
+      await page.locator('[data-action=start]').click();
+      const request = await page.evaluate(()=>requests.at(-1));
+      assert.equal(request.host, '192.0.2.10');
+      assert.equal(request.edition, edition);
+      assert.equal(request.port, port);
+      assert.equal(request.action, action);
+      await page.close();
+    }
+  }
   await browser.close();
-  console.log('PASS Android maintenance: ten locales, correct commands, connection flow, progress, replay, readable text and responsive widths');
+  console.log('PASS Android maintenance: twelve locales, correct commands, connection flow, progress, replay, readable text and responsive widths');
 })().catch(async error=>{console.error(error);if(browser)await browser.close();process.exitCode=1});

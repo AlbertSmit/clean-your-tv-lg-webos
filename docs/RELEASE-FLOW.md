@@ -268,3 +268,43 @@ Workflow changes themselves take effect only after integration into `main`.
 Release-branch Android signing uses the persistent preview identity on trusted
 pushes; PR workflows receive no signing secrets. Stable feed signing and
 publication remain restricted to `main` and the `release-signing` environment.
+
+Android candidate builds use `assembleRelease` and `lintRelease`. The published
+package ID and pinned signing certificate remain unchanged so preview users can
+update without losing private profiles, imported keys or recovery receipts. The
+`CYTV_ANDROID_PREVIEW_KEYSTORE_B64` secret name and
+`android/preview-certificate.sha256` filename are retained for identity continuity;
+they do not imply a debuggable build. The trusted APK verifier rejects
+`application-debuggable` and includes `debuggable: false` in the build report;
+assembly rejects reports without that explicit boolean. No unsigned fallback is
+allowed. Native fixtures are compiled in CI but need a separate emulator run.
+See [Android stable readiness](../android/STABLE-READINESS.md) for hardware and
+upgrade gates before removing the preview version suffix at candidate freeze.
+
+## Homebrew Installer candidate and promotion gate
+
+The new Root-only CYTV Installer remains **unreleased**. Its independent installer
+version and embedded product versions must be recorded separately. Review
+[Homebrew packaging and exact CLI](../homebrew/README.md) and the
+[acceptance matrix and persistent-state inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+All physical rows and meaningful human review remain pending; current coding and
+reviews were AI-assisted. No catalog submission or public availability follows
+from passing CI. Do not copy historical C3 evidence onto this path.
+
+`homebrew/release.json` is deliberately absent, so public promotion is disabled.
+An unaccepted or stale-record Homebrew candidate CI job is optional. A later
+accepted record selects its originating project release, independent nondevelopment
+installer version, exact IPK and serialized manifest hashes, frozen original URLs,
+and genuine hardware/human evidence. Selected promotion requires the successful
+trusted workflow and Homebrew job. Signing/publication compare sourceApproval to
+the immutable committed source record; BUILD-INFO alone cannot grant approval.
+
+Unrelated later product releases carry the previously approved Installer bytes
+and metadata unchanged, including its original immutable IPK URL and honest older
+embedded versions. They do not rebuild or adopt orphan assets. Rebuild and record
+exact frozen artifacts for a new acceptance; verify package/feed assets through
+the normal protected release flow. Public HTTPS reachability, screenshots, named
+human review, accurate AI disclosure and catalog-maintainer review remain separate
+gates. A draft implementation PR targets `release/next`; whole-branch review,
+push/PR attachment and managed-worktree preservation/cleanup follow the normal
+contribution rules. No release version is selected during feature preparation.

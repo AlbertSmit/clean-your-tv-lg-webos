@@ -10,7 +10,23 @@ import os
 from types import SimpleNamespace
 
 
+class PackagePresenceTests(unittest.TestCase):
+    def test_exact_shared_chain_with_private_anchor_and_replacement(self):
+        import test_package_identity as fixtures
+        import package_identity as p
+        fixture=fixtures.IdentityTests();fixture.setUp();self.addCleanup(fixture.tearDown)
+        device=Device(fixture.stores[p.UPDATER],root_state=fixture.states[p.ROOT],installed=fixture.installed)
+        self.assertTrue(device.components_present())
+        meta=fixture.installed/'usr/palm/applications'/p.ROOT/'appinfo.json'
+        meta.write_bytes(meta.read_bytes().replace(b'1.0.0',b'9.0.0'))
+        with self.assertRaises(ValueError):device.components_present()
+        meta.unlink();self.assertFalse(device.components_present())
+
 class DeviceTests(unittest.TestCase):
+    def setUp(self):
+        from unittest.mock import patch
+        self.owner=patch.object(Device,'components_present',return_value=True);self.owner.start();self.addCleanup(self.owner.stop)
+
     def test_route_suspension_uses_transaction_bound_runtime_operation(self):
         tx = {'id':'a'*32, 'phase':'restoring-route'}
         calls=[]

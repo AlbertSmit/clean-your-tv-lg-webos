@@ -62,3 +62,25 @@ class TVNotReady(TVConnectionError):
     def __init__(self):
         super().__init__('TV is asleep or still starting. Turn it on with the remote and wait for the Home screen.',
                          close_code=1008, reason_code='tv-not-ready')
+
+
+def root_recovery_details(value):
+    """Bounded categories only: device diagnostics are untrusted input."""
+    if not isinstance(value, dict) or type(value.get('schema', 1)) is not int or value.get('schema', 1) != 1:
+        return {}
+    enums = {
+        'phase': ('manifest','status','register','startup-hook','publish'),
+        'reason': ('failed','negative-reply','invalid-reply','oversized-reply','oversized-client-output','client-exited','client-start-failed','timeout'),
+        'luna_reason': ('permission-denied','service-missing','method-missing'),
+        'startup_state': ('starting','exited','stale','unavailable'),
+        'exception_name': ('Error','TypeError','SyntaxError','ReferenceError','RangeError'),
+        'exception_code': ('MODULE_NOT_FOUND','ERR_DLOPEN_FAILED','EACCES','EPERM','ENOENT'),
+    }
+    if value.get('phase') not in enums['phase'] or value.get('reason') not in enums['reason']:
+        return {}
+    result = {key: value[key] for key, allowed in enums.items() if value.get(key) in allowed}
+    for key, low, high in (('luna_error_code', -(2**31), 2**31-1),
+                           ('client_exit_status', 0, 255), ('startup_exit_status', 0, 255)):
+        number = value.get(key)
+        if type(number) is int and low <= number <= high: result[key] = number
+    return result

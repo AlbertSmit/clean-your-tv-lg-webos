@@ -1,34 +1,111 @@
 {
   "schema": 1,
-  "version": "1.2.0",
+  "version": "1.3.0",
   "changes": [
     {
-      "pr": 60,
+      "pr": 66,
       "issues": [
-        59
+        65
       ],
-      "summary": "Allow confirmed Helper start when firmware denies status"
+      "summary": "Guide desktop recovery and save failed-attempt diagnostics"
     },
     {
-      "pr": 61,
+      "pr": 67,
+      "issues": [
+        24
+      ],
+      "summary": "Prepare non-debuggable Android builds and preserve pending prompts"
+    },
+    {
+      "pr": 70,
+      "issues": [
+        12,
+        68
+      ],
+      "summary": "Parse source-installer TV Node output without CLI banners and preserve failed probes; partial #12/#68, with fonts handled separately by #72 and underlying Helper-status transport unresolved"
+    },
+    {
+      "pr": 71,
+      "issues": [
+        12
+      ],
+      "summary": "Preserve Android maintenance SSH ports and show unknown Home status with visible focus; underlying C5 status transport and device acceptance remain pending"
+    },
+    {
+      "pr": 72,
+      "issues": [
+        68
+      ],
+      "summary": "Ship static Outfit weights for legacy webOS in Home and Root Home; partial #68, awaiting LM6370PSB visual acceptance and Helper-unavailable diagnostics"
+    },
+    {
+      "pr": 73,
       "issues": [
         55
       ],
-      "summary": "Validate Root migration early and recover pre-provision removal; OLED Flex recovery-service startup remains unresolved"
+      "summary": "Diagnose Root recovery startup/finalize failures with private observations and safe attempt-bound reports; partial #55, OLED Flex cause/device acceptance pending and supervisor inventory rebuild required"
     },
     {
-      "pr": 62,
-      "issues": [
-        51
-      ],
-      "summary": "Retain safe Luna rejection metadata in installer diagnostics; UN70006LA installation refusal remains unresolved"
-    },
-    {
-      "pr": 63,
+      "pr": 74,
       "issues": [],
-      "summary": "Add Root control for LG firmware update blocking"
+      "summary": "Add Root-only Homebrew Installer alongside cytv with shared durable operations, verified offline runtime, owned startup/removal and original-bundle continuation; public Homebrew promotion/catalog remain gated on exact TV/human acceptance"
+    },
+    {
+      "pr": 75,
+      "issues": [],
+      "summary": "Prepare 1.3.0 component versions and pending acceptance/inventory; synchronize Root service metadata and isolate the legacy CLI fixture from local build outputs"
+    },
+    {
+      "pr": 76,
+      "issues": [],
+      "summary": "Add complete Simplified/Traditional Chinese to Home, Root, updaters and all installer interfaces with static offline fonts and guides; physical Chinese-language TV acceptance pending"
+    },
+    {
+      "pr": 77,
+      "issues": [],
+      "summary": "Correct standard webOS package-data/ARM32-on-aarch64 handling, anchored private execution and receipt-owned startup guards; retain fail-closed recovery and portable host tests"
+    },
+    {
+      "pr": 78,
+      "issues": [],
+      "summary": "Record combined Homebrew correction validation, artifact identities and limited isolated Installer evidence; keep final hardware/platform/publication gates pending"
+    },
+    {
+      "pr": 79,
+      "issues": [],
+      "summary": "Accept observed metadata container ownership in Root readback"
+    },
+    {
+      "pr": 83,
+      "issues": [],
+      "summary": "Authenticate cold-boot SDK DATA using phase-selected private package authority; preserve live Home intent, complete owner checks and original System submission/no-replay ordering; final physical cold-boot retest remains pending"
+    },
+    {
+      "pr": 84,
+      "issues": [],
+      "summary": "Refresh candidate inventory and source-specific verification; separate prior controls/emergency/standby results and failed true cold boot from final pending hardware/publication acceptance"
+    },
+    {
+      "pr": 85,
+      "issues": [],
+      "summary": "Keep TV-only binding fixtures off Windows while retaining real host/package smoke; canonicalize gzip metadata across build hosts for exact candidate hashes and rebuild copied private package writers"
+    },
+    {
+      "pr": 88,
+      "issues": [],
+      "summary": "Verify independently pinned SDK services DATA and safely cancel a known-terminal never-provisioned Root install without replay or original-proof changes; scoped console hardware retest recorded, intermittent standby issue90 deferred"
+    },
+    {
+      "pr": 91,
+      "issues": [],
+      "summary": "Keep POSIX TV staging parents on Windows hosts for coordinator, Root product, System Updater and internal recovery uploads; preserve local filesystem paths"
+    },
+    {
+      "pr": 92,
+      "issues": [],
+      "summary": "Preserve published Helper 0.6.19 bytes for release packaging"
     }
   ],
   "excluded": [],
-  "acceptance": "2026-10-25: maintainer confirmed LG OLED55C3RLA / firmware 43.21.71 and reported all checks normal after Home/Back, triple-Home, standby/restart, rollback and firmware-control acceptance request; directed release. Tested installer/source revision not restated; no exact final-installer or original-reporter compatibility claim. See docs/RELEASE-1.2.0-ACCEPTANCE.md for confirmation, automated checks, verified published 1.1.0 rollback hashes and limitations. Issues #55/#51 remain partial; #59 original-device confirmation outstanding."
+  "acceptance": "2026-10-26, repository-maintainer-supervised OLED55C3RLA / firmware43.21.71 / webOS11.2.0: corrected private source1e6e92ce; fresh console Root0.4.0/RootUpdater0.3.0 setup, Home/arrows/OK/Back/volume/app-to-Home, triple-Home persistent-off, System1.1.0 bootstrap while off, explicit UI re-enable, repeated30s standby and separate AC-off30s cold-boot Home control passed with device readback. First standby safely disabled control after observer startup failed; maintainer deferred unresolved issue90 and requested continuing release. Initial cold-boot screen was unconfigured channels, not automatic foreground Clean. Host-only Windows fix91 and published-Helper packaging fix92 retain all three TV-tested Root/RootUpdater/System bundle manifests. Final outer159-file payload differs only by restoring exact published Helper0.6.19 bytes; strict feed preflight against real1.2.0 packages passed. Published1.2.0 rollback packages/feeds retained with verified integrity; signed whole-edition physical rollback, No-root final-device/Android physical upgrade and Homebrew full matrix remain untested. Android stays preview; homebrew/release.json absent, no public Homebrew promotion. Detailed source hashes, exact observations and remaining limits: docs/RELEASE-1.3.0-ACCEPTANCE.md."
 }

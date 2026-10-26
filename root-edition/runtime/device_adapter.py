@@ -20,7 +20,21 @@ STATE = Path('/var/lib/clean-your-tv-root')
 TARGET = Path('/var/webos-profile/override/clean-your-tv-root.json')
 EXPECTED_UID = 0
 PROC = Path('/proc')
+APPLICATIONS = Path('/media/developer/apps/usr/palm/applications')
 FAILSAFE = Path('/var/luna/preferences/webosbrew_failsafe')
+
+
+def home_present(*,purpose='current'):
+    """Ordinary authority and established live health use distinct selectors."""
+    try:
+        from package_identity import identity
+        info=identity(CANDIDATE,purpose=purpose,installed=APPLICATIONS.parents[2],uid=EXPECTED_UID)
+        return isinstance(info,dict) and info.get('id')==CANDIDATE and info.get('type')=='web'
+    except (OSError,ValueError,TypeError,KeyError):return False
+
+
+def require_home(*,purpose='current'):
+    if not home_present(purpose=purpose):raise ValueError('Root Home package is unavailable')
 
 
 def process_start(pid):

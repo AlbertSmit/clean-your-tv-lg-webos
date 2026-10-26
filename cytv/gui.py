@@ -38,11 +38,12 @@ class Wizard(QMainWindow):
         self.running = False
         self.pending = None
         self.report = None
+        self.recovery_profile = None
         self.worker = None
         self.setWindowTitle('Clean Your TV')
         self.resize(1060, 820)
         self.setMinimumSize(900, 680)
-        self.setStyleSheet(STYLE)
+        self.apply_language_font()
         self.current_step = 0
         self.command = 'install'
         self.events = Events()
@@ -166,6 +167,13 @@ class Wizard(QMainWindow):
         if hasattr(self, 'preview'):
             self.preview.setFixedHeight(144 if self.height() < 760 else 206)
 
+    def apply_language_font(self):
+        family = {'zh-Hans': 'Noto Sans SC', 'zh-Hant': 'Noto Sans TC'}.get(i18n.resolved_language())
+        # Keep the existing typography for other languages and use the script's
+        # packaged outlines ahead of system CJK fallback for Chinese.
+        style = STYLE.replace('font-family: ', 'font-family: "' + family + '", ', 1) if family else STYLE
+        self.setStyleSheet(style)
+
     def change_language(self):
         if self.running:
             return
@@ -178,6 +186,7 @@ class Wizard(QMainWindow):
             self.language.blockSignals(False)
             self.error_dialog('Could not save language preference', 'Check write access to the application data folder and try again.')
             return
+        self.apply_language_font()
         self.language.setAccessibleName(tr('Language'))
         self.language.setItemText(0, tr('Auto'))
         self.cancel.setText(tr('Close'))
@@ -231,6 +240,7 @@ class Wizard(QMainWindow):
         dialog.exec()
 
     def home(self):
+        self.recovery_profile = None
         self.clear_form()
         self.preview.show()
         self.subtitle.show()
@@ -272,7 +282,7 @@ class Wizard(QMainWindow):
         self.maintenance.setVisible(expanded)
         self.maintenance_toggle.setText(tr('Maintenance action') + ('  ▾' if expanded else '  ▸'))
 
-    def start(self, command):
+    def start(self, command, profile=None):
         if self.running:
             return
         self.running = True
@@ -284,10 +294,10 @@ class Wizard(QMainWindow):
         self.steps.setVisible(command == 'install')
         self.update_steps(1)
         self.badge.setText(tr('Connecting to your TV' if command == 'install' else 'Maintenance action'))
-        if command != 'install':
-            self.rail_title.setText(tr(self.operation_title))
+        self.rail_title.setText(tr(self.operation_title))
         self.language.setEnabled(False)
         self.report = None
+        self.recovery_profile = None
         self.pending = None
         self.content.clear()
         self.clear_form()
@@ -300,6 +310,9 @@ class Wizard(QMainWindow):
         def work():
             try:
                 args = [command, '--report'] if command == 'doctor' else [command]
+                if profile:
+                    args += ['--host', profile['host'], '--edition', profile['edition'],
+                             '--port', str(profile['port']), '--no-discovery']
                 args += ['--language', i18n.language_choice()]
                 code = self.run(args, ask=self.channel.ask, secret=self.channel.secret, write=self.channel.console)
             except Exception:
@@ -329,14 +342,16 @@ class Wizard(QMainWindow):
                 self.content.clear()
         elif kind in ('text', 'heading', 'error', 'error-heading'):
             text = tr(value)
-            if kind == 'text' and text.endswith('.json') and 'diagnostic-' in text:
-                path = Path(text.strip())
-                if path.is_file():
-                    self.report = path
             tag = 'h3' if kind in ('heading', 'error-heading') else 'p'
             color = '#ff6b6b' if kind.startswith('error') else '#f3ede3' if kind == 'heading' else '#c0b5a5'
             style = f' style="color: {color}"'
             self.content.append(f'<{tag}{style}>' + html.escape(text).replace('\n', '<br>') + f'</{tag}>')
+        elif kind == 'report':
+            path = Path(value)
+            if path.is_file():
+                self.report = path
+        elif kind == 'recovery':
+            self.recovery_profile = dict(value)
         elif kind == 'prompt':
             self.show_prompt(value)
         elif kind == 'done':
@@ -356,11 +371,23 @@ class Wizard(QMainWindow):
             if self.command == 'install':
                 self.update_steps(self.current_step, value)
             self.content.moveCursor(self.content.textCursor().MoveOperation.End)
+            failed = value not in (0, 130)
+            recover = value == 0 and self.recovery_profile is not None
+            if recover:
+                profile = dict(self.recovery_profile)
+                self.title.setText(tr('Recovery available'))
+                self.badge.setText(self.title.text())
+                self.subtitle.setText(tr('Restore LG Home, finish removal and reinstall. You will review each step before changes.'))
+                self.button('Recover and reinstall', lambda: self.start('install', profile), True)
             if self.report:
-                self.button('Save diagnostic report…', self.save_report)
-            if value not in (0, 130):
+                self.button('Save diagnostic report…', self.save_report, failed)
+                if failed:
+                    self.subtitle.setText(tr('Save the report from this failed attempt and attach it to your issue. Recovery data has been kept.'))
+            elif failed:
+                self.subtitle.setText(tr('A diagnostic report could not be created. Include the visible error when opening an issue.'))
+            if failed:
                 self.button('Open an issue', lambda: QDesktopServices.openUrl(QUrl(diagnostics.ISSUE_URL)))
-            self.button('Back to start', self.home, True)
+            self.button('Back to start', self.home, not recover and not (failed and self.report))
 
     def show_prompt(self, prompt):
         self.pending = prompt
@@ -372,10 +399,13 @@ class Wizard(QMainWindow):
         label.setObjectName('promptTitle')
         self.form_layout.addWidget(label)
         if prompt.kind == 'confirm':
-            yes = self.button('Connect and remember' if prompt.label.startswith('Connect') else 'Continue', lambda: self.submit('y'), prompt.default == 'y')
+            trust_prompt = prompt.label.startswith('Connect and remember this TV?')
+            label = ('Recover and reinstall' if prompt.label.startswith('Finish removal before installing again?')
+                     else 'Connect and remember' if trust_prompt else 'Continue')
+            yes = self.button(label, lambda: self.submit('y'), prompt.default == 'y')
             no = self.button('No, go back / cancel this operation', lambda: self.submit('n'), prompt.default == 'n')
             (yes if prompt.default == 'y' else no).setFocus()
-            if prompt.label.startswith('Connect'):
+            if trust_prompt:
                 self.button('Connection details', lambda: self.submit('?'))
         elif prompt.kind == 'choice' and prompt.label.startswith('Edition'):
             options = QWidget()

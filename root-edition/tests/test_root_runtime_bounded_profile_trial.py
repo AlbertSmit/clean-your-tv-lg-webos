@@ -53,7 +53,7 @@ class TrialTests(unittest.TestCase):
                     {'transaction':tx,'deadline':j['deadline'],'pid':123}))
                 (root/'profile-guardian-ready.json').chmod(0o600)
                 return Child()
-            with patch.object(d,'STATE',root),patch.object(d,'TARGET',target), \
+            with patch.object(d,'home_present',return_value=True),patch.object(d,'STATE',root),patch.object(d,'TARGET',target), \
                     patch.object(d,'EXPECTED_UID',os.geteuid()),patch.object(d,'read',side_effect=read), \
                     patch.object(d,'sam_transport',return_value=Transport()),patch.object(b.time,'sleep'):
                 if mode=='bind-failed':

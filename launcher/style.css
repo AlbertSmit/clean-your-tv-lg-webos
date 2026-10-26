@@ -1,9 +1,25 @@
 /* Sizes are the Android launcher's dp values doubled: webOS renders web apps at 1920x1080. */
 
+/* Static outlines: legacy webOS engines cannot apply variable font axes. */
 @font-face {
   font-family: 'Outfit';
-  src: url('fonts/outfit.ttf') format('truetype');
-  font-weight: 100 900;
+  src: url('fonts/outfit-300.ttf') format('truetype');
+  font-weight: 300;
+}
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/outfit-400.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/outfit-500.ttf') format('truetype');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/outfit-700.ttf') format('truetype');
+  font-weight: 700;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

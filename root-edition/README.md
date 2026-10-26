@@ -3,13 +3,13 @@
 **Native Home and Back routing, with an on-TV emergency exit.** Root Edition
 uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
-is needed after setup. A computer is needed for installation and recovery tools.
+is needed after setup. Published setup uses a computer for installation and recovery tools.
 
-[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) includes **Root Edition 0.3.0**, **Root Updater 0.2.1** and **System Updater supervisor 1.0.0**. Latest-download links follow the published release.
+[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0) includes **Root Edition 0.4.0**, **Root Updater 0.3.0** and **System Updater supervisor 1.1.0**. Latest-download links follow the published release.
 
-Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
+Historical Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
 
-See [current acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md). Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
+See [current 1.3.0 acceptance and known issue #90](../docs/RELEASE-1.3.0-ACCEPTANCE.md). Historical [1.2.0 acceptance](../docs/RELEASE-1.2.0-ACCEPTANCE.md) remains scoped to its original artifacts. Earlier [0.1.1](ROOT-0.1.1.md) and [0.1.0](ROOT-STABLE-0.1.0.md) records retain their original artifact scope. Keep working installers and recovery backups.
 
 [Install and activate](ROLLOUT.md) · [Compare editions](../docs/EDITIONS.md) ·
 [Acceptance](RELEASE-ACCEPTANCE.md) · [Recovery design](RECOVERY.md)
@@ -19,6 +19,31 @@ Channel's existing firmware-blocking preference. Changes need a real TV restart;
 the saved switch is not proof of active blocking. This also blocks firmware
 security updates, and Homebrew retains the preference after CYTV removal.
 See [operation, limitations and TV acceptance scope](../docs/LG-FIRMWARE-UPDATES.md).
+
+## Candidate: two setup clients, one installation
+
+**Unpublished Homebrew Installer candidate:** CYTV Installer is a separate Root-only on-TV
+application alongside cytv. It has no published Homebrew catalog listing yet.
+cytv retains No-root and Root on all existing platforms. Root setup requires
+existing root, Homebrew exec, Node.js 8+ and working Python 3.9+; supported ARMv7
+or `armv8l` 32-bit userspace may explicitly prepare the bundled pinned offline
+private runtime before reinspection/final review. No new hardware compatibility
+is implied by packaging or the historical Root 0.2.0 checks above.
+
+The shared coordinator installs Root Home and Root Updater, with explicit optional
+System Updater preparation. Home activation is separate and off/emergency state
+stays off. Verified installations share profiles and recovery across clients;
+unknown older infrastructure is not migrated automatically. Fresh
+`--migrate-packaged-home` imports packaged preferences only, never browser storage.
+
+Homebrew updates Installer only; product updates remain with existing updaters.
+Deleting Installer leaves Root and recovery installed. Complete removal restores
+LG Home and removes owned packages, registrations and startup links, retaining
+required recovery archives and Python slots. The UI offers continuation only for
+proven final readback; other interrupted stages need status/recovery or the
+[explicit source CLI](../docs/MANUAL_INSTALL.md#candidate-shared-product-continuation).
+See [setup](../docs/INSTALL.md#candidate-on-tv-root-installation) and the
+[pending hardware matrix/state inventory](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
 
 ## What works on the tested setup
 
@@ -83,3 +108,64 @@ is not its emergency gesture and can invoke LG behavior such as magnification.
 For exact evidence and outstanding tests, read [release acceptance](RELEASE-ACCEPTANCE.md).
 Historical research is retained in [STATUS.md](STATUS.md); older RC limitations
 are not the current usage instructions.
+
+
+## Recovery startup diagnostics (1.3.0, issue #55)
+
+Version 1.3.0 preloads `service/startup-diagnostics.js` before the firmware's
+Node bootstrap. The runner still execs Node with the same PID and bootstrap
+arguments; registration formats and recovery behavior do not change. A private,
+root-owned mode-0600 `recovery-service.json` under `/var/lib/clean-your-tv-root`
+records the current startup and terminal exit code. On Node 12.17+/13.7+,
+`uncaughtExceptionMonitor` also records a bounded exception name/code/stack
+without handling the exception or preventing its normal fatal exit. Node 8 still
+records exit codes but cannot capture the exception through that monitor.
+
+The file is replaced on each start and remains below 32 KiB; the exception stack
+is limited to 4096 characters. Unsafe paths, symlinks/hard links and diagnostic
+I/O failures cannot redirect writes or stop the service. This is exception/exit
+instrumentation, not an unbounded stderr log. SIGKILL, default signal termination,
+native aborts and failures before the preload runs may leave only an incomplete
+startup record or no record. No exit code is invented in those cases.
+
+If `finalize` fails, `recovery-failure.json` retains the failed phase, bounded
+numeric Luna/client codes, recognized service/method/permission categories and
+safe startup observations. A previous unchanged startup record is marked stale.
+Luna stdout and stderr are drained with a combined 64-KiB limit; raw RPC text is
+not exported. No readiness proof, Home activation or automatic retry is added.
+
+The cytv installer reads this data after a definite failed Root install and adds
+allowlisted `root_recovery` fields to that failed attempt's saved diagnostic
+report. A per-install `CYTV_ROOT_INSTALL_ATTEMPT` token must match the retained
+report; earlier failures cannot be attached to a later attempt. The token is not
+exported. Failed/malformed diagnostic reads preserve the original install error.
+The manual SSH bundle retains the two private files on the TV; its nonzero exit
+alone is not a diagnosis. Review private exception text locally before sharing;
+never publish the full file without redaction. Preserve deployment journals,
+LS2 snapshots and retained drivers; do not overwrite an older installed driver
+to retrofit these diagnostics or rerun provisioning merely to collect a log.
+
+The OLED Flex 42LX3Q9LA / webOS 11.2.0 startup failure is still unresolved. The
+firmware bootstrap argument contract and effective LS2 registrations need device
+evidence; this change does not implement the report's unconfirmed manifests.d
+hypothesis. No hardware, standby or cold-boot acceptance is claimed.
+
+Packaging at freeze: bump/rebuild Root and cytv, synchronize metadata and rebuild
+all desktop/console/Android payloads. The new private service file also changes
+the generated Root infrastructure and System Updater inventory. Version/rebuild
+the supervisor/bootstrap and validate its migration or explicit computer
+rebootstrap before shipping; an old pinned inventory cannot accept the new path.
+Existing failed installations and rollback baselines must remain recoverable.
+Component versions and the release candidate inventory are unchanged here.
+
+
+Unreleased cold-boot correction: rooted SDK DATA may have ordinary `0777` modes.
+The corrected private readers require independent original package hashes; they
+do not repair shared permissions or execute shared source. Missing/conflicting
+current, transaction or own-package proof keeps automatic Home rearm inhibited,
+while independent private LG Home restoration remains available. Deliver the
+changed helper closure through checked fresh setup/rebootstrap, preserving
+existing recovery archives and unknown-operation records. Updating Installer
+alone does not replace retained private product code. Root remains disabled until
+an explicit activation through the normal setup/settings flow. See the
+[candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).

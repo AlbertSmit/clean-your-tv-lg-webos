@@ -36,7 +36,7 @@ class ProvisionTests(unittest.TestCase):
         data={'version':1}
         with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'returnValue':True,'root':False}),patch.object(p,'write') as write:
             with self.assertRaises(ValueError):p.finalize()
-            write.assert_not_called()
+            self.assertNotIn(p.STATE/'recovery-provision.json', [call.args[0] for call in write.call_args_list])
     def test_finalize_owned_registration(self):
         data={'version':1}
         with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write,patch('startup_hook.install') as hook:
@@ -63,12 +63,16 @@ class ProvisionTests(unittest.TestCase):
                 rpc.assert_called_once_with('restore');write.assert_not_called()
     def test_rpc_keeps_stdin_open_until_reply(self):
         child=MagicMock(); child.poll.return_value=None
-        with patch.object(p.subprocess,'Popen',return_value=child) as popen,patch.object(p.select,'select',return_value=([child.stdout],[],[])),patch.object(p.os,'read',return_value=b'{"returnValue":true}'):
+        def read(*args):
+            child.stdin.close.assert_not_called()
+            return b'{"returnValue":true}'
+        with patch.object(p.subprocess,'Popen',return_value=child) as popen,patch.object(p.select,'select',return_value=([child.stdout],[],[])),patch.object(p.os,'read',side_effect=read):
             self.assertTrue(p.rpc('status')['returnValue'])
             self.assertIs(popen.call_args.kwargs['stdin'],p.subprocess.PIPE)
-            child.stdin.close.assert_not_called()
             child.terminate.assert_called_once()
-            child.communicate.assert_called_once_with(timeout=1)
+            child.wait.assert_called_once_with(timeout=1)
+            child.communicate.assert_not_called()
+            child.stdin.close.assert_called_once()
     def test_refresh_fixed_scan(self):
         with patch.object(p.Path,'is_file',return_value=True),patch.object(p.subprocess,'run') as run:
             self.assertTrue(p.refresh()['returnValue'])
@@ -137,3 +141,16 @@ class ProvisionTests(unittest.TestCase):
         with patch.object(p.os.path,'lexists',return_value=True),patch.object(p,'write') as write:
             with self.assertRaises(ValueError):p.repair_pending()
             write.assert_not_called()
+
+    def test_explicit_pending_resume_accepts_only_recorded_original_or_owned_partial_writes(self):
+        original=self.original();updated=p.plan(original)
+        files=list(p.FILES.items())
+        saved={'version':1,'service':p.NAME,'files':{str(path):{'original':original[key],'original_sha256':p.sha(original[key].encode()),'installed_sha256':p.sha(updated[key]),'mode':0o644,'uid':0,'gid':0} for key,path in files}}
+        snapshot=p.STATE/'ls2-provision-snapshot.json';data={path:(original[key].encode() if i%2 else updated[key]) for i,(key,path) in enumerate(files)};data[snapshot]=p.encoded(saved)
+        def write(path,raw,mode=0o600):data[path]=raw
+        with patch.object(p,'secure',side_effect=lambda path:data[path]),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'manifest',return_value={'version':1,'mode':'recovery-only'}),patch.object(p,'write',side_effect=write),patch.object(p.os,'chown'):
+            self.assertTrue(p.resume_pending()['repaired_pending'])
+            self.assertTrue(all(data[path]==updated[key] for key,path in files))
+            self.assertIn(p.STATE/'recovery-provision.pending.json',data)
+            data[files[0][1]]=b'foreign edit'
+            with self.assertRaisesRegex(ValueError,'drift'):p.resume_pending()

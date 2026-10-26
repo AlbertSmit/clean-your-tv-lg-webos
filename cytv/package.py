@@ -51,7 +51,9 @@ def tgz(files, executable=(), helper_state=False, directories=True):
     dirs = set()
     for name in files:
         safe_name(name)
-        dirs.update(str(p) for p in PurePosixPath(name).parents if str(p) != '.')
+        dirs.update(str(p) for p in PurePosixPath(name).parents if str(p) != '.' and (p.parts[:2] != ('usr','palm') or len(p.parts) >= 4))
+    # Shared SDK ancestors are platform-owned; package archives only set own leaves.
+    dirs.difference_update(('usr',))
     with tarfile.open(fileobj=raw, mode='w', format=tarfile.USTAR_FORMAT) as archive:
         for name in sorted(dirs) if directories else ():
             entry = tarfile.TarInfo(name)
@@ -66,7 +68,11 @@ def tgz(files, executable=(), helper_state=False, directories=True):
             entry.mtime = IPK_MTIME
             entry.size, entry.mode = len(data), 0o755 if name in executable else 0o644
             archive.addfile(entry, io.BytesIO(data))
-    return gzip.compress(raw.getvalue(), mtime=0)
+    compressed = io.BytesIO()
+    # GzipFile keeps the OS byte canonical across Python/zlib build hosts.
+    with gzip.GzipFile(filename='', fileobj=compressed, mode='wb', compresslevel=9, mtime=0) as packed:
+        packed.write(raw.getvalue())
+    return compressed.getvalue()
 
 
 def ipk(app, version, files, executable=(), helper_state=False, architecture='all'):
@@ -89,16 +95,24 @@ def data_files(data):
 
 
 def verify_root_rollback_format(data):
-    """Check the updater's file-only archive contract before changing the TV."""
-    parts = read_ar(data)
-    for name in ('control.tar.gz', 'data.tar.gz'):
-        seen = set()
-        with tarfile.open(fileobj=io.BytesIO(parts[name]), mode='r:gz') as archive:
+    """Accept file-only history and secure own-leaf directory entries."""
+    parts=read_ar(data)
+    roots=('usr/palm/applications/'+ROOT_APP,'usr/palm/services/'+ROOT_APP+'.service','usr/palm/packages/'+ROOT_APP)
+    for name in ('control.tar.gz','data.tar.gz'):
+        seen=set();dirs=set();files=set()
+        with tarfile.open(fileobj=io.BytesIO(parts[name]),mode='r:gz') as archive:
             for member in archive:
                 safe_name(member.name)
-                if not member.isfile() or member.name in seen:
-                    raise ValueError('Root rollback package has unsupported archive entries. Use a corrected installer build.')
+                if member.name in seen:raise ValueError('Root rollback package has duplicate archive entries')
                 seen.add(member.name)
+                if member.isdir():
+                    if (member.size or member.mode!=0o755 or member.uid!=0 or member.gid!=0
+                            or not any(member.name==root or member.name.startswith(root+'/') for root in roots)):
+                        raise ValueError('Root rollback package has unsupported archive entries. Use a corrected installer build.')
+                    dirs.add(member.name)
+                elif member.isfile():files.add(member.name)
+                else:raise ValueError('Root rollback package has unsupported archive entries. Use a corrected installer build.')
+        if dirs-{str(parent) for file in files for parent in PurePosixPath(file).parents}:raise ValueError('Root rollback package has foreign directories')
 
 
 def inventory_script(inventory):
@@ -115,8 +129,12 @@ def inventory_script(inventory):
 def personalize(data, app, inventory):
     parts = read_ar(data)
     files = data_files(data)
+    # Preserve execution from the validated regular files; tgz normalizes all
+    # permissions to 0755/0644, without retaining setuid or other special bits.
+    with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']), mode='r:gz') as archive:
+        executable = {member.name for member in archive if member.isfile() and member.mode & 0o111}
     files['usr/palm/applications/' + app + '/apps.js'] = inventory_script(inventory)
-    parts['data.tar.gz'] = tgz(files, directories=app != ROOT_APP)
+    parts['data.tar.gz'] = tgz(files, executable=executable, directories=True)
     return ar(parts), files
 
 

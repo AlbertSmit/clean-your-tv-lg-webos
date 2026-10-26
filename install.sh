@@ -81,7 +81,8 @@ reply=$(ares-novacom -d "$DEVICE" --run 'echo CYTV_SSH_OK')
 tv_node=$(ares-novacom -d "$DEVICE" --run '/usr/bin/node -p "process.versions.node"')
 python3 - "$tv_node" <<'PY'
 import re, sys
-version = sys.argv[1].strip()
+# CLI 3.x writes informational banners to stdout alongside the remote result.
+version = '\n'.join(line for line in sys.argv[1].splitlines() if not line.startswith('[Info]')).strip()
 if not re.fullmatch(r'\d+\.\d+\.\d+', version) or tuple(map(int, version.split('.'))) < (0, 12, 2):
     raise SystemExit('Home Helper requires TV Node.js 0.12.2 or newer. Installation has not started.')
 PY

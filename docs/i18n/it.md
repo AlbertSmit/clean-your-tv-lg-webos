@@ -4,9 +4,11 @@ No-root e Root sono opzioni equivalenti per diverse configurazioni della TV. Sce
 
 ## Requisiti
 
-Questa guida descrive **[v1.2.0 stabile](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. I collegamenti `releases/latest/download` distribuiscono la versione stabile pubblicata. Vedi [installazione](../INSTALL.md) e [note di rilascio](../RELEASE-1.2.0.md).
+Questa guida descrive **[v1.3.0 stabile](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. I collegamenti `releases/latest/download` distribuiscono la versione stabile pubblicata. Vedi [installazione](../INSTALL.md) e [note di rilascio](../RELEASE-1.3.0.md).
 
-Versioni del rilascio: cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root **0.3.0**, Home Updater e Root Updater **0.2.1**, Android **0.2.1-preview** (codice **10**), supervisore System Updater **1.0.0**, protocollo **1**.
+Versioni del rilascio: cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root **0.4.0**, Home Updater e Root Updater **0.3.0**, Android **0.3.0-preview** (codice **11**), supervisore System Updater **1.1.0**, protocollo **1**.
+
+Problema noto della 1.3.0: dopo lo standby, il controllo Home di Root può disattivarsi e Home torna ad aprire LG. Riattivalo esplicitamente nelle impostazioni di Clean Your TV; se non riesce, mantieni LG Home e salva la diagnostica. Vedi [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) e i [test attuali](../RELEASE-1.3.0-ACCEPTANCE.md).
 
 Accendi il televisore e collegalo alla stessa rete locale affidabile del computer. Dopo l’installazione il computer può restare spento. La compatibilità dipende da modello, firmware e telecomando; Root ha ancora verifiche hardware da completare.
 
@@ -36,7 +38,7 @@ Riusa la stessa `--data-dir` durante l’installazione. Per trasferire la cache,
 - **macOS 13+:** estrai `cytv-macos-arm64.zip` per Apple Silicon oppure `cytv-macos-x64.zip` per Intel, sposta `cytv.app` in Applicazioni e aprila. Consenti l’accesso alla rete locale. Se un download affidabile viene bloccato, usa Privacy e sicurezza → Apri comunque; non disattivare Gatekeeper. La verifica sui sistemi meno recenti non è conclusa.
 - **Linux x64:** su Ubuntu 22.04+, Debian 12+ o Mint 21+, installa `cytv-linux-x64.deb` con il gestore grafico dei pacchetti e apri Clean Your TV dal menu. Le librerie possono richiedere Internet. Linux ARM non è incluso. L’eseguibile autonomo `cytv-linux-x64` è la CLI; usa il `.deb` per l’app grafica.
 
-[Installer Android](../../android/README.md): sono disponibili tutte e dieci le lingue. Il pulsante in alto a destra mostra la lingua attuale; toccalo per sceglierne un’altra. La scelta viene salvata sul telefono.
+[Installer Android](../../android/README.md): sono disponibili tutte e dodici le lingue. Il pulsante in alto a destra mostra la lingua attuale; toccalo per sceglierne un’altra. La scelta viene salvata sul telefono.
 
 Su Android, l’azione di manutenzione scelta resta visibile durante la connessione e mostra il proprio avanzamento. L’interfaccia usa il carattere di sistema del telefono con etichette e testi di aiuto più grandi.
 
@@ -115,3 +117,53 @@ Se Root mostra `Denied methods call status` subito dopo la preparazione del supe
 Solo Root: Impostazioni Home → Aggiornamenti firmware LG modifica l’impostazione esistente di Homebrew Channel. Include gli aggiornamenti di sicurezza del firmware; quelli di Clean Your TV restano separati. Serve un vero riavvio della TV in entrambe le direzioni; lo standby non basta. L’interruttore mostra l’impostazione salvata, non un blocco effettivo verificato. Alcune TV controllano prima del blocco; gli avvisi possono restare e può servire un blocco sul router. Homebrew conserva l’impostazione dopo rimozione o rollback di CYTV. Se non disponibile o non confermato, controlla Homebrew e aggiorna lo stato. Il verbale di accettazione descrive la portata dei test TV.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Novità della 1.3.0: ripristino guidato dal computer
+
+Novità della 1.3.0. Dopo il controllo dello stato, la diagnostica della connessione o il ritorno a LG Home, una rimozione No-root incompleta propone **Ripristina e reinstalla** per la stessa TV e connessione. Conferma esplicitamente il completamento della rimozione (predefinito: No), quindi verifica le versioni incluse prima dell’installazione. Anche **Configura la mia TV** offre questo percorso. Il solo ritorno a LG Home non completa la rimozione. In caso di errore, usa **Salva rapporto diagnostico…** per salvare il rapporto di quel tentativo e allegarlo alla segnalazione; non serve il terminale. Se il rapporto non è stato creato, indica l’errore visibile. Conserva i dati di ripristino; le operazioni fallite o dall’esito incerto non vengono ripetute automaticamente. Questo non conferma ancora la soluzione del problema G5 / firmware 43.21.71 (#65).
+
+## Novità della 1.3.0 — #12
+
+Gli Strumenti Android mantengono TV, edizione e porta SSH dopo il ritorno alla schermata iniziale; No-root usa normalmente 9922. Se le impostazioni non possono verificare il controllo Home, mostrano uno stato sconosciuto e nascondono Cambia Home fino a una risposta valida. Questo non significa che Helper sia arrestato e non lo riavvia. Queste modifiche non sono nei pacchetti pubblicati di v1.2.0.
+
+Diagnostica Root della 1.3.0 (#55): dopo un errore di installazione, salvare il rapporto di quel tentativo. Può includere categorie di errori di avvio del servizio di ripristino; conservare i dati di ripristino e il driver installato. La correzione su OLED Flex non è ancora confermata.
+
+## Candidato non pubblicato: installazione Root tramite Homebrew
+
+Questo codice aggiunge l’app separata **CYTV Installer**, solo per **Root**.
+Non è ancora pubblicata nel catalogo Homebrew. cytv mantiene No-root e Root su
+Windows, macOS, Linux e Android; i collegamenti esistenti restano quelli di cytv.
+
+Servono root già disponibile, Homebrew Channel con esecuzione root, Node.js **8+**
+e Python **3.9+** funzionante. È incluso offline un Python privato fissato per
+ARMv7/`armv8l` compatibile con ambiente a 32 bit. Apertura e stato non modificano
+nulla: preparare esplicitamente Python se manca, controllare di nuovo e rivedere
+l’installazione. Servono **320 MiB liberi dopo l’installazione di Installer**;
+lo spazio temporaneo aggiuntivo dei pacchetti sul TV non è ancora misurato.
+Non è dimostrata compatibilità con nuovi modelli o firmware.
+
+Si installano Root Home e Root Updater; System Updater è una scelta esplicita
+facoltativa. Attivare Change Home separatamente dopo le verifiche. Arresto di
+emergenza e preferenze disattivate restano tali. Un’installazione attuale verificata
+condivide profilo e recupero tra cytv e TV senza reinstallare o azzerare. La vecchia
+infrastruttura sconosciuta richiede diagnosi; l’importazione delle preferenze
+confezionate vale per una nuova installazione, non per browser o infrastruttura.
+
+Dopo un’interruzione leggere prima lo stato. Continua richiede istantanea e
+prenotazione originali con stato finale provato. Altrimenti usare stato, ripristino
+o diagnosi; la CLI sorgente può continuare esplicitamente altre fasi riconosciute.
+Finish Root setup in cytv non riavvia un processo incompleto. Non eliminare diari
+e non riprovare alla cieca. Homebrew aggiorna solo Installer; il prodotto usa gli
+Updater esistenti e insiemi completi firmati. Eliminare Installer lascia il prodotto.
+La rimozione completa ripristina LG Home e pulisce i collegamenti di avvio propri,
+conservando recupero indipendente, archivi e Python necessario. Tutti i test fisici
+di questo percorso sono ancora da eseguire; i risultati storici Root 0.2.0 su C3
+non lo convalidano.
+
+L’avvio usa file privati associati alle prove di proprietà e verifica l’identità del pacchetto come dati. Gli script di avvio del pacchetto non vengono eseguiti. Pacchetti mancanti o non sicuri bloccano il riavvio automatico; il ripristino indipendente può ancora ripristinare LG Home. L’ispezione può copiare temporaneamente file verificati in uno spazio privato senza modificare Home o il prodotto.
+
+[Installazione e recupero (inglese)](../INSTALL.md#candidate-on-tv-root-installation) ·
+[Test fisici in attesa (inglese)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.

@@ -108,7 +108,7 @@ def confirm(prompt, ask, write, default=False):
     write.heading(prompt)
     write('Enter / y = yes   |   n = no   |   q = quit' if default else 'y = yes   |   Enter / n = no   |   q = quit')
     while True:
-        value = answer(ask, 'Continue ' + ('[Y/n]' if default else '[y/N]') + ': ').lower()
+        value = answer(ask, prompt + ' ' + ('[Y/n]' if default else '[y/N]') + ': ').lower()
         if not value:
             return default
         if value in ('y', 'yes', 'да', 'д'):

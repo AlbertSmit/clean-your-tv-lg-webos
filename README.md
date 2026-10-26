@@ -29,12 +29,13 @@ handling moved from an external watcher to an on-TV native helper.
 
 ## Languages
 
-Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
+Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md) · [简体中文](docs/i18n/zh-Hans.md) · [繁體中文](docs/i18n/zh-Hant.md).
 
 The v1.0.1 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
-may predate these features.
+may predate these features. Simplified and Traditional Chinese are new in the
+1.3.0 release; earlier v1.2.0 downloads retain the original ten languages.
 
 ## Install with cytv
 
@@ -47,12 +48,12 @@ URLs, so they follow the latest published release without a version in the link.
 [![Download Linux x64 graphical installer — DEB](assets/brand/downloads/linux.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-linux-x64.deb)
 [![Download Android ARM64 preview installer — APK](assets/brand/downloads/android.svg)](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest/download/cytv-android-arm64.apk)
 
-The buttons above download **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. It adds confirmed Helper recovery, Root firmware settings and installer recovery/diagnostic improvements. Hardware evidence remains specific to the tested configuration; see [release notes](docs/RELEASE-1.2.0.md) and [compatibility](docs/COMPATIBILITY.md).
+The buttons above follow the stable release. **[v1.3.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. It adds shared Root setup/recovery, Chinese localization and installer corrections; the intermittent Root standby limitation is tracked in [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90). Hardware evidence remains specific to the tested configuration; see [release notes](docs/RELEASE-1.3.0.md) and [compatibility](docs/COMPATIBILITY.md).
 
 Windows downloads the graphical ZIP: use **Extract All**, then open
 `cytv-desktop/cytv-desktop.exe` with its `_internal` folder beside it. Windows
 publisher signing is not configured. Android is an ARM64,
-debug-signed APK; see [Android preview and requirements](android/README.md).
+non-debuggable preview APK with the retained signing identity; see [Android preview and requirements](android/README.md).
 These downloads do not establish physical-TV compatibility.
 
 One wizard installs either edition. Root activates and opens Home immediately,
@@ -60,12 +61,34 @@ without a trial or Keep confirmation.
 [All latest release files](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/latest) ·
 [Desktop setup](docs/DESKTOP_INSTALL.md) · [CLI guide](docs/CLI.md) · [Release notes](docs/RELEASE-1.2.0.md)
 
+## Candidate: install Root from the TV
+
+**Unreleased candidate:** a separate **CYTV Installer** (`com.cleanyourtv.installer`)
+adds an on-TV Root setup path alongside cytv. It is not yet available through a
+published Homebrew catalog listing. cytv keeps No-root and Root on Windows,
+macOS, Linux and Android. Published download buttons above do not include this
+new path.
+
+The candidate needs existing root, Homebrew Channel with root exec, Node.js 8+
+and usable Python 3.9+. Supported ARMv7/`armv8l` 32-bit userspace can explicitly
+prepare the bundled pinned private Python offline, then inspect again and review
+installation. Setup leaves Home activation separate and never clears emergency
+off. Existing verified installations share profiles and recovery with cytv;
+unknown older infrastructure requires diagnosis, not automatic migration.
+
+Homebrew updates **Installer only**; existing Root/System Updaters own product
+updates and complete signed sets. Removing Installer leaves the product installed.
+Use explicit complete-product removal to restore LG Home and clean owned startup
+hooks; required recovery evidence and interpreter slots remain. See the
+[candidate setup and recovery contract](docs/INSTALL.md#candidate-on-tv-root-installation)
+and [pending physical acceptance](docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+
 ## Choose your edition
 
 | Edition | Status | Start here |
 | --- | --- | --- |
 | **No-root** | Launcher and helper run on the TV | [Installation](docs/INSTALL.md) |
-| **Root Edition** | Root 0.3.0 with persistent activation and Settings updates; version-specific hardware evidence | [Overview and evidence](root-edition/README.md) |
+| **Root Edition** | Root 0.4.0 with persistent activation and Settings updates; version-specific hardware evidence | [Overview and evidence](root-edition/README.md) |
 
 Both use the same Home interface. Root Stable provides native system routing
 for Home and confirmed Back exits without an observed LG flash on the tested C3.
@@ -160,7 +183,7 @@ packages. macOS uses `cytv.app`; Linux uses the graphical `cytv-linux-x64.deb`
 package. Windows uses `cytv-windows-x64-desktop.zip`: extract
 all files and open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it.
 The separate `cytv-windows-x64.exe` download is the console wizard. See [desktop setup](docs/DESKTOP_INSTALL.md).
-The [Android preview](android/README.md) includes all ten desktop languages. Its top-right control shows the current language and opens a saved language picker.
+The [Android preview](android/README.md) includes the original ten desktop languages in published v1.2.0; the 1.3.0 candidate adds both Chinese variants. Its top-right control shows the current language and opens a saved language picker.
 Real-TV acceptance remains model- and build-specific.
 
 ### No-root source installation
@@ -226,11 +249,13 @@ See [setup, status and feedback](docs/DEVELOPER-MODE-BETA.md).
 
 ## Current components and hardware evidence
 
-The **v1.2.0 stable** distribution contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10**, and System Updater **1.0.0 / protocol 1**. Component versions are recorded in `release-versions.json`; see [release notes](docs/RELEASE-1.2.0.md).
+The **v1.3.0 stable** distribution contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11**, and System Updater **1.1.0 / protocol 1**. Component versions are recorded in `release-versions.json`; see [release notes](docs/RELEASE-1.3.0.md).
+
+Current Root 0.4.0 test results and the known standby limitation are recorded in [1.3.0 acceptance](docs/RELEASE-1.3.0-ACCEPTANCE.md). Historical results below retain their original versions.
 
 Root **0.2.0**, Root Updater **0.2.0** and System Updater supervisor **1.0.0** were checked on **LG OLED55C3RLA / firmware 43.21.71 / webOS 11.2.0**, using `d344d92` (product contents identical to `4b66951`). Arrows, OK, app launch, Home, Back/Cancel/confirmed exit, volume/mute, triple-Home emergency exit and explicit resume passed. Standby/wake with Emby left open for 70 seconds and the installed-version menus passed; an unavailable update feed showed a friendly message. True cold boot, Helper **0.6.19** on a TV, UK6540PTD, and a complete signed system upgrade or rollback remain untested. Stable publication accepts this limited evidence; it does not validate every model or path.
 
-The [1.2.0 acceptance record](docs/RELEASE-1.2.0-ACCEPTANCE.md) records the maintainer's confirmation on OLED55C3RLA / 43.21.71 and its limits. Earlier hardware reports retain their original artifact scope. C5/webOS 26 Helper startup remains under investigation. See [compatibility](docs/COMPATIBILITY.md), [Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and [installation checks](docs/INSTALL.md#5-verify-before-daily-use).
+The historical [1.2.0 acceptance record](docs/RELEASE-1.2.0-ACCEPTANCE.md) records the maintainer's confirmation on OLED55C3RLA / 43.21.71 and its limits. Earlier hardware reports retain their original artifact scope. C5/webOS 26 Helper startup remains under investigation. See [compatibility](docs/COMPATIBILITY.md), [Root acceptance](root-edition/RELEASE-ACCEPTANCE.md) and [installation checks](docs/INSTALL.md#5-verify-before-daily-use).
 
 ## Project layout
 
@@ -260,8 +285,8 @@ app inventories are included. Please redact logs before opening an issue.
 The 1.1.0 release introduces **Update all** in **Settings → Software updates**
 for rooted TVs with Homebrew Channel and a separately provisioned System Updater.
 Its signed release set updates Home/Helper/Home Updater for No-root edition on a
-rooted TV, or Root Home/runtime/Root Updater for Root edition. Initial installation
-and supervisor setup require the computer installer; installing a launcher IPK or
+rooted TV, or Root Home/runtime/Root Updater for Root edition. In the published setup flow, initial installation
+and supervisor setup use the computer installer; installing a launcher IPK or
 using legacy Home-only OTA does not install that infrastructure. Unrooted TVs
 continue updating from their computer. Updates preserve the profile and retain a
 verified previous component set for recovery; explicit emergency stops stay off.

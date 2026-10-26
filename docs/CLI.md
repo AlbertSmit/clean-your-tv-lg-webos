@@ -1,6 +1,6 @@
 # cytv standalone installer
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -70,6 +70,18 @@ flow; it does not delete the operation journal to bypass recovery. Declining
 keeps recovery data. Non-interactive installation stops with instructions to
 use the interactive installer or `cytv uninstall` for the same saved TV/profile.
 If recovery fails, attach the new diagnostic report for the `uninstall` phase.
+
+Desktop behavior in 1.3.0 (absent from earlier v1.2.0 installers): successful
+status, doctor or restore checks with an unfinished No-root removal offer
+**Recover and reinstall** for the same saved connection. This uses the existing
+interactive install/removal flow and preserves its separate default-No recovery
+confirmation. Desktop report delivery uses a dedicated report event rather than
+recognizing a filename in translated log text. Failure reports retain the failed
+action, phase, traceback locations and allowlisted error metadata; the window
+offers **Save diagnostic report…** without another doctor run. CLI and Android
+still receive the existing report path through their normal output adapters.
+No new TV endpoint, permission, persistent recovery state or automatic retry is
+introduced. Issue #65's original device failure remains under investigation.
 
 Developer Mode key failures include a safe `connection` object in diagnostic
 JSON: `protocol: developer-key` and an allowlisted `reason_code`:
@@ -211,6 +223,30 @@ profile/packaged inventory instead of reading a fresh SSAP inventory:
 
 Before daily use check arrows/OK, short Home, in-app Back and exit confirmation,
 volume/pointer, standby/wake and cold boot. Both editions use three short Home presses within two seconds for emergency exit.
+
+## Candidate: shared Root operations
+
+**Unreleased source behavior:** Root installation and complete removal share the
+on-TV coordinator with CYTV Installer. The normal cytv platform/edition choices,
+SSH trust and No-root flow remain. A current verified product can be inspected,
+restored and removed across either client without reinstalling or resetting its
+profile. Older or uncertain infrastructure is not silently migrated.
+
+Run `cytv status` first after interruption, then use restore/diagnostics as needed.
+The offered **Finish Root setup** action verifies completed package/recovery
+setup and then performs explicit activation; it does **not** restart an incomplete
+worker. The on-TV UI's Continue action is limited to proven final readback. For
+other recognized interrupted stages, the source setup CLI provides
+[`--operation` plus `--resume`](MANUAL_INSTALL.md#candidate-shared-product-continuation)
+using the original stored snapshot and lease. No generic clear-lock, reset or
+blind retry is supported. Keep journals and private recovery material.
+
+Homebrew upgrades the separate Installer, not the installed product. System
+Updater preparation remains an explicit optional action; complete signed product
+updates keep their existing updater. Installer-only deletion leaves the product
+installed; use complete-product removal to restore LG routing and clean owned
+packages/private startup wrappers while retaining recovery evidence and referenced runtime
+slots. See [candidate requirements](INSTALL.md#candidate-on-tv-root-installation).
 
 ## Maintenance
 
@@ -392,3 +428,24 @@ The production builder reads `release-versions.json` and rejects mismatched Home
 Helper, Root or cytv versions, including packaged service metadata. Build from the
 release commit with `python scripts/build-cytv.py`; no separate local source tree
 is required. The wizard has no trial or Keep step.
+
+## Home button diagnostics
+
+The console executable can collect the existing opt-in Home Helper recording
+using its own saved No-root TV connection:
+
+    ./cytv home-diagnostics --edition no-root
+
+Use the platform-specific console executable name on Windows. With multiple
+saved No-root connections, select the affected TV. With no saved connection,
+follow normal address, trust and Developer Mode prompts; do not copy private
+Android profile/key files to a computer. The Helper must already be running.
+Press Home once when prompted, leave the remote untouched for the recording,
+then attach the generated JSON after reviewing it. Recording does not restart
+Helper or change the saved Home choice; standby and cold boot remain separate
+acceptance checks.
+
+Next-candidate Home settings (not published v1.2.0): a failed status read is shown
+as unknown, with Change Home hidden until a valid response. This avoids showing
+an unconfirmed off switch. It does not repair a firmware denial or unavailable
+request-file transport, prove that Helper stopped, or automatically start it.

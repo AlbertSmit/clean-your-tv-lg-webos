@@ -32,6 +32,11 @@ class DeviceBase(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(os.path.realpath(self.tmp.name));self.store=Store(self.root/'state',uid=os.getuid());(self.root/'state/cache').mkdir();(self.root/'code').mkdir()
         self.store.write('legacy-lockdown',{'schema':1,'files':{}})
         self.device=self.mod.Device(self.store,code=self.root/'code',root_state=self.root/'root',root_updater=self.root/'root-updater',installed=self.root/'installed',uid=os.getuid())
+        # These focused effects tests supply presence; real private owner/phase
+        # authentication is exercised by test_package_identity and shared setup.
+        self.device.require_components=lambda:None
+        for app in ('com.cleanyourtv.system.updater','com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
+            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps({'id':app}))
     def tearDown(self):self.tmp.cleanup()
     def baseline(self,value):
         c=next(c for c in value['components'] if c['name']=='root-infrastructure')
@@ -127,7 +132,11 @@ class InfraTransitionTests(DeviceBase):
 class LegacyBaselineTests(DeviceBase):
     def test_completed_root_release_seeds_legacy_recovery_cache(self):
         raw=ipk('com.cleanyourtv.root.preview');c={'name':'root','application':'com.cleanyourtv.root.preview','version':'1.0.0','kind':'ipk','sha256':digest(raw),'size':len(raw),'local':True};(self.root/'state/cache'/c['sha256']).write_bytes(raw)
-        self.device.sync_root_baseline({'edition':'root','phase':'complete','candidate':{'components':[c]}})
+        own_raw=ipk('com.cleanyourtv.root.updater');own={'name':'root-updater','application':'com.cleanyourtv.root.updater','version':'1.0.0','kind':'ipk','sha256':digest(own_raw),'size':len(own_raw),'local':True}
+        (self.root/'state/cache'/own['sha256']).write_bytes(own_raw)
+        for name,data in self.mod.package_archive(self.mod.members(own_raw)['data.tar.gz']).items():
+            path=self.root/'installed'/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+        self.device.sync_root_baseline({'id':'a'*32,'edition':'root','phase':'complete','candidate':{'components':[c,own]}})
         legacy=Store(self.root/'root-updater',uid=os.getuid());saved=legacy.read('current');self.assertEqual(saved['version'],'1.0.0');self.assertEqual((self.root/'root-updater/cache'/(c['sha256']+'.ipk')).read_bytes(),raw)
     def test_root_legacy_terminal_without_resume_cleanup_blocks(self):
         self.root.joinpath('root-updater').mkdir();self.root.joinpath('root-updater/transaction.json').write_text('{"phase":"complete"}')
@@ -260,7 +269,7 @@ class SignedInfrastructureTests(DeviceBase):
         # Actual Node signature verification, bounded archive parsing, fixed-file
         # replacement and root-owned receipt writes run; only TV bus/process IO is substituted.
         for c,expected in ((candidate,new_files),(previous,old_files)):
-            terminal=[];self.device.install(c,lambda value:None,terminal.append);self.assertTrue(terminal[0]['success'])
+            terminal=[];self.device.install(c,lambda value:None,terminal.append,lambda:None);self.assertTrue(terminal[0]['success'])
             for name,data in expected.items():self.assertEqual(self.device._infra_path(name).read_bytes(),data)
             if c is previous:
                 for name in set(new_files)-set(old_files):self.assertFalse(os.path.lexists(self.device._infra_path(name)))
@@ -312,8 +321,9 @@ class OfferUnavailableTests(DeviceBase):
             if c['kind']=='infrastructure':c['files']={}
         self.store.write('baseline',self.prior)
         self.device.integrity=lambda:None
+        self.device.owner_identity=lambda app,purpose='worker':json.loads((self.root/('installed/usr/palm/applications/'+app+'/appinfo.json')).read_bytes())
         for app in ('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
-            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True)
+            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True,exist_ok=True)
             path.write_text(json.dumps({'id':app,'version':'1.0.2'}))
     def failure(self,code):
         return self.mod.subprocess.CalledProcessError(1,['/usr/bin/node','/private/internal/policy.js','offer'],output=json.dumps({'error':code}).encode(),stderr=b'/private/internal details')
@@ -348,3 +358,60 @@ class OfferUnavailableTests(DeviceBase):
         from unittest.mock import patch
         with patch.object(self.mod.subprocess,'run',side_effect=self.failure('connection-error')):
             with self.assertRaisesRegex(ValueError,r'^Could not connect to the update server\. Nothing was installed\.$'):self.device.fetch('package',binary=True)
+
+class RootRollbackDataTests(DeviceBase):
+    def test_original_system_worker_rolls_back_partial_root_data_once(self):
+        import copy
+        from unittest.mock import patch
+        from test_core import release,profile
+        from system_updater.core import Manager
+        from system_updater.support.store import encode
+        prior=release('1.0.0');prior['edition']='root'
+        for c,name in zip(prior['components'],('root','root-updater','root-infrastructure')):
+            c.update(name=name,application=self.mod.IDENTITIES[name],kind='infrastructure' if name=='root-infrastructure' else 'ipk')
+            if c['kind']=='ipk':
+                raw=ipk(c['application']);c.update(sha256=digest(raw),size=len(raw))
+                (self.root/'state/cache'/c['sha256']).write_bytes(raw)
+        candidate=copy.deepcopy(prior);candidate['release']='v1.1.0'
+        for c in candidate['components']:c['version']='1.1.0'
+        self.store.write('baseline',prior)
+        snapshot=profile();self.store.write('profile-'+'a'*32,snapshot)
+        tx=dict(schema=1,id='a'*32,edition='root',phase='rolling-back',created=1,updated=2,release='v1.1.0',profile='profile-'+'a'*32,profileDigest=digest(encode(snapshot)),rollbackAttempted=True,prior=prior,candidate=candidate,components=[])
+        for c in candidate['components']:
+            tx['components'].append({'name':c['name'],'version':c['version'],'installEvidence':{'intent':c['name']=='root','submitted':{'original':'request'} if c['name']=='root' else None,'terminal':{'success':False} if c['name']=='root' else None},'rollbackEvidence':{'intent':False,'submitted':None,'terminal':None}})
+        self.store.write('transaction',tx)
+        # Static private supervisor proof is supplied at this effects boundary;
+        # real self-cache/terminal authentication has separate all-owner coverage.
+        checked=[];self.device.owner_identity=lambda owner,**kw:checked.append(owner) or {'id':owner}
+        self.device.require_components=lambda:self.mod.Device.require_components(self.device)
+        self.device.integrity=lambda **kw:None;self.device.routing_safe=lambda:True;self.device.now=lambda:1000;self.device.launch=lambda edition:None
+        self.device.snapshot_mutable=lambda:None;self.device.restore_mutable=lambda:None;self.device.repair_registrations=lambda:None
+        actual=self.device.verify_installed
+        self.device.verify_installed=lambda c:actual(c) if c['name']=='root' else True
+        (self.root/'installed/usr/palm/applications/com.cleanyourtv.root.preview/appinfo.json').unlink()
+        def install(owner,path,**kw):
+            self.assertEqual(owner,'com.cleanyourtv.root.preview');kw['on_ready']()
+            for name,data in self.mod.package_archive(self.mod.members(Path(path).read_bytes())['data.tar.gz']).items():
+                target=self.root/'installed'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data);target.chmod(0o777)
+            return {'completed':True,'event':{'statusValue':30}}
+        with patch('observed_install.install',side_effect=install) as submit:
+            manager=Manager(self.store,self.device);result=manager.run()
+            self.assertTrue(result['components'][0]['rollbackEvidence']['terminal']['success']);self.assertEqual(submit.call_count,1)
+            self.assertEqual(manager.run()['phase'],'verifying-rollback')
+            manager.healthy('root',tx['id'],'1.0.0');self.assertEqual(manager.run()['phase'],'rolled-back')
+            self.assertEqual(submit.call_count,1);self.assertEqual(set(checked),{'com.cleanyourtv.system.updater','com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'})
+
+class OriginalPreflightOrderTests(DeviceBase):
+    def test_changed_private_supervisor_blocks_before_executing_release_verifier(self):
+        from test_core import release
+        from unittest.mock import patch
+        candidate=release('1.1.0');candidate['proof']={'original':'fixture-signature'}
+        c=candidate['components'][0];raw=ipk();c.update(version='1.0.0',sha256=digest(raw),size=len(raw))
+        self.store.write('transaction',{'edition':'no-root','candidate':candidate,'prior':candidate})
+        (self.root/'code/policy.js').write_bytes(b'original verifier')
+        self.store.write('infrastructure',{'schema':1,'code':{'policy.js':digest(b'original verifier')}})
+        (self.root/'code/policy.js').write_bytes(b'changed verifier')
+        with patch.object(self.device,'fetch',side_effect=AssertionError('unverified policy executed')) as verifier,patch.object(self.device,'enforce_legacy_lockdown') as lockdown,patch('observed_install.install') as submit:
+            with self.assertRaisesRegex(ValueError,'Supervisor infrastructure changed'):
+                self.device.install(c,self.fail,self.fail,self.fail)
+            self.assertEqual(verifier.call_count,0);self.assertEqual(lockdown.call_count,0);self.assertEqual(submit.call_count,0)

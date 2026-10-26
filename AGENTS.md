@@ -1,7 +1,8 @@
 # Repository instructions
 
-Read `CONTRIBUTING.md` before making changes. Use this project root as the only
-active checkout; follow its branch, release, documentation and verification rules.
+Read `CONTRIBUTING.md` before making changes. Follow its workspace and temporary
+worktree cleanup rules, along with its branch, release, documentation and
+verification rules.
 
 ## Issue labels and status
 

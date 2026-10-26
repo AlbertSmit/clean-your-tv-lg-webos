@@ -29,10 +29,52 @@ def locked(root,uid):
     finally:os.close(fd)
 
 
+class ProductPending(RuntimeError):
+    pass
+
+
+@contextmanager
+def product_control(root, uid):
+    """Use the coordinator's mutex, without a second durable reservation.
+
+    Pure activation does not run under deploy's package lease. Updater Home
+    resume invokes its independently verified _enable path and never enters
+    this public activation gate. Status and emergency restore bypass this gate.
+    """
+    state=Path(root).parent/'clean-your-tv-installation'
+    for parent in (state.parent,*state.parent.parents):
+        info=parent.lstat()
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0,uid) or (info.st_mode&0o022 and not info.st_mode&stat.S_ISVTX):
+            raise ValueError('Unsafe installation ancestor')
+    try: state.mkdir(mode=0o700)
+    except FileExistsError: pass
+    info=state.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid!=uid or info.st_mode&0o022:
+        raise ValueError('Unsafe installation directory')
+    fd=os.open(state/'ownership.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600)
+    try:
+        info=os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1 or info.st_mode&0o022:
+            raise ValueError('Unsafe installation lock')
+        try: fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError: raise ProductPending('Product setup or removal is running; restore remains available') from None
+        path=state/'operation.json'
+        if os.path.lexists(path):
+            value=read(path,uid)
+            if (not isinstance(value,dict) or set(value)!={'schema','id','owner','journal','stage','terminal'}
+                    or type(value.get('schema')) is not int or value['schema']!=1 or type(value.get('terminal')) is not bool
+                    or not isinstance(value.get('id'),str) or not re.fullmatch('[a-f0-9]{32}',value['id'])
+                    or any(not isinstance(value.get(k),str) or not re.fullmatch('[a-zA-Z0-9_.-]{1,128}',value[k]) for k in ('owner','journal','stage'))):
+                raise ProductPending('Unknown product operation; retain recovery evidence')
+            if not value['terminal']: raise ProductPending('Product setup or removal needs recovery; restore remains available')
+        yield
+    finally: os.close(fd)
+
+
 @contextmanager
 def control(root=STATE,uid=0):
     root=Path(root)
-    with locked(root,uid):
+    with product_control(root,uid), locked(root,uid):
         if os.path.lexists(root/'update-block.json'):raise RuntimeError('Software update pending; use Root Updater Recovery before enabling Root')
         yield
 

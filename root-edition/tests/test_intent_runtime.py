@@ -10,6 +10,7 @@ class RuntimeTests(unittest.TestCase):
   self.state=patch.object(r.d,'STATE',self.root);self.state.start();self.addCleanup(self.state.stop)
   self.uid=patch.object(r.d,'EXPECTED_UID',__import__('os').getuid());self.uid.start();self.addCleanup(self.uid.stop)
   (self.root/'persistent-intent.json').write_text('{}')
+  self.presence=patch.object(r.d,'home_present',return_value=True);self.presence.start();self.addCleanup(self.presence.stop)
   self.audit=patch('boot_gate.audit');self.audit.start();self.addCleanup(self.audit.stop)
   self.observation=patch('boot_gate.observation',return_value=(False,False));self.observation.start();self.addCleanup(self.observation.stop)
  def tearDown(self):self.tmp.cleanup()

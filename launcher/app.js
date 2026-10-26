@@ -634,13 +634,26 @@
       var rgb = dominantColorFromImage(image);
       if (rgb) {
         storeCachedColor(tile.app.id, rgb);
-        tile.card.style.background = "rgb(" + rgb.join(",") + ")";
+        // Cards with a fixed icon-background override keep that color; we
+        // still resolve tile.color (ambient) from the artwork.
+        if (!tile.card.hasAttribute('data-bg')) {
+          tile.card.style.background = "rgb(" + rgb.join(",") + ")";
+        }
         tile.color = rgb;
         if (tiles[focusedTile] === tile) updateAmbient(rgb);
       }
     };
     return null;
   }
+  // Fixed card backgrounds mirroring each app icon's own background, so the
+  // artwork blends into its card instead of sitting on a derived color.
+  var APP_BG = {
+    'com.apple.appletv': [0, 0, 0],
+    'cdp-30': [0, 0, 0],
+    'netflix': [255, 255, 255],
+    'triple.nos.app': [255, 255, 255],
+    'youtube.leanback.v4': [255, 255, 255]
+  };
   function createTile(app) {
     var view = HomeUI.createTileView(app),
       element = view.element,
@@ -653,11 +666,19 @@
         color: null
       };
     var color = null, cardBackground;
-    // Apple TV's icon is a black tile; mirror its background so the artwork
-    // blends into the card instead of sitting on a derived gray field.
-    if (app.id === 'com.apple.appletv') {
-      color = [0, 0, 0];
-      cardBackground = 'rgb(0, 0, 0)';
+    var bg = APP_BG[app.id];
+    if (bg) {
+      // Fixed card background mirroring the icon's own background.
+      color = app.dominantColor || cachedColor(app.id);
+      if (!color && app.iconColor) {
+        color = parseHexColor(app.iconColor) || [68, 68, 68];
+      }
+      cardBackground = 'rgb(' + bg.join(',') + ')';
+      card.style.background = cardBackground;
+      card.setAttribute('data-bg', 'fixed');
+      if (!color) {
+        computeColorOnload(tile, image);
+      }
     } else {
       color = app.dominantColor || cachedColor(app.id);
       if (!color && app.iconColor) {

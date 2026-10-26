@@ -167,3 +167,7 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 
 Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.
+
+Solo nel prossimo candidato: No-root Impostazioni → Modalità sviluppatore → Mostra diagnostica include categorie sicure degli errori di archiviazione e RPC Home e la versione effettiva del servizio. La consultazione non abilita il rinnovo né avvia Helper. Un controllo fallito non dimostra che Helper sia fermo. La correzione su C5 non è confermata; [dettagli (inglese)](../SETTINGS-DIAGNOSTICS.md).
+
+Il rapporto riceve il focus del telecomando. Su/Giù scorre; Sinistra/Destra o OK torna alle azioni vicine e Indietro alle impostazioni Home.

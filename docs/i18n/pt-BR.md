@@ -167,3 +167,7 @@ A inicialização usa arquivos privados vinculados aos comprovantes de proprieda
 
 
 Para este candidato do código-fonte, uma instalação Root existente precisa de recuperação verificada e nova configuração para receber o ambiente privado corrigido. Atualizar apenas o Installer não o substitui. Preserve os registros de recuperação e ative Home somente pela configuração ou pelos ajustes normais.
+
+Somente no próximo candidato: No-root Configurações → Modo de desenvolvedor → Mostrar diagnóstico inclui categorias seguras de falhas de armazenamento e RPC do Home e a versão real do serviço. A consulta não ativa a renovação nem inicia o Helper. Uma falha na consulta não prova que o Helper parou. A correção no C5 não foi confirmada; [detalhes (inglês)](../SETTINGS-DIAGNOSTICS.md).
+
+O relatório recebe o foco do controle. Cima/Baixo rola; Esquerda/Direita ou OK volta às ações próximas e Voltar às configurações do Home.

@@ -25,6 +25,12 @@ The panel displays enabled/off status, the last check, an estimated countdown an
 
 **Diagnostics** displays a small report you can share in a [Beta feedback issue](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new?template=developer-mode-beta.yml). Add your TV model, firmware and what the official timer showed before/after. Never post account credentials, session tokens, token files or raw authenticated request URLs.
 
+Next-candidate preparation adds bounded settings/renewal I/O and Home RPC failure
+categories to that existing screen, with the actual service version. Unexpected
+operation failures are distinguished from storage failures. See
+[Home settings diagnostics](SETTINGS-DIAGNOSTICS.md) for collection and evidence
+limits; this is not in published v1.2.0 and does not repair or verify C5 access.
+
 ## Validation so far
 
 - Automated tests: renewal responses, countdown parsing, concurrent calls, rate limits, errors, disk writes, opt-out races, schedule failures and UI navigation.

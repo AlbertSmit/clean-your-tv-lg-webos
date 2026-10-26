@@ -177,3 +177,7 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 
 Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.
+
+Nur im nächsten Kandidaten: No-root Einstellungen → Entwicklermodus → Diagnose anzeigen enthält sichere Fehlerkategorien für Speicherung und Home-RPC sowie die tatsächliche Dienstversion. Das Anzeigen aktiviert weder die Verlängerung noch Helper. Ein fehlgeschlagener Statustest beweist keinen gestoppten Helper. Eine C5-Korrektur ist nicht bestätigt; [Details (Englisch)](../SETTINGS-DIAGNOSTICS.md).
+
+Der Bericht erhält den Fernbedienungsfokus. Auf/Ab scrollt; Links/Rechts oder OK führt zu den benachbarten Aktionen, Zurück zu den Home-Einstellungen.

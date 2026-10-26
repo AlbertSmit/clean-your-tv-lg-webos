@@ -1,4 +1,5 @@
 'use strict';
+var diagnostics=require('./diagnostics');
 var DAY = 86400000;
 function parseRemaining(response) {
   if (!response || response.result !== 'success' || typeof response.errorMsg !== 'string') return null;
@@ -16,7 +17,7 @@ function createRenewal(io, options) {
     if (!options.enabled) return {status:'disabled'};
     var state, now = io.now();
     try { state = await io.load() || {}; }
-    catch (_) { return {status:'storage-error'}; }
+    catch (error) { return {status:'storage-error',diagnostic:diagnostics.storage('renewal','read',error).diagnostic}; }
     if (typeof state.nextAt === 'number' && now < state.nextAt) return {status:'cooldown',nextAt:state.nextAt};
     var token;
     try { token = await io.readToken(); } catch (_) { token = ''; }
@@ -25,7 +26,7 @@ function createRenewal(io, options) {
     var retryDelay = [15*60000,60*60000,6*3600000,DAY][failures];
     // Reserve before network: process death cannot cause an immediate retry loop.
     var result = {status:'retry',checkedAt:now,nextAt:now+retryDelay,failures:failures+1};
-    try { await io.save(result); } catch (_) { return {status:'storage-error'}; }
+    try { await io.save(result); } catch (error) { return {status:'storage-error',diagnostic:diagnostics.storage('renewal','write',error).diagnostic}; }
     try {
       var before = parseRemaining(await io.request('check',token));
       if (before === null) result.status = 'unverified';
@@ -45,7 +46,7 @@ function createRenewal(io, options) {
         }
       }
     } catch (_) { result.status = 'retry'; }
-    try { await io.save(result); } catch (_) { return {status:'storage-error'}; }
+    try { await io.save(result); } catch (error) { return {status:'storage-error',diagnostic:diagnostics.storage('renewal','write',error).diagnostic}; }
     return result;
   }
   return {run:function () {

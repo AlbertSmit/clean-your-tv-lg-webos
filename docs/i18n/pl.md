@@ -166,3 +166,7 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 
 W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego odzyskiwania i nowej konfiguracji, aby otrzymać poprawione prywatne środowisko. Aktualizacja samego Installer go nie zastępuje. Zachowaj dane odzyskiwania i włącz Home tylko w zwykłej konfiguracji lub ustawieniach.
+
+Tylko w następnym kandydacie: No-root Ustawienia → Tryb programisty → Pokaż diagnostykę zawiera bezpieczne kategorie błędów zapisu i RPC Home oraz rzeczywistą wersję usługi. Podgląd nie włącza odnawiania ani nie uruchamia Helpera. Nieudana kontrola nie dowodzi zatrzymania Helpera. Poprawka dla C5 nie jest potwierdzona; [szczegóły (angielski)](../SETTINGS-DIAGNOSTICS.md).
+
+Raport otrzymuje fokus pilota. Góra/Dół przewija; Lewo/Prawo lub OK wraca do pobliskich działań, a Wstecz do ustawień Home.

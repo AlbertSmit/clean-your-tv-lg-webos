@@ -19,8 +19,10 @@
  var status=document.getElementById('renewalStatus'),toggle=document.getElementById('renewalToggle'),check=document.getElementById('renewalCheck'),details=document.getElementById('renewalDetails');
  var previous,developerOpen=false;
  var main=document.getElementById('settingsMain'),developer=document.getElementById('developerSettings'),summary=document.getElementById('renewalSummary');
- var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,state=null,busy=false;
- var developerButtons=['renewalToggle','renewalCheck','renewalDiagnostics','developerBack'].map(function(id){return document.getElementById(id);});
+ var buttons=Array.prototype.slice.call(panel.querySelectorAll('button')),index=0,state=null,busy=false,serviceVersion=null,homeReplies={},homeGeneration=0;
+ buttons.splice(buttons.indexOf(document.getElementById('renewalDiagnostics'))+1,0,details);
+ details.setAttribute('tabindex','0');details.setAttribute('aria-label',tr('Show diagnostics'));
+ var developerButtons=['renewalToggle','renewalCheck','renewalDiagnostics','renewalDetails','developerBack'].map(function(id){return document.getElementById(id);});
  var checkingUpdates=false;
  function checkUpdates(){
   if(checkingUpdates||!window.HomeUpdates||!window.HomeUpdates.rpc)return;
@@ -34,7 +36,7 @@
   });
  }
  function openNow(){return !panel.classList.contains('hidden');}
- function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled&&(developerButtons.indexOf(buttons[j])>=0)===developerOpen){index=j;buttons[index].focus();return;}}}
+ function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled&&!(buttons[j]===details&&details.classList.contains('hidden'))&&(developerButtons.indexOf(buttons[j])>=0)===developerOpen){index=j;buttons[index].focus();return;}}}
  function rpc(method,callback){
   var bridge,done=false,timer=setTimeout(function(){finish(null);},45000);
   function finish(r){if(done)return;done=true;clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}callback(r);}
@@ -47,9 +49,16 @@
   if(focused&&openNow())focus(index);
  }
  function homeRPC(method,payload,callback){
-  var b,done=false,t=setTimeout(function(){finish({returnValue:false});},10000);
-  function finish(r){if(done)return;done=true;clearTimeout(t);if(b)try{b.cancel();}catch(_){}callback(r);}
-  try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish({returnValue:false});}};b.call('luna://com.gathin.tvhome.renewal/'+method,JSON.stringify(payload));}catch(_){finish({returnValue:false});}
+  var b,done=false,generation=homeGeneration,t=setTimeout(function(){finish({returnValue:false,diagnostic:{component:'home',operation:'rpc',code:'TIMEOUT'}});},10000);
+  function finish(r){if(done)return;done=true;clearTimeout(t);if(b)try{b.cancel();}catch(_){}if(generation!==homeGeneration)return;
+   var reply={returnValue:!!(r&&r.returnValue===true)},diagnostic=safeDiagnostic(r&&r.diagnostic);
+   if(r&&typeof r.errorCode==='number'&&r.errorCode%1===0&&r.errorCode>=-2147483648&&r.errorCode<=2147483647)reply.errorCode=r.errorCode;
+   if(r&&typeof r.enabled==='boolean')reply.enabled=r.enabled;
+   if(!diagnostic&&(!reply.returnValue||(method!=='openLGHome'&&typeof reply.enabled!=='boolean')))diagnostic={component:'home',operation:'rpc',code:reply.returnValue?'INVALID_RESPONSE':'REQUEST_FAILED'};
+   if(diagnostic)reply.diagnostic=diagnostic;homeReplies[method]=reply;
+   if(!details.classList.contains('hidden'))renderDiagnostics();callback(r||{returnValue:false});
+  }
+  try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish({returnValue:false,diagnostic:{component:'home',operation:'rpc',code:'INVALID_JSON'}});}};b.call('luna://com.gathin.tvhome.renewal/'+method,JSON.stringify(payload));}catch(_){finish({returnValue:false,diagnostic:{component:'home',operation:'rpc',code:'BRIDGE_ERROR'}});}
  }
  function renderHome(r){
   homeBusy=false;homeVisit.disabled=false;
@@ -93,19 +102,36 @@
   text+='\n'+tr('Last checked: {date}',{date:date(last.checkedAt)})+'\n'+tr('Last confirmed renewal: {date}',{date:date(state.lastRenewedAt)});
   if(state.error==='disable-not-saved')text+='\n'+tr('Disable could not be saved. Retry before restarting the service.');
   if(state.error)text+='\n'+tr('Setup error: {error}. Use Developer Mode manually.',{error:state.error});
-  status.textContent=text;if(openNow())focus(index);
+  status.textContent=text;if(!details.classList.contains('hidden'))renderDiagnostics();if(openNow())focus(index);
  }
  function action(method){if(busy)return;busy=true;status.textContent=tr('Working…');summary.textContent=tr('Working…');toggle.disabled=true;check.disabled=true;
-  rpc(method,function(r){busy=false;if(!r||r.returnValue!==true){state=null;status.textContent=tr('Service unavailable. Install the complete Home package and try again. Manage your Developer Mode timer manually.');summary.textContent=status.textContent;summary.classList.add('settings-danger');toggle.disabled=true;check.disabled=true;if(openNow())focus(index);return;}state=r.state;render();});
+  rpc(method,function(r){busy=false;if(!r||r.returnValue!==true){state=null;serviceVersion=null;status.textContent=tr('Service unavailable. Install the complete Home package and try again. Manage your Developer Mode timer manually.');summary.textContent=status.textContent;summary.classList.add('settings-danger');toggle.disabled=true;check.disabled=true;if(!details.classList.contains('hidden'))renderDiagnostics();if(openNow())focus(index);return;}serviceVersion=typeof r.version==='string'&&/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(r.version)?r.version:null;state=r.state;render();});
  }
  toggle.onclick=function(){if(state)action(state.enabled?'disable':'enable');};
  check.onclick=function(){action('check');};
- document.getElementById('renewalDiagnostics').onclick=function(){
+ function safeDiagnostic(value){
+  if(!value||['settings','renewal','home'].indexOf(value.component)<0||['read','parse','mkdir','write','chmod','rename','wait','authorize','operation','rpc'].indexOf(value.operation)<0||['EACCES','EPERM','EROFS','ENOSPC','EDQUOT','ENOENT','EIO','EMFILE','ENFILE','EEXIST','ENOTDIR','EISDIR','ELOOP','ENAMETOOLONG','INVALID_JSON','INVALID_STATE','TOO_LARGE','TIMEOUT','BUSY','CALLER_DENIED','UNKNOWN','REQUEST_FAILED','INVALID_RESPONSE','BRIDGE_ERROR'].indexOf(value.code)<0)return null;
+  return {component:value.component,operation:value.operation,code:value.code};
+ }
+ function renderDiagnostics(){
   var last=state&&state.last||{};
-  details.textContent=tr('Share this with your TV model and firmware at:')+'\ngithub.com/Razdva122/clean-your-tv-lg-webos/issues\n'+JSON.stringify({launcher:'1.2.0',beta:true,enabled:!!(state&&state.enabled),status:last.status||'not-checked',checkedAt:last.checkedAt||null,remainingSeconds:typeof last.remainingSeconds==='number'?last.remainingSeconds:null,lastRenewedAt:state&&state.lastRenewedAt||null,error:state&&state.error||null},null,2);
+  function number(value){return typeof value==='number'&&isFinite(value)&&value>=0?value:null;}
+  var error=state&&state.error;
+  if(error&&['storage-error','internal-error','schedule-unavailable','cancel-unconfirmed','disable-not-saved','update-in-progress','invalid-update-pause','invalid-update-id','pause-import-conflict','invalid-pause-receipt'].indexOf(error)<0)error='unknown';
+  var result=last.status||'not-checked';
+  if(['not-checked','healthy','renewed','retry','expired','unverified','unavailable','session-changed','storage-error','internal-error','disabled','cooldown'].indexOf(result)<0)result='unknown';
+  var report={serviceVersion:serviceVersion,beta:true,enabled:state&&typeof state.enabled==='boolean'?state.enabled:null,status:result,checkedAt:number(last.checkedAt),remainingSeconds:number(last.remainingSeconds),lastRenewedAt:number(state&&state.lastRenewedAt),error:error||null,diagnostic:safeDiagnostic(state&&state.diagnostic),home:homeReplies};
+  // Keep nested diagnostic tuples compact enough to read on a TV.
+  var rows=Object.keys(report).map(function(key){return '  '+JSON.stringify(key)+': '+JSON.stringify(report[key]);});
+  details.textContent=tr('Share this with your TV model and firmware at:')+'\ngithub.com/Razdva122/clean-your-tv-lg-webos/issues\n{\n'+rows.join(',\n')+'\n}';
+ }
+ document.getElementById('renewalDiagnostics').onclick=function(){
+  renderDiagnostics();
   details.classList.toggle('hidden');
   this.textContent=details.classList.contains('hidden')?tr('Show diagnostics'):tr('Hide diagnostics');
   this.setAttribute('aria-expanded',String(!details.classList.contains('hidden')));
+  focus(buttons.indexOf(details.classList.contains('hidden')?this:details));
+  if(!details.classList.contains('hidden')&&details.scrollIntoView)details.scrollIntoView(false);
  };
  function showDeveloper(show){
   developerOpen=show;main.classList.toggle('hidden',show);developer.classList.toggle('hidden',!show);
@@ -124,9 +150,14 @@
  document.addEventListener('keydown',function(e){if(!openNow())return;var k=e.keyCode;
   if([9,37,38,39,40,13,461,27].indexOf(k)<0)return;
   e.preventDefault();e.stopImmediatePropagation();
+  if(document.activeElement===details&&(k===38||k===40)){
+   var before=developer.scrollTop;developer.scrollTop+=k===38?-80:80;
+   if(developer.scrollTop===before)focus(index+(k===38?-1:1));return;
+  }
+  if(document.activeElement===details&&k===13){focus(buttons.indexOf(document.getElementById('renewalDiagnostics')));return;}
   if(k===461||k===27){if(developerOpen)showDeveloper(false);else close();}else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
- window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
+ window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;homeGeneration++;homeReplies={};main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
  // No session request, token access or scheduler setup happens on launcher startup.
 }());
 

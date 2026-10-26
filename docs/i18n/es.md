@@ -177,3 +177,7 @@ El inicio usa archivos privados respaldados por comprobantes de propiedad y comp
 
 
 Para este candidato de código fuente, una instalación Root existente necesita recuperación verificada y una nueva configuración para recibir el entorno privado corregido. Actualizar solo Installer no lo sustituye. Conserve los registros de recuperación y active Home únicamente desde la configuración habitual.
+
+Solo en el próximo candidato: No-root Ajustes → Modo de desarrollador → Mostrar diagnóstico incluye categorías seguras de errores de almacenamiento y RPC de Home, y la versión real del servicio. Consultarlo no activa la renovación ni inicia Helper. Un fallo de consulta no demuestra que Helper esté detenido. La corrección en C5 no está confirmada; [detalles (inglés)](../SETTINGS-DIAGNOSTICS.md).
+
+El informe recibe el foco del mando. Arriba/Abajo desplaza; Izquierda/Derecha u OK vuelve a las acciones cercanas y Atrás a los ajustes de Home.

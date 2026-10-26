@@ -6,6 +6,18 @@ import unittest
 
 
 class BuildAssetsTests(unittest.TestCase):
+    def test_home_package_includes_storage_diagnostics_dependency(self):
+        import json
+        from cytv import package
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        sources = build['tracked_files']('renewal-service')
+        app = {'appinfo.json': json.dumps({'id':'com.gathin.tvhome','version':'1.0.0','type':'native'}).encode()}
+        files = package.data_files(build['pack_app'](app, sources))
+        prefix = 'usr/palm/services/com.gathin.tvhome.renewal/'
+        self.assertEqual(files[prefix+'diagnostics.js'], (root/'renewal-service/diagnostics.js').read_bytes())
+        self.assertIn(b"require('./diagnostics')", files[prefix+'service.js'])
+
     def test_https_service_assets_survive_the_public_source_filter(self):
         import json
         from cytv import package

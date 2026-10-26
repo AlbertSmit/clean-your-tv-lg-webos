@@ -37,6 +37,11 @@ const output=process.env.CYTV_TEST_OUTPUT_DIR||'build/tests';
      assert(await page.evaluate(()=>document.activeElement.offsetHeight>0),'remote must skip hidden actions');
     }
     await page.locator('#developerOpen').click();await developer.waitFor({state:'visible'});
+    await page.locator('#renewalDiagnostics').click();
+    assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalDetails');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowLeft');
+    assert(await page.evaluate(()=>document.activeElement.offsetHeight>0),'report focus must return to a visible action');
     await page.keyboard.press('Escape');assert(!(await developer.isVisible()));
     assert.equal(await page.evaluate(()=>document.activeElement.id),'developerOpen');
     await page.locator('#developerOpen').click();

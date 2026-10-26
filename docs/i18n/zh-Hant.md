@@ -149,3 +149,7 @@ Installer 要求已有 root、可執行 root exec 的 Homebrew Channel、Node.js
 
 
 此原始碼候選版中，現有 Root 安裝需要經過驗證的復原和重新設定，才能取得修正後的私有執行環境。只更新 Installer 不會取代它。請保留復原記錄，並且只透過正常設定流程或設定頁面啟用 Home。
+
+僅適用於下一候選版本：No-root 設定 → 開發者模式 → 顯示診斷會提供安全的儲存和 Home RPC 錯誤分類及實際服務版本。查看診斷不會啟用自動續期或啟動 Helper。狀態檢查失敗不代表 Helper 已停止。C5 上的修復尚未確認；參閱[診斷說明（英文）](../SETTINGS-DIAGNOSTICS.md)。
+
+報告會取得遙控器焦點。上/下鍵捲動，左/右鍵或 OK 返回相鄰操作，返回鍵回到 Home 設定。

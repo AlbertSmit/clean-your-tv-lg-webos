@@ -172,3 +172,7 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 
 For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+Next candidate only: No-root Settings → Developer Mode → Show diagnostics includes safe storage/Home RPC failure categories and the actual service version. Viewing diagnostics does not enable renewal or start Helper. A failed status check does not prove Helper stopped. This does not establish a C5 fix; see [diagnostics (English)](../SETTINGS-DIAGNOSTICS.md).
+
+The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.

@@ -1,19 +1,21 @@
 'use strict';
+var diagnostics=require('./diagnostics');
 // A single service process owns this queue. Home interception is never called here.
 module.exports=function(io){
- var state,stopped=false,queue=Promise.resolve(),generation=0;
- try{state=io.load()||{};}catch(_){state={enabled:false,error:'storage-error'};}
+ var state,diagnostic=null,stopped=false,queue=Promise.resolve(),generation=0;
+ try{state=io.load()||{};}catch(error){state={enabled:false,error:'storage-error'};diagnostic=diagnostics.storage('settings','read',error).diagnostic;}
  state.enabled=state.enabled===true;stopped=!state.enabled||!!state.updatePause;
- function status(){return JSON.parse(JSON.stringify(state));}
- function save(){io.save(state);}
- function enqueue(fn){var p=queue.then(fn).catch(function(){stopped=true;state.enabled=false;state.error='storage-error';return status();});queue=p;return p;}
+ function status(){var result=JSON.parse(JSON.stringify(state));delete result.diagnostic;if(diagnostic)result.diagnostic=Object.assign({},diagnostic);return result;}
+ function save(){try{io.save(state);if(!state.error)diagnostic=null;}catch(error){diagnostic=diagnostics.storage('settings','write',error).diagnostic;throw diagnostics.storage('settings','write',error);}}
+ function enqueue(fn){var p=queue.then(fn).catch(function(error){stopped=true;state.enabled=false;state.error=error&&error.storageFailure===true?'storage-error':'internal-error';diagnostic=state.error==='storage-error'?diagnostics.sanitize(error.diagnostic):diagnostics.describe('renewal','operation',error);return status();});queue=p;return p;}
  async function check(){
   if(stopped||!state.enabled)return status();
   var result=await io.run();
   if(stopped||!state.enabled)return status();
-  if(result.status!=='cooldown')state.last=result;
+  var resultDiagnostic=diagnostics.sanitize(result.diagnostic);
+  if(result.status!=='cooldown'){state.last=Object.assign({},result);delete state.last.diagnostic;}
   if(result.status==='renewed')state.lastRenewedAt=io.now();
-  save();return status();
+  save();if(resultDiagnostic)diagnostic=resultDiagnostic;return status();
  }
  function validId(id){return typeof id==='string'&&/^[a-zA-Z0-9-]{1,80}$/.test(id);}
  return {

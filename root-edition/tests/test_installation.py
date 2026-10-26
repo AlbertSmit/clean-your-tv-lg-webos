@@ -113,6 +113,47 @@ with owner.operation('deploy','deploy.json'):
             journals[path]['homeResumePhase'] = 'complete'
         self.assertTrue(self.owner.status()['terminal'])
 
+    def interrupted_second_update(self, component):
+        spec = importlib.util.spec_from_file_location('second_update_guard', ROOT/'runtime/update_guard.py')
+        guard = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(guard)
+        root = Path(self.tmp.name).resolve()/'clean-your-tv-root'
+        root.mkdir(mode=0o700)
+        owner = Ownership(Store(root.parent/'clean-your-tv-installation', uid=os.getuid()))
+        path = JOURNALS[component][0]
+        journals = {path: {'phase': 'complete', 'homeResumePhase': 'complete'}}
+        read = lambda path: journals.get(path)
+        with device_operation(component, recovery=True, ownership=owner, read=read) as first:
+            prior = first['id']
+        self.assertTrue(owner.status()['terminal'])
+        with guard.control(root, os.getuid()):
+            pass
+        with self.assertRaisesRegex(RuntimeError, 'interrupted preparation'):
+            with device_operation(component, recovery=True, ownership=owner, read=read) as second:
+                # The next update has persisted its initial transaction, before
+                # a routing reservation or context-exit journal mirroring.
+                journals[path] = {'phase': 'preparing'}
+                raise RuntimeError('interrupted preparation')
+        self.assertNotEqual(owner.status()['id'], prior)
+        self.assertFalse(owner.status()['terminal'])
+        self.assertFalse((root/'update-block.json').exists())
+        with self.assertRaises(guard.ProductPending):
+            with guard.control(root, os.getuid()):
+                self.fail('pending update admitted public activation')
+        # A genuine recovery keeps that new pending lease, rather than creating
+        # a third update reservation after process/lock release.
+        pending = owner.status()['id']
+        with device_operation(component, recovery=True, ownership=owner, read=read) as resumed:
+            self.assertEqual(resumed['id'], pending)
+            journals[path] = {'phase': 'complete', 'homeResumePhase': 'complete'}
+        self.assertTrue(owner.status()['terminal'])
+
+    def test_second_root_update_interruption_blocks_public_activation(self):
+        self.interrupted_second_update('root-update')
+
+    def test_second_system_update_interruption_blocks_public_activation(self):
+        self.interrupted_second_update('system-update')
+
     def test_preexisting_foreign_journal_blocks_even_without_global_record(self):
         read = lambda path: {'phase':'installing'} if path == JOURNALS['root-update'][0] else None
         with self.assertRaises(Busy):

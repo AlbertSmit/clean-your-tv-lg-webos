@@ -186,7 +186,9 @@ def device_operation(owner, recovery=False, ownership=None, read=read_journal):
     path, field, finished = JOURNALS[owner]
     current = ownership.status()
     resume = None
-    if recovery and current and (current['owner'],current['journal']) == (owner,path.name):
+    # Finished component work is a new mutation, not recovery of its old lease.
+    # Reserve it nonterminal before the caller can write a new transaction.
+    if recovery and current and not current['terminal'] and (current['owner'],current['journal']) == (owner,path.name):
         resume = current['id']
     with ownership.operation(owner,path.name,resume=resume, check=lambda: pending_journals(owner,read)) as record:
         yield record

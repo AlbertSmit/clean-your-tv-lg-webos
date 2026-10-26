@@ -117,7 +117,8 @@ python3 -m unittest discover -s tests/cytv -p 'test_root_preflight.py'
 
 ## Task 2 — Make startup ownership and direct removal safe
 
-Implemented and reviewed in `4117979d` (Root 541, System 92, cytv 315 tests
+Implemented and reviewed in `4117979d`, with personalization mode fix
+`0a8a6f64` reviewed separately (Root 541, System 92, cytv 315 tests
 with 23 existing skips). Physical-TV acceptance remains Task 8. Existing updater
 state is not silently reprovisioned; supported migration remains Task 4.
 
@@ -186,7 +187,8 @@ trust and no network calls during device execution. Runtime JS exports
   extraction. Require root-owned parents, exclusive staging, resource limits,
   exact output inventory and smoke/readback checks before selecting an interpreter.
   A valid installed system Python skips private runtime installation.
-- [ ] Test on a fixture with no Python and no host tools. Unsupported ABI and
+- [ ] Test without Python or a computer-side installer, using only Node and
+  existing verified TV utilities. Unsupported ABI and
   inadequate storage return actionable errors with zero installation submissions.
 - [ ] Build twice in distinct output directories; compare hashes and report IPK
   and temporary-space requirements. If measured limits invalidate offline delivery,

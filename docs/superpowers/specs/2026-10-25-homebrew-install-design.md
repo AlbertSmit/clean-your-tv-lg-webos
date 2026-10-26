@@ -75,9 +75,12 @@ Do not expose a shell input, arbitrary URL, arbitrary path or generic command AP
 For a clean compatible TV the user sees the release, required components and any
 private-runtime requirement before choosing Install. The coordinator then:
 
-1. Acquires a shared installation/update lock and verifies the exact local bundle.
+1. Verifies the exact offline bundle and inspects TV prerequisites without changing
+   product state.
 2. Prepares or reuses the verified interpreter; unsupported hardware stops here.
-3. Installs Root Home with its existing bounded recovery preparation.
+   Immutable runtime promotion uses the existing candidate-interpreter lock.
+3. Re-inspects product state under the shared installation/update lease, then
+   installs Root Home with its existing bounded recovery preparation.
 4. Prepares Root Updater and its matching rollback baseline.
 5. Offers explicit System Updater preparation using the existing trust contracts.
 6. Discovers installed apps locally and preserves the existing profile if present.
@@ -112,7 +115,10 @@ publish a path that only works on developer machines with preinstalled Python.
 
 ## Recovery, removal and concurrency
 
-All setup, update and removal clients must share device-side exclusion. UI reload,
+All product setup, update and removal clients must share device-side exclusion.
+The immutable interpreter can be prepared before the Python-based product lease;
+product state is re-inspected under that lease before any product mutation.
+UI reload,
 network loss or closing the installer does not retry a submitted package operation.
 Persistent operation identifiers and terminal receipts allow status and safe
 continuation from cytv or the TV. The installer UI does not own the worker's life.

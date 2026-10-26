@@ -12,7 +12,9 @@ all needed changes and commits in Git and, where applicable, push the branch or
 create/update its PR. Preserve any required artifacts outside the temporary
 worktree. Prefer the managed worktree archive/remove tool when available; otherwise
 use `git worktree remove`. Delete its temporary build outputs and dependencies
-with it. Do not leave unused worktree folders behind or remove another task's active checkout.
+with it. Do not leave unused worktree folders behind or remove another task's
+active checkout.
+
 The former `release-desktop/` checkout is archived under
 `archives/2026-10-24-release-desktop/`. The former `stable/` checkout was moved
 to the project root on 2026-10-25, preserving its Git history and local changes.

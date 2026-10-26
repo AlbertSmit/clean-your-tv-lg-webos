@@ -1,82 +1,123 @@
 # v1.3.0 candidate acceptance
 
 Status: **PREPARATION — NOT ACCEPTED FOR PUBLICATION**.
-Selected metadata does not freeze or approve a release. The user authorized
-release preparation and publication after verification; no physical result or
-meaningful Homebrew human-review result has been supplied for this candidate.
+Selected versions do not freeze or approve a release. The maintainer authorized
+preparation and release after verification; final hardware acceptance and
+meaningful Homebrew human review remain outstanding. The maintainer is away;
+source work does not authorize unsupervised TV reactivation or erase a failed test.
 
-## Candidate and evidence
+## Candidate and exact source evidence
 
-Release 1.3.0; cytv0.4.0; Home1.4.2; Helper0.6.19; Root0.4.0;
-Home/Root Updater0.3.0; supervisor1.1.0/protocol1; Android0.3.0-preview/code11.
-Homebrew0.1.0 is proposed for final exact acceptance; ordinary unapproved CI
-continues to produce development0.0.0. Final integrated frozen source, exact package/manifest hashes, trusted platform-build run and artifact signer evidence are pending.
+Release1.3.0; cytv0.4.0; Home1.4.2; Helper0.6.19 unchanged exact archive pin;
+Root0.4.0; Home/Root Updater0.3.0; supervisor1.1.0/protocol1;
+Android0.3.0-preview/code11 with existing signer/application/private-data identity.
+Homebrew0.1.0 is proposed for exact acceptance; unapproved CI uses development0.0.0.
 
-The approved isolated Installer test at source1be47b2c passed installation, actual file hashes and fixed HBC read-only inspection. Launch was acknowledged, but the foreground screen was not confirmed. Only Installer was then removed with terminal/absence proof; the previous product baseline was unchanged. This does not validate product installation, activation, controls, boot or rollback. Local reproducible Installer0.1.0 SHA256: c3061975151fc9d25c54d7814cf670b0f7a9e3052dc4bf5d2ea9b1b0ee0077cd (59,725,142 bytes); superseded by any later integrated candidate build. Detailed device diagnostics remain private.
+PR #83 source `abf324e19c4882e079bea4722813bcb8a39c2ea2` passed:
 
-PR #74 implementation source7b8738bc passed full local automated checks
-(1,151 Python cases with23 environmental skips, plus JS/native/browser gates),
-actual Helper Node0.12.2 and bootstrap Node8, reproducible IPK and scoped review.
-A subsequent test-only portability correction28d1aeb5 replaces macOS-only
-/private/tmp with tempfile.gettempdir(); nine targeted regressions passed and
-Linux/macOS CI passed. Implementation Linux/macOS/ARM CI subsequently passed at28d1aeb5. Combined
-versioned candidate verification must be recorded independently. These earlier checks do not approve
-new versioned artifacts or certify a TV.
+- Full local `scripts/test.sh`:1,220 Python cases, two isolated-Linux-root skips,
+  Qt, JS/native/compatibility, twelve-locale browser and actual Helper Node0.12.2.
+- Real System Manager/Device/private-authority regressions: both original SDK
+  legs through candidate health, all-owner/cache refusal, durable intent before
+  effects, interrupted unknown requests without fresh-manager/worker replay.
+  Focused12, System107 and selected Root78 passed; committed-source archive and
+  source-deleted isolated14-module emitted closure passed.
+- Native macOS console/GUI build, embedded159-file public payload validation and
+  frozen GUI/package smoke. Private closures are rebuilt with the candidate;
+  equality of public component IPKs alone is insufficient.
+- Two Installer0.1.0 builds were byte-identical:61,270,342bytes, SHA256
+  `c238810ee6f37cc892003eb4c795cf52aed61da56a91034bcd44e72af1fdd61c`.
+  Proposed serialized manifest SHA256
+  `a4cb06ebf363e7d27d993a1ab34599774a847bb9acee1047f8556c9e7efd78d0`;
+  payload manifest SHA256
+  `0ad47d81af435ba311fe34ea975e97de80f3f97acdf8cc103bad181d1e42140c`.
+  These source-specific unpublished artifacts are not a public approval record.
 
-## Required supervised record
+Independent whole-change review and its three corrections passed; the subsequent
+original-System-call delta passed specification/code review without blocking
+findings. One nonblocking new-test note remains: an `intent.json` sentinel is not
+the real persistent-intent record, so those sentinel assertions do not establish
+emergency-intent acceptance. Existing real-runtime coverage is separate; hardware
+retest is still required.
 
-- TV model, firmware, webOS, HBC version, input ABI and actual effective UID: pending.
-- Supervising human, meaningful code reviewer, date and exact source/artifact IDs: pending.
-- Fresh Root installation with suitable system Python and without Python: NOT RUN.
-- cytv→HBC and HBC→cytv maintenance without profile reset: NOT RUN.
-- Original request continuation, concurrent clients and interrupted/unknown outcomes: NOT RUN.
-- Existing 1.2.0 infrastructure migration or explicit supported rebootstrap: NOT RUN.
-- Home/Back/navigation/held arrows/OK/volume/pointer/wheel/app launching: NOT RUN.
-- Change Home, triple-Home, frozen UI/observer recovery, no automatic emergency re-enable: NOT RUN.
-- Individual package deletion and complete-product removal with LG Home recovery: NOT RUN.
-- Standby and true cold boot, recorded separately: NOT RUN.
-- Signed whole-edition update/rollback and retained profile/recovery evidence: NOT RUN.
-- No-root normal setup, maintenance, removal and Developer Mode renewal boundaries: NOT RUN.
-- Protected-signer Android update/private-data/pending-receipt retention and physical use: NOT RUN.
-- Simplified/Traditional Chinese glyph rendering, language selection and remote focus on TV: NOT RUN.
-- Peak package/runtime/product storage and free-space measurements: NOT MEASURED.
+Final source Linux/macOS/ARM CI run40340914902 passed. PR #83 merged as
+`28c6e280b4bef496b6d824c1df642f9d740ab45a`; this release-record update changes
+only documentation/inventory relative to reviewed sourceabf324e1. The exact
+integrated all-platform feedback-build run and artifact checks are maintained in
+release PR #64; those unpublished builds do not freeze acceptance. Prior37d47e27
+run40338324428 is historical after the private-code correction. No source or
+platform-build success establishes physical compatibility.
 
-Preserve private diagnostics outside public records. Do not repeat uncertain
-operations or delete recovery records to make a test pass. See the full twenty-row
-[Homebrew acceptance matrix](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+## Observed supervised session — older artifacts only
 
-## Publication gates
+Detailed model/firmware/webOS/HBC/UID/ABI and device diagnostics remain in the
+maintainer's private record. Public source/package identities and generic outcomes
+are recorded here without addresses, credentials, app inventories or screenshots.
 
-- [ ] All versioned packages/build metadata and final source agree.
-- [ ] Required Linux/macOS/ARM tests and Android/four desktop builds pass.
-- [ ] Needed local and GUI/package smoke checks pass on the combined candidate.
-- [ ] Human review and physical acceptance/limitations are recorded honestly.
-- [ ] Supported old-infrastructure transition, rollback and emergency/removal gates pass.
-- [ ] Exact Homebrew IPK/manifest are accepted before adding release.json.
-- [ ] All affected documentation/translations/commands/download and recovery instructions reviewed.
-- [ ] Candidate description, inventory, release notes and final Release policy agree.
-- [ ] Publication verifies assets/checksums/both signed edition feeds and provenance.
-- [ ] Existing shipping automation notices and issue statuses verified without duplicate comments.
+| Check | Actual older-session result | Final corrected artifacts |
+| --- | --- | --- |
+| Isolated Installer install, on-TV hashes and fixed HBC inspect | PASS at correction sourcecb1c789a | NOT RUN |
+| One launch with bounded foreground observation | PASS on third sample; immediate read was premature | NOT RUN |
+| Exact Installer-only terminal removal/absence; prior baseline unchanged | PASS | NOT RUN |
+| Supported old Root0.2/Updater0.2 removal, archives and fresh Root0.4/Updater0.3 setup | PASS after narrowly corrected shared-container handling; original operation continued, no replay | NOT RUN |
+| Root controls, held-arrow release, OK/Back/volume/pointer/wheel, app-to-Home | Maintainer confirmed PASS | NOT RUN |
+| Triple-Home emergency exit, waiting and repeated Home | Maintainer confirmed LG Home remained; explicit off retained | NOT RUN |
+| System1.1 setup with emergency intent still disabled | PASS on corrected host source86980b7a | NOT RUN |
+| Explicit settings re-enable, standby30seconds and controls | Maintainer confirmed PASS | NOT RUN |
+| True cold boot: remote off, AC removed30seconds, on | **FAILED**: broadcast TV; Home opened LG Home | **NOT RUN; release blocker** |
 
-No shipping claim or issue closure is authorized by this record alone.
+Installed Root/Updater public packages in that session came fromcb1c789a; corrected
+host/System work used86980b7a. New private closures in #83 were not delivered to
+that TV. Read-only diagnosis observed ordinary0777 SDK owner trees/metadata after
+cold boot, intact private recovery, disabled Root and no pending host package
+request. This is a measured layout, not a firmware-wide explanation. Do not
+silently re-enable or patch retained private code to make the failed row pass.
 
-## Combined correction verification
+The earlier isolated Installer SHA256 was
+`f29e4975537735e53527a1296326e2fd46428393eac88eeb07a55e099d814c2b`
+(61,228,554bytes). It is historical evidence, superseded by new candidate builds.
+Historical C3 releases and prior all-platform build40316833884 likewise do not
+validate the final corrected source or versioned packages.
 
-Source `cb1c789a` includes Chinese #76 and correction #77. Full local suite passed
-1,178 Python cases (two isolated-Linux-root skips), with Qt enabled, JS/native/
-compatibility, twelve-locale browser checks and actual Helper Node0.12.2. Actual
-Node8 runtime/bridge checks passed. Required Linux/macOS/optional-runtime CI passed
-in run40315333002. macOS console/desktop embedded155-file payload and frozen GUI/
-package smoke passed. Two Installer0.1.0 builds were byte-identical: SHA256
-`f29e4975537735e53527a1296326e2fd46428393eac88eeb07a55e099d814c2b`,
-61,228,554 bytes; payload manifest
-`54d4c78d93d21f1e128223eeb4fe858e4e222008e2eeb37989a7fe08e327e964`.
+## Remaining supervised matrix
 
-The combined isolated TV test passed installation, actual file hashes and fixed
-HBC read-only inspection. Bounded foreground observation after one launch
-confirmed Installer on the third sample; the earlier immediate read was premature.
-Exact Installer-only terminal removal/absence and unchanged prior-product baseline
-passed. This proves application foreground identity, not manual screen/remote
-acceptance. Supervised product transition was subsequently authorized; its results
-are still pending. All-platform integrated builds and final publication acceptance
-remain separate. No Homebrew public approval record is added.
+- Final exact source, package/manifest identities, supervisor/Root private
+  inventories, peak staging space and free-space measurements: pending.
+- Fresh Root setup with system Python and optional offline Python: final NOT RUN.
+- cytv→HBC and HBC→cytv maintenance, concurrent clients/original continuation,
+  interruptions and unknown outcomes: final NOT RUN.
+- Supported published1.2 infrastructure migration/rebootstrap, missing-package
+  cleanup, full removal with LG recovery, signed whole-edition update/rollback
+  and retained profile/recovery evidence: final NOT RUN.
+- Final controls/emergency, observer/frozen-UI recovery, standby and separate
+  true cold boot: NOT RUN; do not carry older successes into these rows.
+- No-root setup/maintenance/removal and Developer Mode renewal boundaries: NOT RUN.
+- Protected-signer Android upgrade, private-data/pending-receipt retention and
+  physical use: NOT RUN; Android remains preview.
+- Simplified/Traditional Chinese glyphs, selection and remote focus on TV: NOT RUN.
+- Named supervising human and meaningful Homebrew code/artifact review: pending.
+
+See the full [Homebrew matrix and state inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+Do not repeat uncertain requests or delete retained evidence to obtain a success.
+
+## Documentation and publication gates
+
+Reviewed README, Root installation/runtime/update/recovery docs, Homebrew packaging
+and authority/state inventory, current source commands and twelve guides:
+en, ru, de, es, fr, it, pl, pt-BR, hi, ko, zh-Hans, zh-Hant. #83 updates candidate
+SDK/private-boundary guidance and Root0.4.0 source-build examples; historical
+published package/hardware statements stay separate. The internal original-intent
+callback does not change user setup or controls.
+
+- [ ] Final integrated source, versions, inventory and artifact identities agree.
+- [ ] Required Linux/macOS/ARM and exact Android/four desktop builds pass.
+- [ ] Combined-candidate local/native/package checks are recorded.
+- [ ] Final physical acceptance, limitations and human Homebrew review are real.
+- [ ] Supported transition, emergency/removal and signed rollback gates pass.
+- [ ] Exact Homebrew approval precedes any release.json/catalog promotion.
+- [ ] Candidate description, documentation, release notes and policy agree.
+- [ ] Publication verifies assets/checksums/both signed feeds and provenance.
+- [ ] Existing shipping notices and issue statuses verified without duplicates.
+
+`release-plan.json` acceptance remains empty; `homebrew/release.json` is absent.
+PR #64 stays draft. Publication and issue closure do not follow from this record.

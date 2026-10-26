@@ -69,6 +69,21 @@
       "pr": 78,
       "issues": [],
       "summary": "Record combined Homebrew correction validation, artifact identities and limited isolated Installer evidence; keep final hardware/platform/publication gates pending"
+    },
+    {
+      "pr": 79,
+      "issues": [],
+      "summary": "Accept observed metadata container ownership in Root readback"
+    },
+    {
+      "pr": 83,
+      "issues": [],
+      "summary": "Authenticate cold-boot SDK DATA using phase-selected private package authority; preserve live Home intent, complete owner checks and original System submission/no-replay ordering; final physical cold-boot retest remains pending"
+    },
+    {
+      "pr": 84,
+      "issues": [],
+      "summary": "Refresh candidate inventory and source-specific verification; separate prior controls/emergency/standby results and failed true cold boot from final pending hardware/publication acceptance"
     }
   ],
   "excluded": [],

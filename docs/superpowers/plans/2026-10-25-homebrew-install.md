@@ -214,35 +214,43 @@ node homebrew/tests/runtime.cjs
 `system-updater/setup.py`, explicit bundle inventories.
 
 **Interface:** Fixed CLI actions `inspect`, `install`, `status`, `restore`,
-`remove`, with validated operation UUID. `install` consumes a verified local
+`remove`, with validated operation UUID. Explicit `--resume` continues the original
+verified request; `status --verify-current` distinguishes historical completion
+from fresh installation/removal proof. `install` consumes a verified local
 payload and explicit options for migration and supervisor preparation. Emit JSON
 events containing `operation`, `stage`, `state`, `code`; diagnostic detail stays
 in private logs. Retain existing terminal package-observer evidence underneath.
 
-- [ ] Write a fake device adapter that records calls and can fail at every
+- [x] Write a fake device adapter that records calls and can fail at every
   package/provisioning boundary. Assert the specified order: verified preflight,
   Root deployment, Root Updater baseline, optional supervisor preparation, final
   readback. Assert Home activation never happens as an install side effect.
-- [ ] Factor existing local device functions into this orchestration. Keep SSH
+- [x] Factor existing local device functions into this orchestration. Keep SSH
   transport and UI-specific host inventory work outside it; use the current
   local service inventory path for TV installation.
-- [ ] Move the complete Root product removal sequence under the shared device
+- [x] Move the complete Root product removal sequence under the shared device
   coordinator, retaining the existing exact terminal receipts and ownership checks;
   host-local package-absence readback must not unlock a reservation.
-- [ ] Make cytv invoke the shared coordinator and consume its operation records.
+- [x] Make cytv invoke the shared coordinator and consume its operation records.
   Preserve its existing status/doctor/recovery interfaces and current safe refusals.
-- [ ] Test HBC-origin install inspected/maintained by cytv and cytv-origin install
+- [x] Test HBC-origin install inspected/maintained by cytv and cytv-origin install
   inspected/maintained by the TV entry point without reset or duplicate install.
   Test pending status, profile preservation, emergency-off and journal conflicts.
-- [ ] Explicitly supported legacy migrations get tests with exact baseline
+- [x] Explicitly supported legacy migrations get tests with exact baseline
   fixtures. Other retained installations remain recoverable, not overwritten.
-- [ ] Run installer and TV tests and commit.
+- [x] Run installer and TV tests and commit.
 
 ```sh
 python3 -m unittest discover -s root-edition/tests -p 'test_install_driver.py'
 python3 -m unittest discover -s tests/cytv
 bash scripts/test.sh tv installer
 ```
+
+Reviewed implementation: `95276cfb`, `d3eb6211`, `8c420232`. Stable aggregate
+TV/installer gates passed on `d3eb6211` (Root 583, System 93, payload 8, cytv
+324 with 23 existing skips); the final component-lease correction passed 122 Root
+and 3 System CLI tests and scoped re-review. Unknown old infrastructure remains
+blocked rather than migrated implicitly. Physical-TV acceptance is still Task 8.
 
 ## Task 5 — Add the TV installer UI and fixed Homebrew bridge
 

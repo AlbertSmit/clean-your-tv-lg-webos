@@ -8,7 +8,7 @@ async function rejects(promise){var failed=false;try{await promise;}catch(error)
 function digest(raw){return crypto.createHash('sha256').update(raw).digest('hex');}
 function fixture(){
     var base=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'cytv-node-offline-')),root=path.join(base,'payload'),runtimeBase=path.join(base,'private');fs.mkdirSync(root);
-    var calls=[],system=false,space=true,platform='linux',arch='arm',badOwner=null;
+    var calls=[],system=false,space=true,platform='linux',arch='arm',machine='armv7l',badOwner=null;
     var files={},runtimeFiles={};
     var binding={schema:1,archive_sha256:PIN,files:{'bin/python3.13':digest('candidate')}};
     runtimeFiles['bin/python3.13']={sha256:digest('candidate'),size:9,mode:493};
@@ -32,6 +32,7 @@ function fixture(){
         if(executable==='/usr/bin/python3') return callback(system?null:new Error('missing'),system?(args.indexOf('SMOKE')>=0?'CYTV_RUNTIME_SMOKE':'CYTV_SYSTEM_PYTHON'):'');
         if(executable==='/bin/sh'){
             var script=args[1];
+            if(script.indexOf('uname -m')>=0)return callback(/^(armv7l|armv8l)$/.test(machine)?null:new Error('unsupported machine'),/^(armv7l|armv8l)$/.test(machine)?'CYTV_MACHINE_READY':'');
             if(script.indexOf('df -Pk')>=0)return callback(space?null:new Error('space'),space?'CYTV_SPACE_READY':'');
             if(script.indexOf('mktemp -d')>=0){var stage=path.join(runtimeBase,'.stage-123456789abc');fs.mkdirSync(stage);return callback(null,stage);}
             if(script.indexOf('tar -xzf')>=0){var tree=path.join(runtimeBase,'.stage-123456789abc/tree');fs.mkdirSync(tree);fs.mkdirSync(path.join(tree,'bin'));fs.writeFileSync(path.join(tree,'bin/python3.13'),'candidate');fs.chmodSync(path.join(tree,'bin/python3.13'),493);fs.writeFileSync(path.join(tree,'.cytv-runtime.json'),bindraw);return callback(null,'');}
@@ -44,11 +45,13 @@ function fixture(){
     }
     var sandbox={require:function(name){if(name==='fs')return fakefs;if(name==='child_process')return {execFile:exec};return require(name);},process:{geteuid:function(){return 0;},platform:platform,arch:arch},Promise:Promise,Buffer:Buffer,module:{exports:{}}};
     vm.runInNewContext(runtimeSource.replace("'/var/lib/clean-your-tv-python'",JSON.stringify(runtimeBase)),sandbox);
-    return {root:root,manifest:manifest,save:save,calls:calls,api:sandbox.module.exports,base:base,runtimeBase:runtimeBase,setSystem:function(){system=true;},setSpace:function(){space=false;},setArch:function(){sandbox.process.arch='x64';},badOwner:function(name){badOwner=name;},clean:function(){remove(base);}};
+    return {root:root,manifest:manifest,save:save,calls:calls,api:sandbox.module.exports,base:base,runtimeBase:runtimeBase,setMachine:function(value){machine=value;},setSystem:function(){system=true;},setSpace:function(){space=false;},setArch:function(){sandbox.process.arch='x64';},badOwner:function(name){badOwner=name;},clean:function(){remove(base);}};
 }
-async function rejection(change){var f=fixture();try{change(f);await rejects(f.api.prepare(f.root));assert.strictEqual(f.calls.filter(function(c){return c.args.join(' ').indexOf('mktemp -d')>=0;}).length,0);}finally{f.clean();}}
+async function rejection(change){var f=fixture();try{change(f);await rejects(f.api.prepare(f.root));assert.strictEqual(f.calls.filter(function(c){return c.args.join(' ').indexOf('mktemp -d')>=0;}).length,0);assert(f.calls.every(function(c){return c.executable==='/usr/bin/python3'||c.executable==='/bin/sh';}),'preflight failure must not execute a candidate');}finally{f.clean();}}
 (async function(){
     for(var mutate of [function(f){fs.unlinkSync(path.join(f.root,'runtime.tar.gz'));},function(f){fs.writeFileSync(path.join(f.root,'extra'),'x');},function(f){fs.appendFileSync(path.join(f.root,'runtime.tar.gz'),'x');},function(f){fs.writeFileSync(path.join(f.root,'runtime.tar.gz'),'x'.repeat(27));},function(f){fs.unlinkSync(path.join(f.root,'runtime.tar.gz'));fs.symlinkSync('runtime-binding.json',path.join(f.root,'runtime.tar.gz'));},function(f){f.manifest.files['../escape']={sha256:'0'.repeat(64),size:1};f.save();},function(f){f.manifest.runtime.archive_sha256='0'.repeat(64);f.save();},function(f){f.setArch();},function(f){f.setSpace();},function(f){f.badOwner(path.join(f.root,'runtime.tar.gz'));}])await rejection(mutate);
+    await rejection(function(f){f.setMachine('armv6l');});
+    for(var machine of ['armv7l','armv8l']){var supported=fixture();try{supported.setMachine(machine);assert.strictEqual((await supported.api.inspect(supported.root)).privateRuntimeRequired,true);assert(!fs.existsSync(supported.runtimeBase));}finally{supported.clean();}}
     var f=fixture();try{var state=await f.api.inspect(f.root);assert.strictEqual(state.privateRuntimeRequired,true);assert(!fs.existsSync(f.runtimeBase));assert(f.calls.every(function(c){return c.args.indexOf('SMOKE')<0 && c.args.join(' ').indexOf('mktemp -d')<0;}));var selected=await f.api.prepare(f.root);assert.strictEqual(selected,path.join(f.runtimeBase,PIN,'bin/python3.13'));assert(!fs.existsSync(path.join(f.runtimeBase,'.stage-123456789abc')));var count=f.calls.length;assert.strictEqual((await f.api.inspect(f.root)).python,selected);assert(f.calls.slice(count).every(function(c){return c.args.indexOf('SMOKE')<0;}));}finally{f.clean();}
     f=fixture();try{f.setSystem();assert.strictEqual(await f.api.prepare(f.root),'/usr/bin/python3');assert(!fs.existsSync(f.runtimeBase));}finally{f.clean();}
     console.log('Offline runtime: corruption, ownership, ABI, space, read-only inspect, system skip, staging/promotion/readback passed');

@@ -84,13 +84,16 @@ function run(executable, args, marker) {
 }
 function quote(value) { return "'" + value.replace(/'/g, "'\\''") + "'"; }
 function shell(bootstrap, script) { return run('/bin/sh', ['-c', bootstrap.shell + script]); }
-function abi() {
+function abi(bootstrap) {
     if (process.platform !== 'linux' || process.arch !== 'arm') fail('Private Python requires ARMv7 little-endian soft-float EABI5 Linux');
     // /bin/sh can be the distribution's expected symlink; validate its real target.
     var executable = fs.realpathSync('/bin/sh'); ancestors(path.dirname(executable)); owned(executable, false);
     var fd = fs.openSync(executable, 'r'), header = Buffer.alloc(40);
     try { if (fs.readSync(fd, header, 0, 40, 0) !== 40) fail('Unknown Linux ABI'); } finally { fs.closeSync(fd); }
     if (header.toString('hex', 0, 4) !== '7f454c46' || header[4] !== 1 || header[5] !== 1 || header.readUInt16LE(18) !== 40 || (header[37] & 4) || header[39] !== 5) fail('Unsupported ARM ABI; private Python was not installed');
+    return shell(bootstrap, 'case "$(uname -m)" in armv7l|armv8l) ;; *) exit 1;; esac\nprintf CYTV_MACHINE_READY\n').then(function (result) {
+        if (result !== 'CYTV_MACHINE_READY') fail('Unsupported ARM machine; private Python requires ARMv7 or ARMv8 little-endian Linux');
+    }, function () { fail('Private Python requires ARMv7 or ARMv8 little-endian Linux and verified system tools'); });
 }
 function verifiedPayload(root) {
     root = path.resolve(root); ancestors(root);
@@ -130,18 +133,20 @@ function inspectInternal(payloadRoot) {
         return systemSafe.then(function () {
             return { python: '/usr/bin/python3', privateRuntimeRequired: false, context: context };
         }, function () {
-            abi(); ancestors('/var/lib');
-            var slot = BASE + '/' + PIN;
-            if (fs.existsSync(BASE)) ancestors(BASE);
-            if (fs.existsSync(slot) || (function () { try { fs.lstatSync(slot); return true; } catch (e) { if (e.code !== 'ENOENT') throw e; return false; } }())) {
-                return walk(slot, context.manifest.runtime.files).then(function () {
-                    return run(slot + '/bin/python3.13', ['-I', '-B', '-c', context.bootstrap.inspect_probe], 'CYTV_SYSTEM_PYTHON');
-                }).then(function () { return { python: slot + '/bin/python3.13', privateRuntimeRequired: false, context: context }; });
-            }
-            return shell(context.bootstrap, "ancestors /var/lib\navailable=$(df -Pk /var/lib | awk 'END {print $4}')\ncase \"$available\" in ''|*[!0-9]*) exit 1;; esac\n[ \"$available\" -ge " + Math.ceil(context.manifest.runtime.required_space / 1024) + " ] || exit 1\nprintf CYTV_SPACE_READY\n").then(function (result) {
-                if (result !== 'CYTV_SPACE_READY') fail('Insufficient storage; private Python needs at least 320 MiB free');
-                return { python: null, privateRuntimeRequired: true, requiredSpace: context.manifest.runtime.required_space, context: context };
-            }, function () { fail('Private Python needs safe system tools and at least 320 MiB free in /var/lib'); });
+            return abi(context.bootstrap).then(function () {
+                ancestors('/var/lib');
+                var slot = BASE + '/' + PIN;
+                if (fs.existsSync(BASE)) ancestors(BASE);
+                if (fs.existsSync(slot) || (function () { try { fs.lstatSync(slot); return true; } catch (e) { if (e.code !== 'ENOENT') throw e; return false; } }())) {
+                    return walk(slot, context.manifest.runtime.files).then(function () {
+                        return run(slot + '/bin/python3.13', ['-I', '-B', '-c', context.bootstrap.inspect_probe], 'CYTV_SYSTEM_PYTHON');
+                    }).then(function () { return { python: slot + '/bin/python3.13', privateRuntimeRequired: false, context: context }; });
+                }
+                return shell(context.bootstrap, "ancestors /var/lib\navailable=$(df -Pk /var/lib | awk 'END {print $4}')\ncase \"$available\" in ''|*[!0-9]*) exit 1;; esac\n[ \"$available\" -ge " + Math.ceil(context.manifest.runtime.required_space / 1024) + " ] || exit 1\nprintf CYTV_SPACE_READY\n").then(function (result) {
+                    if (result !== 'CYTV_SPACE_READY') fail('Insufficient storage; private Python needs at least 320 MiB free');
+                    return { python: null, privateRuntimeRequired: true, requiredSpace: context.manifest.runtime.required_space, context: context };
+                }, function () { fail('Private Python needs safe system tools and at least 320 MiB free in /var/lib'); });
+            });
         });
     });
 }

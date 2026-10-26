@@ -74,6 +74,12 @@ and Node.js 8+ on the TV, Homebrew services and the supported ARM32 Magic Remote
 are required. Installation checks fail closed for unexpected state. A doctor
 report alone does not establish compatibility.
 
+**Unreleased, issue #82:** if Settings Service has no Home override, explicit
+setup can initialize it to verified LG Home and read it back before finalizing
+recovery. Existing values are not replaced. Uncertain writes are not replayed;
+retain recovery data. Status/doctor never writes this setting. The explicit stock
+override remains after removal. See [readback design and acceptance limits](../docs/development/ROOT-HOME-READBACK.md).
+
 The computer/Android installer can provision a private, verified ARMv7 Python
 when system Python is missing or incompatible. Working system installations do
 not download this component. See [automatic Python runtime](../docs/OPTIONAL-PYTHON.md)

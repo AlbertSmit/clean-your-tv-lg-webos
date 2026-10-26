@@ -178,3 +178,5 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 仅适用于下一候选版本：No-root 设置 → 开发者模式 → 显示诊断会提供安全的存储和 Home RPC 错误分类及实际服务版本。查看诊断不会启用自动续期或启动 Helper。状态检查失败不代表 Helper 已停止。C5 上的修复尚未确认；参阅[诊断说明（英文）](../SETTINGS-DIAGNOSTICS.md)。
 
 报告会获得遥控器焦点。上/下键滚动，左/右键或 OK 返回相邻操作，返回键回到 Home 设置。
+
+**尚未发布，#82：** 如果缺少 Home 设置，明确启动的 Root 安装可以将其设为 LG Home，并重新读取验证，然后完成恢复准备。Status/doctor 不会写入设置。结果不确定的写入不会重复，请保留恢复数据。卸载后显式的 LG Home 设置仍会保留。此固件仍需真机测试。

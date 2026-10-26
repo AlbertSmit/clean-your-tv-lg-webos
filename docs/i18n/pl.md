@@ -195,3 +195,5 @@ W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego
 Tylko w następnym kandydacie: No-root Ustawienia → Tryb programisty → Pokaż diagnostykę zawiera bezpieczne kategorie błędów zapisu i RPC Home oraz rzeczywistą wersję usługi. Podgląd nie włącza odnawiania ani nie uruchamia Helpera. Nieudana kontrola nie dowodzi zatrzymania Helpera. Poprawka dla C5 nie jest potwierdzona; [szczegóły (angielski)](../SETTINGS-DIAGNOSTICS.md).
 
 Raport otrzymuje fokus pilota. Góra/Dół przewija; Lewo/Prawo lub OK wraca do pobliskich działań, a Wstecz do ustawień Home.
+
+**Jeszcze niewydane, #82:** gdy brakuje ustawienia Home, jawnie uruchomiona instalacja Root może ustawić LG Home i potwierdzić odczyt przed zakończeniem przygotowania odzyskiwania. Status/doctor niczego nie zapisuje. Zapis o niepewnym wyniku nie jest powtarzany; zachowaj dane odzyskiwania. Jawne ustawienie LG Home pozostaje po odinstalowaniu. Testy na urządzeniu z tym firmware są nadal wymagane.

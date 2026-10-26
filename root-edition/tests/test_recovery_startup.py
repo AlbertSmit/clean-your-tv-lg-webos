@@ -18,6 +18,10 @@ spec.loader.exec_module(p)
 
 
 class StartupTests(unittest.TestCase):
+    def setUp(self):
+        context = patch.object(p, 'prepare_stock_home')
+        context.start(); self.addCleanup(context.stop)
+
     def test_node_records_exit_and_exception_without_swallowing_failure(self):
         source = ROOT / 'service/startup-diagnostics.js'
         self.assertTrue(source.is_file(), 'preload must observe bootstrap failures before service.js loads')

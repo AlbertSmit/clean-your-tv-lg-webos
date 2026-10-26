@@ -201,3 +201,5 @@ For this source candidate, an existing Root installation needs checked recovery 
 Next candidate only: No-root Settings → Developer Mode → Show diagnostics includes safe storage/Home RPC failure categories and the actual service version. Viewing diagnostics does not enable renewal or start Helper. A failed status check does not prove Helper stopped. This does not establish a C5 fix; see [diagnostics (English)](../SETTINGS-DIAGNOSTICS.md).
 
 The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.
+
+**Unreleased, #82:** when the Home setting is absent, explicit Root setup can initialize it to LG Home and verify the readback before enabling recovery. Status/doctor never writes it. An uncertain write is not repeated; keep recovery data. The explicit LG Home setting remains after removal. This firmware still needs device testing.

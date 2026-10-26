@@ -69,7 +69,7 @@ def root_recovery_details(value):
     if not isinstance(value, dict) or type(value.get('schema', 1)) is not int or value.get('schema', 1) != 1:
         return {}
     enums = {
-        'phase': ('manifest','status','register','startup-hook','publish'),
+        'phase': ('manifest','stock-home','status','register','startup-hook','publish'),
         'reason': ('failed','negative-reply','invalid-reply','oversized-reply','oversized-client-output','client-exited','client-start-failed','timeout'),
         'luna_reason': ('permission-denied','service-missing','method-missing'),
         'startup_state': ('starting','exited','stale','unavailable'),

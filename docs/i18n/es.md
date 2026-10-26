@@ -206,3 +206,5 @@ Para este candidato de código fuente, una instalación Root existente necesita 
 Solo en el próximo candidato: No-root Ajustes → Modo de desarrollador → Mostrar diagnóstico incluye categorías seguras de errores de almacenamiento y RPC de Home, y la versión real del servicio. Consultarlo no activa la renovación ni inicia Helper. Un fallo de consulta no demuestra que Helper esté detenido. La corrección en C5 no está confirmada; [detalles (inglés)](../SETTINGS-DIAGNOSTICS.md).
 
 El informe recibe el foco del mando. Arriba/Abajo desplaza; Izquierda/Derecha u OK vuelve a las acciones cercanas y Atrás a los ajustes de Home.
+
+**Aún no publicado, #82:** si falta el ajuste Home, la instalación Root iniciada explícitamente puede establecer LG Home y verificar su lectura antes de completar la preparación de recuperación. Status/doctor no escribe nada. Una escritura de resultado incierto no se repite; conserva los datos de recuperación. El ajuste explícito de LG Home permanece tras la desinstalación. Faltan pruebas en esta versión del firmware.

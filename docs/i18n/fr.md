@@ -207,3 +207,5 @@ Pour ce candidat issu des sources, une installation Root existante nécessite un
 Uniquement dans le prochain candidat : No-root Paramètres → Mode développeur → Afficher les diagnostics indique des catégories sûres pour les erreurs de stockage et RPC Home ainsi que la version réelle du service. La consultation ne lance ni le renouvellement ni Helper. Un échec de lecture ne prouve pas que Helper est arrêté. La correction sur C5 reste non confirmée ; [détails (anglais)](../SETTINGS-DIAGNOSTICS.md).
 
 Le rapport reçoit le focus de la télécommande. Haut/Bas fait défiler ; Gauche/Droite ou OK revient aux actions voisines, Retour aux paramètres Home.
+
+**Non publié, #82 :** si le réglage Home est absent, une installation Root explicitement lancée peut définir LG Home et relire la valeur avant de terminer la préparation de la récupération. Status/doctor ne modifie rien. Une écriture au résultat incertain ne sera pas répétée ; conservez les données de récupération. Le réglage explicite LG Home reste après la désinstallation. Les tests sur ce firmware restent à effectuer.

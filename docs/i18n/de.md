@@ -206,3 +206,5 @@ Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation ein
 Nur im nächsten Kandidaten: No-root Einstellungen → Entwicklermodus → Diagnose anzeigen enthält sichere Fehlerkategorien für Speicherung und Home-RPC sowie die tatsächliche Dienstversion. Das Anzeigen aktiviert weder die Verlängerung noch Helper. Ein fehlgeschlagener Statustest beweist keinen gestoppten Helper. Eine C5-Korrektur ist nicht bestätigt; [Details (Englisch)](../SETTINGS-DIAGNOSTICS.md).
 
 Der Bericht erhält den Fernbedienungsfokus. Auf/Ab scrollt; Links/Rechts oder OK führt zu den benachbarten Aktionen, Zurück zu den Home-Einstellungen.
+
+**Noch nicht veröffentlicht, #82:** Fehlt die Home-Einstellung, kann die ausdrücklich gestartete Root-Einrichtung LG Home eintragen und den Wert vor Abschluss der Wiederherstellungseinrichtung zurücklesen. Status/doctor schreibt nichts. Ein Schreibvorgang mit unklarem Ergebnis wird nicht wiederholt; Wiederherstellungsdaten behalten. Die ausdrückliche LG-Home-Einstellung bleibt nach der Deinstallation erhalten. Gerätetests für diese Firmware stehen aus.

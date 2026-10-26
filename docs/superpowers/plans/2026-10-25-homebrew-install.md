@@ -315,26 +315,35 @@ identity/version/title from the built IPK and computes its actual size and SHA-2
 Use `rootRequired: true`. Catalog title is `CYTV Installer`, category `utility`,
 pool `main`; point to one stable release-asset manifest URL.
 
-- [ ] Add failing tests for malformed IPK, unexpected app identity, version drift,
+- [x] Add failing tests for malformed IPK, unexpected app identity, version drift,
   non-HTTPS release URL, wrong payload hash, accidental rootRequired false and
   manifest omitted from checksum/publication verification.
-- [ ] Build the installer from exact candidate artifacts. Generate its manifest
+- [x] Build the installer from exact candidate artifacts. Generate its manifest
   after packaging and verify the same bytes again after publication. Reuse the
   established publication gate; do not create an independent release workflow.
-- [ ] Ensure later unrelated releases keep the stable manifest URL valid. Record
+- [x] Ensure later unrelated releases keep the stable manifest URL valid. Record
   installer version separately from product release versions at candidate freeze.
-- [ ] Draft the catalog description with prerequisites, product-component/removal
+- [x] Draft the catalog description with prerequisites, product-component/removal
   behavior, source/license, screenshots, hardware evidence and support link.
   Validate schema with the current apps-repo tooling before submission.
-- [ ] Keep unaccepted artifacts out of stable feeds and do not open a public
+- [x] Keep unaccepted artifacts out of stable feeds and do not open a public
   catalog PR before Task 8 passes. Record genuine human review and AI disclosure.
-- [ ] Run packaging/release tests and commit. A passing manifest test is not
+- [x] Run packaging/release tests and commit. A passing manifest test is not
   catalog approval or TV acceptance.
 
 ```sh
 python3 -m unittest discover -s tests/setup -p 'test_homebrew_manifest.py'
 bash scripts/test.sh setup
 ```
+
+Reviewed implementation: `c5db64e3` through `67eba06f`. Public promotion is
+disabled while `homebrew/release.json` is absent; a later accepted record selects
+one originating project release and exact artifact bytes. Unrelated releases
+carry only previously approved bytes/metadata; unaccepted CI failures are optional,
+accepted promotion requires successful workflow/job. Final focused metadata/policy
+17, automatic-release 11 and CI-scope 4 tests passed; upstream schema and real
+candidate build checks passed. Public reachability, screenshots and hardware/human
+approval remain pending; no catalog submission or public delivery occurred.
 
 ## Task 7 — Document both paths and run the combined regression
 

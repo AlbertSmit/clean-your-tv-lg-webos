@@ -25,7 +25,7 @@ BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater')
 ROOT_UPDATER_TRANSACTION=Path('/var/lib/clean-your-tv-root-updater/transaction.json')
 APPS={'home':'com.gathin.tvhome','helper':'com.local.nativehome','updater':'com.cleanyourtv.updater','root':'com.cleanyourtv.root.preview','root-updater':'com.cleanyourtv.root.updater'}
-CODE={'python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
+CODE={'installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
@@ -359,12 +359,15 @@ def main():
     if args.device:
         if not args.apply or os.geteuid()!=0 or not Path('/usr/bin/luna-send').is_file() or sys.version_info<(3,9):raise PermissionError('Explicit root webOS Python 3.9+ setup required')
         subprocess.run(['/usr/bin/node','-e','process.exit(Number(process.versions.node.split(".")[0])>=8?0:1)'],check=True)
-        if args.baseline is None:
-            if not args.edition:parser.error('--edition is required without --baseline')
-            with tempfile.TemporaryDirectory(prefix='system-baseline-') as tmp:
-                baseline=snapshot(args.bundle,args.edition,Path(tmp)/'baseline')
-                print(json.dumps(provision(args.bundle,baseline)))
-        else:print(json.dumps(provision(args.bundle,args.baseline)))
+        sys.path.insert(0,str(args.bundle))
+        from installation import device_operation
+        with device_operation('system-bootstrap'):
+            if args.baseline is None:
+                if not args.edition:parser.error('--edition is required without --baseline')
+                with tempfile.TemporaryDirectory(prefix='system-baseline-') as tmp:
+                    baseline=snapshot(args.bundle,args.edition,Path(tmp)/'baseline')
+                    print(json.dumps(provision(args.bundle,baseline)))
+            else:print(json.dumps(provision(args.bundle,args.baseline)))
         return
     verify_bundle(args.bundle);baseline=verify_baseline(args.baseline,args.bundle) if args.baseline else {'edition':args.edition}
     if not baseline['edition']:parser.error('--edition is required without --baseline')

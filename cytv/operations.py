@@ -177,6 +177,10 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         self.store.finish(self.profile)
         return reply
 
+    def root_installation(self):
+        """Read the shared on-device classification without claiming setup success."""
+        return self.root_action('inspect')['installation']
+
     def root_action(self, action, bundle=None, migrate=False):
         driver = (bundle or ROOT_STATE) + '/deploy.py'
         args = [self._python(ROOT_STATE), driver, action]

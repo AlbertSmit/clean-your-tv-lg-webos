@@ -56,11 +56,14 @@ def worker(store,device):
         except BlockingIOError:return
         device.integrity();manager=Manager(store,device)
         while True:
-            tx=manager.run()
-            if not tx:return
-            if tx['phase'] in ('complete','rolled-back','aborted'):
-                device.finish(tx);return
-            if tx['phase']=='recovery-required':return
+            if store.read('transaction') is None:return
+            from installation import device_operation
+            with device_operation('root-update', recovery=True):
+                tx=manager.run()
+                if not tx:return
+                if tx['phase'] in ('complete','rolled-back','aborted'):
+                    device.finish(tx);return
+                if tx['phase']=='recovery-required':return
             time.sleep(1 if tx['phase']=='verifying' else 0.05)
     finally:os.close(fd)
 
@@ -72,7 +75,18 @@ def main():
     if method=='worker':worker(store,device);return None
     raw=sys.stdin.buffer.read(4*1024*1024+1)
     if len(raw)>4*1024*1024:raise ValueError('Request too large')
-    return handle(method,json.loads(raw or b'{}'),store,device)
+    payload=json.loads(raw or b'{}')
+    validate_request(method,payload)
+    if method in ('status','check','restoreProfile'):
+        return handle(method,payload,store,device)
+    if method != 'install' and store.read('transaction') is None:
+        if method in ('rollback','reconcile'):return None
+        raise ValueError('Stale health signal')
+    from installation import device_operation
+    with device_operation('root-update', recovery=True):
+        result=handle(method,payload,store,device,wake=lambda:None)
+    spawn_worker()
+    return result
 
 
 def entry():

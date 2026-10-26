@@ -20,7 +20,10 @@ def main():
     args=parser.parse_args()
     if args.device:
         from updater.bootstrap import apply
-        print(json.dumps(apply(args.bundle,args.baseline)));return
+        from installation import device_operation
+        with device_operation('root-bootstrap'):
+            print(json.dumps(apply(args.bundle,args.baseline)))
+        return
     from updater.bootstrap import verify_bundle,permission_plan
     from deploy import verify_bundle as verify_root
     updater=verify_bundle(args.bundle);baseline=verify_root(args.baseline)

@@ -1,0 +1,270 @@
+"""Shared, conservative installation inspection and durable operation ownership.
+
+The ownership receipt provides exclusion only. Component journals remain the
+source of truth; a closed file descriptor or package readback is never success.
+"""
+from contextlib import contextmanager
+import fcntl
+import os
+from pathlib import Path
+import re
+import uuid
+
+try:
+    from updater.store import Store
+except ImportError:
+    from system_updater.support.store import Store
+
+STATE = Path('/var/lib/clean-your-tv-installation')
+FIELDS = {'supported', 'packages_match', 'receipts_match', 'pending', 'retained',
+          'complete', 'migration_supported'}
+COMPONENTS = ('root', 'root-updater', 'system-updater')
+
+
+def classify(snapshot):
+    if (not isinstance(snapshot, dict) or set(snapshot) != FIELDS
+            or any(type(value) is not bool for value in snapshot.values())):
+        state, reason = 'conflict', 'invalid_snapshot'
+    elif not snapshot['supported']:
+        state, reason = 'unsupported', 'unsupported_device'
+    elif snapshot['pending'] or snapshot['retained']:
+        state, reason = 'recovery_required', 'retained_operation'
+    elif all(snapshot[key] for key in ('packages_match', 'receipts_match', 'complete')):
+        state, reason = 'installed', 'verified_components'
+    elif snapshot['migration_supported']:
+        state, reason = 'migration_required', 'supported_migration'
+    elif any(snapshot[key] for key in ('packages_match', 'receipts_match', 'complete')):
+        state, reason = 'conflict', 'component_mismatch'
+    else:
+        state, reason = 'fresh', 'no_installation'
+    return dict(state=state, reason=reason, can_install=state == 'fresh', can_maintain=state == 'installed')
+
+
+def snapshot(supported, observe):
+    """Combine fixed component observers; unknown protocols fail closed.
+
+    Each observer verifies package files, runtime bindings and its own receipts.
+    No version-only observation can establish a complete installation.
+    """
+    observations = []
+    for name in COMPONENTS:
+        try:
+            value = observe(name)
+            keys = (FIELDS - {'supported'}) | {'present'}
+            if set(value) != keys or any(type(v) is not bool for v in value.values()):
+                raise ValueError('unknown observation')
+            if not value['present'] and any(value[key] for key in keys - {'present'}):
+                raise ValueError('inconsistent observation')
+        except (OSError, ValueError, TypeError, KeyError, ImportError):
+            value = dict(present=True, packages_match=False, receipts_match=False,
+                         pending=False, retained=True, complete=False, migration_supported=False)
+        observations.append(value)
+    present = any(v['present'] for v in observations)
+    result = dict(supported=supported,
+                  packages_match=all(v['packages_match'] for v in observations),
+                  receipts_match=all(v['receipts_match'] for v in observations),
+                  complete=all(v['complete'] for v in observations),
+                  pending=any(v['pending'] for v in observations),
+                  retained=any(v['retained'] for v in observations),
+                  migration_supported=present and all(v['migration_supported'] for v in observations))
+    # Partial installations must not collapse to the clean-device booleans.
+    if present and not any(result[k] for k in ('packages_match','receipts_match','complete','migration_supported')):
+        result['retained'] = True
+    return result
+
+
+class Busy(RuntimeError):
+    def __init__(self):
+        super().__init__('installation_operation_retained')
+
+
+class Ownership:
+    def __init__(self, store=None):
+        self.store = store if store is not None else Store(STATE)
+
+    def status(self):
+        value = self.store.read('operation')
+        if value is not None:
+            if (not isinstance(value, dict) or set(value) != {'schema','id','owner','journal','stage','terminal'}
+                    or type(value['schema']) is not int or value['schema'] != 1 or type(value['terminal']) is not bool
+                    or not isinstance(value['id'],str) or not re.fullmatch('[0-9a-f]{32}',value['id'])
+                    or any(not isinstance(value[k], str) or not re.fullmatch('[a-zA-Z0-9_.-]{1,128}',value[k])
+                           for k in ('owner','journal','stage'))):
+                raise ValueError('unknown_installation_receipt')
+        return value
+
+    @contextmanager
+    def operation(self, owner, journal, resume=None, check=None):
+        directory = self.store._directory()
+        fd = None
+        try:
+            fd = os.open('ownership.lock', os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,
+                         0o600, dir_fd=directory)
+            self.store._check(os.fstat(fd))
+            try: fcntl.flock(fd, fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError: raise Busy() from None
+            if check is not None: check()
+            previous = self.status()
+            if previous and not previous['terminal']:
+                if (previous['id'], previous['owner'], previous['journal']) != (resume, owner, journal):
+                    raise Busy()
+                record = previous
+            else:
+                record = dict(schema=1, id=uuid.uuid4().hex, owner=owner, journal=journal,
+                              stage='reserved', terminal=False)
+                # Validate identifiers before committing durable state.
+                if any(not isinstance(v,str) or not re.fullmatch('[a-zA-Z0-9_.-]{1,128}',v)
+                       for v in (owner,journal)):
+                    raise ValueError('invalid_installation_owner')
+                self.store.write('operation', record)
+            yield record
+        finally:
+            if fd is not None: os.close(fd)
+            os.close(directory)
+
+    def stage(self, record, stage, terminal=False):
+        """Call only after the owning component has durably written its journal."""
+        current = self.status()
+        if current != record: raise Busy()
+        if not isinstance(stage,str) or not re.fullmatch('[a-zA-Z0-9_.-]{1,128}', stage):
+            raise ValueError('invalid_installation_stage')
+        record.update(stage=stage, terminal=terminal)
+        self.store.write('operation', record)
+
+
+JOURNALS = {
+    'deploy': (Path('/var/lib/clean-your-tv-root/deploy.json'), 'stage', {'installed-recovery-only','uninstalled-state-retained'}),
+    'root-bootstrap': (Path('/var/lib/clean-your-tv-root-updater/bootstrap.json'), 'phase', {'complete'}),
+    'root-update': (Path('/var/lib/clean-your-tv-root-updater/transaction.json'), 'phase', {'complete','rolled-back','aborted'}),
+    'system-bootstrap': (Path('/var/lib/clean-your-tv-system-updater/bootstrap.json'), 'phase', {'complete'}),
+    'system-update': (Path('/var/lib/clean-your-tv-system-updater/transaction.json'), 'phase', {'complete','rolled-back','aborted'}),
+}
+
+
+def read_journal(path):
+    """Read through the existing checked store without creating absent state."""
+    store = Store.__new__(Store)
+    store.root, store.uid = str(path.parent), 0
+    try: return store.read(path.name)
+    except FileNotFoundError: return None
+
+
+def pending_journals(owner, read=read_journal):
+    for other, (path, field, finished) in JOURNALS.items():
+        value = read(path)
+        if value is not None:
+            pending = not isinstance(value,dict) or value.get(field) not in finished
+            if other.endswith('-update') and isinstance(value,dict):
+                pending = pending or value.get('homeResumePhase') != value.get(field)
+            if pending and other != owner: raise Busy()
+
+
+@contextmanager
+def device_operation(owner, recovery=False, ownership=None, read=read_journal):
+    """Short mutation lock plus durable reservation across asynchronous workers.
+
+    Same-component continuation is authorized by the fixed CLI operation, while
+    foreign journals always prevent a new installation or update. Recovery may
+    continue the recorded owner; it never bypasses another component's journal.
+    """
+    ownership = ownership if ownership is not None else Ownership()
+    path, field, finished = JOURNALS[owner]
+    current = ownership.status()
+    resume = None
+    if recovery and current and (current['owner'],current['journal']) == (owner,path.name):
+        resume = current['id']
+    with ownership.operation(owner,path.name,resume=resume, check=lambda: pending_journals(owner,read)) as record:
+        yield record
+        journal = read(path)
+        if journal is not None:
+            if not isinstance(journal,dict) or not isinstance(journal.get(field),str):
+                raise ValueError('unknown_component_journal')
+            stage = journal[field]
+            # Updater finish restores routing and writes a separate exact receipt.
+            terminal = stage in finished
+            if owner.endswith('-update'):
+                terminal = terminal and journal.get('homeResumePhase') == stage
+            ownership.stage(record,stage,terminal=terminal)
+
+
+def device_snapshot(supported=True, read=read_journal):
+    """Read existing device evidence without modifying state or executing workers.
+
+    Legacy bootstrap receipts do not inventory all installed app bytes. They
+    cannot alone advertise complete-product maintenance. The shared coordinator
+    must supply current descriptor/profile observers to snapshot() for that gate.
+    """
+    import hashlib
+    import json
+    from pathlib import PurePosixPath
+    from python_binding import verify_binding, _read
+    installed = Path('/media/developer/apps')
+    def observe(name):
+        root = Path('/var/lib/clean-your-tv-' + name)
+        app = {'root':'com.cleanyourtv.root.preview', 'root-updater':'com.cleanyourtv.root.updater',
+               'system-updater':'com.cleanyourtv.system.updater'}[name]
+        paths = [installed/'usr/palm'/kind/identity for kind,identity in
+                 (('applications',app),('services',app+'.service'),('packages',app))]
+        result = dict(present=False,packages_match=False,receipts_match=False,
+                      pending=False,retained=False,complete=False,migration_supported=False)
+        if not os.path.lexists(root):
+            if any(os.path.lexists(p) for p in paths): result.update(present=True,retained=True)
+            return result
+        result['present'] = True
+        verify_binding(root)
+        owner = {'root':'deploy','root-updater':'root-bootstrap','system-updater':'system-bootstrap'}[name]
+        path, field, finished = JOURNALS[owner]
+        journal = read(path)
+        if not isinstance(journal,dict) or journal.get(field) not in finished:
+            result['retained'] = True
+            return result
+        if any(not p.is_dir() or p.is_symlink() for p in paths):
+            raise ValueError('incomplete_component')
+        info = json.loads(_read(paths[0]/'appinfo.json'))
+        package = json.loads(_read(paths[2]/'packageinfo.json'))
+        if info.get('id') != app or package.get('id') != app:
+            raise ValueError('component_identity_mismatch')
+        if name == 'root':
+            receipt = read(root/'recovery-provision.json')
+            if not isinstance(receipt,dict) or receipt.get('mode') != 'recovery-only':
+                raise ValueError('unknown_recovery_receipt')
+            files = receipt.get('files')
+            if not isinstance(files,dict) or not files: raise ValueError('empty_recovery_inventory')
+            for target, digest in files.items():
+                target = Path(target)
+                if not target.is_relative_to(root): raise ValueError('foreign_recovery_file')
+                if hashlib.sha256(_read(target,4*1024*1024)).hexdigest() != digest:
+                    raise ValueError('recovery_integrity_mismatch')
+        else:
+            receipt = read(root/'infrastructure.json')
+            if not isinstance(receipt,dict) or receipt.get('schema') != 1:
+                raise ValueError('unknown_infrastructure_receipt')
+            if name == 'root-updater' and (receipt.get('runtime'),receipt.get('updater')) != (1,1):
+                raise ValueError('unknown_updater_protocol')
+            files = receipt.get('code')
+            if not isinstance(files,dict) or not files: raise ValueError('empty_infrastructure_inventory')
+            for relative,digest in files.items():
+                path = PurePosixPath(relative)
+                if path.is_absolute() or '..' in path.parts or str(path) != relative:
+                    raise ValueError('foreign_infrastructure_file')
+                if hashlib.sha256(_read(root/'code'/relative,4*1024*1024)).hexdigest() != digest:
+                    raise ValueError('infrastructure_integrity_mismatch')
+            tx = read(root/'transaction.json')
+            if tx and (not isinstance(tx,dict) or tx.get('phase') not in {'complete','rolled-back','aborted'}
+                       or tx.get('homeResumePhase') != tx.get('phase')):
+                result['pending'] = True
+        # Recognized final lifecycle receipts are evidence, but they do not
+        # replace a complete current package/profile inventory after updates.
+        result['receipts_match'] = True
+        return result
+    values = snapshot(supported,observe)
+    ownership = Ownership.__new__(Ownership)
+    ownership.store = Store.__new__(Store)
+    ownership.store.root, ownership.store.uid = str(STATE),0
+    try: operation = ownership.status()
+    except FileNotFoundError: operation = None
+    except ValueError:
+        values['retained'] = True
+        operation = None
+    if operation and not operation['terminal']: values['pending'] = True
+    return values

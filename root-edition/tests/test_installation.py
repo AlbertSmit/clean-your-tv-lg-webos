@@ -1,0 +1,192 @@
+import importlib.util
+import os
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from installation import classify, Ownership, Busy, snapshot, device_operation, JOURNALS
+from updater.store import Store
+
+
+class ClassificationTests(unittest.TestCase):
+    def state(self, **changes):
+        values = dict(supported=True, packages_match=False, receipts_match=False,
+                      pending=False, retained=False, complete=False, migration_supported=False)
+        values.update(changes)
+        return classify(values)
+
+    def test_all_states_and_fixed_response(self):
+        cases = [('unsupported', dict(supported=False)),
+                 ('fresh', {}),
+                 ('installed', dict(packages_match=True, receipts_match=True, complete=True)),
+                 ('migration_required', dict(migration_supported=True)),
+                 ('conflict', dict(packages_match=True)),
+                 ('recovery_required', dict(retained=True))]
+        for state, changes in cases:
+            with self.subTest(state=state):
+                result = self.state(**changes)
+                self.assertEqual(set(result), {'state', 'reason', 'can_install', 'can_maintain'})
+                self.assertEqual(result['state'], state)
+                self.assertEqual(result['can_install'], state == 'fresh')
+                self.assertEqual(result['can_maintain'], state == 'installed')
+
+    def test_pending_matching_packages_are_not_finished(self):
+        for marker in ('pending', 'retained'):
+            result = self.state(packages_match=True, receipts_match=True, complete=True, **{marker: True})
+            self.assertEqual(result['state'], 'recovery_required')
+            self.assertFalse(result['can_maintain'])
+            self.assertFalse(result['can_install'])
+
+    def test_unknown_missing_and_non_boolean_fields_fail_closed(self):
+        for value in ({}, {'supported': True}, dict(supported=True, protocol=2)):
+            self.assertEqual(classify(value)['state'], 'conflict')
+        self.assertEqual(self.state(pending=0)['state'], 'conflict')
+
+
+class OwnershipTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = Store(Path(self.tmp.name).resolve()/'ownership', uid=os.getuid())
+        self.owner = Ownership(self.store)
+
+    def test_contention_status_and_restart_never_imply_completion(self):
+        with self.owner.operation('deploy', 'deploy.json') as operation:
+            identifier = operation['id']
+            with self.assertRaises(Busy):
+                with Ownership(self.store).operation('system', 'transaction.json'): pass
+            self.assertEqual(Ownership(self.store).status()['id'], identifier)
+        # A released OS lock (or crashed process) is still a durable reservation.
+        with self.assertRaises(Busy):
+            with Ownership(self.store).operation('system', 'transaction.json'): pass
+        with self.owner.operation('deploy', 'deploy.json', resume=identifier) as operation:
+            self.assertEqual(operation['id'], identifier)
+            self.owner.stage(operation, 'journal-terminal', terminal=True)
+        with self.owner.operation('system', 'transaction.json') as operation:
+            self.assertNotEqual(operation['id'], identifier)
+
+    def test_process_death_retains_reservation_without_success(self):
+        import subprocess
+        code = """import os,sys
+sys.path.insert(0,sys.argv[1])
+from installation import Ownership
+from updater.store import Store
+owner=Ownership(Store(sys.argv[2],uid=os.getuid()))
+with owner.operation('deploy','deploy.json'):
+    os._exit(7)
+"""
+        result = subprocess.run([sys.executable,'-c',code,str(ROOT),self.store.root])
+        self.assertEqual(result.returncode,7)
+        self.assertFalse(self.owner.status()['terminal'])
+        with self.assertRaises(Busy):
+            with self.owner.operation('system','transaction.json'): pass
+
+    def test_resume_requires_exact_owner_journal_and_identifier(self):
+        with self.owner.operation('deploy', 'deploy.json') as operation:
+            identifier = operation['id']
+        for owner, journal, ident in [('system','deploy.json',identifier), ('deploy','other.json',identifier), ('deploy','deploy.json','0'*32)]:
+            with self.subTest(owner=owner, journal=journal), self.assertRaises(Busy):
+                with self.owner.operation(owner, journal, resume=ident): pass
+
+    def test_unknown_record_is_never_replaced(self):
+        self.store.write('operation', {'protocol': 99})
+        with self.assertRaises(ValueError):
+            with self.owner.operation('deploy', 'deploy.json'): pass
+        self.assertEqual(self.store.read('operation'), {'protocol': 99})
+
+    def test_component_guard_keeps_pending_and_requires_routing_receipt(self):
+        journals = {}
+        read = lambda path: journals.get(path)
+        path = JOURNALS['root-update'][0]
+        with device_operation('root-update', ownership=self.owner, read=read):
+            journals[path] = {'phase':'installing'}
+        self.assertFalse(self.owner.status()['terminal'])
+        with self.assertRaises(Busy):
+            with device_operation('system-update', ownership=self.owner, read=read): pass
+        with device_operation('root-update', recovery=True, ownership=self.owner, read=read):
+            journals[path] = {'phase':'complete'}
+        self.assertFalse(self.owner.status()['terminal'])
+        with device_operation('root-update', recovery=True, ownership=self.owner, read=read):
+            journals[path]['homeResumePhase'] = 'complete'
+        self.assertTrue(self.owner.status()['terminal'])
+
+    def test_preexisting_foreign_journal_blocks_even_without_global_record(self):
+        read = lambda path: {'phase':'installing'} if path == JOURNALS['root-update'][0] else None
+        with self.assertRaises(Busy):
+            with device_operation('deploy', ownership=self.owner, read=read): pass
+        self.assertIsNone(self.owner.status())
+
+    def test_absent_components_cannot_claim_complete_receipts(self):
+        observe=lambda name: dict(present=False,packages_match=True,receipts_match=True,
+                                  pending=False,retained=False,complete=True,migration_supported=False)
+        self.assertEqual(classify(snapshot(True,observe))['state'],'recovery_required')
+
+    def test_snapshot_requires_all_component_receipts_and_retains_partial(self):
+        def observe(name):
+            return dict(present=True, packages_match=True, receipts_match=name != 'system-updater',
+                        pending=False, retained=False, complete=True, migration_supported=False)
+        result = snapshot(True, observe)
+        self.assertEqual(classify(result)['state'], 'conflict')
+        self.assertEqual(classify(snapshot(True, lambda name: {'protocol': 9}))['state'], 'recovery_required')
+
+
+class EntryPointTests(unittest.TestCase):
+    def test_idle_reconcile_does_not_reserve_an_installation(self):
+        from updater import cli
+        import installation
+        import io
+        from unittest.mock import patch, Mock
+        store=Mock()
+        store.read.return_value=None
+        with patch.object(sys,'argv',['run-updater.py','reconcile']), \
+             patch.object(sys,'stdin',type('Input',(),{'buffer':io.BytesIO(b'{}')})()), \
+             patch.object(cli.os,'geteuid',return_value=0), patch.object(cli,'Store',return_value=store), \
+             patch.object(cli,'Device'), patch.object(cli,'spawn_worker'), \
+             patch.object(installation,'device_operation') as guard:
+            self.assertIsNone(cli.main())
+        guard.assert_not_called()
+
+    def test_updater_reserves_before_mutation_and_wakes_after_unlock(self):
+        from updater import cli
+        import installation
+        import contextlib
+        import io
+        from unittest.mock import patch
+        events=[]
+        @contextlib.contextmanager
+        def guard(owner,recovery=False):
+            events.append(('enter',owner,recovery))
+            yield
+            events.append('exit')
+        def handle(method,payload,store,device,wake):
+            events.append('handle')
+            wake()
+            return {'phase':'preparing'}
+        with patch.object(sys,'argv',['run-updater.py','install']), \
+             patch.object(sys,'stdin',type('Input',(),{'buffer':io.BytesIO(b'{"version":"1.0.0","profile":{}}')})()), \
+             patch.object(cli.os,'geteuid',return_value=0), patch.object(cli,'Store'), patch.object(cli,'Device'), \
+             patch.object(installation,'device_operation',guard), patch.object(cli,'handle',handle), \
+             patch.object(cli,'spawn_worker',side_effect=lambda:events.append('wake')):
+            self.assertEqual(cli.main(),{'phase':'preparing'})
+        self.assertEqual(events,[('enter','root-update',True),'handle','exit','wake'])
+
+    def test_device_inspect_exposes_classifier_without_mutation(self):
+        import deploy
+        import installation
+        import contextlib
+        import io
+        from unittest.mock import patch
+        values = dict(supported=True, packages_match=False, receipts_match=False,
+                      pending=False, retained=False, complete=False, migration_supported=False)
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['deploy.py','inspect']), patch.object(deploy,'require_device'), \
+             patch.object(installation,'device_snapshot',return_value=values), contextlib.redirect_stdout(output):
+            deploy.main()
+        import json
+        self.assertEqual(json.loads(output.getvalue())['installation'], classify(values))
+
+
+if __name__ == '__main__': unittest.main()

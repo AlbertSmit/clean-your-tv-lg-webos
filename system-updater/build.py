@@ -36,7 +36,7 @@ def build(output):
         code['system_updater/'+name]=source(ROOT/'system-updater'/name)
     for name in ('store.py','package.py','profile.py','luna.py'):
         code['system_updater/support/'+name]=source(ROOT/'root-edition/updater'/name)
-    for name in ('observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
+    for name in ('installation.py','observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
         code[name]=source(ROOT/'root-edition'/name)
     for name in ('release-public.pem','ca-bundle.crt','ca-LICENSE.txt'):
         code['system_updater/'+name]=source(ROOT/'updater-service'/name)

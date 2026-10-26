@@ -41,6 +41,14 @@ class BuildTests(unittest.TestCase):
             manifest = verify_bundle(first)
             self.assertIn('runtime/cli.py', manifest['files'])
             self.assertIn('setup.py', manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            self.assertIn('updater/store.py',manifest['files'])
+            import subprocess
+            result = subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import deploy,installation;'
+                'assert installation.Store.__module__ == "updater.store"',str(first)],
+                cwd=Path(tmp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             ipk = next(first.glob('*.ipk'))
             parts = ar_members(ipk.read_bytes())
             self.assertEqual(set(parts), {'debian-binary', 'control.tar.gz', 'data.tar.gz'})

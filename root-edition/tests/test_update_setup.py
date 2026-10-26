@@ -26,6 +26,12 @@ class SetupTests(unittest.TestCase):
             out=Path(temp).resolve()/'bundle';module.build(out)
             manifest=verify_bundle(out)
             self.assertIn('updater/core.py',manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            result=subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation;'
+                'assert installation.Store.__module__ == "updater.store"',str(out)],
+                cwd=Path(temp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('root-updater.ipk',manifest['files'])
             self.assertIn('updater/ca-bundle.crt',manifest['files'])
             self.assertIn('updater/ca-LICENSE.txt',manifest['files'])

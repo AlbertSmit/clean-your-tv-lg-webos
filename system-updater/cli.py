@@ -54,19 +54,22 @@ def worker(store,device):
         except BlockingIOError:return
         device.integrity();manager=Manager(store,device)
         while True:
-            tx=manager.run()
-            if tx is None or tx['phase']=='recovery-required':return
-            if tx['phase'] in FINISHED:
-                if tx.get('homeResumePhase')!=tx['phase']:
-                    with store.lock():
-                        current=store.read('transaction')
-                        if current and (current['id'],current['phase'])==(tx['id'],tx['phase']):
-                            try:
-                                current['homeResume']=device.finish(current);current['homeResumePhase']=current['phase']
-                            except Exception as error:
-                                current['homeResume']={'status':'failed','error':str(error)[:512]};current['error']=str(error)[:1024]
-                            store.write('transaction',current)
-                return
+            if store.read('transaction') is None:return
+            from installation import device_operation
+            with device_operation('system-update', recovery=True):
+                tx=manager.run()
+                if tx is None or tx['phase']=='recovery-required':return
+                if tx['phase'] in FINISHED:
+                    if tx.get('homeResumePhase')!=tx['phase']:
+                        with store.lock():
+                            current=store.read('transaction')
+                            if current and (current['id'],current['phase'])==(tx['id'],tx['phase']):
+                                try:
+                                    current['homeResume']=device.finish(current);current['homeResumePhase']=current['phase']
+                                except Exception as error:
+                                    current['homeResume']={'status':'failed','error':str(error)[:512]};current['error']=str(error)[:1024]
+                                store.write('transaction',current)
+                    return
             time.sleep(1 if tx['phase'] in ('verifying','verifying-rollback') else .05)
     finally:os.close(fd)
 
@@ -78,7 +81,18 @@ def main():
     if method=='worker':return worker(store,device)
     raw=sys.stdin.buffer.read(4*1024*1024+1)
     if len(raw)>4*1024*1024:raise ValueError('Request too large')
-    return handle(method,json.loads(raw or b'{}'),store,device)
+    payload=json.loads(raw or b'{}')
+    validate_request(method,payload)
+    if method in ('status','check','restoreProfile'):
+        return handle(method,payload,store,device)
+    if method != 'install' and store.read('transaction') is None:
+        if method in ('rollback','reconcile'):return None
+        raise ValueError('Stale health signal')
+    from installation import device_operation
+    with device_operation('system-update', recovery=True):
+        result=handle(method,payload,store,device,wake=lambda:None)
+    spawn_worker()
+    return result
 
 
 def entry():

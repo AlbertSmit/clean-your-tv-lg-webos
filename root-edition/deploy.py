@@ -20,7 +20,7 @@ RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'devic
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
                  'boot_gate.py', 'shutdown_state.py', 'persistent_health.py', 'persistent_lease.py', 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
-SUPPORT_FILES = ('setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py', 'python_binding.py', 'python_boot.js')
+SUPPORT_FILES = ('installation.py', 'updater/store.py', 'setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py', 'python_binding.py', 'python_boot.js')
 
 
 def require_device():
@@ -195,6 +195,7 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
     (STATE / 'runtime').mkdir(mode=0o700)
     for name in SUPPORT_FILES + ('release.json', 'bundle.json'):
         target = STATE / name
+        target.parent.mkdir(mode=0o700, exist_ok=True)
         target.write_bytes(checked_file(Path(bundle).resolve(), name)); target.chmod(0o600)
     for name in RUNTIME_FILES:
         target = STATE / 'runtime' / name
@@ -294,7 +295,7 @@ def _remove_root(run, proof):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'))
+    parser.add_argument('command', choices=('install', 'inspect', 'status', 'trial', 'emergency-trial', 'intent-trial', 'enable', 'confirm', 'restore', 'uninstall'))
     parser.add_argument('--transaction')
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--migrate-packaged-home', action='store_true', help='Copy fixed installed Home packaged preferences; excludes browser storage')
@@ -302,17 +303,29 @@ def main():
     if args.migrate_packaged_home and args.command != 'install':
         parser.error('migration is only available with install')
     require_device()
+    from installation import classify, device_snapshot, device_operation
+    from contextlib import nullcontext
+    if args.command == 'inspect':
+        print(json.dumps({'returnValue':True, 'installation':classify(device_snapshot())}), flush=True)
+        return
+    # Read-only status remains available during every retained operation.
+    # Restore is explicit recovery and does not replace any package.
     if args.command == 'install':
         require_node()
         if args.bundle is None: parser.error('install requires --bundle')
-        result = install(args.bundle, migrate=args.migrate_packaged_home)
-    elif args.command == 'uninstall': result = uninstall()
-    elif args.command == 'restore': result = restore()
-    elif args.command == 'confirm':
-        import re
-        if not args.transaction or not re.fullmatch(r'[0-9a-f-]{36}',args.transaction): parser.error('confirm requires --transaction')
-        result = command([python_command(STATE),str(STATE/'runtime/cli.py'),'confirm',args.transaction])
-    else: result = runtime(args.command)
+        verify_bundle(args.bundle)
+    guard = (device_operation('deploy', recovery=args.command == 'uninstall')
+             if args.command in ('install','uninstall') else nullcontext())
+    with guard:
+        if args.command == 'install':
+            result = install(args.bundle, migrate=args.migrate_packaged_home)
+        elif args.command == 'uninstall': result = uninstall()
+        elif args.command == 'restore': result = restore()
+        elif args.command == 'confirm':
+            import re
+            if not args.transaction or not re.fullmatch(r'[0-9a-f-]{36}',args.transaction): parser.error('confirm requires --transaction')
+            result = command([python_command(STATE),str(STATE/'runtime/cli.py'),'confirm',args.transaction])
+        else: result = runtime(args.command)
     print(json.dumps(result), flush=True)
 
 

@@ -43,6 +43,13 @@ class BuildTests(unittest.TestCase):
             manifest=setup.verify_bundle(a)
             self.assertIn('system_updater/support/store.py',manifest['files'])
             self.assertIn('observed_install.py',manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            import subprocess,sys
+            result=subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation;'
+                'assert installation.Store.__module__ == "system_updater.support.store"',str(a)],
+                cwd=Path(tmp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('python_binding.py',manifest['files'])
             self.assertIn('python_boot.js',manifest['files'])
             inventory=json.loads((a/'infrastructure-paths.json').read_text())

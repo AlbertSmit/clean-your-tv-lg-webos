@@ -64,7 +64,7 @@ def importing(name,*args,**kwargs):
 builtins.__import__=importing
 import cytv.operations
 """
-        result=subprocess.run([sys.executable,'-I','-B','-c',code,str(project)],cwd='/private/tmp',capture_output=True,text=True)
+        result=subprocess.run([sys.executable,'-I','-B','-c',code,str(project)],cwd=tempfile.gettempdir(),capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
 
 class ActualCrossClientTests(unittest.TestCase):

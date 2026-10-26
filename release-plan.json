@@ -44,6 +44,11 @@
         55
       ],
       "summary": "Diagnose Root recovery startup/finalize failures with private observations and safe attempt-bound reports; partial #55, OLED Flex cause/device acceptance pending and supervisor inventory rebuild required"
+    },
+    {
+      "pr": 74,
+      "issues": [],
+      "summary": "Add Root-only Homebrew Installer alongside cytv with shared durable operations, verified offline runtime, owned startup/removal and original-bundle continuation; public Homebrew promotion/catalog remain gated on exact TV/human acceptance"
     }
   ],
   "excluded": [],

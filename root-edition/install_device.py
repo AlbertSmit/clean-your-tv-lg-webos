@@ -121,7 +121,7 @@ def _capture_migrated_baseline(bundle):
 
 def require_product_abi():
     """Product support is independent of the selected Python interpreter."""
-    if sys.platform != 'linux' or platform.machine() not in ('armv7l','armv8l'):
+    if sys.platform != 'linux' or platform.machine() not in ('armv7l','armv8l','aarch64'):
         raise RuntimeError('unsupported_product_abi')
     executable=Path('/bin/sh').resolve(strict=True)
     header=safe_bytes(executable,uid=0)[:40]
@@ -369,7 +369,9 @@ class LocalDevice:
         if not isinstance(bundle,dict) or not isinstance(bundle.get('files'),dict):
             raise ValueError('root_recovery_requires_existing_cytv_recovery')
         files=bundle['files']
-        for name in ('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py'):
+        support=('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py')
+        support+=tuple(name for name in ('package_data.py','startup_guard.py') if name in files)
+        for name in support:
             if files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)):
                 raise ValueError('root_recovery_support_mismatch')
         proof=read_journal(ROOT/'recovery-provision.json')

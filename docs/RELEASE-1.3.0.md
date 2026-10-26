@@ -17,6 +17,8 @@ or Homebrew catalog availability is claimed.
 
 ## Included behavior
 
+- Homebrew device correction: accept verified ARM32 userspace on aarch64 kernels, read package data through the platform container boundary, execute verified code from private snapshots and use receipt-owned private startup guards. Missing or unsafe owner packages block rearming. POSIX device fixtures are isolated from portable Windows host tests.
+
 - #66 / #65, partial: desktop recovery keeps the selected No-root TV/port, asks
   separately before removal, verifies cleanup before reinstallation and offers
   the exact failed attempt's redacted diagnostic report. The G5 failure's cause

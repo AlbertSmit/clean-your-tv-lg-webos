@@ -35,11 +35,12 @@ async function rejects(fn){var failed=false;try{await fn();}catch(e){failed=true
  bridge=loadBridge({returnValue:true,stdout:'{}'});await rejects(function(){return bridge.inspect();});
  bridge=loadBridge({returnValue:false,errorText:'Unknown method'});await rejects(function(){return bridge.inspect();});
  bridge=loadBridge({returnValue:true,stdoutString:'private diagnostics'});await rejects(function(){return bridge.inspect();});
- var bootstrap=require('../bootstrap.js'),executed=[],prepares=0,inspects=0;
- var deps={process:{geteuid:function(){return 0;},versions:{node:'8.12.0'}},runtime:{inspect:function(p){inspects++;assert.equal(p,bootstrap.PAYLOAD);return Promise.resolve({python:'/usr/bin/python3',privateRuntimeRequired:false});},prepare:function(){prepares++;return Promise.resolve('/usr/bin/python3');}},execute:function(exe,args){executed.push({exe:exe,args:args});return Promise.resolve(JSON.stringify({state:'fresh'}));}};
+ var bootstrap=require('../bootstrap.js'),executed=[],prepares=0,inspects=0,cleanups=0;
+ var deps={process:{geteuid:function(){return 0;},versions:{node:'8.12.0'}},runtime:{stage:function(state,full){return Promise.resolve({root:'/private/stage',driver:'/private/stage/root-updater/install_driver.py',cleanup:function(){cleanups++;return Promise.resolve();}});},inspect:function(p){inspects++;assert.equal(p,bootstrap.PAYLOAD);return Promise.resolve({python:'/usr/bin/python3',privateRuntimeRequired:false});},prepare:function(){prepares++;return Promise.resolve('/usr/bin/python3');}},execute:function(exe,args){executed.push({exe:exe,args:args});return Promise.resolve(JSON.stringify({state:'fresh'}));}};
  for(var badArgs of [['install','--operation',ID,'--candidate',SHA,'--url','x'],['status','--operation','A'.repeat(32)],['install','--operation',ID,'--candidate',SHA,'--prepare-supervisor','true'],['inspect','--resume'],['remove','--operation',ID],['activate','--payload','/tmp']])await rejects(function(){return bootstrap.run(badArgs,deps);});
  assert.equal(inspects,0,'backend validates before runtime or effects');
- await bootstrap.run(['inspect'],deps);assert.equal(prepares,0);assert.equal(executed[0].args[3],bootstrap.DRIVER);
+ await bootstrap.run(['inspect'],deps);assert.equal(prepares,0);assert.equal(executed[0].args[3],'/private/stage/root-updater/install_driver.py');
+ assert.equal(executed[0].args[executed[0].args.indexOf('--payload')+1],'/private/stage');
  await bootstrap.run(['status','--operation',ID,'--verify-current'],deps);assert(executed[1].args.indexOf('--verify-current')>=0);
  await bootstrap.run(['remove','--operation',ID,'--resume'],deps);assert(executed[2].args.indexOf('--resume')>=0);assert(executed[2].args.indexOf('--payload')<0,'resume uses original snapshot');
  var recoverySelections=[];deps.runtime.inspect=function(root,recovery){recoverySelections.push(recovery);return Promise.resolve({python:'/usr/bin/python3'});};
@@ -48,6 +49,9 @@ async function rejects(fn){var failed=false;try{await fn();}catch(e){failed=true
  assert.equal((await bootstrap.run(['inspect'],deps)).state,'prerequisites');assert.equal(prepares,0);
  await rejects(function(){return bootstrap.run(['install','--operation',ID,'--candidate',SHA],deps);});assert.equal(prepares,0);
  await bootstrap.run(['prepare-runtime'],deps);assert.equal(prepares,1);
+ deps.runtime.inspect=function(){return Promise.resolve({python:'/usr/bin/python3'});};
+ var priorCleanups=cleanups;deps.execute=function(){return Promise.resolve('invalid json');};await rejects(function(){return bootstrap.run(['inspect'],deps);});assert.equal(cleanups,priorCleanups+1,'invalid child output still cleans this private stage after exit');
+ deps.execute=function(){return Promise.reject(new Error('child exited'));};await rejects(function(){return bootstrap.run(['restore'],deps);});assert.equal(cleanups,priorCleanups+2,'failed child still cleans this private stage after exit');
  deps.process.geteuid=function(){return 1000;};await rejects(function(){return bootstrap.run(['inspect'],deps);});
  deps.process.geteuid=function(){return 0;};deps.process.versions.node='0.12.2';await rejects(function(){return bootstrap.run(['inspect'],deps);});
  console.log('PASS fixed HBC exec reply, input boundaries, root/Node gates, read-only prerequisites/status, explicit runtime and original resume');

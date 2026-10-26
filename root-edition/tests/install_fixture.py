@@ -9,7 +9,7 @@ class CurrentInstallation:
         self.stack=ExitStack();self.temp=self.stack.enter_context(tempfile.TemporaryDirectory())
         self.base=Path(self.temp).resolve();project=Path(__file__).resolve().parents[2]
         sys.path.insert(0,str(project/'root-edition'))
-        import installation,install_device,python_binding,deploy
+        import installation,install_device,python_binding,deploy,package_data
         from updater import device as updater_device,package as updater_package
         from updater.store import Store,encode
         from cytv import package
@@ -34,6 +34,7 @@ class CurrentInstallation:
                 for member in tar:
                     if not member.isfile():continue
                     target=self.installed/member.name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(tar.extractfile(member).read());target.chmod(0o755 if member.mode&0o111 else 0o644)
+        for shared in (self.installed,self.installed/'usr',self.installed/'usr/palm',*(self.installed/'usr/palm'/kind for kind in ('applications','services','packages'))):shared.chmod(0o777)
         proof={'version':1,'mode':'recovery-only','files':{str(self.root/'runtime'/name):hashlib.sha256((self.root/'runtime'/name).read_bytes()).hexdigest() for name in deploy.RUNTIME_FILES}}
         self.root_store=Store(self.root,uid=os.getuid());self.root_store.write('recovery-provision',proof)
         self.root_store.write('deploy',{'app':deploy.APP,'stage':'installed-recovery-only'})
@@ -58,6 +59,10 @@ class CurrentInstallation:
             def _walk(self,path):self.uid=uid;return super()._walk(path)
         original_safe=updater_package.safe_bytes
         def safe(path,limit=32*1024*1024,uid=None):return original_safe(path,limit=limit,uid=os.getuid() if uid==0 else uid)
+        original_package_read=package_data.read
+        def package_read(path,**kw):return original_package_read(path,**{**kw,'uid':os.getuid(),'installed':self.installed})
+        self.stack.enter_context(patch.object(package_data,'read',side_effect=package_read))
+        self.stack.enter_context(patch.object(updater_device,'package_read',side_effect=package_read))
         real_path=Path
         def path(value):
             raw=str(value)

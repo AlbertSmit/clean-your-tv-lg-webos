@@ -386,7 +386,7 @@ def _run(remote, script, data=None, timeout=90):
 def _preflight(remote):
     script = r'''
 ancestors /var/lib
-case "$(uname -m)" in armv7l|armv8l) ;; *) exit 1;; esac
+case "$(uname -m)" in armv7l|armv8l|aarch64) ;; *) exit 1;; esac
 shell=$(readlink -f /bin/sh)
 [ "$(od -An -tu1 -j 4 -N 2 "$shell" | awk '{$1=$1;print}')" = '1 1' ]
 [ "$(od -An -tu1 -j 18 -N 2 "$shell" | awk '{$1=$1;print}')" = '40 0' ]

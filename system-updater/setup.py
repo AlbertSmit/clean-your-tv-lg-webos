@@ -25,7 +25,7 @@ BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater')
 ROOT_UPDATER_TRANSACTION=Path('/var/lib/clean-your-tv-root-updater/transaction.json')
 APPS={'home':'com.gathin.tvhome','helper':'com.local.nativehome','updater':'com.cleanyourtv.updater','root':'com.cleanyourtv.root.preview','root-updater':'com.cleanyourtv.root.updater'}
-CODE={'startup_hook.py','installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
+CODE={'startup_hook.py','package_data.py','startup_guard.py','installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
@@ -74,7 +74,7 @@ def infrastructure_name(name):
     if not isinstance(name,str):raise ValueError('Invalid infrastructure inventory')
     path=PurePosixPath(name)
     if path.is_absolute() or str(path)!=name or '..' in path.parts or '\\' in name or '\x00' in name or len(path.parts)<2 or path.parts[0] not in ('runtime','updater','service','support'):raise ValueError('Invalid infrastructure inventory')
-    if path.parts[0]=='support' and name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Invalid infrastructure support path')
+    if path.parts[0]=='support' and name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/startup_guard.py'):raise ValueError('Invalid infrastructure support path')
     return name
 
 def infrastructure_paths(bundle):

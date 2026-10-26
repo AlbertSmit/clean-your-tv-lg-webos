@@ -15,6 +15,7 @@ import signal
 import stat
 import subprocess
 import time
+from package_data import read as package_read
 from .core import IDENTITIES, SETS, release_set, version
 from .support.package import archive, members, safe_bytes, verify_payload
 from .support.luna import call
@@ -70,7 +71,7 @@ class Device:
             owners.update(('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'))
         try:
             for owner in owners:
-                info=json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),limit=65536,uid=self.uid))
+                info=json.loads(package_read(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),installed=self.installed_root,uid=self.uid))
                 if not isinstance(info,dict) or info.get('id')!=owner:return False
             return True
         except (OSError,ValueError,TypeError):return False
@@ -187,7 +188,7 @@ class Device:
         pinned=json.loads(safe_bytes(self.code/'infrastructure-paths.json',limit=65536,uid=self.uid))
         if not isinstance(pinned,list) or not pinned or len(set(pinned))!=len(pinned):raise ValueError('Invalid pinned infrastructure inventory')
         for name in pinned:
-            if isinstance(name,str) and name.startswith('support/') and name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
+            if isinstance(name,str) and name.startswith('support/') and name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/startup_guard.py'):raise ValueError('Foreign infrastructure support path')
             if not isinstance(name,str):raise ValueError('Unsafe managed infrastructure path')
             path=PurePosixPath(name)
             if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater','support'):raise ValueError('Unsafe managed infrastructure path')
@@ -268,7 +269,7 @@ class Device:
         if name not in self._infra_inventory():raise ValueError('Foreign infrastructure destination')
         kind,relative=name.split('/',1)
         if kind=='support':
-            if name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
+            if name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/startup_guard.py'):raise ValueError('Foreign infrastructure support path')
             return self.root_state/relative
         return (self.root_updater/'code' if kind=='updater' else self.root_state/kind)/relative
 

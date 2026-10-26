@@ -94,7 +94,9 @@ Python; only existing root with Homebrew exec can run it. The private ABI is
 ARMv7 soft-float EABI5 Linux, including verified `armv8l` 32-bit userspace with a
 compatible loader/libc. It does not support arbitrary ARM64 userspace.
 
-Opening or checking status is read-only. Missing Python requires an explicit
+Opening or checking status does not change the product, Home, runtime slots or
+operation receipts. It may briefly stage verified code/data under a private
+0700 execution directory, removed after the child exits. Missing Python requires an explicit
 **Prepare runtime** action, followed by reinspection and final product review.
 Suitable system Python 3.9+ or the verified private slot is reused. The free-space
 threshold remains **335,544,320 bytes (320 MiB) after Installer installation**;

@@ -9,6 +9,7 @@ import sys
 import time
 
 from updater.package import APP, inspect_package, safe_bytes, verify_payload
+from package_data import read as package_read
 
 STATE = Path('/var/lib/clean-your-tv-root-updater')
 ROOT_STATE = Path('/var/lib/clean-your-tv-root')
@@ -28,7 +29,7 @@ class Device:
         owners.add(APP)
         try:
             for owner in owners:
-                info=json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),limit=65536,uid=0))
+                info=json.loads(package_read(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),installed=self.installed_root))
                 if not isinstance(info,dict) or info.get('id')!=owner:return False
             return True
         except (OSError,ValueError,TypeError):return False
@@ -89,7 +90,7 @@ class Device:
         return value
 
     def installed(self):
-        raw=safe_bytes(self.installed_root/('usr/palm/applications/'+APP+'/appinfo.json'),limit=65536)
+        raw=package_read(self.installed_root/('usr/palm/applications/'+APP+'/appinfo.json'),installed=self.installed_root)
         app=json.loads(raw)
         if app.get('id')!=APP or app.get('type')!='web':raise ValueError('Root application unavailable')
         return {'version':app['version']}

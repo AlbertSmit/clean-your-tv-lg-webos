@@ -21,22 +21,9 @@ SERVICE_FILES = ('service.js','startup-diagnostics.js', 'app-inventory.js', 'han
 
 
 def tgz(files, executables=()):
-    """Create a reproducible archive containing regular relative files only."""
-    buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode='w', format=tarfile.USTAR_FORMAT) as archive:
-        for name, data in sorted(files.items()):
-            if (not name or name.startswith('/') or '\\' in name or '\x00' in name
-                    or any(part in ('', '.', '..') for part in name.split('/'))):
-                raise ValueError('Unsafe archive path: ' + repr(name))
-            member = tarfile.TarInfo(name)
-            member.mtime = IPK_MTIME
-            member.size = len(data)
-            member.mode = 0o755 if name in executables else 0o644
-            archive.addfile(member, io.BytesIO(data))
-    compressed = io.BytesIO()
-    with gzip.GzipFile(fileobj=compressed, mode='wb', filename='', mtime=0) as stream:
-        stream.write(buffer.getvalue())
-    return compressed.getvalue()
+    """Secure owned package leaves, without chmod records for platform containers."""
+    from cytv.package import tgz as package_tgz
+    return package_tgz(files, executable=executables)
 
 
 def ar(parts):

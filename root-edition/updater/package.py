@@ -30,17 +30,24 @@ def members(raw):
 
 
 def archive(raw):
-    result = {}; total = 0
+    result = {}; total = 0; seen=set(); directories=set()
     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as stream:
         for member in stream:
             name = member.name; path = PurePosixPath(name)
-            if (not member.isfile() or path.is_absolute() or str(path) != name or '..' in path.parts
-                    or '\\' in name or '\x00' in name or name in result or member.size > 32*1024*1024):
+            if (path.is_absolute() or str(path) != name or '..' in path.parts
+                    or '\\' in name or '\x00' in name or name in seen or member.size > 32*1024*1024):
                 raise ValueError('Unsafe IPK payload')
+            seen.add(name)
+            if member.isdir():
+                if (member.size or member.mode!=0o755 or member.uid!=0 or member.gid!=0
+                        or (len(path.parts)<4 or path.parts[:3] not in (('usr','palm','applications'),('usr','palm','services'),('usr','palm','packages')))):raise ValueError('Unsafe IPK directory')
+                directories.add(name);continue
+            if not member.isfile():raise ValueError('Unsafe IPK payload')
             total += member.size
             if total > 64*1024*1024 or len(result) >= 4096: raise ValueError('IPK payload too large')
             result[name] = stream.extractfile(member).read(member.size+1)
             if len(result[name]) != member.size: raise ValueError('Truncated payload')
+    if directories-{str(p) for name in result for p in PurePosixPath(name).parents}:raise ValueError('Foreign IPK directory')
     return result
 
 

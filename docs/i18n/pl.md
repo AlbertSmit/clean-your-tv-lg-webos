@@ -157,5 +157,7 @@ pozostawia produkt. Pełne usunięcie przywraca LG Home i usuwa własne linki st
 zachowując niezależne dane odzyskiwania, archiwa i potrzebny Python. Wszystkie testy
 fizyczne tej ścieżki czekają; historyczne wyniki Root 0.2.0 na C3 jej nie potwierdzają.
 
+Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem własności i sprawdza tożsamość pakietu wyłącznie jako dane. Skrypty startowe z pakietów nie są wykonywane. Brakujący lub niezabezpieczony pakiet blokuje automatyczne wznowienie; niezależne odzyskiwanie nadal może przywrócić LG Home. Sprawdzanie może tymczasowo skopiować zweryfikowane pliki do prywatnego katalogu bez zmiany Home ani produktu.
+
 [Instalacja i odzyskiwanie (angielski)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Oczekujące testy TV (angielski)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

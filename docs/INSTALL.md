@@ -51,12 +51,16 @@ Homebrew upgrades Installer only. Product updates still use existing Root/System
 Updater contracts and signed complete release sets. Deleting Installer in LG or
 Homebrew leaves separately installed product components and recovery intact.
 Complete-product removal is an explicit Installer/cytv action: restore LG Home,
-verify ownership, remove packages/registrations and owned startup links, and retain
+verify ownership, remove packages/registrations and owned private startup wrappers, and retain
 independent recovery/archive evidence and referenced Python slots. Direct deletion
 of Root Home or either updater is a different scenario requiring physical testing;
-package-owned hooks disable when their package disappears, while live routing and
+private startup guards stop rearming when owner package metadata is missing or unsafe, while live routing and
 worker disappearance protections must also be verified. See the exact
 [acceptance matrix and state/permission inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+Startup uses receipt-owned private wrappers and validates shared package metadata
+as data; it never executes packaged startup scripts. Independent recovery remains
+available after package loss. Inspection may briefly stage verified code/data
+privately without changing the product or Home.
 Historical C3 checks do not certify this new path.
 
 ## 1. Choose your edition

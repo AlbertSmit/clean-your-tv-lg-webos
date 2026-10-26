@@ -123,18 +123,35 @@ network loss or closing the installer does not retry a submitted package operati
 Persistent operation identifiers and terminal receipts allow status and safe
 continuation from cytv or the TV. The installer UI does not own the worker's life.
 
-Convert managed startup hooks to receipt-verified symlinks into their owning
-installed package. Strictly validate parent directories, the exact link target,
-target ownership and allowed package identity; do not globally relax existing
-symlink protections. Migrate only exact previously owned hooks and retain rollback
-evidence. Treat collisions or drift as errors.
+Managed startup hooks are receipt-owned 0700 regular wrappers. They invoke only
+private `python_boot.js` and `startup_guard.py` under their owner's `/var/lib`
+state. The guard reads installed package identity as bounded DATA through checked
+descriptors and never executes a package startup script. Only the exact fixed
+root-owned developer platform ancestor chain may be writable; package leaves and
+files stay root-owned and nonwritable by group/others. Private readers stay strict.
+The 2026-10-26 [device-boundary correction](2026-10-26-homebrew-device-boundary.md)
+supersedes the former package-target symlink design.
 
 The owners of hooks 50/51/52 are respectively Root Home, Root Updater and System
-Updater. An absent package disables that hook. Preserve independent recovery
-material until routing and any pending operation are resolved. Active workers and
-activities must also detect component disappearance, return to LG Home where
-needed, stop routing and refuse reactivation. Merely breaking a boot symlink is
-insufficient when the TV is already running.
+Updater. Missing, unsafe or foreign owner metadata suppresses automatic startup.
+Exact v1 regular hooks and v2 links migrate to v3 (`version`, `path`, `owner_app`,
+`sha256`) with retained previous proof before atomic replacement. Unlinking an
+exact owned v2 link does not trust its replaceable target. Collisions and drift
+remain errors. Independent private recovery can restore LG Home after package loss;
+live workers must stop rearming without clearing emergency/off state.
+
+The initial privileged HBC launch trusts the installed application. The built
+bootstrap pins the outer payload-manifest SHA256. Before later Python execution,
+copy/hash original-inventory bytes into a unique private 0700 `.exec-*` directory
+under `/var/lib/clean-your-tv-installer`. Payload-consuming inspect/install/fresh
+remove stage all required component data and manifests plus executable closure
+without the unused runtime archive; `--payload` names that private tree. Status,
+restore, activate and resume stage only the Root Updater code/support closure.
+Imports never resolve from the shared source. Ephemeral staging during inspect is
+allowed without product/Home/profile/runtime-slot/operation-receipt mutations.
+Clean only the invocation's stage after child exit, retaining unknown drift. Durable
+request snapshots and the original operation UUID/lease continue to authorize
+all detached work and continuation.
 
 Test deletion through LG's UI/Homebrew separately from CYTV's complete removal.
 The system supplies no uninstall hook. No correctness claim may depend on cleanup

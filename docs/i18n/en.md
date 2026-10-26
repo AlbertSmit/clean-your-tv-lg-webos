@@ -163,5 +163,7 @@ retaining independent recovery/archive evidence and referenced Python slots.
 All physical checks for this path remain pending; the historical Root 0.2.0 C3
 results above do not validate Homebrew setup.
 
+Startup uses receipt-owned private wrappers that check installed package identity as data. Packaged startup scripts are never executed. Missing or unsafe packages stop automatic rearming; independent recovery can still restore LG Home. Inspection may briefly stage verified files privately without changing Home or the product.
+
 [Candidate setup and recovery (English)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Pending physical acceptance (English)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

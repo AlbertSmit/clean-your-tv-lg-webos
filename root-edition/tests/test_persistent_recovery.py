@@ -11,8 +11,10 @@ from test_root_runtime_profile_plan import response
 
 class IntegrationTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.root.chmod(0o700)
-  self.apps=self.root/'apps';self.apps.mkdir();(self.apps/CANDIDATE).mkdir();(self.apps/CANDIDATE/'appinfo.json').write_text(json.dumps({'id':CANDIDATE,'type':'web'}))
+  self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name).resolve();self.root.chmod(0o700)
+  self.apps=self.root/'apps/usr/palm/applications';self.apps.mkdir(parents=True);
+  for shared in (self.apps,self.apps.parent,self.apps.parent.parent,self.apps.parents[2]):shared.chmod(0o777)
+  (self.apps/CANDIDATE).mkdir();(self.apps/CANDIDATE/'appinfo.json').write_text(json.dumps({'id':CANDIDATE,'type':'web'}))
   self.target=self.root/'profile';self.home=STOCK;self.baseline=snapshot(response(),STOCK)
   self.patches=[patch.object(d,'APPLICATIONS',self.apps),patch.object(d,'STATE',self.root),patch.object(d,'TARGET',self.target),patch.object(d,'EXPECTED_UID',os.getuid()),patch.object(d,'read',side_effect=self.read),patch.object(d,'sam_transport',return_value=self)]
   for p in self.patches:p.start()

@@ -27,8 +27,8 @@ FAILSAFE = Path('/var/luna/preferences/webosbrew_failsafe')
 def home_present():
     """Package presence is checked by the existing two-second health channel."""
     try:
-        trusted_dir(APPLICATIONS);trusted_dir(APPLICATIONS/CANDIDATE)
-        info=safe_json(APPLICATIONS/CANDIDATE/'appinfo.json')
+        from package_data import read
+        info=json.loads(read(APPLICATIONS/CANDIDATE/'appinfo.json',installed=APPLICATIONS.parents[2],uid=EXPECTED_UID))
         return isinstance(info,dict) and info.get('id')==CANDIDATE and info.get('type')=='web'
     except (OSError,ValueError,TypeError):return False
 

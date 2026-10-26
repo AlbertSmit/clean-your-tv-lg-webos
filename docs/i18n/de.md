@@ -168,5 +168,7 @@ wieder her und entfernt eigene Startverknüpfungen; unabhängige Wiederherstellu
 Archive und benötigte Python-Slots bleiben. Alle TV-Prüfungen dieses Pfads stehen aus;
 die früheren Root-0.2.0-Ergebnisse am C3 bestätigen diesen Pfad nicht.
 
+Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien. Paketmetadaten werden nur als Daten geprüft; Startskripte aus Paketen werden nicht ausgeführt. Fehlende oder unsichere Pakete verhindern den automatischen Neustart. Die unabhängige Wiederherstellung kann weiterhin LG Home zurücksetzen. Die Prüfung darf kurzzeitig verifizierte Dateien privat zwischenspeichern, ohne Home oder das Produkt zu ändern.
+
 [Einrichtung und Wiederherstellung (Englisch)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Ausstehende TV-Prüfungen (Englisch)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

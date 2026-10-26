@@ -667,6 +667,10 @@ class ProductABITests(unittest.TestCase):
         with CurrentInstallation() as fixture:
             device=install_device.LocalDevice()
             self.assertEqual(device.inspect()['state'],'installed')
+            for kernel in ('armv7l','armv8l','aarch64'):
+                with self.subTest(supported_kernel=kernel),patch.object(install_device.platform,'machine',return_value=kernel):
+                    install_device.require_product_abi()
+                    self.assertEqual(device.inspect()['state'],'installed')
             options={'migrate':False,'prepare_supervisor':False}
             for attribute,value in (('platform','darwin'),('machine','x86_64'),('machine','armv6l')):
                 target=install_device.sys if attribute=='platform' else install_device.platform

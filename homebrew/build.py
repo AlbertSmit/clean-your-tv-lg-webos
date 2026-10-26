@@ -32,7 +32,7 @@ def build_payload(root_bundle, root_updater_bundle, supervisor_bundle, runtime_a
         if info.get('id')!=app: raise ValueError('Component identity mismatch')
         versions[key]=info['version']
     # Shared protocol/binding sources must come from the same component baseline.
-    for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','python_binding.py','python_boot.js'):
+    for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','package_data.py','startup_guard.py','python_binding.py','python_boot.js'):
         hashes={components[key].get(name,{}).get('sha256') for key in inputs}
         if len(hashes)!=1 or None in hashes: raise ValueError('Mismatched component baseline: '+name)
     # Reuse each component's authoritative inventory contract, including required files.
@@ -155,7 +155,7 @@ def build_installer(payload, output, version='0.0.0'):
         app['fonts/'+name]=read_file(project/'launcher/fonts'/name)
     # Backend and offline runtime are deliberately added AFTER web compilation.
     files={APP_PREFIX+name:raw for name,raw in compile_web(app).items()}
-    files[APP_PREFIX+'bootstrap.js']=read_file(source/'bootstrap.js')
+    files[APP_PREFIX+'bootstrap.js']=read_file(source/'bootstrap.js').replace(b'__CYTV_PAYLOAD_SHA256__',hashlib.sha256(read_file(Path(payload)/'manifest.json')).hexdigest().encode())
     for name in (*manifest['files'],'manifest.json'):files[APP_PREFIX+'payload/'+name]=read_file(Path(payload)/name)
     files[PACKAGE_INFO]=(json.dumps({'id':APP_ID,'version':version,'app':APP_ID,'services':[]},sort_keys=True)+'\n').encode()
     raw=package.ipk(APP_ID,version,files)

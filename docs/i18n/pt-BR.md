@@ -158,5 +158,7 @@ próprios, preservando recuperação independente, arquivos e Python necessário
 Todos os testes físicos deste caminho estão pendentes; os resultados históricos
 Root 0.2.0 no C3 não o validam.
 
+A inicialização usa arquivos privados vinculados aos comprovantes de propriedade e verifica a identidade do pacote como dados. Scripts de inicialização do pacote nunca são executados. Pacotes ausentes ou inseguros impedem a retomada automática; a recuperação independente ainda pode restaurar LG Home. A inspeção pode copiar temporariamente arquivos verificados para uma área privada sem alterar Home nem o produto.
+
 [Instalação e recuperação (inglês)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Testes físicos pendentes (inglês)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

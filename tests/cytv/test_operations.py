@@ -533,10 +533,29 @@ class OperationTests(unittest.TestCase):
                 self.assertFalse(any(c[0] == 'run' and c[1].endswith(' enable') for c in remote.calls))
 
     def test_bad_rollback_format_stops_before_removing_existing_root(self):
-        self.root_bundle()
+        import hashlib, io, tarfile
+        root = self.root_bundle()
+        manifest_path = root/'bundle.json'
+        manifest = json.loads(manifest_path.read_text())
+        target = root/manifest['package']
+        parts = package.read_ar(target.read_bytes())
+        output = io.BytesIO()
+        unsafe_directory = False
+        with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as source, tarfile.open(fileobj=output, mode='w:gz') as archive:
+            for member in source:
+                if member.isdir():
+                    member.mode = 0o777
+                    unsafe_directory = True
+                archive.addfile(member, source.extractfile(member) if member.isfile() else None)
+        self.assertTrue(unsafe_directory)
+        parts['data.tar.gz'] = output.getvalue()
+        target.write_bytes(package.ar(parts))
+        manifest['files'][target.name] = hashlib.sha256(target.read_bytes()).hexdigest()
+        manifest_path.write_text(json.dumps(manifest))
         remote = Remote()
         installer = self.installer(remote, 'root')
-        # Migration retains the supplied package; this fixture has directory entries.
+        # Migration retains the supplied package; secure own directories are valid,
+        # so this fixture must contain genuinely unsafe writable directory modes.
         with self.assertRaisesRegex(ValueError, 'rollback'):
             installer.install_root(self.inventory, migrate=True, reinstall='installed')
         self.assertIsNone(self.store.pending(installer.profile))

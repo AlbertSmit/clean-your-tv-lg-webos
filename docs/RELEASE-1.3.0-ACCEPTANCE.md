@@ -10,8 +10,9 @@ meaningful Homebrew human-review result has been supplied for this candidate.
 Release 1.3.0; cytv0.4.0; Home1.4.2; Helper0.6.19; Root0.4.0;
 Home/Root Updater0.3.0; supervisor1.1.0/protocol1; Android0.3.0-preview/code11.
 Homebrew0.1.0 is proposed for final exact acceptance; ordinary unapproved CI
-continues to produce development0.0.0. Frozen source, exact package/manifest
-hashes, trusted platform-build run and artifact signer evidence are pending.
+continues to produce development0.0.0. Final integrated frozen source, exact package/manifest hashes, trusted platform-build run and artifact signer evidence are pending.
+
+The approved isolated Installer test at source1be47b2c passed installation, actual file hashes and fixed HBC read-only inspection. Launch was acknowledged, but the foreground screen was not confirmed. Only Installer was then removed with terminal/absence proof; the previous product baseline was unchanged. This does not validate product installation, activation, controls, boot or rollback. Local reproducible Installer0.1.0 SHA256: c3061975151fc9d25c54d7814cf670b0f7a9e3052dc4bf5d2ea9b1b0ee0077cd (59,725,142 bytes); superseded by any later integrated candidate build. Detailed device diagnostics remain private.
 
 PR #74 implementation source7b8738bc passed full local automated checks
 (1,151 Python cases with23 environmental skips, plus JS/native/browser gates),

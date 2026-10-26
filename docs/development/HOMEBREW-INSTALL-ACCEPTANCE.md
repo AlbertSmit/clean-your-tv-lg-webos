@@ -6,10 +6,26 @@ is established. All current implementation and code reviews were AI-assisted;
 meaningful named human review and supervised TV testing are pending. This record
 does not approve public promotion or catalog submission.
 
-## Candidate identity and automated artifact evidence
+## Limited correction test (not product acceptance)
+
+At correction source `1be47b2c`, isolated Installer0.1.0 passed installation,
+actual package-file hashes and fixed HBC read-only inspection. Launch was
+acknowledged but the foreground screen was not confirmed. Only Installer was
+removed afterward, with terminal/absence proof and unchanged existing-product
+baseline. The packaged console also completed read-only status. Private device
+facts and logs are retained locally; no product update, activation, control,
+startup, boot or rollback acceptance is inferred. The local reproducible IPK
+SHA256 is `c3061975151fc9d25c54d7814cf670b0f7a9e3052dc4bf5d2ea9b1b0ee0077cd`
+(59,725,142 bytes). Later integrated packages need their own identity and checks.
+
+## Historical candidate identity and automated artifact evidence
+
+The 2026-10-26 private staging/startup-guard correction supersedes the source and
+startup representation below. These exact earlier artifacts remain historical
+software evidence; rebuild corrected artifacts before candidate acceptance.
 
 The integration base is `2b76134a` (includes `origin/release/next` at `fe7e8c1b`).
-The final source is `7b8738bceaf1d5ffc79ba9987d27c2e12ef6619d`. Two builds from that source
+The earlier source is `7b8738bceaf1d5ffc79ba9987d27c2e12ef6619d`. Two builds from that source
 produced byte-identical IPKs. Installer remains **0.0.0 development**, with
 embedded Root **0.3.0**, Root Updater **0.2.1** and System Updater supervisor
 **1.0.0**; these are not selected public Homebrew versions.
@@ -122,12 +138,13 @@ reuses their recovery contracts rather than adding a competing updater.
 
 | Persistent scope | Contents and ownership/lifetime |
 | --- | --- |
-| `/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/` | Installer web assets, fixed `bootstrap.js`, verified `payload/` (Root, Root Updater, supervisor, baseline, runtime archive/manifests/licenses). Package-owned regular files, 0644 or explicitly executable 0755; trusted root-owned non-writable ancestors. No separate Installer LS2 service. |
+| `/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/` | Installer web assets, fixed `bootstrap.js`, verified `payload/` (Root, Root Updater, supervisor, baseline, runtime archive/manifests/licenses). Package-owned regular files, 0644 or explicitly executable 0755; fixed root-owned real platform ancestors may be writable; the own app/payload leaf and files remain nonwritable by group/others. This is a DATA policy, not execution authority. No separate Installer LS2 service. |
 | `/media/developer/apps/usr/palm/packages/com.cleanyourtv.installer/packageinfo.json` | Package metadata owned/removed by the package manager. Removing Installer does not request product removal. |
 | `/var/lib/clean-your-tv-installation/` | Shared root-owned 0700 store; 0600 `operation.json` durable owner/lease, `request-<id>.json`, `submission-<id>.json`, `removal-<lease>.json`, `ownership.lock` product mutex and `worker.lock` submission/store mutex. Exact journals remain authoritative across clients. |
 | `/var/lib/clean-your-tv-installation/request-<id>/` | Original checked private worker/payload snapshot; 0700 directories, 0600 files and `worker.log`. Worker lifetime is independent of Installer UI. Retained for checked continuation and diagnosis, not deleted to reset an operation. |
 | `/var/lib/clean-your-tv-root/` | Existing root-owned recovery/deploy code and `runtime/`, `service/`, manifests, `deploy.json`, `install-terminal.json`, `personalization.json`, `recovery-provision.json`/pending, `ls2-provision-snapshot.json`, `system-permissions.json`, `activity-registration.json`, startup/binding and routing/intent/update receipts/locks. Private files normally 0600, directories 0700, fixed executable launchers/runners 0700. Retained after removal; verified cytv reinstall may create `.archive-<id>`, never blind deletion. |
 | `/var/lib/clean-your-tv-root-updater/` and `/var/lib/clean-your-tv-system-updater/` | Existing private 0700 `code/`, `cache/`, bootstrap/infrastructure/installed-package/installed-terminal receipts, original full-bundle/IPK `bootstrap-bundle.json` continuation binding, transactions, baselines/profiles, `run-service`, bindings and `startup-hook.json` (plus `startup-hook.previous.json` on exact legacy migration). Full removal disables/archives owned state under `.archive-<id>` and retains removal evidence. Regular data 0600; fixed runners 0700. |
+| `/var/lib/clean-your-tv-installer/.exec-<random>/` | Unique root-owned 0700 temporary execution snapshot with 0600 original-inventory-checked code/data. Payload actions stage required component/baseline inputs, excluding the runtime archive; other actions stage code only. Python/imports and `--payload` use this private tree. Removed after child exit; unknown drift is retained. Inspect permits this ephemeral staging without product or operation-receipt mutations. |
 | `/var/lib/clean-your-tv-installer/cytv-root-install-<id>/package.ipk` | Existing bounded observed-install staging; exact terminal event must match it. Preserve uncertain operation evidence. Root-owned 0755 staging directories and 0644 IPK permit package-manager read access; no private bundle is exposed and no user-supplied path is accepted. |
 | `/var/lib/clean-your-tv-python/<sha256>/` | Immutable pinned private CPython slot with `.cytv-runtime.json` inventory; 0755 directories/executables and 0644 regular data, root owned and not group/world writable. Pin is `4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea`. No `/usr/bin` replacement or global PATH change. |
 | `/var/lib/clean-your-tv-python/.stage-<id>/` and `.install.lock` | Checked runtime staging/tree and 0600 immutable-promotion lock, separate from the product lease. Only the exact owned runtime stage is cleaned; drift is retained. Referenced slots remain after application removal. |
@@ -143,20 +160,30 @@ existing ordinary `com.gathin.tvhome`, `com.local.nativehome`, and
 it does not remove foreign applications. App/GUI mutable preferences keep their
 existing package/profile storage; changing installation clients does not reset them.
 
-### Owned startup links
+### Owned private startup wrappers
 
-| Link in `/var/lib/webosbrew/init.d/` | Exact target |
+| Regular 0700 file in `/var/lib/webosbrew/init.d/` | Private guard |
 | --- | --- |
-| `50-clean-your-tv-root` | `/media/developer/apps/usr/palm/applications/com.cleanyourtv.root.preview/startup.sh` |
-| `51-clean-your-tv-root-updater` | `/media/developer/apps/usr/palm/applications/com.cleanyourtv.root.updater/startup.sh` |
-| `52-clean-your-tv-system-updater` | `/media/developer/apps/usr/palm/applications/com.cleanyourtv.system.updater/startup.sh` |
+| `50-clean-your-tv-root` | `/var/lib/clean-your-tv-root/startup_guard.py` |
+| `51-clean-your-tv-root-updater` | `/var/lib/clean-your-tv-root-updater/code/startup_guard.py` |
+| `52-clean-your-tv-system-updater` | `/var/lib/clean-your-tv-system-updater/code/startup_guard.py` |
 
-Only exact package identity, target content/hash, root ownership, safe ancestors
-and 0755 target mode are accepted. Exact previously owned 0700 copied hooks can
-be migrated with retained previous receipt; collisions/drift stop setup.
-Package deletion makes its link inert. Full product removal verifies ownership
-before removing the link, retaining receipts. Runtime/worker/ActivityManager guards
-also detect missing packages, restore LG where needed and refuse reactivation.
+Each wrapper invokes its private `python_boot.js` binding gate, then validates
+owner package metadata as DATA before marking normal Root boot or starting its
+updater. No shared package startup bytes execute. V3 receipts bind exact wrapper
+hash/path/owner; exact v1 regular and v2 link receipts retain prior proof during
+migration. An exact owned link can be removed after its target is replaced or
+missing. Unknown hook/receipt bytes remain collisions. Package loss stops rearming;
+independent private recovery remains available to restore LG Home. Live worker and
+ActivityManager disappearance protections still require physical acceptance.
+
+HBC's initial privileged installed-app launch is an explicit trust assumption.
+The built bootstrap pins the outer manifest digest, and later staging reads and
+writes exact bytes against that original inventory. A newly self-consistent source
+manifest cannot authorize replacement code. Runtime preparation separately stages
+the authenticated archive privately before extraction/verification. Never chmod
+shared platform directories; new package archives explicitly secure only their
+own app/service/package leaves.
 
 ### Existing LS2 permissions and registrations reused
 

@@ -46,7 +46,7 @@ class BuildTests(unittest.TestCase):
             self.assertIn('installation.py',manifest['files'])
             import subprocess,sys
             result=subprocess.run([sys.executable,'-I','-B','-c',
-                'import sys;sys.path.insert(0,sys.argv[1]);import installation;'
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation,package_data,startup_guard;'
                 'assert installation.Store.__module__ == "system_updater.support.store"',str(a)],
                 cwd=Path(tmp),capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
@@ -142,14 +142,14 @@ class BuildTests(unittest.TestCase):
                             setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
                 self.assertFalse(owner.status()['terminal'])
                 (state/'bootstrap.json').write_text('{"phase":"complete"}')
-            self.assertTrue(hook.is_symlink())
+            self.assertFalse(hook.is_symlink())
             self.assertTrue(result['installed'])
             self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
             self.assertEqual(json.loads((state/'current-no-root.json').read_text()),manifest)
             self.assertEqual((state/'code/system_updater/core.py').stat().st_mode&0o777,0o600)
-            self.assertTrue(hook.is_symlink())
+            self.assertFalse(hook.is_symlink())
             self.assertIn(str(state/'run-service'),(base/'services.d'/(setup.SERVICE+'.service')).read_text())
-            self.assertEqual(hook.read_text(),startup_hook.packaged_content(setup.APP).decode())
+            self.assertEqual(hook.read_text(),startup_hook.private_content(setup.APP).decode())
             self.assertEqual(mutable.read_text(),'private preferences')
             with self.assertRaises(FileExistsError):setup.provision(bundle,baseline,state=state)
 

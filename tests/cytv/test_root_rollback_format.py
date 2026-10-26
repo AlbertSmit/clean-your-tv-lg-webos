@@ -47,9 +47,11 @@ class RootRollbackFormatTests(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(package.read_ar(raw)['data.tar.gz']),mode='r:gz') as archive:
             self.assertTrue(any(item.isdir() for item in archive))
 
-    def test_root_preflight_rejects_directory_entries(self):
-        raw = package.ipk(package.ROOT_APP, '0.1.3', {'usr/palm/applications/'+package.ROOT_APP+'/index.html': b'home'})
-        with self.assertRaisesRegex(ValueError, 'rollback'):
-            package.verify_root_rollback_format(raw)
-        fixed, _ = package.personalize(raw, package.ROOT_APP, {'apps':[{'id':'youtube'}]})
+    def test_root_preflight_accepts_secure_owned_leaf_directories(self):
+        raw=package.ipk(package.ROOT_APP,'0.1.3',{'usr/palm/applications/'+package.ROOT_APP+'/index.html':b'home'})
+        package.verify_root_rollback_format(raw)
+        fixed,_=package.personalize(raw,package.ROOT_APP,{'apps':[{'id':'youtube'}]})
         package.verify_root_rollback_format(fixed)
+        with tarfile.open(fileobj=io.BytesIO(package.read_ar(fixed)['data.tar.gz'])) as archive:
+            dirs=[entry for entry in archive if entry.isdir()]
+        self.assertTrue(dirs);self.assertTrue(all(len(Path(entry.name).parts)>=4 and entry.mode==0o755 for entry in dirs))

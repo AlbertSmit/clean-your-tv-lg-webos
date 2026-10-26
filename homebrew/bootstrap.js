@@ -1,6 +1,8 @@
 /* Node 8 only. Fixed installed entry; never a generic command or path API. */
 'use strict';
 var APP='/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer';
+// Initial privileged HBC launch trusts the installed app. Subsequent payload bytes are pinned.
+var PAYLOAD_SHA256='__CYTV_PAYLOAD_SHA256__';
 var PAYLOAD=APP+'/payload',DRIVER=PAYLOAD+'/root-updater/install_driver.py';
 function fail(){throw new Error('Installer prerequisite or request is unsupported');}
 function parse(args){
@@ -27,18 +29,20 @@ function run(args,deps){
  return Promise.resolve().then(function(){
   var request=parse(args);deps=deps||{process:process,runtime:require('./payload/runtime.js'),execute:execute};
   if(!deps.process.geteuid||deps.process.geteuid()!==0||parseInt(deps.process.versions.node.split('.')[0],10)<8)fail();
-  return deps.runtime.inspect(PAYLOAD, ['status','restore','remove'].indexOf(request.action)>=0).then(function(state){
-   if(request.action==='prepare-runtime')return deps.runtime.prepare(PAYLOAD).then(function(){return {state:'runtime_ready',code:'inspect_required'};});
+  return deps.runtime.inspect(PAYLOAD, ['status','restore','remove'].indexOf(request.action)>=0,PAYLOAD_SHA256).then(function(state){
+   if(request.action==='prepare-runtime')return deps.runtime.prepare(PAYLOAD,PAYLOAD_SHA256).then(function(){return {state:'runtime_ready',code:'inspect_required'};});
    if(!state.python){if(request.action!=='inspect')fail();return {state:'prerequisites',code:'private_runtime_required',runtime:state};}
-   var command=['-E','-s','-B',DRIVER,request.action];
+   return deps.runtime.stage(state,!request.resume&&['inspect','install','remove'].indexOf(request.action)>=0).then(function(stage){
+   var command=['-E','-s','-B',stage.driver,request.action];
    if(request.operation)command.push('--operation',request.operation);
    if(request.resume)command.push('--resume');
-   else if(['inspect','install','remove'].indexOf(request.action)>=0)command.push('--payload',PAYLOAD);
+   else if(['inspect','install','remove'].indexOf(request.action)>=0)command.push('--payload',stage.root);
    if(request.candidate)command.push('--candidate',request.candidate);
    if(request.supervisor)command.push('--prepare-supervisor');
    if(request.migrate)command.push('--migrate-packaged-home');
    if(request.current)command.push('--verify-current');
-   return deps.execute(state.python,command).then(function(raw){var result=JSON.parse(raw);if(!result||typeof result!=='object'||Array.isArray(result)||typeof result.state!=='string')fail();return result;});
+   return deps.execute(state.python,command).then(function(raw){var result=JSON.parse(raw);if(!result||typeof result!=='object'||Array.isArray(result)||typeof result.state!=='string')fail();return result;}).then(function(result){return stage.cleanup().then(function(){return result;});},function(error){return stage.cleanup().then(function(){throw error;});});
+   });
   });
  });
 }

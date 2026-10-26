@@ -178,14 +178,31 @@ export function createWidgets(dataSource) {
     return !!(snap && snap.playing && snap.title);
   }
 
+  let lastNP = null;
+
+  function applyNowPlayingVisibility() {
+    npEl.classList.toggle('w-np-hidden', !(cfg.enabled.nowPlaying && hasMusic(snapshot && snapshot.nowPlaying)));
+  }
+
+  function restartAnimation(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
   function setNowPlaying(snap) {
-    npEl.style.display = cfg.enabled.nowPlaying && hasMusic(snap) ? '' : 'none';
+    applyNowPlayingVisibility();
     if (!hasMusic(snap)) {
       artEl.innerHTML = '';
       titleEl.textContent = '';
       artistEl.textContent = '';
+      lastNP = null;
       return;
     }
+    const changed = !lastNP ||
+      lastNP.title !== snap.title ||
+      lastNP.artist !== (snap.artist || '') ||
+      lastNP.artwork !== snap.artwork;
     if (snap.artwork && /^data:image\//.test(snap.artwork)) {
       artEl.innerHTML = '';
       const img = document.createElement('img');
@@ -198,6 +215,12 @@ export function createWidgets(dataSource) {
     }
     titleEl.textContent = snap.title;
     artistEl.textContent = snap.artist || '';
+    if (changed) {
+      restartAnimation(titleEl, 'w-np-animate');
+      restartAnimation(artistEl, 'w-np-animate');
+      restartAnimation(artEl, 'w-np-art-animate');
+    }
+    lastNP = { title: snap.title, artist: snap.artist || '', artwork: snap.artwork };
   }
 
   function update(snap) {
@@ -212,7 +235,7 @@ export function createWidgets(dataSource) {
     visible = !!nextVisible;
     clockEl.style.display = cfg.enabled.clock ? '' : 'none';
     wxEl.style.display = cfg.enabled.weather ? '' : 'none';
-    npEl.style.display = cfg.enabled.nowPlaying && hasMusic(snapshot && snapshot.nowPlaying) ? '' : 'none';
+    applyNowPlayingVisibility();
     root.classList.toggle('widgets-visible', visible);
     setClock(visible && !document.hidden && cfg.enabled.clock);
   }

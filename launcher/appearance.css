@@ -168,6 +168,19 @@ html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display:
 .w-np-badge { position: absolute; top: -8px; right: 0; width: 30px; height: 30px; opacity: .8; }
 .w-np-badge svg { display: block; width: 30px; height: 30px; fill: currentColor; }
 .w-np-badge path { fill: none; stroke: currentColor; stroke-width: 2; }
+.w-np { transition: opacity 260ms ease, transform 260ms ease, visibility 260ms; }
+.w-np.w-np-hidden { opacity: 0; transform: translateY(16px) scale(.985); visibility: hidden; }
+@keyframes wNpTextIn {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: none; }
+}
+.w-np-animate { animation: wNpTextIn 440ms cubic-bezier(.22,.61,.36,1) both; }
+@keyframes wNpArtIn {
+  from { opacity: 0; transform: scale(1.07); }
+  to { opacity: 1; transform: none; }
+}
+.w-np-art-animate { animation: wNpArtIn 480ms cubic-bezier(.22,.61,.36,1) both; }
+html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { animation: none !important; }
 
 /* The master widget switch belongs to status navigation, outside decoration. */
 .status-widgets { display: none; }

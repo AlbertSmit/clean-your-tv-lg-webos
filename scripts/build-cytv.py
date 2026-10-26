@@ -30,6 +30,7 @@ def tracked_files(prefix):
                              'launcher/ui/shelf.jsx', 'launcher/ui/appearance-panel.jsx',
                              'launcher/ui/status.jsx', 'launcher/assets/cinema-backdrop.jpg', 'launcher/assets/cinema-backdrop-soft.jpg',
                              'launcher/ui/dock-glass.js', 'launcher/assets/dock-home.jpg', 'launcher/assets/dock-grid.jpg', 'launcher/assets/dock-displacement.png',
+                             'launcher/assets/dock-glass-home.jpg', 'launcher/assets/dock-glass-grid.jpg',
                              'launcher/fonts/InterDisplay-Regular.woff2', 'launcher/fonts/InterDisplay-Medium.woff2',
                              'launcher/fonts/InterDisplay-SemiBold.woff2', 'launcher/fonts/Inter-OFL.txt',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',

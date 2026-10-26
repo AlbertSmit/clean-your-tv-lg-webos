@@ -19,6 +19,7 @@ LAUNCHER_FILES = {
     'appearance.css', 'home-ui.js', 'home-ui-LICENSE.txt',
     'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
@@ -43,6 +44,7 @@ ROOT_LAUNCHER_FILES = {
     'appearance.css', 'theme-panel.js', 'home-ui.js', 'home-ui-LICENSE.txt',
     'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
 }

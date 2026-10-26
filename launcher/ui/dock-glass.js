@@ -1,4 +1,4 @@
-const textures = ['assets/dock-home.jpg', 'assets/dock-grid.jpg'];
+const textures = ['assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg'];
 
 export function createDockGlass() {
   let enabled = false, grid = false, current = null;

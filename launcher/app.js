@@ -660,8 +660,8 @@
   function layoutTiles() {
     tiles.forEach(function (e, t) {
       tilesContainer.appendChild(e.el);
-      e.el.style.left = tileLeft(t) + "px";
-      e.el.style.top = tileTop(t) + "px";
+      // Position via transform so layout is never touched on updates.
+      e.el.style.transform = "translate3d(" + tileLeft(t) + "px," + tileTop(t) + "px,0)";
       e.el.classList.toggle("dock", 0 === rowFor(t));
     });
     var dockBand = getElement("dockBand"),
@@ -733,7 +733,7 @@
       }
       var top = tileTop(index);
       scrollOffset = HomeUI.scrollFor(layout, index, scrollOffset, !!moveState);
-      stage.style.transform = "translateY(" + -scrollOffset + "px)";
+      stage.style.transform = "translate3d(0," + -scrollOffset + "px,0)";
       document.body.classList.toggle("app-grid", layout.tvos && scrollOffset > 0);
       document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < headerBottom + 24);
       shelf.update(layout.tvos && row === 0);
@@ -748,7 +748,7 @@
         glassTop = top + layout.cardHeight / 2 - glassHeight / 2;
       focusGlass.style.width = glassWidth + "px";
       focusGlass.style.height = glassHeight + "px";
-      focusGlass.style.transform = "translate(" + glassLeft + "px," + glassTop + "px)";
+      focusGlass.style.transform = "translate3d(" + glassLeft + "px," + glassTop + "px,0)";
       focusGlassVisible || (focusGlass.style.transition = "none", focusGlass.offsetWidth, focusGlass.style.transition = "", focusGlass.style.opacity = "1", focusGlassVisible = true);
       0 === row ? function (e) {
         var t = e.app.title;

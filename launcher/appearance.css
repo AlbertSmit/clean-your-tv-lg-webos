@@ -59,7 +59,7 @@ html.home-tvos #dockBand {
 html.home-tvos #dockTexture { display: block; }
 html.reduced-effects #dockTexture { display: none !important; }
 html.home-tvos #stage { transition: transform 260ms cubic-bezier(.23,1,.32,1); }
-html.home-tvos .item { width: 250px; transition: opacity 180ms ease, transform 180ms ease, left 220ms ease, top 220ms ease; }
+html.home-tvos .item { width: 250px; transition: opacity 180ms ease, transform 180ms ease; }
 html.home-tvos .card { width: 250px; height: 150px; border-radius: 28px; background: #333441; box-shadow: 0 8px 13px rgba(0,0,0,.15); transition: transform 180ms cubic-bezier(.23,1,.32,1), border-radius 180ms cubic-bezier(.23,1,.32,1); }
 html.home-tvos .card::before {
   content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1;

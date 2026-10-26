@@ -4,6 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const base=process.env.PREVIEW_URL||'http://127.0.0.1:8876';
+const output=process.env.CYTV_TEST_OUTPUT_DIR||'build/tests';
 (async()=>{
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  try{
@@ -44,7 +45,7 @@ const base=process.env.PREVIEW_URL||'http://127.0.0.1:8876';
     await page.locator('#renewalDiagnostics').click();assert(await page.locator('#renewalDetails').isVisible());
     await page.locator('#developerBack').click();
     assert(await page.locator('#renewalSummary').evaluate(el=>el.textContent.includes('enabled')));
-    await updates.click();await page.locator('#updatePanel').waitFor({state:'visible'});
+    await updates.click();await page.locator('#systemUpdates').waitFor({state:'visible'});
     await page.keyboard.press('Escape');await card.waitFor({state:'visible'});
     assert.equal(await page.evaluate(()=>document.activeElement.id),'renewalUpdates');
     await page.locator('#developerOpen').click();
@@ -66,8 +67,8 @@ const base=process.env.PREVIEW_URL||'http://127.0.0.1:8876';
    await page.waitForFunction(()=>{const b=document.querySelector('#homeRoutingToggle')||document.querySelector('.home-routing-switch');return b&&!b.disabled;});
    if(edition==='launcher')await page.waitForFunction(()=>!document.getElementById('renewalSummary').textContent.includes('Working'));
    await updates.evaluate(el=>el.setAttribute('data-update-available','true'));
-   fs.mkdirSync('build/tests',{recursive:true});
-   await page.screenshot({path:'build/tests/settings-'+edition+'.png'});
+   fs.mkdirSync(output,{recursive:true});
+   await page.screenshot({path:output+'/settings-'+edition+'.png'});
    for(const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']){
     await page.evaluate(code=>localStorage.setItem('tvhome.language',code),locale);
     await page.reload();await page.locator('#tiles .item').first().waitFor();await page.locator('#btnSettings').click();await card.waitFor();
@@ -76,6 +77,38 @@ const base=process.env.PREVIEW_URL||'http://127.0.0.1:8876';
     assert(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1),locale+' horizontal overflow');
     assert(await card.evaluate(el=>el.scrollHeight<=el.clientHeight+1),locale+' main settings should fit at 1080p');
     assert(await card.locator('.settings-links button').evaluateAll(buttons=>buttons.every(el=>el.scrollWidth<=el.clientWidth+1)),locale+' link label must fit');
+    if(edition==='launcher'){
+     await page.waitForFunction(()=>!document.getElementById('homeRoutingToggle').disabled);
+     await page.setViewportSize({width:1280,height:720});
+     const confirmedOverflow=await card.evaluate(el=>Math.max(0,el.scrollHeight-el.clientHeight));
+     await page.setViewportSize({width:1920,height:1080});
+     await page.evaluate(()=>{
+      const call=PalmServiceBridge.prototype.call;
+      PalmServiceBridge.prototype.call=function(uri,raw){
+       if(uri==='luna://com.gathin.tvhome.renewal/homeStatus')window.pendingHomeStatus=this;
+       else call.call(this,uri,raw);
+      };
+     });
+     await page.locator('#renewalClose').click();await page.locator('#btnSettings').click();
+     assert(await page.locator('#homeRoutingToggle').isHidden(),'pending status must not look off');
+     assert(await page.evaluate(()=>document.activeElement.id!=='homeRoutingToggle'&&document.activeElement.offsetHeight>0),'pending status must leave a visible focused action');
+     await page.evaluate(()=>pendingHomeStatus.onservicecallback(JSON.stringify({returnValue:false,errorText:'Home Helper data unavailable'})));
+     assert(await page.locator('#homeRoutingToggle').isHidden(),'unreadable status must not expose a false off switch');
+     assert(await page.evaluate(()=>document.activeElement.id!=='homeRoutingToggle'&&document.activeElement.offsetHeight>0),'failed status must leave a visible focused action');
+     assert(await page.locator('#homeRoutingStatus').isVisible());
+     await page.setViewportSize({width:1280,height:720});
+     assert(await card.evaluate((el,baseline)=>el.scrollHeight-el.clientHeight<=baseline+1,confirmedOverflow),locale+' unknown status must not add scrolling at 720p');
+     await page.locator('#homeVisit').focus();await page.keyboard.press('ArrowLeft');
+     assert.notEqual(await page.evaluate(()=>document.activeElement.id),'homeRoutingToggle','remote must skip the unavailable switch');
+     if(['de','ko','ru'].includes(locale))await page.screenshot({path:output+'/issue12-status-unknown-'+locale+'.png'});
+     for(const enabled of [false,true]){
+      await page.locator('#renewalClose').click();await page.locator('#btnSettings').click();
+      await page.evaluate(enabled=>pendingHomeStatus.onservicecallback(JSON.stringify({returnValue:true,enabled})),enabled);
+      assert(await page.locator('#homeRoutingToggle').isVisible());
+      assert.equal(await page.locator('#homeRoutingToggle').getAttribute('aria-checked'),String(enabled));
+     }
+     await page.setViewportSize({width:1920,height:1080});
+    }
    }
    await page.setViewportSize({width:1280,height:720});
    assert(await card.evaluate(el=>el.scrollHeight<=el.clientHeight+1),'main settings should fit at 720p');

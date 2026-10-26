@@ -107,3 +107,17 @@ The `screenshots/android-language-*` files and `android-languages-overview.png` 
 Files `screenshots/android-*` are screenshots of the actual debug APK on an Android 15 ARM64 emulator. Native smoke checks reached the real Python No-root code/passphrase request, then tested the recovery result for an unavailable synthetic Key Server. The Root negative SSH fixture checked the real fingerprint confirmation and hidden password callback, then rejected an intentionally invalid synthetic password. It never executes TV commands. These checks do not establish successful hardware installation.
 
 For native smoke tests, forward the APK's debug WebView socket (`adb shell cat /proc/net/unix` identifies `webview_devtools_remote_PID`) with `adb forward tcp:9228 localabstract:webview_devtools_remote_PID`. Run `node android/tests/emulator.cjs` with `CYTV_ADB` set to adb's path. For the Root negative fixture, run `python android/tests/root-handshake.py` first, then set `CYTV_TEST_ROOT=1` for the Node command. To avoid an older fixture’s remembered host key, set a fresh `CYTV_TEST_SSH_PORT` in both commands. Start the app on its Russian welcome screen with no operation running. WebView debugging is enabled only in debug builds; it is disabled in release builds.
+
+## Next candidate: maintenance connection continuity (issue #12)
+
+Unreleased preparation: after Done returns to the start screen, Tools retains the
+selected TV, edition and SSH port. No-root keeps port 9922; a custom Root port is
+also retained. Status, restore and Home button diagnostics no longer inherit the
+start screen's old hard-coded port 22. Home Helper recording remains No-root only.
+This UI change is not in the published v1.2.0 APK.
+
+Regression coverage drives a full install-result → Done → Tools → action flow
+for No-root and custom-port Root. A TCP connection failure does not establish
+that the Developer Mode passphrase was wrong. The report attached to issue #12
+records action status and phase ssh-connect; the exact reporter path/port still
+needs device confirmation.

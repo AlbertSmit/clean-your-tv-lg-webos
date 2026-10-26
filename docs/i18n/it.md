@@ -119,3 +119,7 @@ Solo Root: Impostazioni Home → Aggiornamenti firmware LG modifica l’impostaz
 ## Candidato: ripristino guidato dal computer
 
 Questo comportamento appartiene al prossimo candidato, non all’installer pubblicato v1.2.0. Dopo il controllo dello stato, la diagnostica della connessione o il ritorno a LG Home, una rimozione No-root incompleta propone **Ripristina e reinstalla** per la stessa TV e connessione. Conferma esplicitamente il completamento della rimozione (predefinito: No), quindi verifica le versioni incluse prima dell’installazione. Anche **Configura la mia TV** offre questo percorso. Il solo ritorno a LG Home non completa la rimozione. In caso di errore, usa **Salva rapporto diagnostico…** per salvare il rapporto di quel tentativo e allegarlo alla segnalazione; non serve il terminale. Se il rapporto non è stato creato, indica l’errore visibile. Conserva i dati di ripristino; le operazioni fallite o dall’esito incerto non vengono ripetute automaticamente. Questo non conferma ancora la soluzione del problema G5 / firmware 43.21.71 (#65).
+
+## Prossimo candidato: connessione e stato di Home (issue #12)
+
+Preparazione non ancora pubblicata: gli Strumenti Android mantengono TV, edizione e porta SSH dopo il ritorno alla schermata iniziale; No-root usa normalmente 9922. Se le impostazioni non possono verificare il controllo Home, mostrano uno stato sconosciuto e nascondono Cambia Home fino a una risposta valida. Questo non significa che Helper sia arrestato e non lo riavvia. Queste modifiche non sono nei pacchetti pubblicati di v1.2.0.

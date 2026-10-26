@@ -6,7 +6,7 @@
  panel.setAttribute('aria-modal','true');
  panel.innerHTML=ht([
   "<div id=\"settingsMain\" class=\"renewal-card settings-main\"><div class=\"settings-heading\"><h2>Home settings</h2><span class=\"settings-edition\">No-root Edition</span></div><section class=\"settings-home\"><h3>Your Home screen</h3><p id=\"homeRoutingStatus\" class=\"settings-status\" aria-live=\"polite\">Checking Home control…</p>",
-  "<div class=\"renewal-actions home-routing-actions\"><button id=\"homeRoutingToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\" disabled>Change Home</button><button id=\"homeVisit\" class=\"home-visit-button\" aria-describedby=\"homeVisitHint\">Open LG Home</button></div><p id=\"homeVisitHint\" class=\"home-visit-hint\">Open LG Home once, keeping your Home choice.</p>",
+  "<div class=\"renewal-actions home-routing-actions\"><button id=\"homeRoutingToggle\" class=\"home-routing-switch\" role=\"switch\" aria-checked=\"false\" hidden disabled>Change Home</button><button id=\"homeVisit\" class=\"home-visit-button\" aria-describedby=\"homeVisitHint\">Open LG Home</button></div><p id=\"homeVisitHint\" class=\"home-visit-hint\">Open LG Home once, keeping your Home choice.</p>",
   "</section>",
   "<div class=\"renewal-actions settings-links settings-section\"><button id=\"homeLanguage\">Language<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalUpdates\">Software updates<span class=\"settings-update-dot\" aria-hidden=\"true\"></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button><button id=\"renewalTV\">TV settings<span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"renewal-actions settings-developer\"><button id=\"developerOpen\" aria-controls=\"developerSettings\" aria-describedby=\"renewalSummary\"><span><span>Developer Mode</span> <span class=\"settings-beta\">Beta</span><span id=\"renewalSummary\" class=\"renewal-summary\" aria-live=\"polite\">Checking auto-renewal…</span></span><span class=\"settings-chevron\" aria-hidden=\"true\"></span></button></div><div class=\"settings-footer\"><p>Hold Back for 1.2 seconds to open LG Home.</p>",
   "<div class=\"renewal-actions\"><button id=\"renewalClose\">Back to Home</button></div></div>",
@@ -41,6 +41,11 @@
   try{bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish(null);}};bridge.call('luna://com.gathin.tvhome.renewal/'+method,'{}');}catch(_){finish(null);}
  }
  var homeToggle=document.getElementById('homeRoutingToggle'),homeVisit=document.getElementById('homeVisit'),homeStatus=document.getElementById('homeRoutingStatus'),homeEnabled=null,homeBusy=false;
+ function hideHomeChoice(){
+  var focused=document.activeElement===homeToggle;
+  homeToggle.hidden=true;homeToggle.disabled=true;
+  if(focused&&openNow())focus(index);
+ }
  function homeRPC(method,payload,callback){
   var b,done=false,t=setTimeout(function(){finish({returnValue:false});},10000);
   function finish(r){if(done)return;done=true;clearTimeout(t);if(b)try{b.cancel();}catch(_){}callback(r);}
@@ -49,13 +54,13 @@
  function renderHome(r){
   homeBusy=false;homeVisit.disabled=false;
   if(!r||r.returnValue!==true||typeof r.enabled!=='boolean'){
-   homeEnabled=null;homeToggle.disabled=true;homeStatus.textContent=tr('Home Helper unavailable. Open Home Helper, then reopen settings.');return;
+   homeEnabled=null;hideHomeChoice();homeStatus.textContent=tr('Home status is unknown. The Home button may still work.');return;
   }
-  homeEnabled=r.enabled;homeToggle.disabled=false;homeToggle.setAttribute('aria-checked',String(homeEnabled));
+  homeEnabled=r.enabled;homeToggle.hidden=false;homeToggle.disabled=false;homeToggle.setAttribute('aria-checked',String(homeEnabled));
   homeStatus.textContent=homeEnabled?tr('Home and return from apps open Clean Your TV.'):tr('Home and return from apps open LG Home.');
   if(openNow())focus(index);
  }
- function refreshHome(){homeToggle.disabled=true;homeRPC('homeStatus',{},renderHome);}
+ function refreshHome(){hideHomeChoice();homeStatus.textContent=tr('Checking Home control…');homeRPC('homeStatus',{},renderHome);}
  homeToggle.onclick=function(){
   if(homeBusy||homeEnabled===null)return;homeBusy=true;homeToggle.disabled=true;homeVisit.disabled=true;homeStatus.textContent=tr('Changing Home control…');
   homeRPC('setHomeControl',{enabled:!homeEnabled},function(r){

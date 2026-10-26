@@ -404,3 +404,24 @@ The production builder reads `release-versions.json` and rejects mismatched Home
 Helper, Root or cytv versions, including packaged service metadata. Build from the
 release commit with `python scripts/build-cytv.py`; no separate local source tree
 is required. The wizard has no trial or Keep step.
+
+## Home button diagnostics
+
+The console executable can collect the existing opt-in Home Helper recording
+using its own saved No-root TV connection:
+
+    ./cytv home-diagnostics --edition no-root
+
+Use the platform-specific console executable name on Windows. With multiple
+saved No-root connections, select the affected TV. With no saved connection,
+follow normal address, trust and Developer Mode prompts; do not copy private
+Android profile/key files to a computer. The Helper must already be running.
+Press Home once when prompted, leave the remote untouched for the recording,
+then attach the generated JSON after reviewing it. Recording does not restart
+Helper or change the saved Home choice; standby and cold boot remain separate
+acceptance checks.
+
+Next-candidate Home settings (not published v1.2.0): a failed status read is shown
+as unknown, with Change Home hidden until a valid response. This avoids showing
+an unconfirmed off switch. It does not repair a firmware denial or unavailable
+request-file transport, prove that Helper stopped, or automatically start it.

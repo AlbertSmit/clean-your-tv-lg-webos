@@ -10,6 +10,13 @@ const APP=process.env.CYTV_INSTALLER_APP||path.join(__dirname,'../app'),ID='a'.r
  const browser=await chromium.launch({headless:true,channel:process.env.BROWSER_CHANNEL||'chrome'});
  async function fixture(state,locale='en',size={width:1280,height:720}){
   const context=await browser.newContext({viewport:size,locale});
+  // file: localStorage persistence is browser-dependent; use a stable test origin.
+  await context.route('https://cytv.test/**',async route=>{
+   const name=decodeURIComponent(new URL(route.request().url()).pathname).replace(/^\//,'');
+   const file=path.resolve(APP,name),base=path.resolve(APP)+path.sep;
+   if(!file.startsWith(base)||!fs.existsSync(file)){await route.fulfill({status:404,body:''});return;}
+   await route.fulfill({path:file});
+  });
   await context.addInitScript(({state,ID,LEASE,SHA,locale})=>{
    localStorage.setItem('cytv.installer.language',locale);window.calls=[];window.model=state;window.saved=ID;
    if(state.noHbc)return;
@@ -24,7 +31,7 @@ const APP=process.env.CYTV_INSTALLER_APP||path.join(__dirname,'../app'),ID='a'.r
     this.onservicecallback(JSON.stringify({returnValue:true,stdoutString:JSON.stringify(reply)}));
    };};
   },{state,ID,LEASE,SHA,locale});
-  const page=await context.newPage();await page.goto('file://'+path.join(APP,'index.html'));await page.waitForSelector('[data-screen]');return {context,page};
+  const page=await context.newPage();await page.goto('https://cytv.test/index.html');await page.waitForSelector('[data-screen]');return {context,page};
  }
  try{
   let f=await fixture({state:'fresh'}),p=f.page;
@@ -34,7 +41,8 @@ const APP=process.env.CYTV_INSTALLER_APP||path.join(__dirname,'../app'),ID='a'.r
   await p.keyboard.press('Escape');await p.waitForSelector('[data-screen="review"]');assert.equal(await p.evaluate(()=>document.activeElement.id),'install');assert((await p.evaluate(()=>calls)).every(c=>c.includes(' inspect')),'cancel never submits');
   await p.locator('#install').click();await p.locator('#confirm').click();await p.waitForSelector('[data-screen="progress"]');
   assert.equal((await p.evaluate(()=>calls)).filter(c=>c.includes(' install ')).length,1);
-  await p.reload();await p.waitForSelector('[data-screen="progress"]');assert((await p.evaluate(()=>calls)).every(c=>c.includes(' inspect')||c.includes(' status ')),'reopening never resubmits');await f.context.close();
+  const original=await p.evaluate(()=>localStorage.getItem('cytv.installer.operation'));assert(/^[a-f0-9]{32}$/.test(original),'submission saves the original request');
+  await p.reload();assert.equal(await p.evaluate(()=>localStorage.getItem('cytv.installer.operation')),original,'reload preserves the original request');await p.waitForSelector('[data-screen="progress"]');assert((await p.evaluate(()=>calls)).some(c=>c.includes(' status --operation '+original)),'reopening polls the original request');assert((await p.evaluate(()=>calls)).every(c=>c.includes(' inspect')||c.includes(' status ')),'reopening never resubmits');await f.context.close();
   f=await fixture({state:'recovery_required',active:{operation:ID,lease:LEASE,state:'pending',action:'remove'}});p=f.page;await p.waitForSelector('[data-screen="progress"]');assert((await p.evaluate(()=>calls)).some(c=>c.includes('--operation '+ID)));assert(!(await p.evaluate(()=>calls)).some(c=>c.includes('--operation '+LEASE)));await f.context.close();
   f=await fixture({state:'prerequisites',runtime:{privateRuntimeRequired:true,requiredSpace:335544320}});p=f.page;await p.waitForSelector('[data-screen="prerequisites"]');assert(!(await p.evaluate(()=>calls)).some(c=>c.includes('prepare-runtime')));await p.locator('#prepare').click();await p.locator('#confirm').click();await p.waitForSelector('[data-screen="review"]');assert.equal((await p.evaluate(()=>calls)).filter(c=>c.endsWith('prepare-runtime')).length,1);await f.context.close();
   f=await fixture({state:'installed',versions:{root:'1.2.3','root-updater':'2.3.4'}});p=f.page;await p.waitForSelector('[data-screen="installed"]');assert((await p.locator('#versions').textContent()).includes('1.2.3'));assert.equal(await p.locator('#install').count(),0);await p.locator('#remove').click();await p.waitForSelector('[data-screen="confirm"]');assert(!(await p.evaluate(()=>calls)).some(c=>c.includes(' remove ')));await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>document.activeElement.id),'remove');await f.context.close();

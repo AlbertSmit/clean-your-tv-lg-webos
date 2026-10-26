@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": null,
+  "version": "1.3.0",
   "changes": [
     {
       "pr": 66,
@@ -44,6 +44,16 @@
         55
       ],
       "summary": "Diagnose Root recovery startup/finalize failures with private observations and safe attempt-bound reports; partial #55, OLED Flex cause/device acceptance pending and supervisor inventory rebuild required"
+    },
+    {
+      "pr": 74,
+      "issues": [],
+      "summary": "Add Root-only Homebrew Installer alongside cytv with shared durable operations, verified offline runtime, owned startup/removal and original-bundle continuation; public Homebrew promotion/catalog remain gated on exact TV/human acceptance"
+    },
+    {
+      "pr": 75,
+      "issues": [],
+      "summary": "Prepare 1.3.0 component versions and pending acceptance/inventory; synchronize Root service metadata and isolate the legacy CLI fixture from local build outputs"
     }
   ],
   "excluded": [],

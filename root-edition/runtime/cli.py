@@ -44,6 +44,10 @@ def execute(mode, transaction=None):
         from bounded_profile_trial import begin, spawn
         return begin(spawn)
     if mode == 'restore':
+        try:
+            from audio_recovery import inhibit
+            inhibit(d.STATE)
+        except Exception: pass  # Optional audio state must never block Home recovery.
         from update_guard import cancel
         from intent_runtime import restore
         try:
@@ -56,7 +60,14 @@ def execute(mode, transaction=None):
     if mode == 'boot':
         from intent_runtime import boot
         result = boot()
-        return d.main('boot') if result is None else result
+        result = d.main('boot') if result is None else result
+        # A feature-owned worker survives UI/JS service lifetimes. Never disturb Home recovery.
+        if os.path.lexists(d.STATE/'audio-recovery/policy.json'):
+            try:
+                from audio_recovery import main as audio
+                audio('boot')
+            except Exception: pass
+        return result
     if mode == 'status':
         from provision import verify
         result = d.main('status')

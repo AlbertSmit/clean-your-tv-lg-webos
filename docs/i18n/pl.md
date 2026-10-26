@@ -164,3 +164,16 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 
 W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego odzyskiwania i nowej konfiguracji, aby otrzymać poprawione prywatne środowisko. Aktualizacja samego Installer go nie zastępuje. Zachowaj dane odzyskiwania i włącz Home tylko w zwykłej konfiguracji lub ustawieniach.
+
+## Nieopublikowany kandydat: odzyskiwanie dźwięku HDMI (Root)
+
+Ustawienia Home → Dźwięk HDMI oferuje ponowne łączenie eARC i potwierdzone przywrócenie
+HDMI. ARC-only, łączone/WOW Orchestra i nieznane tryby są pomijane. Automatyka po
+włączeniu/wybudzeniu jest eksperymentalna, domyślnie wyłączona, wymaga obsługiwanej
+subskrypcji zasilania i może przerywać sprawny dźwięk. Wstecz zamyka podczas porządkowania.
+Po przerwaniu sprawdź stan; przywróć ustawienie tylko, jeśli chcesz włączyć eARC.
+Przywrócenie Home/zatrzymanie awaryjne wyłącza automatykę do jawnego włączenia.
+Starsze prywatne runtime wymagają sprawdzonej ponownej konfiguracji. Zgodność i krótsze
+opóźnienie niepotwierdzone.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -176,3 +176,16 @@ Le démarrage utilise des scripts privés liés aux preuves de propriété et v�
 
 
 Pour ce candidat issu des sources, une installation Root existante nécessite une récupération vérifiée et une nouvelle configuration pour recevoir l’environnement privé corrigé. Mettre à jour Installer seul ne le remplace pas. Conservez les données de récupération et activez Home uniquement par la configuration ou les paramètres habituels.
+
+## Candidat non publié : récupération du son HDMI (Root)
+
+Réglages Home → Son HDMI propose reconnexion eARC et rétablissement HDMI confirmé.
+Les modes ARC seul, combinés/WOW Orchestra et inconnus sont ignorés. L’automatisation
+après allumage/veille est expérimentale, désactivée par défaut ; elle nécessite un
+abonnement d’alimentation pris en charge et peut interrompre un son normal. Retour
+ferme pendant le nettoyage. Après interruption, vérifiez l’état ; rétablissez le
+réglage uniquement si vous souhaitez activer eARC. Restauration Home/arrêt d’urgence
+désactive l’automatisation jusqu’à activation explicite. Anciens runtimes privés :
+nouvelle configuration vérifiée nécessaire. Compatibilité et délai réduit non confirmés.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

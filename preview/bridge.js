@@ -3,7 +3,7 @@
   'use strict';
   var homeEnabled = true;
   var enabled = false, rootPhase = 'disabled';
-  var firmwareBlocked = false;
+  var firmwareBlocked = false, audioAutomatic = false, audioLast = null;
   var rootTransaction = 'preview-root-activation';
   var toastTimer;
   function message(text) {
@@ -56,6 +56,12 @@
         result = {returnValue: true, connected: true};
       } else if (uri.indexOf('luna://com.cleanyourtv.root.preview.service/') === 0) {
         var rootMethod = uri.split('/').pop();
+        if (rootMethod === 'audioRecoveryStatus' || rootMethod === 'setAudioRecoveryEnabled') {
+          if (rootMethod === 'setAudioRecoveryEnabled' && typeof payload.enabled === 'boolean') audioAutomatic = payload.enabled;
+          result = {returnValue:true,enabled:audioAutomatic,observer:audioAutomatic,autoSupported:true,canRestart:true,canRestoreRoute:false,canRestoreSetting:false,needsRestore:false,mode:'earc',last:audioLast};
+        } else if (rootMethod === 'recoverAudio') {
+          audioLast = {result:'settings-restored'}; result = {returnValue:true,result:'settings-restored'};
+        }
         if (rootMethod === 'enable') {
           rootPhase = 'active';
         } else if (rootMethod === 'restore') {

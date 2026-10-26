@@ -175,3 +175,17 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 
 Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.
+
+## Unveröffentlichter Kandidat: HDMI-Ton wiederherstellen (Root)
+
+Home-Einstellungen → HDMI-Ton bietet eARC-Neuverbindung und bestätigte
+HDMI-Ausgabewiederherstellung. ARC-only, kombinierte/WOW-Orchestra- und unbekannte
+Modi werden übersprungen. Automatik nach Einschalten/Aufwachen ist experimentell,
+standardmäßig aus, benötigt ein Stromstatus-Abonnement und kann funktionierenden
+Ton unterbrechen. Zurück schließt während der Bereinigung. Nach Unterbrechung
+Status prüfen; gespeichertes eARC nur wiederherstellen, wenn es eingeschaltet sein
+soll. Home-Wiederherstellung/Not-Aus deaktiviert die Automatik bis zur ausdrücklichen
+Aktivierung. Alte private Runtimes brauchen geprüfte Neueinrichtung. TV-Kompatibilität
+und schnellerer Ton sind unbestätigt.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -170,3 +170,16 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 
 For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+## Unreleased candidate: HDMI sound recovery (Root)
+
+Home settings → HDMI sound offers Reconnect eARC and confirmed HDMI-route fallback
+recovery. ARC-only, combined/WOW Orchestra and unknown modes are skipped.
+Recover after power-on is experimental, off by default; it may interrupt healthy
+audio after power-on/standby and requires a supported power subscription. Back can
+close the panel during cleanup. After interruption, check status; restore the saved
+setting only if you want eARC on. Home restoration/emergency stop disables automation
+until explicit enable. Older private runtimes need checked fresh setup. TV compatibility
+and faster audio acquisition remain unconfirmed.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

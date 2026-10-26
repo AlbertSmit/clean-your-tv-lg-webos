@@ -147,3 +147,14 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 
 
 此源码候选版中，现有 Root 安装需要经过验证的恢复和重新设置，才能获得修正后的私有运行环境。仅更新 Installer 不会替换它。请保留恢复记录，并且只通过正常设置流程或设置页面启用 Home。
+
+## 未发布候选版本：HDMI 声音恢复（Root）
+
+Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出恢复。仅 ARC、
+组合/WOW Orchestra 及未知模式会跳过。开机/待机唤醒自动恢复是实验功能，默认关闭；
+需要支持的电源订阅，可能中断正常声音。返回可关闭面板，清理仍会继续。中断后
+请检查状态，仅在希望开启 eARC 时恢复已保存的设置。恢复 Home 或紧急停止会关闭
+自动恢复，必须明确重新开启。旧私有运行时需要经过验证的重新设置。尚未确认
+电视兼容性或声音开始时间缩短。
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -165,3 +165,16 @@ A inicialização usa arquivos privados vinculados aos comprovantes de proprieda
 
 
 Para este candidato do código-fonte, uma instalação Root existente precisa de recuperação verificada e nova configuração para receber o ambiente privado corrigido. Atualizar apenas o Installer não o substitui. Preserve os registros de recuperação e ative Home somente pela configuração ou pelos ajustes normais.
+
+## Candidato não publicado: recuperação de som HDMI (Root)
+
+Configurações do Home → Som por HDMI oferece reconexão eARC e recuperação de saída
+HDMI confirmada. ARC-only, combinados/WOW Orchestra e modos desconhecidos são ignorados.
+A automação ao ligar/sair da espera é experimental, desativada por padrão; exige
+assinatura de energia compatível e pode interromper áudio normal. Voltar fecha
+durante a limpeza. Após interrupção, confira o status; restaure a configuração apenas
+se quiser eARC ligado. Restaurar Home/parada de emergência desativa a automação até
+reativação explícita. Runtimes privados antigos exigem nova configuração verificada.
+Compatibilidade e menor atraso não confirmados.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

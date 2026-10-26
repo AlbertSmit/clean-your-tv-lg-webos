@@ -32,3 +32,18 @@ service.register('listApps',function(message){
  var request=inventoryPending;
  request.then(function(apps){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:true,apps:apps});},function(){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:false,errorText:'App inventory unavailable'});});
 });
+
+// Audio recovery has a separate process-wide transaction lock and never runs on service load.
+var audio = require('./audio-recovery')(function () { return process.getuid(); }, function (command) {
+  return new Promise(function (resolve, reject) {
+    var executable = pythonCommand();
+    execFile(executable, ['/var/lib/clean-your-tv-root/runtime/audio_recovery.py', command],
+      {timeout:45000,maxBuffer:16384}, function (error, stdout) {
+        if (error) return reject(new Error('Audio recovery unavailable'));
+        try { resolve(JSON.parse(stdout)); } catch (_) { reject(new Error('Invalid audio response')); }
+      });
+  });
+});
+Object.keys(audio).forEach(function (method) {
+  service.register(method, function (message) { audio[method](message.payload).then(function (reply) { message.respond(reply); }); });
+});

@@ -165,3 +165,16 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 
 Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.
+
+## Candidato non pubblicato: ripristino audio HDMI (Root)
+
+Impostazioni Home → Audio HDMI offre riconnessione eARC e ripristino HDMI confermato.
+ARC-only, combinati/WOW Orchestra e modalità sconosciute sono escluse. L’automazione
+all’accensione/risveglio è sperimentale, inizialmente disattivata; richiede una
+sottoscrizione di alimentazione supportata e può interrompere audio funzionante.
+Indietro chiude durante la pulizia. Dopo interruzione controlla lo stato; ripristina
+solo se desideri eARC attivo. Ripristino Home/arresto di emergenza disattiva l’automazione
+fino ad attivazione esplicita. Vecchi runtime privati richiedono nuova configurazione
+verificata. Compatibilità e minore ritardo non confermati.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)

@@ -29,12 +29,13 @@ handling moved from an external watcher to an on-TV native helper.
 
 ## Languages
 
-Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md).
+Installation, use and recovery: [English](docs/i18n/en.md) · [Deutsch](docs/i18n/de.md) · [Español](docs/i18n/es.md) · [Português (Brasil)](docs/i18n/pt-BR.md) · [Français](docs/i18n/fr.md) · [Italiano](docs/i18n/it.md) · [한국어](docs/i18n/ko.md) · [हिन्दी](docs/i18n/hi.md) · [Polski](docs/i18n/pl.md) · [Русский](docs/i18n/ru.md) · [简体中文](docs/i18n/zh-Hans.md) · [繁體中文](docs/i18n/zh-Hant.md).
 
 The v1.0.1 release selects the system language automatically and saves
 an explicit choice in the installer or **Settings → Language** on the TV.
 See [language availability and guides](docs/LANGUAGES.md); older release downloads
-may predate these features.
+may predate these features. Simplified and Traditional Chinese are new in the
+unreleased 1.3.0 candidate; published v1.2.0 retains the original ten languages.
 
 ## Install with cytv
 
@@ -182,7 +183,7 @@ packages. macOS uses `cytv.app`; Linux uses the graphical `cytv-linux-x64.deb`
 package. Windows uses `cytv-windows-x64-desktop.zip`: extract
 all files and open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it.
 The separate `cytv-windows-x64.exe` download is the console wizard. See [desktop setup](docs/DESKTOP_INSTALL.md).
-The [Android preview](android/README.md) includes all ten desktop languages. Its top-right control shows the current language and opens a saved language picker.
+The [Android preview](android/README.md) includes the original ten desktop languages in published v1.2.0; the 1.3.0 candidate adds both Chinese variants. Its top-right control shows the current language and opens a saved language picker.
 Real-TV acceptance remains model- and build-specific.
 
 ### No-root source installation

@@ -17,7 +17,11 @@ assert.equal(x.i.t('Fallback {n}',{n:0}),'Fallback 0');
 assert.equal(x.i.setLanguage('de'),true);assert.equal(x.saved['tvhome.language'],'de');assert.equal(x.reloads(),1);
 assert.equal(x.i.setLanguage('bad'),false);assert.equal(x.reloads(),1);
 assert.equal(load(['en'],null,true).i.setLanguage('de'),false,'blocked storage must not pretend to persist or reload');
-assert.equal(x.i.languages.length,10);
+assert.equal(x.i.languages.length,12);
+for(const [tag,want] of [['zh','zh-Hans'],['zh_CN','zh-Hans'],['zh-SG','zh-Hans'],['zh-TW','zh-Hant'],['zh-HK','zh-Hant'],['zh_MO','zh-Hant'],['zh-Hant-CN','zh-Hant'],['zh-Hans-TW','zh-Hans']]){
+ assert.equal(load([tag]).i.language(),want,tag);
+}
+for(const code of ['zh-Hans','zh-Hant']){const selected=load(['en']);assert.equal(selected.i.setLanguage(code),true);assert.equal(selected.saved['tvhome.language'],code);assert.equal(selected.i.language(),code);}
 console.log('PASS locale resolution, preference, interpolation, storage failures');
 let bridge,timed,loaded=false;
 const tv={navigator:{language:'en-US'},localStorage:{getItem:()=>null},setTimeout:fn=>{timed=fn;return 1;},clearTimeout(){},PalmServiceBridge:function(){bridge=this;this.cancel=()=>{};this.call=(uri,raw)=>{assert.equal(uri,'luna://com.webos.settingsservice/getSystemSettings');assert.equal(JSON.parse(raw).key,'localeInfo');};}};tv.window=tv;

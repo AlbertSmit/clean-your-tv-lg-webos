@@ -13,9 +13,50 @@ class LanguageTests(unittest.TestCase):
 
     def test_locale_variants_and_unsupported_fallback(self):
         lang = self.language()
-        for value, expected in [('pt_PT.UTF-8', 'pt-BR'), ('de_AT', 'de'), ('ru-RU', 'ru'), ('zh_CN', 'en'), ('C', 'en')]:
+        for value, expected in [('pt_PT.UTF-8', 'pt-BR'), ('de_AT', 'de'), ('ru-RU', 'ru'), ('zh_CN', 'zh-Hans'), ('C', 'en')]:
             self.assertEqual(lang.resolve_language(value), expected)
         self.assertEqual(lang.resolve_language('auto', ['xx_XX', 'fr_CA']), 'fr')
+
+    def test_chinese_script_precedes_region_and_posix_tags(self):
+        lang = self.language()
+        for value, expected in [
+            ('zh', 'zh-Hans'), ('zh_CN.UTF-8', 'zh-Hans'),
+            ('zh-SG', 'zh-Hans'), ('zh-TW', 'zh-Hant'),
+            ('zh_HK.UTF-8', 'zh-Hant'), ('zh-MO', 'zh-Hant'),
+            ('zh-Hans-TW', 'zh-Hans'), ('zh_Hant_CN.UTF-8', 'zh-Hant'),
+        ]:
+            with self.subTest(value=value):
+                self.assertEqual(lang.resolve_language(value), expected)
+        self.assertEqual(lang.resolve_language('auto', ['xx', 'zh-Hant-HK']), 'zh-Hant')
+
+    def test_chinese_selection_and_rendering_keep_identifiers(self):
+        lang = self.language()
+        for code, title in [('zh-Hans', '连接到电视'), ('zh-Hant', '連線至電視')]:
+            with tempfile.TemporaryDirectory() as directory:
+                self.assertEqual(lang.configure(code, directory), code)
+                self.assertEqual(lang.configure(None, directory), code)
+            self.assertEqual(lang.translate('Connect to your TV'), title)
+            self.assertIn('17', lang.translate('Read 17 applications.'))
+            self.assertIn('cytv status', lang.translate('Run cytv status.'))
+
+    def test_chinese_cli_cancel_and_desktop_confirm_semantics(self):
+        self.language()
+        from cytv.cli import main
+        from cytv.desktop import Channel
+        from cytv import i18n
+        for code in ('zh-Hans', 'zh-Hant'):
+            with tempfile.TemporaryDirectory() as directory:
+                lines = []
+                self.assertEqual(main(['--language', code, '--data-dir', directory, '--no-discovery'],
+                                      ask=lambda _: 'q', write=lines.append), 130)
+                self.assertIn('取消', '\n'.join(lines))
+            i18n.set_language(code)
+            events = []
+            channel = Channel(lambda *event: events.append(event))
+            channel.answer('n')
+            self.assertEqual(channel.ask('Connect and remember this TV? [Y/n]: '), 'n')
+            prompt = events[-1][1]
+            self.assertEqual((prompt.kind, prompt.default), ('confirm', 'y'))
 
     def test_selection_is_persisted_and_auto_is_not_frozen(self):
         lang = self.language()

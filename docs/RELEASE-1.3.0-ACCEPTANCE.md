@@ -37,6 +37,7 @@ new versioned artifacts or certify a TV.
 - Signed whole-edition update/rollback and retained profile/recovery evidence: NOT RUN.
 - No-root normal setup, maintenance, removal and Developer Mode renewal boundaries: NOT RUN.
 - Protected-signer Android update/private-data/pending-receipt retention and physical use: NOT RUN.
+- Simplified/Traditional Chinese glyph rendering, language selection and remote focus on TV: NOT RUN.
 - Peak package/runtime/product storage and free-space measurements: NOT MEASURED.
 
 Preserve private diagnostics outside public records. Do not repeat uncertain

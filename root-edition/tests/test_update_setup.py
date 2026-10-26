@@ -44,6 +44,9 @@ class SetupTests(unittest.TestCase):
             with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
                 prefix = 'usr/palm/applications/com.cleanyourtv.root.updater/'
                 version = json.loads((ROOT.parent/'release-versions.json').read_text())['updater']
+                for name in ('NotoSansSC.ttf', 'NotoSansTC.ttf', 'NotoSansSC-OFL.txt', 'NotoSansTC-OFL.txt'):
+                    self.assertEqual(archive.extractfile(prefix+'fonts/'+name).read(),
+                                     (ROOT.parent/'launcher/fonts'/name).read_bytes())
                 import startup_hook
                 self.assertEqual(archive.extractfile(prefix+'startup.sh').read(),startup_hook.packaged_content('com.cleanyourtv.root.updater'))
                 self.assertEqual(archive.getmember(prefix+'startup.sh').mode,0o755)

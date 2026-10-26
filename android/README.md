@@ -6,8 +6,13 @@ No-root and Root are equal options for different TV environments: Developer Mode
 
 The interface uses the approved B1 house mark in its original colours, with quiet warm charcoal surfaces and muted controls. Orange is confined to the identity rather than large button/background fills.
 
-A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The interface supports the same ten languages as desktop: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. The optional TV Python runtime archive is a separate
+A self-contained Android installer for the existing No-root and Root editions of Clean Your TV. The published v1.2.0 interface supports the original ten desktop languages: English, German, Spanish, Brazilian Portuguese, French, Italian, Korean, Hindi, Polish and Russian, with the Android system font, a bundled Noto Sans fallback, readable text sizes, offline UI and TV packages. The optional TV Python runtime archive is a separate
 verified on-demand download, rather than part of the APK. On first launch it follows the phone language (English for unsupported languages). The top-right control shows the current language; tap it to open a list with native language names and a checkmark. Your choice is saved on this phone. No PC, Termux, Python installation on the phone, or cloud service is required to run the APK.
+
+The unreleased 1.3.0 candidate adds Simplified Chinese (`zh-Hans`, 简体中文) and
+Traditional Chinese (`zh-Hant`, 繁體中文), including native operation notifications
+and WebView guidance. Explicit script tags override regional defaults; CN/SG
+use Simplified and TW/HK/MO use Traditional. This is not in current stable APKs.
 
 ## Install and connect
 
@@ -98,11 +103,11 @@ synthetic private-data and unfinished-operation retention across an APK update;
 see [the upgrade procedure](STABLE-READINESS.md). These fixtures do not connect to
 a TV and cannot establish physical installation compatibility.
 
-The localization suite checks all ten complete catalogs, system-language resolution, the current-language picker, saved selection, preserving connection fields, localized native requests and progress, and returning from recovery to a fresh installation. Operation logs and the foreground notification use the language selected when the operation starts; changing the interface language does not rewrite earlier logs.
+The localization suite checks all twelve complete candidate catalogs, system-language resolution, the current-language picker, saved selection, preserving connection fields, localized native requests and progress, and returning from recovery to a fresh installation. Operation logs and the foreground notification use the language selected when the operation starts; changing the interface language does not rewrite earlier logs.
 
 The browser suite covers both editions, IP/port/key validation, explicit trust, secret isolation, error recovery and widths 320/375/412/768/1024. Files `screenshots/01-*` through `05-*` show the same offline UI in browser demonstration mode, clearly labeled; progress and completion there are simulated.
 
-The `screenshots/android-language-*` files and `android-languages-overview.png` show the actual APK language picker and Russian, German, Korean and Hindi screens. Run `node android/tests/languages-emulator.cjs` against the same forwarded debug WebView to check all ten languages and recreate them.
+The `screenshots/android-language-*` files and `android-languages-overview.png` show the actual APK language picker and Russian, German, Korean and Hindi screens. Run `node android/tests/languages-emulator.cjs` against the same forwarded debug WebView to check all twelve candidate languages and recreate them.
 
 Files `screenshots/android-*` are screenshots of the actual debug APK on an Android 15 ARM64 emulator. Native smoke checks reached the real Python No-root code/passphrase request, then tested the recovery result for an unavailable synthetic Key Server. The Root negative SSH fixture checked the real fingerprint confirmation and hidden password callback, then rejected an intentionally invalid synthetic password. It never executes TV commands. These checks do not establish successful hardware installation.
 

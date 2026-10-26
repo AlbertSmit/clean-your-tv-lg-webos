@@ -32,6 +32,7 @@ class OperationChecks : Instrumentation() {
                 finish(Activity.RESULT_OK, result)
                 return
             }
+            checkChineseResources()
             for (edition in listOf("no-root", "root")) {
                 checkReplay(edition)
             }
@@ -43,6 +44,25 @@ class OperationChecks : Instrumentation() {
         } finally {
             Operation.listener = null
             Operation.emit("{\"kind\":\"finished\",\"code\":130}")
+        }
+    }
+
+    private fun checkChineseResources() {
+        // Script qualifiers are supported on our minimum Android API 24. Check
+        // platform region inference as well as explicit script precedence.
+        for ((tag, traditional) in listOf(
+            "zh" to false, "zh-CN" to false, "zh-SG" to false,
+            "zh-TW" to true, "zh-HK" to true, "zh-MO" to true,
+            "zh-Hant-CN" to true, "zh-Hans-TW" to false
+        )) {
+            val config = android.content.res.Configuration(targetContext.resources.configuration)
+            config.setLocale(java.util.Locale.forLanguageTag(tag))
+            val resources = targetContext.createConfigurationContext(config).resources
+            check(resources.getString(R.string.installation_channel) == "CYTV") { tag }
+            check(resources.getString(R.string.installation_progress) ==
+                if (traditional) "電視操作進行中" else "电视操作进行中") { tag }
+            check(resources.getString(R.string.webview_update).contains(
+                if (traditional) "重新開啟" else "重新打开")) { tag }
         }
     }
 

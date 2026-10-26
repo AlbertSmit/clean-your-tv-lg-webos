@@ -4,7 +4,7 @@ This is an unpublished Root-edition installation path. Physical TV acceptance
 (Task 8), public asset verification, meaningful human review, screenshots and
 catalog-maintainer approval remain separate gates. The catalog file is a review
 **draft**, not a submitted or approved listing. See the [candidate setup guide](../docs/INSTALL.md#candidate-on-tv-root-installation),
-all ten [localized guides](../docs/LANGUAGES.md), and the [physical acceptance/state inventory](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+all twelve [localized guides](../docs/LANGUAGES.md), and the [physical acceptance/state inventory](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
 
 The installer requires a rooted compatible LG webOS TV, Homebrew Channel's exec
 service with actual root execution, Node.js 8+, and a usable Python 3.9+ or the

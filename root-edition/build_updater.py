@@ -59,7 +59,7 @@ def build(output):
     files[prefix+'root-updater-largeIcon.png']=source(ROOT/'assets/updater-large.png')
     files[prefix+'root-settings.css']=source(ROOT/'ui/root-settings.css')
     files[prefix+'i18n.js']=source(ROOT.parent/'launcher/i18n.js')
-    for name in ('catalogs.js', 'i18n.css', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt'):
+    for name in ('catalogs.js', 'i18n.css', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/NotoSansSC.ttf', 'fonts/NotoSansSC-OFL.txt', 'fonts/NotoSansTC.ttf', 'fonts/NotoSansTC-OFL.txt'):
         files[prefix+name]=source(ROOT.parent/'launcher'/name)
     files[prefix+'root-locales.js']=source(ROOT/'ui/root-locales.js')
     files[prefix+'release-notes.js']=source(ROOT.parent/'launcher/release-notes.js')

@@ -198,3 +198,34 @@ assert.throws(()=>verify({homebrew:approval},null),/homebrew-source-approval-mis
 """
         result=subprocess.run(['node','-e',code],cwd=ROOT,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_source_approval_reads_the_exact_git_blob_and_fails_closed(self):
+        import subprocess,base64
+        approval=self.accepted(self.manifest())
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);(root/'homebrew').mkdir()
+            (root/'homebrew/release.json').write_bytes(encoded(approval))
+            def git(*args):return subprocess.check_output(['git',*args],cwd=root,stderr=subprocess.DEVNULL)
+            git('init');git('add','homebrew/release.json')
+            git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','approval')
+            commit=git('rev-parse','HEAD').decode().strip()
+            def provider(*args):
+                ref=args[-1].rsplit('=',1)[1]
+                blob=git('show',ref+':homebrew/release.json')
+                return encoded({'content':base64.b64encode(blob).decode()})
+            with patch.dict(self.prepare['verify_homebrew_source'].__globals__,gh=provider):
+                self.prepare['verify_homebrew_source']({'homebrew':approval},commit)
+                with self.assertRaises(ValueError):self.prepare['verify_homebrew_source']({'homebrew':{**approval,'version':'9.9.9'}},commit)
+                with self.assertRaises(subprocess.CalledProcessError):self.prepare['verify_homebrew_source']({'homebrew':approval},'0'*40)
+            code="""
+const cp=require('child_process'),assert=require('assert/strict');
+const verify=require('./scripts/publish-release.cjs').verifyHomebrewSource;
+const repository=process.argv[1],commit=process.argv[2];
+function provider(args){const ref=args[1].split('?ref=')[1];const blob=cp.execFileSync('git',['show',ref+':homebrew/release.json'],{cwd:repository,stdio:['ignore','pipe','pipe']});return JSON.stringify({content:blob.toString('base64')});}
+const approval=JSON.parse(cp.execFileSync('git',['show',commit+':homebrew/release.json'],{cwd:repository}));
+verify({source_commit:commit,homebrew:approval},provider);
+assert.throws(()=>verify({source_commit:commit,homebrew:{...approval,version:'9.9.9'}},provider),/homebrew-source-approval-mismatch/);
+assert.throws(()=>verify({source_commit:'0'.repeat(40),homebrew:approval},provider));
+"""
+            result=subprocess.run(['node','-e',code,directory,commit],cwd=ROOT,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)

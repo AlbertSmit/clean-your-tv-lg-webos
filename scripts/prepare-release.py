@@ -228,6 +228,12 @@ def verify_homebrew_approval(build, committed):
         raise ValueError('Homebrew approval differs from committed source')
 
 
+def verify_homebrew_source(build, commit):
+    # GitHub reads the immutable source blob, including on shallow workflow checkouts.
+    content=json.loads(gh('api', 'repos/' + REPO + '/contents/homebrew/release.json?ref=' + commit))
+    verify_homebrew_approval(build, json.loads(base64.b64decode(content['content'])))
+
+
 def bundles(meta, folder):
     folder.mkdir()
     build = json.loads(download(meta, 'BUILD-INFO.json', folder))
@@ -240,8 +246,7 @@ def bundles(meta, folder):
     if json.loads(base64.b64decode(content['content'])) != build['versions']:
         raise ValueError('Release versions differ from committed source')
     if build.get('homebrew') is not None:
-        content = json.loads(gh('api', 'repos/' + REPO + '/contents/homebrew/release.json?ref=' + commit))
-        verify_homebrew_approval(build, json.loads(base64.b64decode(content['content'])))
+        verify_homebrew_source(build, commit)
     versions = build['versions']
     validate_versions(versions)
     home_name = 'clean-your-tv-no-root-' + versions['home'] + '.zip'

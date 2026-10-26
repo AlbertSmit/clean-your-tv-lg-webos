@@ -1,8 +1,9 @@
 """Bounded installed-package DATA reads; never authorize execution from this tree.
 
 Unanchored reads keep strict own leaves. Independently pinned reads tolerate
-ordinary SDK rwx drift; private readers stay strict. Only the shared packages container
-also permits observed metadata owner 501; it grants no execution authority.
+ordinary SDK rwx drift; private readers stay strict. The shared packages container
+and pinned DATA reads through the exact services container permit observed owner 501;
+this grants no execution authority.
 Directory descriptors bind every open and are checked again after reading; concurrent
 package replacement fails shut.
 """
@@ -42,7 +43,8 @@ def _read(path,limit,uid,installed,verified):
     descriptors=[];bindings=[]
     def directory(info,name):
         # Shared SDK metadata storage is DATA, distinct from strict package leaves.
-        owners=(0,uid,501) if name==installed/'usr/palm/packages' else (0,uid)
+        owners=(0,uid,501) if (name==installed/'usr/palm/packages' or
+                              (verified and name==installed/'usr/palm/services')) else (0,uid)
         special=info.st_mode&0o7000
         if name in shared:special&=~stat.S_ISVTX  # Shared /tmp may be legitimately sticky.
         if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (special or (not verified and name not in shared and info.st_mode&0o022)):

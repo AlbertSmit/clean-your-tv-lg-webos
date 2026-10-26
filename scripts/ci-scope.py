@@ -16,7 +16,9 @@ def components(paths):
                 or path.lower().endswith(('.md', '.rst'))
                 or path == 'LICENSE'):
             continue
-        if path.startswith('cytv/'):
+        if path.startswith('homebrew/'):
+            selected.update(('installer', 'tv', 'setup'))
+        elif path.startswith('cytv/'):
             selected.add('installer')
             if Path(path).name not in ('desktop.py', 'desktop_entry.py', 'gui_style.py', 'build-requirements.txt'):
                 selected.update(('android', 'setup'))

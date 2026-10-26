@@ -229,3 +229,41 @@ assert.throws(()=>verify({source_commit:'0'.repeat(40),homebrew:approval},provid
 """
             result=subprocess.run(['node','-e',code,directory,commit],cwd=ROOT,capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_workflow_failure_policy_and_resolver_follow_selected_acceptance(self):
+        import os,runpy,textwrap
+        from unittest.mock import Mock
+        workflow=(ROOT/'.github/workflows/cytv.yml').read_text()
+        scope=workflow.split('  scope:\n',1)[1].split('  android:\n',1)[0]
+        self.assertIn("homebrew_required: ${{ steps.scope.outputs.homebrew_required }}",scope)
+        self.assertIn("continue-on-error: ${{ needs.scope.outputs.homebrew_required != 'true' }}",workflow.split('  homebrew:\n',1)[1])
+        code=textwrap.dedent(scope.split("          python - <<'PY'\n",1)[1].split('          PY\n',1)[0])
+        required_jobs=runpy.run_path(str(ROOT/'scripts/release-flow.py'))['BUILD_JOBS']
+        commit='a'*40
+        run={'conclusion':'success','status':'completed','head_sha':commit,'head_branch':'main',
+             'event':'push','path':'.github/workflows/cytv.yml','head_repository':{'full_name':'Razdva122/clean-your-tv-lg-webos'},'id':123}
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);(root/'homebrew').mkdir();output=root/'output'
+            (root/'release-versions.json').write_bytes(encoded({'release':'9.8.7'}))
+            approval=self.accepted(self.manifest())
+            for selected,record in ((False,None),(True,approval),(False,{**approval,'release':'v9.8.6'})):
+                with self.subTest(selected=selected,record=record):
+                    path=root/'homebrew/release.json'
+                    if record is None:
+                        if path.exists():path.unlink()
+                    else:path.write_bytes(encoded(record))
+                    output.write_text('')
+                    with patch.dict(os.environ,RELEASE_SOURCE_ROOT=str(root),GITHUB_OUTPUT=str(output)):
+                        exec(compile(code,'cytv.yml scope policy','exec'),{})
+                        resolver=runpy.run_path(str(ROOT/'scripts/assemble-release.py'))['resolve_build_source']
+                    self.assertEqual(output.read_text().strip(),'homebrew_required='+str(selected).lower())
+                    # An ignored job can fail while the workflow succeeds. A selected
+                    # accepted job remains mandatory even if that overall success is forged.
+                    jobs=[{'name':name,'conclusion':'success'} for name in required_jobs]+[{'name':'homebrew','conclusion':'failure'}]
+                    with patch.dict(resolver.__globals__,github=Mock(side_effect=[run,{'jobs':jobs}])):
+                        if selected:
+                            with self.assertRaisesRegex(ValueError,'successful exact candidate'):resolver(commit,123)
+                        else:self.assertEqual(resolver(commit,123),run)
+                    if selected:
+                        with patch.dict(resolver.__globals__,github=Mock(return_value={**run,'conclusion':'failure'})):
+                            with self.assertRaisesRegex(ValueError,'successful trusted'):resolver(commit,123)

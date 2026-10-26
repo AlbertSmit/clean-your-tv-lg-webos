@@ -31,7 +31,10 @@ and the pinned [runtime source contract](../cytv/python_runtime.py).
 
 `cytv.yml` has an optional `homebrew_candidate` manual input. Its `homebrew` job
 also runs with normal candidate installer builds; it uses no signing secret and
-uploads only a `homebrew-candidate` CI artifact. It defaults to installer **0.0.0**,
+uploads only a `homebrew-candidate` CI artifact. Its failure is optional unless
+acceptance selects the current frozen project release; selected promotion requires
+both the successful workflow and a successful Homebrew job. Stale approval records
+for unrelated release tags keep the build optional. It defaults to installer **0.0.0**,
 which is a development version and cannot be promoted. Candidate URL strings in
 its manifest reserve an intended immutable release path; no reachability is
 claimed. CI build success is not hardware acceptance.

@@ -25,6 +25,7 @@ jobs:
     outputs:
       candidate: ${{ steps.scope.outputs.candidate }}
       installers: ${{ steps.scope.outputs.installers }}
+      homebrew_required: ${{ steps.scope.outputs.homebrew_required }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +34,14 @@ jobs:
         with:
           python-version: '3.12'
       - id: scope
-        run: python scripts/ci-scope.py
+        run: |
+          python scripts/ci-scope.py
+          python - <<'PY'
+          import os, runpy
+          selected=runpy.run_path('scripts/assemble-release.py')['selected_homebrew_approval']() is not None
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('homebrew_required='+str(selected).lower()+'\n')
+          PY
   android:
     needs: scope
     if: needs.scope.outputs.installers == 'true'
@@ -165,6 +173,7 @@ jobs:
 
   homebrew:
     needs: scope
+    continue-on-error: ${{ needs.scope.outputs.homebrew_required != 'true' }}
     if: needs.scope.outputs.installers == 'true' || (github.event_name == 'workflow_dispatch' && inputs.homebrew_candidate)
     runs-on: ubuntu-22.04
     timeout-minutes: 20

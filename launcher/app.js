@@ -1071,7 +1071,15 @@
   initializeApps();
   layoutTiles();
   updateClock();
-  setInterval(updateClock, 1e4);
+  var clockTimer = setInterval(updateClock, 1e4);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      clearInterval(clockTimer);
+    } else {
+      updateClock();
+      clockTimer = setInterval(updateClock, 1e4);
+    }
+  });
   callLuna("luna://com.palm.connectionmanager/getStatus", {
     subscribe: true
   }, function (e) {

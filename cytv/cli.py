@@ -127,6 +127,11 @@ def choose_profile(args, store, ask, write, search, inspect):
 
 def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None, payload_root=None):
     raw_args = list(sys.argv[1:] if argv is None else argv)
+    if raw_args == ['--check-runtime']:
+        from .runtime_check import check_runtime
+        check_runtime()
+        (write if isinstance(write, Console) else Console(write)).raw('Installer runtime verified; no TV contacted.')
+        return 0
     requested = next((arg.split('=', 1)[1] for arg in raw_args if arg.startswith('--language=')), None)
     if '--language' in raw_args and raw_args.index('--language') + 1 < len(raw_args):
         requested = raw_args[raw_args.index('--language') + 1]

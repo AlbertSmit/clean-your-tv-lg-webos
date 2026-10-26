@@ -406,8 +406,21 @@ python -m venv .venv-cytv
 
 Output is `dist/cytv` or `dist/cytv.exe`. Build each target natively; PyInstaller
 does not turn a macOS executable into a Windows/Linux executable. The workflow
-does this in four separate jobs. It tests both source and frozen payload smoke
-checks, without TV access or release publication.
+does this in four separate jobs. Use a fresh virtual environment: build requirements
+select binary `cryptography` wheels with their own static OpenSSL rather than a
+source build that can conflict with Python's bundled `libssl` on Intel macOS.
+An already installed source build is not replaced by pip's binary-only option;
+recreate the environment if the runtime check fails.
+
+Both console and GUI builders run `--check-payload` and the internal offline
+`--check-runtime` probe on the frozen executable before packaging succeeds. The
+runtime probe loads Python TLS and SSH dependencies, signs/verifies RSA and
+Ed25519 data, encrypts/decrypts AES-GCM data and derives a bcrypt key. Dependency
+load errors fail the build with their original exception; these checks do not
+connect to a TV, read connection profiles or publish a release. GUI startup smoke
+remains a separate check. A focused Intel macOS PR workflow freezes both actual
+entrypoints without a TV payload and runs the same probe before integration.
+This is an unreleased fix for issue #93.
 
 For source development, `python scripts/build-cytv.py --payload-only` prepares the
 embedded assets, then `python -m cytv` runs the same wizard. Public payload sources

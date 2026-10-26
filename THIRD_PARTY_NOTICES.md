@@ -51,3 +51,12 @@ The independent System Updater bundles Mozilla CA root certificates from the
 curl CA Extract bundle. The certificate data and MPL 2.0 license are distributed
 as `updater-service/ca-bundle.crt` and `updater-service/ca-LICENSE.txt`, and copied
 into the supervisor bootstrap bundle.
+
+## LG Developer Mode reference screenshots
+
+The installer setup examples are screenshots from LG Electronics' official
+[Developer Mode guide](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app).
+Copyright LG Electronics; these third-party reference images are not covered by
+CYTV's MIT license. Original URLs and provenance are included with the images in
+`setup-guide/README.md` (Android: `ui/guide/README.md`). The screenshots show an
+example LG UI, not a tested CYTV device or the user's credentials.

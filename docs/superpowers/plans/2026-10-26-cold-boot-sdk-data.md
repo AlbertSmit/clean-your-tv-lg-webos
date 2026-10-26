@@ -74,6 +74,18 @@ A separately reproduced functional defect remains after the scoped final-fix rev
 - Update the authority spec only for the actual internal contract; no localized user-flow change is expected. Run affected System/identity/worker suites and committed-HEAD emitted closure checks; parent owns a fresh aggregate and exact installer/native/platform builds after source freeze.
 - No TV, remote network/GitHub mutation, subagents or extra worktrees. Sole source writer; commit and freeze explicitly before parent builds. Report RED/GREEN commands/output, exact commit, interface decisions/costs and remaining limits in task-1b-report.md.
 
+## Task 1d — Canonical gzip metadata for exact cross-host package hashes
+
+Measured release gate: at identical application/private source (localabf324e1 vs integrateda97e779f differing only docs/inventory), local Python3.14 emits gzip OS255 while Linux CI Python3.12 emits OS3. Actual three nested component IPKs have byte-identical deflate bodies and decompressed control/data; only gzip header OS differs. It cascades through package hashes, caches, manifests and HBC bootstrap pin. The existing same-host reproducibility check passes, but exact human artifact acceptance cannot reuse that local hash across release environments.
+
+- Scope: cytv/package.py tgz uses gzip.compress(mtime=0). Use the existing standard-library gzip.GzipFile pattern already in cytv/python_runtime.py to write a canonical header (filename empty, mtime0, explicit existing compression level9), preserving USTAR bytes, IPK_MTIME, UID/GID/modes/directories and archive/member formats. No new library/framework or manual integrity bypass. Do not modify published Helper archives/pin.
+- This builder source is copied as private root_package.py (Root Updater/coordinator infrastructure); all exact private bundle hashes need rebuild even when public component IPKs are unchanged. Reuse existing manifests/copies; no new inventory paths or durable schema.
+- TDD: add a small portable host format regression using actual output; run it before production edits under bundled Python3.12.14 at /Users/pridannikov-d/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 (observed native gzip header OS19) and local .venv-release Python3.14. Fixed canonical gzip metadata/roundtrip and deterministic bytes are the contract; do not fake POSIX or edit compressed bytes in the test. Existing relevant metadata/permission/Helper-pin tests must still pass.
+- Inspect all tgz/ipk callers and preserve trust/removal/legacy format behavior. No broad refactor. Update technical packaging/acceptance documentation only for the real deterministic format guarantee and source/candidate distinction; no user flow/translation change is expected.
+- Run focused package/Root/System parser/build/source-free checks as needed and both actual Python versions for format regression. Parent owns final whole-suite, two-interpreter full HBC0.1 builds and Linux CI byte comparison, native and all-platform builds.
+- No network/GitHub/TV mutations, subagents, worktrees or large duplicate Installer builds. Sole source writer in existing checkout branchcodex/portable-candidate-builds at01e6f5c7. Task1c one-line POSIX fixture correction is already committed and separate; do not reopen it.
+- Commit/freeze explicit HANDOFF. Full report task-1d-report.md: RED/GREEN commands/output, exact source/bundle implications, decisions/costs and remaining gates.
+
 ## Task 2 — Review and stable artifacts (parent)
 
 - [ ] Save one complete task diff; read-only spec/quality review against the written contract and counterevidence. Fix Critical/Important findings in one integrated wave; scoped rereview only.

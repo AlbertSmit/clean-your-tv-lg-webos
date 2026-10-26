@@ -6,6 +6,18 @@ is established. All current implementation and code reviews were AI-assisted;
 meaningful named human review and supervised TV testing are pending. This record
 does not approve public promotion or catalog submission.
 
+Candidate packaging uses canonical gzip metadata for shared IPK/control/data
+and baseline archives: no filename, zero gzip timestamp, compression level 9
+and OS byte 255. USTAR entries retain fixed 2024-01-01 timestamps and desired
+ownership/modes. This removes host-dependent gzip headers; exact cross-host
+hashes still require comparing final builds, including their compression bodies.
+`cytv/package.py` is also copied into private bundles as `root_package.py`, so a
+packaging-source change requires rebuilding private source closures, manifests
+and the enclosing Installer/bootstrap pin even if public component IPKs match.
+The published Helper archive and its existing pin stay unchanged. Source review
+and focused format tests do not approve an exact candidate artifact; record the
+final rebuilt hashes before physical acceptance or human artifact approval.
+
 ## Limited correction test (not product acceptance)
 
 At correction source `1be47b2c`, isolated Installer0.1.0 passed installation,

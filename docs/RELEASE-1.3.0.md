@@ -17,6 +17,15 @@ or Homebrew catalog availability is claimed.
 
 ## Included behavior
 
+- #79: tolerate the measured shared package-metadata directory owner only at
+  that platform container; package leaves and private execution remain guarded.
+- #83: authenticate observed SDK0777 DATA through phase-selected private hashes,
+  preserve established live Home health until update suspension captures intent,
+  validate every required owner before deferring uncertainty, and record original
+  System install intent after guarded preflight but before effects/submission.
+  Boot marker admission returns before HBC clears its temporary failsafe; normal
+  rearm, private execution and unknown-operation no-replay remain guarded.
+
 - #77 Homebrew device correction: accept verified ARM32 userspace on aarch64 kernels, read package data through the platform container boundary, execute verified code from private snapshots and use receipt-owned private startup guards. Missing or unsafe owner packages block rearming. POSIX device fixtures are isolated from portable Windows host tests.
 
 - #66 / #65, partial: desktop recovery keeps the selected No-root TV/port, asks
@@ -81,11 +90,14 @@ Artifact integrity alone does not establish physical whole-edition rollback.
 
 See [1.3.0 candidate acceptance](RELEASE-1.3.0-ACCEPTANCE.md) and the detailed
 [Homebrew matrix and state inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
-All new Homebrew physical rows remain NOT RUN. Historical C3 observations apply
-only to their recorded older source/components. Actual staging space, cross-client
-maintenance, interruptions, missing-package cleanup, emergency release, standby,
-separate cold boot, upgrade and rollback require supervised observation on the
-final artifacts. Human code review is also pending for Homebrew promotion.
+Final-artifact physical rows remain NOT RUN. An earlier isolated Installer test
+passed install/hash inspection, bounded foreground observation and exact removal.
+A subsequent supervised rebootstrap passed controls, emergency release and standby
+on its recorded older private runtime, but true cold boot FAILED: broadcast TV
+started and Home opened LG Home. The corrected source has not been installed or
+accepted on the TV. Repeat supported final-artifact setup, controls/emergency,
+standby and true cold boot; cross-client maintenance, interruptions, missing-package
+cleanup, signed upgrade/rollback and Homebrew human review remain separate gates.
 
 `homebrew/release.json` stays absent until exact nondevelopment Installer IPK and
 manifest hashes, immutable URLs and genuine TV/human acceptance are recorded.

@@ -74,6 +74,11 @@
       "pr": 79,
       "issues": [],
       "summary": "Accept observed metadata container ownership in Root readback"
+    },
+    {
+      "pr": 83,
+      "issues": [],
+      "summary": "Authenticate cold-boot SDK DATA using phase-selected private package authority; preserve live Home intent, complete owner checks and original System submission/no-replay ordering; final physical cold-boot retest remains pending"
     }
   ],
   "excluded": [],

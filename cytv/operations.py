@@ -2,7 +2,7 @@
 import json
 import hashlib
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shlex
 import shutil
 import tempfile
@@ -163,7 +163,7 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         self.store.begin(self.profile, 'enable-system-updates', stage='upload')
         stage = '/tmp/cytv-system-updater-' + uuid.uuid4().hex
         self.remote.run('umask 077; mkdir ' + stage)
-        for directory in sorted({str(Path(name).parent) for name in files} - {'.'}):
+        for directory in sorted({str(PurePosixPath(name).parent) for name in files} - {'.'}):
             self.remote.run('mkdir -p ' + shlex.quote(stage + '/' + directory))
         for name in [*files, 'bundle.json']:
             self.remote.upload(stage + '/' + package.safe_name(name), (bundle / name).read_bytes(), mode=0o600)
@@ -195,7 +195,7 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         for name in files:
             if name.endswith('.ipk'): continue
             target=stage+'/'+package.safe_name(name)
-            self.remote.run('mkdir -p '+shlex.quote(str(Path(target).parent)))
+            self.remote.run('mkdir -p '+shlex.quote(str(PurePosixPath(target).parent)))
             self.remote.upload(target,(bundle/name).read_bytes(),mode=0o600)
         self._coordinator_code=stage
         return stage
@@ -246,7 +246,7 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
         for component,bundle in bundles:
             for name in (*manifests[component]['files'],'bundle.json'):
                 target=stage+'/'+component+'/'+package.safe_name(name)
-                self.remote.run('mkdir -p '+shlex.quote(str(Path(target).parent)))
+                self.remote.run('mkdir -p '+shlex.quote(str(PurePosixPath(target).parent)))
                 self.remote.upload(target,(bundle/name).read_bytes(),mode=0o600)
         if not hasattr(self,'_product_candidates'):self._product_candidates={}
         self._product_candidates[stage]=digest

@@ -96,13 +96,15 @@ def stage_brand_assets(payload):
         (payload / packaged).write_bytes((ROOT / 'assets/brand' / master).read_bytes())
 
 
-# Helper 0.6.16 is already published: preserve its bytes until the version changes.
+# Preserve exact published Helper packages while their versions remain selected.
 HELPER_0_6_16_SHA256 = 'ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1'
 HELPER_0_6_17_SHA256 = '165d933c17f1ed24f0ab65986293c7488b0b5d875db5f7b1215e46f24d422f92'
 
+HELPER_0_6_19_SHA256 = '52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b'
 
 def helper_baseline(version):
-    expected = {'0.6.16': HELPER_0_6_16_SHA256, '0.6.17': HELPER_0_6_17_SHA256}.get(version)
+    expected = {'0.6.16': HELPER_0_6_16_SHA256, '0.6.17': HELPER_0_6_17_SHA256,
+                '0.6.19': HELPER_0_6_19_SHA256}.get(version)
     if expected is None:
         return None
     data = (ROOT / ('native/published/com.local.nativehome_' + version + '_arm.ipk')).read_bytes()

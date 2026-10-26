@@ -1,4 +1,5 @@
 """All runtime modules must be included even before their first Git commit."""
+import hashlib
 from pathlib import Path
 import runpy
 import unittest
@@ -109,7 +110,10 @@ class BuildAssetsTests(unittest.TestCase):
         published = root / 'native/published/com.local.nativehome_0.6.16_arm.ipk'
         self.assertEqual(baseline('0.6.16'), published.read_bytes())
         self.assertEqual(baseline('0.6.17'), (root / 'native/published/com.local.nativehome_0.6.17_arm.ipk').read_bytes())
-        self.assertIsNone(baseline('0.6.18'))
+        current = baseline('0.6.19')
+        self.assertIsNotNone(current, 'Keep the exact published 0.6.19 package')
+        self.assertEqual(hashlib.sha256(current).hexdigest(), '52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b')
+        self.assertIsNone(baseline('0.6.20'))
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / 'native/published' / published.name
             fixture.parent.mkdir(parents=True)
@@ -117,3 +121,8 @@ class BuildAssetsTests(unittest.TestCase):
             with patch.dict(baseline.__globals__, ROOT=Path(directory)):
                 with self.assertRaisesRegex(ValueError, 'hash'):
                     baseline('0.6.16')
+            current_fixture = fixture.with_name('com.local.nativehome_0.6.19_arm.ipk')
+            current_fixture.write_bytes(current + b'corruption')
+            with patch.dict(baseline.__globals__, ROOT=Path(directory)):
+                with self.assertRaisesRegex(ValueError, 'hash'):
+                    baseline('0.6.19')

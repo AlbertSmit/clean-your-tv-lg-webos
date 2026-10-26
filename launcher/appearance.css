@@ -20,7 +20,7 @@ html.home-tvos #homeShelf { display: block; position: absolute; top: 0; left: 0;
 .shelf-visible .shelf-backdrop { opacity: 1; }
 .shelf-visible .shelf-backdrop-soft { opacity: 0; }
 .shelf-copy { position: absolute; left: 88px; top: 62px; opacity: 0; transition: opacity 180ms ease; }
-.shelf-title { font: italic 600 106px/1.1 Georgia, 'Times New Roman', serif; letter-spacing: -5px; text-shadow: 0 2px 12px rgba(0,0,0,.14); }
+.shelf-mark { display: block; width: 460px; height: auto; }
 .shelf-visible .shelf-copy { opacity: 1; }
 
 /* The normal Home header is a compact status control. Up reveals LG actions. */

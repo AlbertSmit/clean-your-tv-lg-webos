@@ -5,7 +5,7 @@ export function createShelf() {
     <div class="shelf-backdrop" />
     <div class="shelf-backdrop-soft" />
     <div class="shelf-shade" />
-    <div class="shelf-copy"><div class="shelf-title">Sundown</div></div>
+    <div class="shelf-copy"><img class="shelf-mark" src="assets/shelf-mark.svg" alt="" draggable="false" /></div>
   </section>;
   document.body.insertBefore(element, document.getElementById('viewport'));
   return {

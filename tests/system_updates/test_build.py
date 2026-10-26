@@ -94,20 +94,31 @@ class BuildTests(unittest.TestCase):
                 on_ready();on_accepted({'confirmed':True})
                 for name,data in package.data_files(Path(filename).read_bytes()).items():
                     target=installed/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+                    if name.endswith('/startup.sh'):target.chmod(0o755)
                 service=setup.SERVICE
                 (base/'services.d'/(service+'.service')).write_text('[Luna Service]\nName='+service+'\nExec=/usr/bin/run-js-service -n '+str(installed/'usr/palm/services'/service)+'\n')
                 (base/'roles.d'/(service+'.service.json')).write_text(json.dumps({'appId':service,'type':'regular'}))
                 (base/'client-permissions.d'/(service+'.service.json')).write_text('{}')
                 (base/'api-permissions.d'/(service+'.api.json')).write_text('{}')
             state=path/'state';hook=hooks/'52-system'
-            result=setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=lambda:None)
+            import startup_hook,os
+            from unittest.mock import patch
+            def trusted(path):
+                for parent in (path,*path.parents):
+                    if parent==path_root.parent:break
+                    info=parent.lstat()
+                    if not __import__('stat').S_ISDIR(info.st_mode) or info.st_mode&0o022:raise ValueError('Unsafe fixture path')
+            path_root=path
+            with patch.object(startup_hook,'EXPECTED_UID',os.getuid()),patch.object(startup_hook,'INSTALLED',installed),patch.object(startup_hook,'trusted_directory',side_effect=trusted):
+                result=setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=lambda:None)
+            self.assertTrue(hook.is_symlink())
             self.assertTrue(result['installed'])
             self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
             self.assertEqual(json.loads((state/'current-no-root.json').read_text()),manifest)
             self.assertEqual((state/'code/system_updater/core.py').stat().st_mode&0o777,0o600)
-            self.assertEqual(hook.stat().st_mode&0o777,0o700)
+            self.assertTrue(hook.is_symlink())
             self.assertIn(str(state/'run-service'),(base/'services.d'/(setup.SERVICE+'.service')).read_text())
-            self.assertNotIn('/media/developer/apps',hook.read_text())
+            self.assertEqual(hook.read_text(),startup_hook.packaged_content(setup.APP).decode())
             self.assertEqual(mutable.read_text(),'private preferences')
             with self.assertRaises(FileExistsError):setup.provision(bundle,baseline,state=state)
 

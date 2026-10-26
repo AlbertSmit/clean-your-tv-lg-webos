@@ -36,7 +36,7 @@ def build(output):
         code['system_updater/'+name]=source(ROOT/'system-updater'/name)
     for name in ('store.py','package.py','profile.py','luna.py'):
         code['system_updater/support/'+name]=source(ROOT/'root-edition/updater'/name)
-    for name in ('installation.py','observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
+    for name in ('startup_hook.py','installation.py','observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
         code[name]=source(ROOT/'root-edition'/name)
     for name in ('release-public.pem','ca-bundle.crt','ca-LICENSE.txt'):
         code['system_updater/'+name]=source(ROOT/'updater-service'/name)
@@ -58,7 +58,10 @@ def build(output):
            ap+'index.html':b'<!doctype html><title>System Updater</title><p>Open Software updates from Home.</p>',
            ap+'icon.png':source(ROOT/'updater-app/updater-icon.png') if (ROOT/'updater-app/updater-icon.png').exists() else source(ROOT/'assets/icons/installer.png'),
            'usr/palm/packages/'+APP+'/packageinfo.json':json.dumps({'id':APP,'version':VERSION,'app':APP,'services':[SERVICE]}).encode()}
-    code['system-updater.ipk']=package.ipk(APP,VERSION,files)
+    sys.path.insert(0,str(ROOT/'root-edition'))
+    from startup_hook import packaged_content
+    files[ap+'startup.sh']=packaged_content(APP)
+    code['system-updater.ipk']=package.ipk(APP,VERSION,files,executable={ap+'startup.sh'})
     code['setup-system-updater.py']=source(ROOT/'system-updater/setup.py')
     output.mkdir(parents=True,exist_ok=False)
     for name,raw in code.items():

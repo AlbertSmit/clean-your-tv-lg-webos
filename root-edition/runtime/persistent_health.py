@@ -17,6 +17,7 @@ def path(transaction):
 
 
 def context(transaction):
+    d.require_home()
     from intent_runtime import boot_identity
     c = Coordinator(Store(d.STATE)); intent = c.store.read(); binding = c.read_binding()
     if (binding['transaction'] != transaction or binding['restored']

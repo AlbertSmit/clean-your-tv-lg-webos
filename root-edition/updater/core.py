@@ -332,6 +332,18 @@ class Manager:
 
     def confirm(self, transaction, version): return self._health(transaction, version, 'confirm')
 
+    def component_removed(self):
+        """Stop at a phase boundary; never reinstall an externally removed package."""
+        with self.store.lock():
+            tx=self._load()
+            if tx is None or tx['phase'] in FINISHED:return tx
+            error='CYTV component removed; recovery evidence retained'
+            try:
+                self._safe_route()
+            except Exception as exc:
+                return self._save(tx,'recovery-required',error+': '+str(exc))
+            return self._save(tx,'aborted' if tx['installEvidence']['submitted'] is None and tx['phase'] in ('preparing','downloading','backed-up','restoring-route') else 'recovery-required',error)
+
     def reconcile(self):
         return self.run()
 

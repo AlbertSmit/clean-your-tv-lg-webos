@@ -34,6 +34,8 @@ def build(output):
     files={}
     prefix='usr/palm/applications/'+APP+'/'
     app={'id':APP,'version':version,'vendor':'Clean Your TV','type':'web','main':'index.html','title':'Root Updater','icon':'root-updater-icon.png','largeIcon':'root-updater-largeIcon.png','iconColor':'#241d19','titleVisible':True,'noSplashOnLaunch':True,'disableBackHistoryAPI':True,'requiredPermissions':[]}
+    from startup_hook import packaged_content
+    files[prefix+'startup.sh']=packaged_content(APP)
     files[prefix+'appinfo.json']=(json.dumps(app)+'\n').encode()
     files[prefix+'root-updater-icon.png']=source(ROOT/'assets/updater.png')
     files[prefix+'root-updater-largeIcon.png']=source(ROOT/'assets/updater-large.png')
@@ -53,7 +55,7 @@ def build(output):
     files[sp+'package.json']=code['package.json'];files[sp+'services.json']=code['services.json']
     files['usr/palm/packages/'+APP+'/packageinfo.json']=(json.dumps({'id':APP,'version':version,'app':APP,'services':[APP+'.service']})+'\n').encode()
     control=('Package: '+APP+'\nVersion: '+version+'\nSection: misc\nPriority: optional\nArchitecture: all\nMaintainer: Clean Your TV\nDescription: Independent Root application updater and recovery\n').encode()
-    code['root-updater.ipk']=builder.ar({'debian-binary':b'2.0\n','control.tar.gz':builder.tgz({'control':control}),'data.tar.gz':builder.tgz(files)})
+    code['root-updater.ipk']=builder.ar({'debian-binary':b'2.0\n','control.tar.gz':builder.tgz({'control':control}),'data.tar.gz':builder.tgz(files,{prefix+'startup.sh'})})
     output.mkdir(exist_ok=False)
     for name,raw in code.items():
         target=output/name;target.parent.mkdir(exist_ok=True);target.write_bytes(raw)

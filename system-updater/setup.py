@@ -25,7 +25,7 @@ BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater')
 ROOT_UPDATER_TRANSACTION=Path('/var/lib/clean-your-tv-root-updater/transaction.json')
 APPS={'home':'com.gathin.tvhome','helper':'com.local.nativehome','updater':'com.cleanyourtv.updater','root':'com.cleanyourtv.root.preview','root-updater':'com.cleanyourtv.root.updater'}
-CODE={'installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
+CODE={'startup_hook.py','installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
@@ -310,7 +310,8 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     record('registration',{'files':{str(paths[k]):{'original':original[k].decode(),'installed':v.decode()} for k,v in updated.items()}})
     for key,path in paths.items():atomic(path,updated[key],stat.S_IMODE(path.stat().st_mode))
     apply_legacy_lockdown(state)
-    atomic(hook,'#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(code/'python_boot.js')+' '+str(state)+' '+str(code/'run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
+    import startup_hook
+    startup_hook.install_link(safe,atomic,state,Path(hook),APP)
     if refresh is None:
         executable=next((p for p in (Path('/usr/bin/ls-control'),Path('/usr/sbin/ls-control')) if p.is_file()),None)
         if executable is None:raise ValueError('ls-control unavailable')

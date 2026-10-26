@@ -20,7 +20,21 @@ STATE = Path('/var/lib/clean-your-tv-root')
 TARGET = Path('/var/webos-profile/override/clean-your-tv-root.json')
 EXPECTED_UID = 0
 PROC = Path('/proc')
+APPLICATIONS = Path('/media/developer/apps/usr/palm/applications')
 FAILSAFE = Path('/var/luna/preferences/webosbrew_failsafe')
+
+
+def home_present():
+    """Package presence is checked by the existing two-second health channel."""
+    try:
+        trusted_dir(APPLICATIONS);trusted_dir(APPLICATIONS/CANDIDATE)
+        info=safe_json(APPLICATIONS/CANDIDATE/'appinfo.json')
+        return isinstance(info,dict) and info.get('id')==CANDIDATE and info.get('type')=='web'
+    except (OSError,ValueError,TypeError):return False
+
+
+def require_home():
+    if not home_present():raise ValueError('Root Home package is unavailable')
 
 
 def process_start(pid):

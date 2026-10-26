@@ -36,6 +36,7 @@ def handle(method,payload,store,device,wake=spawn_worker):
     if method=='status':return manager.status()
     if method=='restoreProfile':return manager.restore_profile()
     device.integrity()
+    device.require_components()
     if method=='check':return device.offer()
     if method=='install':value=manager.install(p['version'],p['profile'])
     elif method=='ready':value=manager.ready(p['transaction'],p['version'])
@@ -59,6 +60,8 @@ def worker(store,device):
             if store.read('transaction') is None:return
             from installation import device_operation
             with device_operation('root-update', recovery=True):
+                if not device.components_present():
+                    manager.component_removed();return
                 tx=manager.run()
                 if not tx:return
                 if tx['phase'] in ('complete','rolled-back','aborted'):

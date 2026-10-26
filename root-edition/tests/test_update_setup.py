@@ -44,6 +44,9 @@ class SetupTests(unittest.TestCase):
             with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
                 prefix = 'usr/palm/applications/com.cleanyourtv.root.updater/'
                 version = json.loads((ROOT.parent/'release-versions.json').read_text())['updater']
+                import startup_hook
+                self.assertEqual(archive.extractfile(prefix+'startup.sh').read(),startup_hook.packaged_content('com.cleanyourtv.root.updater'))
+                self.assertEqual(archive.getmember(prefix+'startup.sh').mode,0o755)
                 self.assertEqual(json.loads(archive.extractfile(prefix+'appinfo.json').read())['version'], version)
                 self.assertEqual(json.loads(archive.extractfile('usr/palm/packages/com.cleanyourtv.root.updater/packageinfo.json').read())['version'], version)
                 self.assertEqual(json.loads(archive.extractfile('usr/palm/services/com.cleanyourtv.root.updater.service/package.json').read())['version'], version)

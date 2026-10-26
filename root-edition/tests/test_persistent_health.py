@@ -14,6 +14,13 @@ class HealthTests(IntegrationTests):
   self.bp=patch('intent_runtime.boot_identity',return_value='boot-a');self.bp.start()
  def tearDown(self):
   self.bp.stop();self.hp.stop();super().tearDown()
+ def test_deleted_home_revokes_health_and_existing_guard_recovers(self):
+  from profile_plan import CANDIDATE
+  h.publish('route-a',1)
+  (self.apps/CANDIDATE/'appinfo.json').unlink()
+  self.assertFalse(h.authorized('route-a'))
+  h.run('route-a',lambda tx:self.c.exit(self.store.read()))
+  self.assertEqual(self.store.read()['phase'],'disabled');self.assertEqual(self.read(),self.baseline)
  def test_only_current_binding_can_publish(self):
   h.publish('route-a',1)
   with self.assertRaises(ValueError):h.publish('old',2)
@@ -69,6 +76,7 @@ import os,sys,time
 from pathlib import Path
 import persistent_health as h, intent_runtime, device_adapter as d
 d.STATE=Path(sys.argv[1]);d.EXPECTED_UID=os.getuid();h.ROOT=d.STATE/'health'
+d.home_present=lambda:True
 intent_runtime.boot_identity=lambda:'boot-a'
 """
    pub=setup+"\nseq=0\nwhile True:\n seq+=1;h.publish('tx',seq)\n if seq==1:print('READY',flush=True)\n time.sleep(.1)\n"

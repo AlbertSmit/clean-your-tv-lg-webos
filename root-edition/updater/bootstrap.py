@@ -134,7 +134,8 @@ def apply(bundle,baseline):
     store.write('registration',{'files':{str(paths[k]):{'original':v.decode(),'installed':updated[k].decode()} for k,v in original.items()}})
     for key,path in paths.items():
         mode=stat.S_IMODE(path.stat().st_mode);atomic(path,updated[key],mode)
-    atomic(HOOK,'#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(code/'python_boot.js')+' '+str(STATE)+' '+str(code/'run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n',0o700)
+    import startup_hook
+    startup_hook.install_link(safe_bytes,atomic,STATE,HOOK,'com.cleanyourtv.root.updater')
     import provision
     provision.refresh()
     store.write('bootstrap',{'phase':'complete','hardware_validated':False})

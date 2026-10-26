@@ -11,6 +11,10 @@ from types import SimpleNamespace
 
 
 class DeviceTests(unittest.TestCase):
+    def setUp(self):
+        from unittest.mock import patch
+        self.owner=patch.object(Device,'components_present',return_value=True);self.owner.start();self.addCleanup(self.owner.stop)
+
     def test_route_suspension_uses_transaction_bound_runtime_operation(self):
         tx = {'id':'a'*32, 'phase':'restoring-route'}
         calls=[]

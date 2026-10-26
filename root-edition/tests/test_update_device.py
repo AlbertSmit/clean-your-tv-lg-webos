@@ -10,6 +10,25 @@ import os
 from types import SimpleNamespace
 
 
+class PackagePresenceTests(unittest.TestCase):
+    def test_exact_shared_chain_with_strict_leaves_and_replacement(self):
+        import json
+        from unittest.mock import patch
+        from package_data import read
+        import updater.device as module
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();installed=root/'apps'
+            for owner in ('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
+                app=installed/'usr/palm/applications'/owner;app.mkdir(parents=True,exist_ok=True)
+                (app/'appinfo.json').write_text(json.dumps({'id':owner,'type':'web'}))
+            for shared in (installed,installed/'usr',installed/'usr/palm',installed/'usr/palm/applications'):shared.chmod(0o777)
+            device=Device(SimpleNamespace(root=root/'state'),installed=installed)
+            with patch.object(module,'package_read',side_effect=lambda path,**kw:read(path,**kw,uid=os.getuid())):
+                self.assertTrue(device.components_present())
+                app.chmod(0o777);self.assertFalse(device.components_present());app.chmod(0o755)
+                meta=app/'appinfo.json';meta.write_text('{"id":"foreign"}');self.assertFalse(device.components_present())
+                meta.unlink();self.assertFalse(device.components_present())
+
 class DeviceTests(unittest.TestCase):
     def setUp(self):
         from unittest.mock import patch

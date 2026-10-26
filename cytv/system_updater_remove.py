@@ -284,5 +284,6 @@ import io
 import tokenize
 # Whitespace/comments are transport-only; the readable SCRIPT remains inspectable.
 transport=tokenize.untokenize(t for t in tokenize.generate_tokens(io.StringIO(SCRIPT).readline) if t.type!=tokenize.COMMENT)
-transport='\n'.join(line.rstrip() for line in transport.splitlines() if line.strip())+'\n'
+# Normalize this fixed script's four-space indents for the bounded SSH transport.
+transport='\n'.join(' ' *((len(line)-len(line.lstrip()))//4)+line.strip() for line in transport.splitlines() if line.strip())+'\n'
 COMMAND='import base64,zlib;exec(zlib.decompress(base64.b85decode('+repr(base64.b85encode(zlib.compress(transport.encode(),9)).decode())+')))'

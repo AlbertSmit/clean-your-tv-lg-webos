@@ -27,6 +27,16 @@ class PackageTests(unittest.TestCase):
     def manifest(self, raw):
         return {'version':'0.1.0','sha256':hashlib.sha256(raw).hexdigest(),'size':len(raw)}
 
+    def test_new_package_emits_secure_owned_leaves_only(self):
+        raw=self.package(self.files())
+        from updater.package import members
+        with tarfile.open(fileobj=io.BytesIO(members(raw)['data.tar.gz'])) as archive:
+            dirs={entry.name:entry for entry in archive if entry.isdir()}
+        self.assertIn('usr/palm/applications/com.cleanyourtv.root.preview',dirs)
+        self.assertIn('usr/palm/packages/com.cleanyourtv.root.preview',dirs)
+        self.assertNotIn('usr/palm/applications',dirs)
+        self.assertTrue(all(entry.mode==0o755 and entry.uid==0 for entry in dirs.values()))
+
     def test_checks_content_identity_and_installed_bytes(self):
         files=self.files(); raw=self.package(files); hashes=inspect_package(raw,self.manifest(raw))
         with tempfile.TemporaryDirectory() as tmp:

@@ -55,26 +55,20 @@ class LinkTests(unittest.TestCase):
         path.write_bytes(raw);path.chmod(mode)
     def install(self):h.install_link(Path.read_bytes,self.write,self.state,self.hook,self.app,(h.CONTENT,))
     def remove(self):h.remove_link(Path.read_bytes,self.state,self.hook,self.app,(h.CONTENT,))
-    def test_install_exact_symlink_and_repeat_remove_after_package_disappears(self):
-        self.install();self.assertTrue(self.hook.is_symlink());self.assertEqual(os.readlink(self.hook),str(self.target))
+    def test_install_private_wrapper_and_repeat_remove_after_package_disappears(self):
+        self.install();self.assertFalse(self.hook.is_symlink());self.assertEqual(self.hook.read_bytes(),h.private_content(self.app));self.assertEqual(stat.S_IMODE(self.hook.stat().st_mode),0o700)
         value=json.loads((self.state/'startup-hook.json').read_bytes())
-        self.assertEqual(set(value),{'version','path','target','owner_app','target_sha256'});self.assertEqual(value['version'],2)
+        self.assertEqual(set(value),{'version','path','sha256','owner_app'});self.assertEqual(value['version'],3)
         self.target.unlink();self.remove();self.remove();self.assertFalse(os.path.lexists(self.hook))
         self.assertTrue((self.state/'startup-hook.json').exists())
-    def test_missing_or_changed_target_and_wrong_owner_fail_closed(self):
-        original=self.target.read_bytes();self.target.unlink()
-        with self.assertRaises((ValueError,FileNotFoundError)):self.install()
-        self.target.write_bytes(original+b'changed')
-        with self.assertRaises(ValueError):self.install()
-        self.target.write_bytes(original);self.target.chmod(0o644)
-        with self.assertRaises(ValueError):self.install()
-        self.target.chmod(0o755);(self.target.parent/'appinfo.json').write_text('{"id":"foreign"}')
-        with self.assertRaises(ValueError):self.install()
-        self.assertFalse(os.path.lexists(self.hook))
+    def test_packaged_startup_is_never_required_or_executed(self):
+        self.target.write_bytes(b'#!/bin/sh\ntouch /SHOULD_NEVER_RUN\n');self.target.chmod(0o777)
+        self.install();self.assertEqual(self.hook.read_bytes(),h.private_content(self.app))
+        self.assertNotIn(str(self.installed).encode(),self.hook.read_bytes())
     def test_foreign_link_and_writable_parent_are_rejected(self):
         self.hook.symlink_to(self.root/'foreign')
         with self.assertRaises(ValueError):self.install()
-        self.hook.unlink();self.target.parent.chmod(0o777)
+        self.hook.unlink();self.root.chmod(0o777)
         with self.assertRaises(ValueError):self.install()
     def test_migration_retains_previous_receipt_and_resumes_after_receipt_write(self):
         prior={'version':1,'path':str(self.hook),'content':h.CONTENT.decode()}
@@ -84,13 +78,49 @@ class LinkTests(unittest.TestCase):
             with self.assertRaises(OSError):self.install()
         self.assertEqual(json.loads((self.state/'startup-hook.previous.json').read_bytes()),prior)
         self.assertEqual(self.hook.read_bytes(),h.CONTENT)
-        self.install();self.assertTrue(self.hook.is_symlink());self.remove()
-    def test_changed_target_or_link_cannot_be_adopted_or_removed(self):
-        self.install();self.target.write_bytes(b'changed')
+        self.install();self.assertFalse(self.hook.is_symlink());self.remove()
+    def test_replaced_package_does_not_change_removal_authority(self):
+        prior=h.target_receipt(None,self.hook,self.app,missing=True)
+        self.write(self.state/'startup-hook.json',json.dumps(prior));self.hook.symlink_to(self.target)
+        self.target.write_bytes(b'changed');self.target.parent.chmod(0o777)
+        self.remove();self.remove();self.assertFalse(os.path.lexists(self.hook))
+    def test_v2_migration_interruption_retains_exact_link_proof(self):
+        prior=h.target_receipt(None,self.hook,self.app,missing=True)
+        self.write(self.state/'startup-hook.json',json.dumps(prior));self.hook.symlink_to(self.target)
+        with patch.object(h.os,'replace',side_effect=OSError('interrupted')):
+            with self.assertRaises(OSError):self.install()
+        self.assertEqual(json.loads((self.state/'startup-hook.previous.json').read_bytes()),prior)
+        self.assertTrue(self.hook.is_symlink());self.install();self.assertEqual(self.hook.read_bytes(),h.private_content(self.app));self.remove();self.remove()
+    def test_foreign_link_receipt_cannot_be_adopted_or_removed(self):
+        prior=h.target_receipt(None,self.hook,self.app,missing=True)
+        self.write(self.state/'startup-hook.json',json.dumps(prior));self.hook.symlink_to(self.root/'foreign')
         with self.assertRaises(ValueError):self.install()
         with self.assertRaises(ValueError):self.remove()
-        self.target.write_bytes(h.packaged_content(self.app));self.hook.unlink();self.hook.symlink_to(self.root/'foreign')
-        with self.assertRaises(ValueError):self.remove()
+    def test_interrupted_v1_to_v2_receipt_migrates_without_losing_regular_proof(self):
+        previous={'version':1,'path':str(self.hook),'content':h.CONTENT.decode()}
+        self.write(self.state/'startup-hook.previous.json',json.dumps(previous))
+        self.write(self.state/'startup-hook.json',json.dumps(h.target_receipt(None,self.hook,self.app)))
+        self.write(self.hook,h.CONTENT,0o700)
+        self.install();self.assertEqual(self.hook.read_bytes(),h.private_content(self.app));self.remove();self.remove()
+    def test_unknown_previous_receipt_blocks_new_hook(self):
+        self.write(self.state/'startup-hook.previous.json','{"version":99}')
+        with self.assertRaises(ValueError):self.install()
+        self.assertFalse(os.path.lexists(self.hook))
+    def test_updater_owners_migrate_exact_v1_system_and_bound_python_wrappers(self):
+        for owner in ('com.cleanyourtv.root.updater','com.cleanyourtv.system.updater'):
+            app=self.installed/'usr/palm/applications'/owner;app.mkdir()
+            (app/'appinfo.json').write_text(json.dumps({'id':owner,'type':'web'}))
+            for content in h.owned_legacy(owner,self.state):
+                for receipt in ('startup-hook.json','startup-hook.previous.json'):
+                    path=self.state/receipt
+                    if path.exists():path.unlink()
+                self.write(self.state/'startup-hook.json',json.dumps(dict(version=1,path=str(self.hook),content=content.decode())))
+                self.write(self.hook,content,0o700)
+                h.install_link(Path.read_bytes,self.write,self.state,self.hook,owner)
+                self.assertEqual(self.hook.read_bytes(),h.private_content(owner))
+                h.remove_link(Path.read_bytes,self.state,self.hook,owner);h.remove_link(Path.read_bytes,self.state,self.hook,owner)
+                self.assertFalse(os.path.lexists(self.hook))
+
     def test_wrong_unix_owner_is_not_accepted(self):
         with patch.object(h,'EXPECTED_UID',os.getuid()+1):
             with self.assertRaises(ValueError):self.install()

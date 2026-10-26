@@ -245,7 +245,7 @@ Homebrew upgrades the separate Installer, not the installed product. System
 Updater preparation remains an explicit optional action; complete signed product
 updates keep their existing updater. Installer-only deletion leaves the product
 installed; use complete-product removal to restore LG routing and clean owned
-packages/startup links while retaining recovery evidence and referenced runtime
+packages/private startup wrappers while retaining recovery evidence and referenced runtime
 slots. See [candidate requirements](INSTALL.md#candidate-on-tv-root-installation).
 
 ## Maintenance

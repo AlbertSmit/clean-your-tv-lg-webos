@@ -258,6 +258,7 @@ class DeployTests(unittest.TestCase):
                 kwargs['on_ready']()
                 with tarfile.open(fileobj=io.BytesIO(ar_members(package.read_bytes())['data.tar.gz'])) as archive:
                     for member in archive:
+                        if member.isdir():continue
                         target = installed / member.name
                         target.parent.mkdir(parents=True, exist_ok=True)
                         target.write_bytes(archive.extractfile(member).read())

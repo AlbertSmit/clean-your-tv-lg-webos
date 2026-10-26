@@ -134,16 +134,20 @@ state is not silently reprovisioned; supported migration remains Task 4.
 `tests/system_updates/test_component_removal.py`.
 
 **Interface:** Keep `startup_hook.install(secure, write)` and `remove(secure)`.
-Introduce receipt schema 2 with exact `path`, `target`, `owner_app`, `target_sha256`
-alongside `version`. Read schema 1 only for verified migration/removal. Store the
-previous receipt so failure does not lose ownership evidence.
+The approved 2026-10-26 correction supersedes the original schema-2 link design:
+use schema 3 with exact `path`, `owner_app`, `sha256` alongside `version`, and a
+0700 regular wrapper invoking only private guarded code. Migrate exact schema-1
+regular hooks and schema-2 links with retained crash proof. Read package identity
+as DATA with the dedicated platform-chain policy; never execute packaged startup
+bytes or require a replaced target to authorize unlinking its exact owned link.
 
 - [x] Test missing target, foreign symlink, changed target bytes, writable parent,
   wrong owner, copied legacy hook, interrupted migration and repeated removal.
   Use `lstat`/`readlink` to inspect a link itself, not a permissive `resolve` check.
 - [x] Package startup scripts under the three owning packages. Atomically replace
-  only a previously verified owned hook with the exact intended symlink. The
-  link allowance must not change general `secure`/`safe_bytes` semantics.
+  only a previously verified owned hook with a private 0700 regular wrapper.
+  Shared packaged startup scripts are never executed. The package DATA policy
+  must not change general `secure`/`safe_bytes` semantics.
 - [x] Add bounded package-presence checks to already-running lifecycle workers:
   disappearance of Root Home restores LG routing and leaves activation disabled.
   Disappearance of an updater blocks new work and resolves only safely recoverable
@@ -153,7 +157,8 @@ previous receipt so failure does not lose ownership evidence.
   recovery evidence. Distinguish the temporary replacement window of an owned
   update transaction from external package deletion.
 - [x] Update the existing cytv removal helpers to verify/archive both exact legacy
-  copied hooks and new receipt-owned symlinks without following foreign links.
+  copied hooks, saved receipt-owned links and v3 private wrappers without following
+  foreign links or authenticating a replaced package target.
   Include interrupted removal and retained-registration compatibility tests.
 - [x] Run lifecycle/update regression and commit. This task gates Homebrew
   publication even though the installer itself is a separate package.

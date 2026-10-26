@@ -70,6 +70,7 @@ class Remote:
 
 
 class RuntimeTests(unittest.TestCase):
+    @unittest.skipUnless(os.name=='posix','Requires the POSIX device shell ABI fixture')
     def test_shell_abi_accepts_arm32_userspace_on_aarch64_without_accepting_elf64(self):
         import shlex
         remote=Remote(system=False)

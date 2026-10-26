@@ -369,7 +369,9 @@ class LocalDevice:
         if not isinstance(bundle,dict) or not isinstance(bundle.get('files'),dict):
             raise ValueError('root_recovery_requires_existing_cytv_recovery')
         files=bundle['files']
-        for name in ('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py'):
+        support=('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py')
+        support+=tuple(name for name in ('package_data.py','startup_guard.py') if name in files)
+        for name in support:
             if files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)):
                 raise ValueError('root_recovery_support_mismatch')
         proof=read_journal(ROOT/'recovery-provision.json')

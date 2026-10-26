@@ -218,6 +218,7 @@ def device_snapshot(supported=True, read=read_journal, owned_operation=None):
     import json
     from pathlib import PurePosixPath
     from python_binding import verify_binding, _read
+    from package_data import read as package_read
     installed = Path('/media/developer/apps')
     def observe(name):
         root = Path('/var/lib/clean-your-tv-' + name)
@@ -240,8 +241,8 @@ def device_snapshot(supported=True, read=read_journal, owned_operation=None):
             return result
         if any(not p.is_dir() or p.is_symlink() for p in paths):
             raise ValueError('incomplete_component')
-        info = json.loads(_read(paths[0]/'appinfo.json'))
-        package = json.loads(_read(paths[2]/'packageinfo.json'))
+        info = json.loads(package_read(paths[0]/'appinfo.json',installed=installed))
+        package = json.loads(package_read(paths[2]/'packageinfo.json',installed=installed))
         if info.get('id') != app or package.get('id') != app:
             raise ValueError('component_identity_mismatch')
         if name == 'root':

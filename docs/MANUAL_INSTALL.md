@@ -537,7 +537,7 @@ Pending/recovery/conflict stops any subsequent setup; do not submit removal agai
 automatically or infer completion from package/process absence.
 
 It restores LG Home, verifies ownership and removes the project product packages,
-owned registrations and startup links. Recovery/archive evidence and referenced
+owned registrations and private startup wrappers. Recovery/archive evidence and referenced
 Python slots remain independently retained. Deleting CYTV Installer itself from
 LG/Homebrew removes only Installer; it does not perform complete-product removal.
 Direct component deletion is also distinct and still needs physical acceptance.

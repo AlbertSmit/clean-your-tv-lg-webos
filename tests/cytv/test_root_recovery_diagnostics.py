@@ -1,4 +1,5 @@
 """Failed Root setup must export safe recovery evidence without repeating setup."""
+import os
 import json
 import shlex
 import subprocess
@@ -51,6 +52,7 @@ class RootRecoveryDiagnosticsTests(unittest.TestCase):
                 self.assertIs(caught.exception,error)
                 self.assertFalse(getattr(error,'root_recovery',{}))
 
+    @unittest.skipUnless(os.name=='posix','Requires POSIX device filesystem/process fixture')
     def test_attempt_identity_crosses_real_process_boundary(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)

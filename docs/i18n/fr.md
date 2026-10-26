@@ -169,5 +169,7 @@ LG Home et retire les liens de démarrage propres, en conservant récupération,
 archives et Python nécessaires. Tous les essais TV de ce parcours restent à faire ;
 les résultats historiques Root 0.2.0 sur C3 ne le valident pas.
 
+Le démarrage utilise des scripts privés liés aux preuves de propriété et vérifie les métadonnées des paquets comme des données. Les scripts de démarrage des paquets ne sont jamais exécutés. Un paquet absent ou non sûr bloque le redémarrage automatique ; la récupération indépendante peut toujours restaurer LG Home. La vérification peut copier temporairement les fichiers vérifiés dans un espace privé sans modifier Home ni le produit.
+
 [Installation et récupération (anglais)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Essais TV en attente (anglais)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

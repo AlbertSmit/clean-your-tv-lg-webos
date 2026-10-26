@@ -48,6 +48,8 @@ class PackagePresenceTests(unittest.TestCase):
             (app/'appinfo.json').write_text(json.dumps({'id':'foreign'}))
             self.assertFalse(device.components_present())
             (app/'appinfo.json').write_text(json.dumps({'id':'com.cleanyourtv.system.updater'}))
+            for shared in (installed,installed/'usr',installed/'usr/palm',app.parent):shared.chmod(0o777)
             self.assertTrue(device.components_present())
+            app.chmod(0o777);self.assertFalse(device.components_present());app.chmod(0o755)
             (app/'appinfo.json').unlink();(app/'appinfo.json').symlink_to(root/'foreign')
             self.assertFalse(device.components_present())

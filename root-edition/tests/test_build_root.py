@@ -45,7 +45,7 @@ class BuildTests(unittest.TestCase):
             self.assertIn('updater/store.py',manifest['files'])
             import subprocess
             result = subprocess.run([sys.executable,'-I','-B','-c',
-                'import sys;sys.path.insert(0,sys.argv[1]);import deploy,installation;'
+                'import sys;sys.path.insert(0,sys.argv[1]);import deploy,installation,package_data,startup_guard;'
                 'assert installation.Store.__module__ == "updater.store"',str(first)],
                 cwd=Path(tmp),capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
@@ -54,8 +54,8 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(set(parts), {'debian-binary', 'control.tar.gz', 'data.tar.gz'})
             self.assertEqual(parts['debian-binary'], b'2.0\n')
             with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as archive:
-                files = {m.name: archive.extractfile(m).read() for m in archive}
-                self.assertTrue(all(m.isfile() and 1577836800 <= m.mtime <= 1767225600 for m in archive))
+                files = {m.name: archive.extractfile(m).read() for m in archive if m.isfile()}
+                self.assertTrue(all((m.isfile() or (m.isdir() and m.mode==0o755 and len(Path(m.name).parts)>=4)) and 1577836800 <= m.mtime <= 1767225600 for m in archive))
             prefix = 'usr/palm/applications/com.cleanyourtv.root.preview/'
             self.assertTrue(all(n.startswith(prefix) or n.startswith('usr/palm/services/com.cleanyourtv.root.preview.service/') or n == 'usr/palm/packages/com.cleanyourtv.root.preview/packageinfo.json' for n in files))
             self.assertEqual(json.loads(files[prefix + 'appinfo.json'])['id'], 'com.cleanyourtv.root.preview')
@@ -91,6 +91,7 @@ class BuildTests(unittest.TestCase):
                 self.assertEqual(archive.getmember(app+'startup.sh').mode,0o755)
                 self.assertEqual(archive.getmember('usr/palm/services/com.cleanyourtv.root.preview.service/boot-recover.sh').mode,0o755)
                 for member in archive:
+                    if member.isdir():continue
                     target=installed/member.name;target.parent.mkdir(parents=True,exist_ok=True)
                     target.write_bytes(archive.extractfile(member).read());target.chmod(member.mode)
             script="""

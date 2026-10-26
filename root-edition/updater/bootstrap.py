@@ -39,7 +39,7 @@ def verify_bundle(bundle,reader=None):
               'updater/core.py','updater/store.py','updater/profile.py','updater/device.py','updater/package.py','updater/cli.py',
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
               'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
-              'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js'}
+              'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','package_data.py','startup_guard.py','python_binding.py','python_boot.js'}
     from coordinator_inventory import BUNDLED_FILES
     required.update(BUNDLED_FILES)
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')

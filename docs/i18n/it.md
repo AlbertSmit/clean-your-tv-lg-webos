@@ -158,5 +158,7 @@ conservando recupero indipendente, archivi e Python necessario. Tutti i test fis
 di questo percorso sono ancora da eseguire; i risultati storici Root 0.2.0 su C3
 non lo convalidano.
 
+L’avvio usa file privati associati alle prove di proprietà e verifica l’identità del pacchetto come dati. Gli script di avvio del pacchetto non vengono eseguiti. Pacchetti mancanti o non sicuri bloccano il riavvio automatico; il ripristino indipendente può ancora ripristinare LG Home. L’ispezione può copiare temporaneamente file verificati in uno spazio privato senza modificare Home o il prodotto.
+
 [Installazione e recupero (inglese)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Test fisici in attesa (inglese)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

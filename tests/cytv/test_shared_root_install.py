@@ -1,4 +1,5 @@
 """The SSH client consumes the same durable records as the TV entry point."""
+import os
 import json
 from pathlib import Path
 import subprocess
@@ -108,6 +109,7 @@ class ActualCrossClientTests(unittest.TestCase):
         host._selected_python='/usr/bin/python3';host._coordinator_code=str(fixture.payload/'root-updater')
         return host
 
+    @unittest.skipUnless(os.name=='posix','Requires POSIX device filesystem/process fixture')
     def test_tv_to_cytv_uses_real_complete_receipts_and_preserves_profile_off(self):
         from install_driver import Coordinator
         from install_device import LocalDevice
@@ -120,6 +122,7 @@ class ActualCrossClientTests(unittest.TestCase):
             self.assertEqual(host.product_action('install','b'*32,str(fixture.payload))['state'],'complete')
             fixture.assert_preserved(self)
 
+    @unittest.skipUnless(os.name=='posix','Requires POSIX device filesystem/process fixture')
     def test_cytv_to_tv_uses_real_complete_receipts_without_resubmission(self):
         from install_driver import Coordinator
         from install_device import LocalDevice
@@ -130,6 +133,7 @@ class ActualCrossClientTests(unittest.TestCase):
             self.assertEqual(Coordinator(LocalDevice(),fixture.owner).install('d'*32,fixture.payload)['state'],'complete')
             fixture.assert_preserved(self)
 
+    @unittest.skipUnless(os.name=='posix','Requires POSIX device filesystem/process fixture')
     def test_component_deletion_and_newer_operation_invalidate_historical_completion(self):
         from install_driver import Coordinator
         from install_device import LocalDevice

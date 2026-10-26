@@ -32,6 +32,11 @@ async function stylesheet(code, filename) {
   transformed.root.walkDecls(/^(overflow-wrap|word-wrap)$/, declaration => {
     if (declaration.value === 'anywhere') unsupported.push(filename + ': ' + declaration.prop + ': anywhere requires a legacy break-word value');
   });
+  transformed.root.walkAtRules(/^font-face$/i, face => {
+    face.walkDecls(/^font-weight$/i, declaration => {
+      if (/\s/.test(declaration.value.trim())) unsupported.push(filename + ': font-weight ranges require static font faces for legacy engines');
+    });
+  });
   await postcss([doiuse({browsers: targets, onFeatureUsage: usage => {
     // doiuse groups legacy overflow values with newer clip/overlay features.
     // Only the four original values are accepted, not the entire feature family.

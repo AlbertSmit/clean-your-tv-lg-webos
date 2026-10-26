@@ -49,6 +49,33 @@ No webpack or application-module migration is needed. Build products are staged
 separately; the compiler never overwrites a developer's app configuration,
 inventory or icons in the source tree.
 
+## Static TV fonts
+
+Home and Root Home use static Outfit Light (300), Regular (400), Medium (500)
+and Bold (700) files. Each CSS face declares one weight, including 700 for browser
+bold defaults. This preserves the intended typography without variable-axis
+support. The retained variable source defaults to Thin (100); old engines can
+render that default for every weight (issue #68). Do not reference it in TV CSS.
+The CSS gate rejects weight ranges; binary regressions check fixed weights,
+distinct baked outlines, original character mappings and Root package staging.
+Both preview inventories include the same static assets and OFL license.
+
+To regenerate from the retained `launcher/fonts/outfit.ttf`, use a temporary
+Python environment with `fonttools==4.60.1` (not a TV/build runtime dependency):
+
+```sh
+for weight in 300 400 500 700; do
+  fonttools varLib.instancer launcher/fonts/outfit.ttf wght=$weight --static \
+    --update-name-table --no-recalc-timestamp -o launcher/fonts/outfit-$weight.ttf
+done
+```
+
+See [fontTools instancing](https://fonttools.readthedocs.io/en/latest/varLib/instancer.html).
+No setup steps or controls change. The fix is unreleased; visual acceptance on
+the reporter's LG LM6370PSB / webOS 4.5 / Chromium 53 remains required. Host tests
+verify assets and rendering in a current browser, not physical TV readability.
+The separately reported Helper-unavailable state remains unresolved.
+
 ## Regression checks
 
 `npm run test:compat` verifies syntax conversion, missing built-ins, polyfill
@@ -62,7 +89,8 @@ npx playwright install chromium
 BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:legacy-ui
 ```
 
-The browser test disables `inset` and selected JS APIs to reproduce issue #20.
+The browser test verifies the actual rendered Outfit face for each weight, then
+disables `inset` and selected JS APIs to reproduce issue #20.
 It checks actual card hit-testing, dimensions, icon fallback, scrolling,
 launch/navigation and full-screen dialogs. This models the reported engine
 limitations in a current browser; it is not an emulator of an entire old TV.

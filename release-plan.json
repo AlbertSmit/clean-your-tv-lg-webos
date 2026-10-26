@@ -69,6 +69,11 @@
       "pr": 78,
       "issues": [],
       "summary": "Record combined Homebrew correction validation, artifact identities and limited isolated Installer evidence; keep final hardware/platform/publication gates pending"
+    },
+    {
+      "pr": 79,
+      "issues": [],
+      "summary": "Accept observed metadata container ownership in Root readback"
     }
   ],
   "excluded": [],

@@ -124,11 +124,14 @@
   if(k===461||k===27){if(developerOpen)showDeveloper(false);else close();}else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
  window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
- // Mount theme panel after panel is in DOM
+ // Mount theme panel after panel is in DOM, then rebuild buttons array
  setTimeout(function(){
   var container=document.getElementById('themeSection');
   if(container && window.ThemePanel && window.ThemePanel.mount){
    window.ThemePanel.mount(container);
+   // Rebuild buttons array to include theme buttons
+   buttons=Array.prototype.slice.call(panel.querySelectorAll('button'));
+   buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.addEventListener('mouseover',function(){focus(i);});});
   }
  }, 0);
  // No session request, token access or scheduler setup happens on launcher startup.

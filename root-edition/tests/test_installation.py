@@ -133,6 +133,76 @@ with owner.operation('deploy','deploy.json'):
         self.assertEqual(classify(snapshot(True, lambda name: {'protocol': 9}))['state'], 'recovery_required')
 
 
+class RealStoreAbsenceTests(unittest.TestCase):
+    def setUp(self):
+        import installation
+        from unittest.mock import patch
+        self.installation=installation
+        self.tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root=Path(self.tmp.name).resolve()
+        uid=os.getuid()
+        class FixtureStore(Store):
+            # Only inject the fixture UID; traversal, reads and errors are real.
+            def _walk(self,path):
+                self.uid=uid
+                return super()._walk(path)
+        self.journals={name:(self.root/name/path.name,field,finished)
+                       for name,(path,field,finished) in JOURNALS.items()}
+        for attribute,value in [('Store',FixtureStore),('JOURNALS',self.journals),('STATE',self.root/'global')]:
+            patcher=patch.object(installation,attribute,value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_real_reader_missing_component_directory_is_absent(self):
+        self.assertIsNone(self.installation.read_journal(self.root/'absent'/'bootstrap.json'))
+        self.assertFalse((self.root/'absent').exists())
+
+    def test_clean_and_partial_entrypoints_admit_missing_peers(self):
+        for owner in ('deploy','root-bootstrap','system-bootstrap'):
+            with self.subTest(owner=owner):
+                store=Store(self.root/('global-'+owner),uid=os.getuid())
+                with device_operation(owner,ownership=Ownership(store)):
+                    pass
+        path,field,finished=self.journals['deploy']
+        Store(path.parent,uid=os.getuid()).write(path.name,{'app':'com.cleanyourtv.root.preview',
+                                                          field:'installed-recovery-only'})
+        with device_operation('root-update',ownership=Ownership(Store(self.root/'partial-global',uid=os.getuid()))):
+            pass
+
+    def test_absent_global_state_does_not_manufacture_retained_evidence(self):
+        result=self.installation.device_snapshot()
+        self.assertEqual(classify(result)['state'],'fresh')
+        self.assertFalse((self.root/'global').exists())
+
+    def test_unsafe_component_paths_and_invalid_receipts_still_block(self):
+        symlink=self.root/'symlink';symlink.symlink_to(self.root/'missing',target_is_directory=True)
+        writable=self.root/'writable';writable.mkdir();writable.chmod(0o777)
+        invalid=self.root/'invalid';invalid.mkdir();(invalid/'bootstrap.json').write_text('{broken')
+        for parent in (symlink,writable,invalid):
+            with self.subTest(parent=parent.name),self.assertRaises(ValueError):
+                self.installation.read_journal(parent/'bootstrap.json')
+        with self.assertRaises(ValueError):
+            self.installation.read_journal(writable/'missing'/'bootstrap.json')
+        foreign=Store.__new__(Store)
+        foreign.root,foreign.uid=str(self.root/'foreign'),os.getuid()+1
+        (self.root/'foreign').mkdir()
+        with self.assertRaises(ValueError):
+            self.installation._optional_record(foreign,'bootstrap')
+        from unittest.mock import patch
+        (invalid/'operation.json').write_text('{"schema":99}')
+        for parent in (symlink,writable,invalid):
+            with self.subTest(global_parent=parent.name),patch.object(self.installation,'STATE',parent):
+                self.assertEqual(classify(self.installation.device_snapshot())['state'],'recovery_required')
+
+    def test_unrelated_value_error_with_absence_cause_is_not_swallowed(self):
+        from unittest.mock import patch
+        def read(store,name):
+            raise ValueError('other failure') from FileNotFoundError('not traversal')
+        with patch.object(self.installation.Store,'read',read),self.assertRaisesRegex(ValueError,'other failure'):
+            self.installation.read_journal(self.root/'missing'/'bootstrap.json')
+
+
 class EntryPointTests(unittest.TestCase):
     def test_idle_reconcile_does_not_reserve_an_installation(self):
         from updater import cli

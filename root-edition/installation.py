@@ -78,12 +78,27 @@ class Busy(RuntimeError):
         super().__init__('installation_operation_retained')
 
 
+def _optional_record(store, name):
+    """Recognize only checked-traversal ENOENT, preserving every unsafe error."""
+    try:
+        return store.read(name)
+    except FileNotFoundError:
+        return None
+    except ValueError as error:
+        # Store._walk validates each ancestor before opening the next one and
+        # preserves the original OSError as its direct cause. A symlink,
+        # ownership/permission failure or corrupt receipt is not this case.
+        if error.args == ('unsafe store path',) and isinstance(error.__cause__, FileNotFoundError):
+            return None
+        raise
+
+
 class Ownership:
     def __init__(self, store=None):
         self.store = store if store is not None else Store(STATE)
 
     def status(self):
-        value = self.store.read('operation')
+        value = _optional_record(self.store,'operation')
         if value is not None:
             if (not isinstance(value, dict) or set(value) != {'schema','id','owner','journal','stage','terminal'}
                     or type(value['schema']) is not int or value['schema'] != 1 or type(value['terminal']) is not bool
@@ -145,8 +160,7 @@ def read_journal(path):
     """Read through the existing checked store without creating absent state."""
     store = Store.__new__(Store)
     store.root, store.uid = str(path.parent), 0
-    try: return store.read(path.name)
-    except FileNotFoundError: return None
+    return _optional_record(store,path.name)
 
 
 def pending_journals(owner, read=read_journal):

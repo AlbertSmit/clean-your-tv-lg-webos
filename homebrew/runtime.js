@@ -120,11 +120,12 @@ function verifiedPayload(root) {
         return { root: root, manifest: manifest, bootstrap: bootstrap };
     });
 }
-function inspectInternal(payloadRoot) {
+function inspectInternal(payloadRoot, recovery) {
     return Promise.resolve().then(function () {
         if (!process.geteuid || process.geteuid() !== 0) fail('Root execution is required');
         return verifiedPayload(payloadRoot);
     }).then(function (context) {
+        return (recovery === true ? Promise.resolve() : abi(context.bootstrap)).then(function () {
         var systemSafe = Promise.resolve().then(function () {
             var executable = fs.realpathSync('/usr/bin/python3');
             ancestors(path.dirname(executable)); owned(executable, false);
@@ -147,6 +148,7 @@ function inspectInternal(payloadRoot) {
                     return { python: null, privateRuntimeRequired: true, requiredSpace: context.manifest.runtime.required_space, context: context };
                 }, function () { fail('Private Python needs safe system tools and at least 320 MiB free in /var/lib'); });
             });
+        });
         });
     });
 }
@@ -183,8 +185,8 @@ function prepare(payloadRoot) {
         return (context ? removeStage(context.bootstrap, stage) : Promise.resolve()).then(function () { throw error; });
     });
 }
-function inspect(payloadRoot) {
-    return inspectInternal(payloadRoot).then(function (state) {
+function inspect(payloadRoot, recovery) {
+    return inspectInternal(payloadRoot, recovery).then(function (state) {
         return { python: state.python, privateRuntimeRequired: state.privateRuntimeRequired,
             requiredSpace: state.requiredSpace || 0 };
     });

@@ -369,6 +369,12 @@ python3 build/root-candidate/setup.py install --ssh my-tv --bundle build/root-ca
 python3 build/root-candidate/setup.py status --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_OPERATION"
 ```
 
+The install command returns a pending receipt from a detached worker. Repeat the
+same shared `status` command until **`state: complete` and `current: true`** before
+System Updater preparation or activation below. While `pending`, wait and inspect;
+`recovery_required`, `conflict` or `current: false` stops the sequence for diagnosis.
+Do not rerun install automatically or replace the original operation UUID.
+
 Retain the actual operation ID privately; do not generate another to retry an
 uncertain request. Add `--migrate-packaged-home` only for the deliberate fresh
 preference import above. Normal `install` requires **both** `--bundle` and
@@ -382,8 +388,7 @@ An alternative source entry point reviews the same full-product request:
 python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv
 ```
 
-Without `--apply` it prints the plan without TV mutation. With `--apply` (and,
-when needed, `--operation "$CYTV_OPERATION"`) it submits shared Root + Root
+Without `--apply` it prints the plan without TV mutation. With `--apply --operation "$CYTV_OPERATION"` it submits shared Root + Root
 Updater setup; do **not** run both entry points to install twice. The
 `--component-only` flag on either setup tool is explicitly advanced component
 recovery, not normal setup, a reinstall shortcut or infrastructure migration.
@@ -417,7 +422,8 @@ If the old No-root Helper is running, press Home three times within two seconds 
 is active or an ambiguous old PID marker exists. Do not manually delete its
 `blocked` or PID files, or run two input handlers together.
 
-For persistent mode, open **Home Root → Home settings** and turn **Change Home** on, or run:
+After the original shared setup status confirms `state: complete` and `current: true`,
+for persistent mode, open **Home Root → Home settings** and turn **Change Home** on, or run:
 
 ```bash
 python3 build/root-candidate/setup.py enable --ssh my-tv
@@ -524,6 +530,11 @@ export CYTV_REMOVE_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)'
 python3 build/root-candidate/setup.py uninstall --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_REMOVE_OPERATION"
 python3 build/root-candidate/setup.py status --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_REMOVE_OPERATION"
 ```
+
+Removal also returns a detached pending receipt. Repeat only the shared status
+command with the original removal UUID until `state: complete` and `current: true`.
+Pending/recovery/conflict stops any subsequent setup; do not submit removal again
+automatically or infer completion from package/process absence.
 
 It restores LG Home, verifies ownership and removes the project product packages,
 owned registrations and startup links. Recovery/archive evidence and referenced

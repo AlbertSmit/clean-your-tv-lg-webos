@@ -27,7 +27,7 @@ function run(args,deps){
  return Promise.resolve().then(function(){
   var request=parse(args);deps=deps||{process:process,runtime:require('./payload/runtime.js'),execute:execute};
   if(!deps.process.geteuid||deps.process.geteuid()!==0||parseInt(deps.process.versions.node.split('.')[0],10)<8)fail();
-  return deps.runtime.inspect(PAYLOAD).then(function(state){
+  return deps.runtime.inspect(PAYLOAD, ['status','restore','remove'].indexOf(request.action)>=0).then(function(state){
    if(request.action==='prepare-runtime')return deps.runtime.prepare(PAYLOAD).then(function(){return {state:'runtime_ready',code:'inspect_required'};});
    if(!state.python){if(request.action!=='inspect')fail();return {state:'prerequisites',code:'private_runtime_required',runtime:state};}
    var command=['-E','-s','-B',DRIVER,request.action];

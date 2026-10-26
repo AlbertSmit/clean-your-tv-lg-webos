@@ -70,6 +70,11 @@ class CurrentInstallation:
           (install_device,'safe_bytes',safe),(updater_device,'safe_bytes',safe),(python_binding,'_read',safe),
           (deploy,'STATE',self.root),(deploy,'INSTALLED',self.installed),(deploy,'require_device',lambda:None),(deploy,'require_node',lambda:None)):
             self.stack.enter_context(patch.object(obj,name,value))
+        self.stack.enter_context(patch.object(install_device.sys,'platform','linux'))
+        self.stack.enter_context(patch.object(install_device.platform,'machine',return_value='armv7l'))
+        elf=bytearray(40);elf[:6]=b'\x7fELF\x01\x01';elf[18]=40;elf[39]=5
+        previous_safe=install_device.safe_bytes
+        self.stack.enter_context(patch.object(install_device,'safe_bytes',side_effect=lambda path,*a,**kw: bytes(elf) if path==Path('/bin/sh').resolve() else previous_safe(path,*a,**kw)))
         self.stack.enter_context(patch.object(install_device.sys,'executable','/usr/bin/python3'))
         self.owner=installation.Ownership(Store(self.state,uid=os.getuid()))
         self.stack.enter_context(patch('observed_install.install',side_effect=AssertionError('package submission during maintenance')))

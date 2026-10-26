@@ -42,6 +42,8 @@ async function rejects(fn){var failed=false;try{await fn();}catch(e){failed=true
  await bootstrap.run(['inspect'],deps);assert.equal(prepares,0);assert.equal(executed[0].args[3],bootstrap.DRIVER);
  await bootstrap.run(['status','--operation',ID,'--verify-current'],deps);assert(executed[1].args.indexOf('--verify-current')>=0);
  await bootstrap.run(['remove','--operation',ID,'--resume'],deps);assert(executed[2].args.indexOf('--resume')>=0);assert(executed[2].args.indexOf('--payload')<0,'resume uses original snapshot');
+ var recoverySelections=[];deps.runtime.inspect=function(root,recovery){recoverySelections.push(recovery);return Promise.resolve({python:'/usr/bin/python3'});};
+ await bootstrap.run(['status','--operation',ID],deps);await bootstrap.run(['restore'],deps);await bootstrap.run(['remove','--operation',ID,'--candidate',SHA],deps);await bootstrap.run(['inspect'],deps);assert.deepEqual(recoverySelections,[true,true,true,false]);
  deps.runtime.inspect=function(){return Promise.resolve({python:null,privateRuntimeRequired:true,requiredSpace:335544320});};
  assert.equal((await bootstrap.run(['inspect'],deps)).state,'prerequisites');assert.equal(prepares,0);
  await rejects(function(){return bootstrap.run(['install','--operation',ID,'--candidate',SHA],deps);});assert.equal(prepares,0);

@@ -54,6 +54,7 @@ def execute_product(action, alias, root_bundle, updater_bundle, identity=None, r
                 target=local/name/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(checked_file(folder,relative))
         run(['scp','-O',*options[:-1],'-r',str(local/'root'),str(local/'root-updater'),alias+':'+remote+'/'],check=True,stdin=subprocess.DEVNULL)
     argv=[selected,remote+'/root-updater/install_driver.py',action,'--payload',remote,'--candidate',candidate]
+    if action=='status':argv.append('--verify-current')
     if operation:argv+=['--operation',operation]
     if migrate:argv.append('--migrate-packaged-home')
     if resume:argv.append('--resume')

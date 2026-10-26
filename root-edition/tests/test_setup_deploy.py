@@ -353,6 +353,12 @@ class SharedSetupEntryTests(unittest.TestCase):
         self.assertIn('--operation '+'a'*32,command);self.assertIn('--candidate ',command)
         self.assertNotIn('deploy.py install',command)
 
+    def test_documented_shared_status_requests_current_proof(self):
+        setup=load('setup');root,updater=self.fixture();calls=[]
+        setup.execute('status','living-room',root,updater_bundle=updater,operation='a'*32,run=lambda args,**kwargs:calls.append(args))
+        self.assertIn('--verify-current',calls[-1][-1])
+        self.assertIn('--operation '+'a'*32,calls[-1][-1])
+
     def test_component_install_requires_explicit_low_level_flag(self):
         setup=load('setup');root,_=self.fixture()
         with self.assertRaisesRegex(ValueError,'component-only'):

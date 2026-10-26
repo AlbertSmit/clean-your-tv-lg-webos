@@ -263,7 +263,7 @@ def submit(identifier, payload, migrate=False, prepare_supervisor=False, action=
         inventories=_verified_payload(payload,prepare_supervisor)
         actual_candidate=candidate_digest(payload,inventories)
         if candidate is not None and candidate!=actual_candidate: raise ValueError('reviewed_candidate_changed')
-        device=LocalDevice();device.preflight(payload,dict(migrate=migrate,prepare_supervisor=prepare_supervisor))
+        device=LocalDevice();device.preflight(payload,dict(migrate=migrate,prepare_supervisor=prepare_supervisor),product=action=='install')
         receipt=dict(operation=identifier,stage='preparing',state='pending',code='operation_pending',action=action,home_changed=False,candidate_sha256=actual_candidate,options=dict(migrate=migrate,prepare_supervisor=prepare_supervisor),worker_sha256=hashlib.sha256((__import__('pathlib').Path(payload)/'root-updater/bundle.json').read_bytes()).hexdigest(),root_binding=root_review_binding(payload,inventories),root_static={n:d for n,d in inventories['root']['files'].items() if n not in (inventories['root'].get('package'),'release.json','SHA256SUMS')})
         store.write('submission-'+identifier,receipt)
         try:

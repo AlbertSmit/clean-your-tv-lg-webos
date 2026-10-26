@@ -100,6 +100,7 @@ class BuildTests(unittest.TestCase):
                 (base/'roles.d'/(service+'.service.json')).write_text(json.dumps({'appId':service,'type':'regular'}))
                 (base/'client-permissions.d'/(service+'.service.json')).write_text('{}')
                 (base/'api-permissions.d'/(service+'.api.json')).write_text('{}')
+                return {'completed':True,'event':{'id':app,'statusValue':30,'returnValue':True,'details':{'packageId':app,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}
             state=path/'state';hook=hooks/'52-system'
             import startup_hook,os
             from unittest.mock import patch
@@ -110,7 +111,37 @@ class BuildTests(unittest.TestCase):
                     if not __import__('stat').S_ISDIR(info.st_mode) or info.st_mode&0o022:raise ValueError('Unsafe fixture path')
             path_root=path
             with patch.object(startup_hook,'EXPECTED_UID',os.getuid()),patch.object(startup_hook,'INSTALLED',installed),patch.object(startup_hook,'trusted_directory',side_effect=trusted):
-                result=setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=lambda:None)
+                from installation import Ownership,device_operation,Busy
+                from updater.store import Store
+                owner=Ownership(Store(path/'global',uid=os.getuid()))
+                read=lambda p: json.loads((state/'bootstrap.json').read_text()) if p.name=='bootstrap.json' and 'system-updater' in str(p) and (state/'bootstrap.json').exists() else None
+                def eligible():setup.preflight(bundle,baseline,state,installed,base,hook)
+                def interrupted():raise RuntimeError('scanner interrupted after terminal')
+                with self.assertRaisesRegex(RuntimeError,'scanner interrupted'):
+                    with device_operation('system-bootstrap',ownership=owner,read=read,check=eligible):
+                        setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=interrupted)
+                pending=owner.status()['id']
+                self.assertFalse(owner.status()['terminal'])
+                with self.assertRaises(Busy):
+                    with owner.operation('deploy','deploy.json'):pass
+                with patch('observed_install.install',side_effect=AssertionError('known terminal resubmitted')):
+                    with device_operation('system-bootstrap',recovery=True,ownership=owner,read=read) as lease:
+                        self.assertEqual(lease['id'],pending)
+                        result=setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
+                self.assertTrue(owner.status()['terminal'])
+                completed=owner.status()
+                with self.assertRaises(FileExistsError):
+                    with device_operation('system-bootstrap',ownership=owner,read=read,check=eligible):pass
+                self.assertEqual(owner.status(),completed)
+                # An accepted package without its exact terminal remains blocked.
+                (state/'installed-terminal.json').unlink()
+                (state/'bootstrap.json').write_text('{"phase":"accepted-supervisor"}')
+                with patch('observed_install.install',side_effect=AssertionError('unknown submission replayed')):
+                    with self.assertRaisesRegex(ValueError,'outcome unknown'):
+                        with device_operation('system-bootstrap',recovery=True,ownership=owner,read=read):
+                            setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
+                self.assertFalse(owner.status()['terminal'])
+                (state/'bootstrap.json').write_text('{"phase":"complete"}')
             self.assertTrue(hook.is_symlink())
             self.assertTrue(result['installed'])
             self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
@@ -278,9 +309,17 @@ class BuildTests(unittest.TestCase):
                 scans[0]+=1
                 if scans[0]==1:raise RuntimeError('scanner disconnected after terminal')
             with patch.object(setup,'ROOT_UPDATER_TRANSACTION',fixture.updater/'transaction.json'),patch.object(setup,'INSTALLED',fixture.installed),patch.object(setup,'BASE',base),patch.object(setup,'atomic',atomic),patch.object(setup,'infrastructure_destination',destination),patch.object(setup,'apply_legacy_lockdown',lockdown),patch('startup_hook.install_link'):
-                with self.assertRaisesRegex(RuntimeError,'scanner'):setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)
+                from installation import device_operation
+                read=lambda path: json.loads((state/'bootstrap.json').read_text()) if path.name=='bootstrap.json' and 'system-updater' in str(path) else None
+                with self.assertRaisesRegex(RuntimeError,'scanner'):
+                    with device_operation('system-bootstrap',ownership=fixture.owner,read=read):setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)
+                original=fixture.owner.status()['id']
+                self.assertFalse(fixture.owner.status()['terminal'])
                 saved=(state/'registration.json').read_bytes()
-                self.assertTrue(setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)['installed'])
+                with device_operation('system-bootstrap',recovery=True,ownership=fixture.owner,read=read) as lease:
+                    self.assertEqual(lease['id'],original)
+                    self.assertTrue(setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)['installed'])
+                self.assertTrue(fixture.owner.status()['terminal'])
                 self.assertEqual((state/'registration.json').read_bytes(),saved)
                 self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
             fixture.assert_preserved(self)

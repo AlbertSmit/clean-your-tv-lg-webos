@@ -268,7 +268,7 @@ def apply_legacy_lockdown(state,bases=None,root_updater=Path('/var/lib/clean-you
     return value
 
 
-def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,install=None,refresh=None):
+def preflight(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK):
     state=Path(state)
     if os.path.lexists(state):raise FileExistsError('Supervisor setup exists; inspect retained state from computer before changing it')
     require_legacy_idle()
@@ -282,6 +282,12 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
             for name,data in package_files(raw).items():
                 if safe(Path(installed)/name)!=data:raise ValueError('Installed baseline payload mismatch: '+name)
         else:infrastructure_readback(item,raw)
+    return manifest,current
+
+
+def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,install=None,refresh=None):
+    manifest,current=preflight(bundle,baseline,state,installed,base,hook)
+    state=Path(state);bundle=Path(bundle);baseline=Path(baseline)
     state.mkdir(mode=0o700);code=state/'code';code.mkdir(mode=0o700);(state/'cache').mkdir(mode=0o700)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
     sys.path.insert(0,str(bundle))
@@ -356,7 +362,6 @@ def resume(bundle,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=No
     for name,digest_value in expected.items():
         if digest(safe(state/'code'/name,os.geteuid()))!=digest_value:raise ValueError('Supervisor bootstrap code changed')
     current=verify_baseline(state,bundle)
-    if current['edition']!='root':raise ValueError('Root product continuation required')
     require_legacy_idle()
     phase=json.loads(safe(state/'bootstrap.json',os.geteuid())).get('phase')
     terminal=json.loads(safe(state/'installed-terminal.json',os.geteuid())) if os.path.lexists(state/'installed-terminal.json') else None
@@ -371,7 +376,7 @@ def resume(bundle,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=No
     return finish_registration(bundle,state,state,installed,base,hook,refresh)
 
 
-def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,python='/usr/bin/python3'):
+def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,python='/usr/bin/python3',resume=False):
     if python not in ('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'):raise ValueError('Unapproved Python executable')
     manifest=verify_bundle(bundle)
     baseline_manifest=verify_baseline(baseline,bundle) if baseline is not None else None
@@ -394,6 +399,7 @@ def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,
         run(['scp','-O',*options,'-r',*sources,alias+':'+remote+'/'],check=True,stdin=subprocess.DEVNULL)
     remote_bundle=remote+'/bundle'
     argv=['env','-u','PYTHONHOME','-u','PYTHONPATH','PYTHONDONTWRITEBYTECODE=1','PYTHONNOUSERSITE=1',python,remote_bundle+'/setup-system-updater.py','--device','--apply','--bundle',remote_bundle]
+    if resume:argv.append('--resume')
     if baseline is not None:argv+=['--baseline',remote+'/baseline']
     else:argv+=['--edition',edition]
     return run(['ssh',*options,alias,shlex.join(argv)],check=True,stdin=subprocess.DEVNULL)
@@ -401,25 +407,35 @@ def execute(bundle,baseline,alias,identity=None,run=subprocess.run,edition=None,
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--bundle',type=Path,required=True);parser.add_argument('--baseline',type=Path);parser.add_argument('--edition',choices=('root','no-root'));parser.add_argument('--ssh');parser.add_argument('--identity',type=Path);parser.add_argument('--apply',action='store_true');parser.add_argument('--device',action='store_true',help=argparse.SUPPRESS)
     parser.add_argument('--python',default='/usr/bin/python3',choices=('/usr/bin/python3','/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'))
+    parser.add_argument('--resume',action='store_true',help='Explicit bounded continuation of retained bootstrap; never replay unknown submissions')
     args=parser.parse_args()
     if args.device:
         if not args.apply or os.geteuid()!=0 or not Path('/usr/bin/luna-send').is_file() or sys.version_info<(3,9):raise PermissionError('Explicit root webOS Python 3.9+ setup required')
         subprocess.run(['/usr/bin/node','-e','process.exit(Number(process.versions.node.split(".")[0])>=8?0:1)'],check=True)
         sys.path.insert(0,str(args.bundle))
-        from installation import device_operation
-        with device_operation('system-bootstrap'):
-            if args.baseline is None:
-                if not args.edition:parser.error('--edition is required without --baseline')
-                with tempfile.TemporaryDirectory(prefix='system-baseline-') as tmp:
-                    baseline=snapshot(args.bundle,args.edition,Path(tmp)/'baseline')
-                    print(json.dumps(provision(args.bundle,baseline)))
-            else:print(json.dumps(provision(args.bundle,args.baseline)))
+        from installation import device_operation, Ownership, read_journal, JOURNALS
+        with tempfile.TemporaryDirectory(prefix='system-baseline-') as tmp:
+            selected=[args.baseline]
+            def eligible():
+                if args.resume:
+                    current=Ownership().status()
+                    if not current or current['terminal'] or (current['owner'],current['journal'])!=('system-bootstrap','bootstrap.json') or read_journal(JOURNALS['system-bootstrap'][0]) is None:
+                        raise ValueError('No matching pending supervisor bootstrap; inspect retained state')
+                    return
+                if selected[0] is None:
+                    if not args.edition:parser.error('--edition is required without --baseline')
+                    # Snapshot is private staging only, under the global mutex.
+                    if os.path.lexists(STATE):raise FileExistsError('Supervisor setup exists; inspect or explicitly --resume')
+                    selected[0]=snapshot(args.bundle,args.edition,Path(tmp)/'baseline')
+                preflight(args.bundle,selected[0])
+            with device_operation('system-bootstrap', recovery=args.resume, check=eligible):
+                print(json.dumps(resume(args.bundle) if args.resume else provision(args.bundle,selected[0])))
         return
     verify_bundle(args.bundle);baseline=verify_baseline(args.baseline,args.bundle) if args.baseline else {'edition':args.edition}
     if not baseline['edition']:parser.error('--edition is required without --baseline')
     print(json.dumps({'operation':'one-time-system-updater-setup','edition':baseline['edition'],'permissions':permission_plan(),'hardware_validated':False},indent=2))
     if args.apply:
         if not args.ssh:parser.error('--apply requires --ssh')
-        execute(args.bundle,args.baseline,args.ssh,args.identity,edition=baseline['edition'],python=args.python)
+        execute(args.bundle,args.baseline,args.ssh,args.identity,edition=baseline['edition'],python=args.python,resume=args.resume)
 
 if __name__=='__main__':main()

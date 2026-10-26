@@ -6,6 +6,7 @@ using its receipts; no module is imported from a retained installation.
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -118,14 +119,26 @@ def _capture_migrated_baseline(bundle):
     (bundle/'bundle.json').write_text(json.dumps(manifest))
 
 
+def require_product_abi():
+    """Product support is independent of the selected Python interpreter."""
+    if sys.platform != 'linux' or platform.machine() not in ('armv7l','armv8l'):
+        raise RuntimeError('unsupported_product_abi')
+    executable=Path('/bin/sh').resolve(strict=True)
+    header=safe_bytes(executable,uid=0)[:40]
+    if (len(header)!=40 or header[:6]!=b'\x7fELF\x01\x01' or
+            int.from_bytes(header[18:20],'little')!=40 or header[37]&4 or header[39]!=5):
+        raise RuntimeError('unsupported_product_abi')
+
+
 class LocalDevice:
     def __init__(self):
         self.payload=None
 
-    def preflight(self, payload, options):
+    def preflight(self, payload, options, product=True):
         import deploy
         from updater.bootstrap import verify_bundle
         deploy.require_device();deploy.require_node()
+        if product:require_product_abi()
         self.payload=Path(payload)
         deploy.verify_bundle(self.payload/'root')
         verify_bundle(self.payload/'root-updater')
@@ -142,9 +155,9 @@ class LocalDevice:
     def inspect(self):
         import deploy
         try:
-            deploy.require_device();deploy.require_node()
+            deploy.require_device();deploy.require_node();require_product_abi()
             if sys.version_info<(3,9): raise RuntimeError('unsupported_python')
-        except (OSError,PermissionError,RuntimeError):
+        except (OSError,PermissionError,RuntimeError,ValueError):
             return classify(dict(supported=False,packages_match=False,receipts_match=False,pending=False,retained=False,complete=False,migration_supported=False))
         versions=None
         operation=getattr(self,'operation',None)
@@ -182,7 +195,7 @@ class LocalDevice:
         if not isinstance(static,dict) or set(static)!=expected:raise ValueError('static_snapshot_required')
         for name,digest in static.items():
             if sha(safe_bytes(payload/'root'/name,uid=os.geteuid()))!=digest:raise ValueError('static_snapshot_changed')
-        self.preflight(payload,options)
+        self.preflight(payload,options,product=submission['action']=='install')
         return options
 
     def continuation_ready(self, record, submission, store):

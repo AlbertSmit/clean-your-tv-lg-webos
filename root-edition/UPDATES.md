@@ -66,16 +66,28 @@ commands do not migrate an existing retained updater:
 ```sh
 python3 root-edition/build.py --version 0.3.0 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
-python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply
+export CYTV_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
+python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply --operation "$CYTV_OPERATION"
+# Repeat this read-only status command until state=complete AND current=true.
+python3 build/root-candidate/setup.py status --ssh my-tv --bundle build/root-candidate --updater-bundle build/root-updater --operation "$CYTV_OPERATION"
+# Only after that verified completion:
 python3 system-updater/build.py --output build/system-updater
 python3 system-updater/setup.py --bundle build/system-updater --edition root --ssh my-tv --apply
 ```
+
+`--apply` returns after submitting a detached worker; successful shell exit is
+not setup completion. Keep the original operation UUID and repeat only the shared
+status command above. `pending` means wait and inspect again; `recovery_required`,
+`conflict`, or `current: false` stops the sequence for diagnosis/recovery. Do not
+run supervisor setup or enable Home until `state: complete` and `current: true`.
+Never repeat installation automatically or generate a new UUID to escape a pending request.
 
 These are **unreleased source** commands: normal `setup_updater.py --apply` now
 submits the same shared Root + Root Updater request as `setup.py install` with
 `--updater-bundle`; do not run both for a fresh installation. The baseline must
 match the reviewed Root bundle exactly. `--component-only` is an advanced
-component/recovery bootstrap, not normal product setup or an old-infrastructure
+component/recovery bootstrap (`--component-only --resume` explicitly continues
+a known retained Root Updater bootstrap), not normal product setup or an old-infrastructure
 migration shortcut. Published tagged bundles retain their own matching procedure.
 Keep the whole bundles together; see [manual source setup](../docs/MANUAL_INSTALL.md#7-root-first-installation-checks-and-persistent-activation). The
 manual supervisor command defaults to `/usr/bin/python3`; `--python` accepts only
@@ -83,6 +95,11 @@ approved system/managed interpreter paths. Use the verified installed binding
 when managed Python is required. It does not download Python itself. Omitting
 `--apply` prints a setup plan without changing the TV. OpenSSH uses strict host
 checking and batch authentication with an explicit alias such as `my-tv`.
+
+For a known interrupted standalone supervisor bootstrap, `system-updater/setup.py
+--resume` explicitly uses the retained baseline and exact package evidence, for
+either edition. Keep the same bundle and edition; an unknown submitted outcome
+is refused. This is recovery, not a retry that submits packages blindly.
 
 The supervisor's private state is `/var/lib/clean-your-tv-system-updater`; its
 normal-boot worker uses `52-clean-your-tv-system-updater`. Root Updater retains

@@ -175,7 +175,7 @@ def pending_journals(owner, read=read_journal):
 
 
 @contextmanager
-def device_operation(owner, recovery=False, ownership=None, read=read_journal):
+def device_operation(owner, recovery=False, ownership=None, read=read_journal, check=None):
     """Short mutation lock plus durable reservation across asynchronous workers.
 
     Same-component continuation is authorized by the fixed CLI operation, while
@@ -190,7 +190,10 @@ def device_operation(owner, recovery=False, ownership=None, read=read_journal):
     # Reserve it nonterminal before the caller can write a new transaction.
     if recovery and current and not current['terminal'] and (current['owner'],current['journal']) == (owner,path.name):
         resume = current['id']
-    with ownership.operation(owner,path.name,resume=resume, check=lambda: pending_journals(owner,read)) as record:
+    def eligible():
+        pending_journals(owner,read)
+        if check is not None: check()
+    with ownership.operation(owner,path.name,resume=resume, check=eligible) as record:
         yield record
         journal = read(path)
         if journal is not None:

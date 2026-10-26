@@ -67,7 +67,7 @@ def atomic(path,raw,mode=0o600):
         if temporary.exists():temporary.unlink()
 
 
-def apply(bundle,baseline):
+def preflight(bundle,baseline):
     import sys
     if sys.version_info < (3, 9):raise RuntimeError('Root Updater requires TV Python 3.9+')
     if os.geteuid()!=0 or not Path('/usr/bin/luna-send').is_file():raise PermissionError('Explicit rooted webOS device required')
@@ -84,6 +84,11 @@ def apply(bundle,baseline):
     # must restore and provision the new runtime; never overwrite a live runtime.
     proof=safe_bytes(ROOT_STATE/'recovery-provision.json',limit=65536,uid=0)
     recovery=json.loads(proof);runtime=ROOT_STATE/'runtime'
+    if recovery.get('mode')!='recovery-only':raise ValueError('Recovery not provisioned')
+    for name,expected in recovery.get('files',{}).items():
+        target=Path(name)
+        if not target.is_relative_to(ROOT_STATE):raise ValueError('Foreign recovery infrastructure')
+        if digest(safe_bytes(target,limit=1048576,uid=0))!=expected:raise ValueError('Recovery integrity failed')
     for name in ('cli.py','update_guard.py'):
         target=runtime/name
         if recovery.get('files',{}).get(str(target))!=digest(safe_bytes(target,uid=0)):
@@ -94,6 +99,18 @@ def apply(bundle,baseline):
     if current.get('version')!=descriptor['version']:raise ValueError('Baseline must match installed Root version')
     if STATE.exists() or STATE.is_symlink():raise FileExistsError('Updater setup exists; inspect retained state')
     if os.path.lexists(HOOK):raise FileExistsError('Updater boot hook collision')
+    from python_binding import verify_binding
+    verify_binding(ROOT_STATE)
+    from updater.store import Store
+    store=Store.__new__(Store);store.root=str(STATE)
+    status=Device(store,code=STATE/'code').routing_status()
+    if status['active'] or not status['safe']:raise ValueError('Verify LG Home routing before one-time updater setup')
+    return manifest, baseline_manifest, descriptor, proof, raw
+
+
+def apply(bundle,baseline):
+    manifest, baseline_manifest, descriptor, proof, raw=preflight(bundle,baseline)
+    bundle=Path(bundle)
     STATE.mkdir(mode=0o700);(STATE/'cache').mkdir(mode=0o700);code=STATE/'code';code.mkdir(mode=0o700)
     from updater.store import Store
     from python_binding import install_launcher, verify_binding

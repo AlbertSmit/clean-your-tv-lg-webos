@@ -513,14 +513,24 @@ class ComponentTerminalRecoveryTests(unittest.TestCase):
             fixture.up_store.write('bootstrap',{'phase':'provisioning'})
             fixture.up_store.write('installed-terminal',self.terminal('com.cleanyourtv.root.updater'))
             with patch.object(bootstrap,'STATE',fixture.updater),patch.object(bootstrap,'ROOT_STATE',fixture.root),patch.object(bootstrap,'INSTALLED',fixture.installed),patch.object(bootstrap,'BASE',base),patch.object(bootstrap,'HOOK',hook),patch.object(bootstrap,'safe_bytes',fixture.device_module.safe_bytes),patch.object(bootstrap,'atomic',atomic),patch.object(updater_store,'Store',FixtureStore),patch.object(updater_device,'Device',FixtureDevice),patch('startup_hook.install_link'),patch.object(provision,'refresh',side_effect=[RuntimeError('transient scanner failure'),None]):
-                with self.assertRaisesRegex(RuntimeError,'transient'):bootstrap.resume(fixture.payload/'root-updater')
+                from installation import device_operation
+                read=lambda path: fixture.up_store.read('bootstrap') if path.parent==fixture.updater and path.name=='bootstrap.json' else None
+                with self.assertRaisesRegex(RuntimeError,'transient'):
+                    with device_operation('root-bootstrap',ownership=fixture.owner,read=read):bootstrap.resume(fixture.payload/'root-updater')
+                pending=fixture.owner.status()['id']
+                self.assertFalse(fixture.owner.status()['terminal'])
                 saved=fixture.up_store.read('registration')
-                self.assertTrue(bootstrap.resume(fixture.payload/'root-updater')['installed'])
+                with device_operation('root-bootstrap',recovery=True,ownership=fixture.owner,read=read) as lease:
+                    self.assertEqual(lease['id'],pending)
+                    self.assertTrue(bootstrap.resume(fixture.payload/'root-updater')['installed'])
+                self.assertTrue(fixture.owner.status()['terminal'])
                 self.assertEqual(fixture.up_store.read('registration'),saved)
                 self.assertEqual(fixture.up_store.read('bootstrap')['phase'],'complete')
                 (fixture.updater/'installed-terminal.json').unlink()
                 fixture.up_store.write('bootstrap',{'phase':'accepted-updater'})
-                with self.assertRaisesRegex(ValueError,'outcome unknown'):bootstrap.resume(fixture.payload/'root-updater')
+                with self.assertRaisesRegex(ValueError,'outcome unknown'):
+                    with device_operation('root-bootstrap',recovery=True,ownership=fixture.owner,read=read):bootstrap.resume(fixture.payload/'root-updater')
+                self.assertFalse(fixture.owner.status()['terminal'])
             fixture.assert_preserved(self)
 
 class ChildOwnershipRecoveryTests(unittest.TestCase):
@@ -611,3 +621,31 @@ class SavedRemovalTerminalTests(unittest.TestCase):
           {'completed':True,'event':{'details':{'state':'removed','errorCode':1}}}):
             with self.subTest(value=value):self.assertFalse(terminal_removal(value,app))
         self.assertTrue(terminal_removal({'completed':True,'event':{'details':{'state':'removed'}}},app))
+
+
+class ProductABITests(unittest.TestCase):
+    def test_real_current_adapter_rejects_unsupported_os_machine_and_elf_before_setup(self):
+        from unittest.mock import patch
+        from install_fixture import CurrentInstallation
+        import install_device
+        with CurrentInstallation() as fixture:
+            device=install_device.LocalDevice()
+            self.assertEqual(device.inspect()['state'],'installed')
+            options={'migrate':False,'prepare_supervisor':False}
+            for attribute,value in (('platform','darwin'),('machine','x86_64'),('machine','armv6l')):
+                target=install_device.sys if attribute=='platform' else install_device.platform
+                context=patch.object(target,attribute,value) if attribute=='platform' else patch.object(target,attribute,return_value=value)
+                with self.subTest(attribute=attribute,value=value),context:
+                    self.assertEqual(device.inspect()['state'],'unsupported')
+                    with self.assertRaisesRegex(RuntimeError,'unsupported_product_abi'):
+                        device.preflight(fixture.payload,options)
+                    # Cleanup payload validation does not gain install prerequisites.
+                    device.preflight(fixture.payload,options,product=False)
+            original=install_device.safe_bytes
+            for index,value in ((4,2),(5,2),(18,62),(37,4),(39,4)):
+                elf=bytearray(40);elf[:6]=b'\x7fELF\x01\x01';elf[18]=40;elf[39]=5;elf[index]=value
+                with self.subTest(elf=index),patch.object(install_device,'safe_bytes',side_effect=lambda path,*a,**kw: bytes(elf) if path==Path('/bin/sh').resolve() else original(path,*a,**kw)):
+                    self.assertEqual(device.inspect()['state'],'unsupported')
+                    with self.assertRaisesRegex(RuntimeError,'unsupported_product_abi'):
+                        device.preflight(fixture.payload,options)
+            fixture.assert_preserved(self)

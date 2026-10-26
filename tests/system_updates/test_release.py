@@ -19,7 +19,7 @@ class ReleaseTests(unittest.TestCase):
                 version='1.0.0';versions[name]=version
                 files={'usr/palm/applications/'+app+'/appinfo.json':json.dumps({'id':app,'version':version}).encode()}
                 if name=='root':
-                    for service_file in ('service.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh'):files['usr/palm/services/'+app+'.service/'+service_file]=('final '+service_file).encode()
+                    for service_file in ('service.js','startup-diagnostics.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh'):files['usr/palm/services/'+app+'.service/'+service_file]=('final '+service_file).encode()
                 raw=package.ipk(app,version,files)
                 target={'home':'launcher.ipk','helper':'helper.ipk','updater':'updater.ipk','root':'root/root.ipk','root-updater':'root-updater/root-updater.ipk'}[name]
                 (payload/target).write_bytes(raw)
@@ -36,7 +36,8 @@ class ReleaseTests(unittest.TestCase):
             infra=next(c for c in manifests['root']['components'] if c['name']=='root-infrastructure')
             with tarfile.open(fileobj=io.BytesIO(files[infra['url'].rsplit('/',1)[1]]),mode='r:gz') as archive:
                 service_files={m.name:archive.extractfile(m).read() for m in archive if m.name.startswith('service/')}
-            self.assertEqual(len(service_files),7)
+            self.assertEqual(len(service_files),8)
+            self.assertEqual(service_files['service/startup-diagnostics.js'],b'final startup-diagnostics.js')
             self.assertEqual(service_files['service/service.js'],b'final service.js')
             self.assertEqual(files['com.gathin.tvhome_1.0.0_all.ipk'],(payload/'launcher.ipk').read_bytes())
             first=manifests['root']['components'][0]['url'].rsplit('/',1)[1]

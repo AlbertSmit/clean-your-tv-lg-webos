@@ -123,3 +123,5 @@ To działanie następnego kandydata, jeszcze niedostępne w opublikowanym instal
 ## Następny kandydat: połączenie i stan Home (issue #12)
 
 Zmiany jeszcze nieopublikowane: narzędzia Androida zachowują wybrany telewizor, edycję i port SSH po powrocie do ekranu początkowego; No-root zwykle używa 9922. Jeśli ustawienia nie mogą sprawdzić sterowania Home, pokazują stan nieznany i ukrywają Zmień Home do czasu poprawnej odpowiedzi. Nie oznacza to zatrzymania Helpera i nie uruchamia go ponownie. Tych zmian nie ma w opublikowanych pakietach v1.2.0.
+
+Diagnostyka Root w następnym kandydacie (#55): po błędzie instalacji zapisz raport z tej próby. Może zawierać kategorie błędów uruchamiania usługi odzyskiwania; zachowaj dane odzyskiwania i zainstalowany sterownik. Naprawa na OLED Flex nie jest jeszcze potwierdzona.

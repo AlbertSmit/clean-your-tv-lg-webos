@@ -129,3 +129,5 @@ This is next-candidate behavior, not part of the published v1.2.0 installer. Aft
 ## Next candidate: connection and Home status (issue #12)
 
 Unreleased preparation: Android Tools keeps the selected TV, edition and SSH port after returning to the start screen; No-root normally uses 9922. If Home settings cannot verify Home control, they show an unknown status and hide Change Home until a valid reply. This does not mean Helper stopped and does not restart it. These changes are not in the published v1.2.0 packages.
+
+Next-candidate Root diagnostics (#55): after a failed setup, save the diagnostic report from that attempt. It can include categorized recovery-service startup failures; keep recovery state and retained drivers. This does not yet confirm a fix on OLED Flex.

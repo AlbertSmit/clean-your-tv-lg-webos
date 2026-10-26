@@ -271,6 +271,9 @@ class OperationTests(unittest.TestCase):
             if 'CYTV_PYTHON_BOUND' in command:return ''
             commands.append(command)
             args = shlex.split(command)
+            if args[:1] == ['env'] and args[1].startswith('CYTV_ROOT_INSTALL_ATTEMPT='):
+                self.assertRegex(args[1], r'^CYTV_ROOT_INSTALL_ATTEMPT=[a-f0-9]{32}$')
+                args = args[2:]
             if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
                 self.assertEqual(args[3], 'reconcile')
                 return '{"state":"archived"}'
@@ -729,6 +732,9 @@ class OperationTests(unittest.TestCase):
         def run(command, **kwargs):
             if 'CYTV_PYTHON_BOUND' in command:return ''
             args = shlex.split(command)
+            if args[:1] == ['env'] and args[1].startswith('CYTV_ROOT_INSTALL_ATTEMPT='):
+                self.assertRegex(args[1], r'^CYTV_ROOT_INSTALL_ATTEMPT=[a-f0-9]{32}$')
+                args = args[2:]
             if len(args)>3 and args[:2] == ['/usr/bin/python3','-c'] and 'CYTV_UPDATER_VERIFIED' not in command:
                 action=args[3]
                 actions.append(action)

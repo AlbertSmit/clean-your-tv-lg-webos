@@ -123,3 +123,5 @@ Este comportamento pertence ao próximo candidato, não ao instalador publicado 
 ## Próximo candidato: conexão e estado do Home (issue #12)
 
 Preparação ainda não publicada: as Ferramentas do Android mantêm a TV, a edição e a porta SSH ao retornar à tela inicial; No-root normalmente usa 9922. Se os ajustes não conseguirem verificar o controle de Home, mostram um estado desconhecido e ocultam Alterar Home até receber uma resposta válida. Isso não significa que o Helper parou e não o reinicia. Essas mudanças não estão nos pacotes publicados da v1.2.0.
+
+Diagnóstico Root do próximo candidato (#55): após uma falha na instalação, salve o relatório dessa tentativa. Ele pode incluir categorias de erros de inicialização do serviço de recuperação; preserve os dados de recuperação e o driver instalado. A correção no OLED Flex ainda não foi confirmada.

@@ -226,7 +226,13 @@ Health selects only the phase-authorized candidate after actual terminal success
 or prior after proved rollback. Unknown submissions remain unknown and cannot
 be replayed. A known owned replacement window may run only its original private
 recovery worker; it does not establish ordinary presence or normal rearm.
-Unchanged installed metadata is reread on every two-second observation; only
+Existing live input health keeps the exact committed prior through untouched
+preparation/download and the pre-ticket suspension window. Normal rearm remains
+current-only; the actual suspend captures active intent before disabling it. All
+required owners are checked before a touched transition is deferred, so another
+owner's absence or integrity failure stops the worker. Legitimate sticky shared
+ancestors remain readable; own SDK special bits, shared setid and private modes
+stay strict. Unchanged installed metadata is reread on every two-second observation; only
 expected inventories are cached in process against private anchor/cache identity.
 
 These private helper/inventory changes require checked removal/rebootstrap or

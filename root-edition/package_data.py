@@ -43,7 +43,9 @@ def _read(path,limit,uid,installed,verified):
     def directory(info,name):
         # Shared SDK metadata storage is DATA, distinct from strict package leaves.
         owners=(0,uid,501) if name==installed/'usr/palm/packages' else (0,uid)
-        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (info.st_mode&0o7000 or (not verified and name not in shared and info.st_mode&0o022)):
+        special=info.st_mode&0o7000
+        if name in shared:special&=~stat.S_ISVTX  # Shared /tmp may be legitimately sticky.
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (special or (not verified and name not in shared and info.st_mode&0o022)):
             raise ValueError('Unsafe package directory')
     def identity(info):return (info.st_dev,info.st_ino)
     def file_identity(info):return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)

@@ -383,6 +383,7 @@ class RootRollbackDataTests(DeviceBase):
         # Static private supervisor proof is supplied at this effects boundary;
         # real self-cache/terminal authentication has separate all-owner coverage.
         checked=[];self.device.owner_identity=lambda owner,**kw:checked.append(owner) or {'id':owner}
+        self.device.require_components=lambda:self.mod.Device.require_components(self.device)
         self.device.integrity=lambda:None;self.device.routing_safe=lambda:True;self.device.now=lambda:1000;self.device.launch=lambda edition:None
         self.device.snapshot_mutable=lambda:None;self.device.restore_mutable=lambda:None;self.device.repair_registrations=lambda:None
         actual=self.device.verify_installed
@@ -398,4 +399,4 @@ class RootRollbackDataTests(DeviceBase):
             self.assertTrue(result['components'][0]['rollbackEvidence']['terminal']['success']);self.assertEqual(submit.call_count,1)
             self.assertEqual(manager.run()['phase'],'verifying-rollback')
             manager.healthy('root',tx['id'],'1.0.0');self.assertEqual(manager.run()['phase'],'rolled-back')
-            self.assertEqual(submit.call_count,1);self.assertEqual(checked,['com.cleanyourtv.system.updater'])
+            self.assertEqual(submit.call_count,1);self.assertEqual(set(checked),{'com.cleanyourtv.system.updater','com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'})

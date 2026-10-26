@@ -173,3 +173,30 @@ class PackageDataTests(unittest.TestCase):
         with patch.object(self.reader.os,'read',side_effect=replace),self.assertRaises(ValueError):
             self.reader.read_verified(self.metadata,sha256=expected,installed=self.root,uid=os.getuid())
         self.assertTrue(switched)
+
+    def test_sticky_shared_ancestor_is_data_but_own_sticky_leaf_is_refused(self):
+        import hashlib
+        ancestor=self.root.parent;ancestor.chmod(0o1777)
+        self.assertTrue(ancestor.stat().st_mode&0o1000)
+        expected=hashlib.sha256(self.file.read_bytes()).hexdigest()
+        self.assertEqual(self.read(),self.file.read_bytes())
+        self.assertEqual(self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid()),self.file.read_bytes())
+        self.file.parent.chmod(0o1755)
+        for reader in (self.read,lambda:self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid())):
+            with self.assertRaises(ValueError):reader()
+        self.file.parent.chmod(0o755)
+        import python_binding
+        with patch.object(python_binding,'EXPECTED_UID',os.getuid()),self.assertRaises(ValueError):python_binding._read(self.file)
+
+    def test_shared_setid_bits_are_refused_even_with_sticky(self):
+        import hashlib
+        ancestor=self.root.parent;ancestor.chmod(0o1777);inode=ancestor.stat().st_ino;original=os.fstat
+        expected=hashlib.sha256(self.file.read_bytes()).hexdigest()
+        for bit in (0o2000,0o4000):
+            def setid(fd):
+                info=original(fd);values={name:getattr(info,name) for name in dir(info) if name.startswith('st_')}
+                if info.st_ino==inode:values['st_mode']|=bit
+                return SimpleNamespace(**values)
+            with patch.object(self.reader.os,'fstat',side_effect=setid):
+                with self.assertRaises(ValueError):self.read()
+                with self.assertRaises(ValueError):self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid())

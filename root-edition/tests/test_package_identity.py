@@ -29,7 +29,7 @@ class IdentityTests(unittest.TestCase):
     def tearDown(self):self.temp.cleanup()
     def package(self,owner,version):
         ap='usr/palm/applications/'+owner+'/';pkg='usr/palm/packages/'+owner+'/packageinfo.json'
-        files={ap+'appinfo.json':json.dumps({'id':owner,'version':version,'type':'web','main':'index.html'}).encode(),ap+'index.html':version.encode(),pkg:json.dumps({'id':owner,'app':owner,'version':version,'services':[owner+'.service']}).encode()}
+        files={ap+'appinfo.json':json.dumps({'id':owner,'version':version,'type':'web','main':'index.html',**({'systemUpdateProtocol':1} if owner==p.ROOT else {})}).encode(),ap+'index.html':version.encode(),pkg:json.dumps({'id':owner,'app':owner,'version':version,'services':[owner+'.service']}).encode()}
         raw=ipk(owner,version,files);descriptor={'version':version,'sha256':p.digest(raw),'size':len(raw),'local':True}
         target=self.states[p.UPDATER] if owner==p.ROOT else self.states[owner]
         (target/'cache'/(descriptor['sha256']+'.ipk')).write_bytes(raw)
@@ -68,11 +68,12 @@ class IdentityTests(unittest.TestCase):
     def test_candidate_requires_original_terminal_and_normal_rearm_waits(self):
         tx=self.tx('installing');tx['installEvidence']={'submitted':{'request':'original'},'terminal':None};self.save(tx)
         self.install(p.ROOT,self.package(p.ROOT,'1.1.0'))
-        for purpose in ('current','worker','admission'):
+        for purpose in ('current','worker','admission','live'):
             with self.assertRaises(p.TransitionUnknown):self.identity(purpose=purpose)
         tx['installEvidence']=self.success();tx['phase']='verifying';self.save(tx)
         self.assertEqual(self.identity(purpose='worker')['version'],'1.1.0')
         self.assertEqual(self.identity(purpose='admission')['version'],'1.1.0')
+        with self.assertRaises(p.TransitionUnknown):self.identity(purpose='live')
         with self.assertRaises(p.TransitionUnknown):self.identity()
         tx['phase']='complete';self.save(tx)
         with self.assertRaises(ValueError):self.identity()
@@ -80,6 +81,7 @@ class IdentityTests(unittest.TestCase):
     def test_proved_rollback_health_selects_prior_only(self):
         tx=self.tx('verifying-rollback');tx['rollbackAttempted']=True;tx['installEvidence']=self.success();tx['rollbackEvidence']=self.success();self.save(tx)
         self.assertEqual(self.identity(purpose='worker')['version'],'1.0.0')
+        with self.assertRaises(p.TransitionUnknown):self.identity(purpose='live')
         self.install(p.ROOT,self.package(p.ROOT,'1.1.0'))
         with self.assertRaises(ValueError):self.identity(purpose='worker')
     def test_missing_private_cache_and_writable_private_receipt_never_adopt_sdk(self):

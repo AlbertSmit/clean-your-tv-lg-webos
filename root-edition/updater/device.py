@@ -9,7 +9,7 @@ import sys
 import time
 
 from updater.package import APP, inspect_package, safe_bytes, verify_payload
-from package_identity import identity, TransitionUnknown, ROOT, UPDATER, SYSTEM
+from package_identity import identity, owners_present, TransitionUnknown, ROOT, UPDATER, SYSTEM
 
 STATE = Path('/var/lib/clean-your-tv-root-updater')
 ROOT_STATE = Path('/var/lib/clean-your-tv-root')
@@ -29,10 +29,7 @@ class Device:
                         states={ROOT:self.root_state,UPDATER:self.state,SYSTEM:self.state.parent/'clean-your-tv-system-updater'})
 
     def components_present(self):
-        for owner in (UPDATER,APP):
-            try:self.owner_identity(owner)
-            except FileNotFoundError:return False
-        return True
+        return owners_present((UPDATER,APP),self.owner_identity)
 
     def require_components(self):
         if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
@@ -202,7 +199,8 @@ class Device:
             if (any(manifest.get(k)!=tx['prior'].get(k) for k in ('version','sha256','size'))
                     or tx['installEvidence']['terminal'] is None or any(v is not None for v in tx['rollbackEvidence'].values())):
                 raise ValueError('Original rollback submission proof required')
-            self.owner_identity(UPDATER)  # The replacing Root DATA may be partial.
+            try:self.require_components()
+            except TransitionUnknown:pass  # All owners checked; this exact prior leg owns partial Root DATA.
         else:self.require_components()
         self.descriptor(manifest)
         path=self.cached(manifest);inspect_package(safe_bytes(path,uid=0),manifest)

@@ -62,7 +62,7 @@ def worker(store,device):
             with device_operation('root-update', recovery=True):
                 from package_identity import TransitionUnknown
                 try:present=device.components_present()
-                except TransitionUnknown:present=True  # Original manager owns uncertainty/no replay.
+                except TransitionUnknown:present=True  # Every owner was checked; only the original touched leg remains uncertain.
                 if not present:
                     manager.component_removed();return
                 tx=manager.run()

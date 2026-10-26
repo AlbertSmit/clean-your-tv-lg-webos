@@ -130,7 +130,12 @@ def _select(tx,prior,candidate,evidence,purpose,system=False):
     if phase=='aborted':
         if install['submitted'] is not None or (system and install['intent']):raise ValueError('Aborted after submission')
         return prior
-    if purpose=='current':raise TransitionUnknown('Package transition inhibits normal rearm')
+    if purpose in ('current','live'):
+        # Existing active health may observe the unchanged committed prior until
+        # the writer actually captures/suspends intent. This grants no rearm.
+        preparing=('preparing','downloading','backed-up','suspending' if system else 'restoring-route')
+        if purpose=='live' and phase in preparing and not tx['rollbackAttempted'] and install['submitted'] is None and install['terminal'] is None and not (system and install['intent']):return prior
+        raise TransitionUnknown('Package transition inhibits normal rearm')
     if phase=='recovery-required':raise TransitionUnknown('Private transaction requires recovery')
     # Intent with no terminal is unknown even if either package happens to match.
     if ((system and rollback['intent'] or rollback['submitted'] is not None) and rollback['terminal'] is None
@@ -233,7 +238,8 @@ def bootstrap_inventory(root,*,uid=0):
 
 
 def inventory(owner,*,purpose='current',states=None,uid=0):
-    if owner not in STATES or purpose not in ('current','worker','admission'):raise ValueError('Invalid package identity purpose')
+    if owner not in STATES or purpose not in ('current','worker','admission','live'):raise ValueError('Invalid package identity purpose')
+    if purpose=='live' and owner!=ROOT:raise ValueError('Live health belongs only to Root')
     states=STATES if states is None else states
     root,updater,system=(Path(states[o]) for o in (ROOT,UPDATER,SYSTEM))
     if owner==SYSTEM:
@@ -254,6 +260,8 @@ def inventory(owner,*,purpose='current',states=None,uid=0):
     sys_tx=_record(system,'transaction',uid)
     if sys_tx is not None:sys_tx=_journal(sys_tx,True)
     if sys_tx is not None and sys_tx['edition']=='root':
+        if purpose=='live' and sys_tx['phase'] not in FINISHED and any(c[leg]['intent'] for c in sys_tx['components'] for leg in ('installEvidence','rollbackEvidence')):
+            raise TransitionUnknown('System mutation inhibits live presence')
         name='root' if owner==ROOT else 'root-updater'
         index=('root','root-updater','root-infrastructure').index(name)
         prior,candidate=(sys_tx[k]['components'][index] for k in ('prior','candidate'))
@@ -275,7 +283,7 @@ def inventory(owner,*,purpose='current',states=None,uid=0):
                         original=_package(owner,updater/'cache'/(current['sha256']+'.ipk'),current,uid)
                         baseline=_package(owner,system/'cache'/prior['sha256'],prior,uid)
                         if original!=baseline:raise ValueError('Conflicting Root publication')
-                    if purpose=='current' and (not _same(current,selected) or current.get('writer')!={'owner':'system-update','id':sys_tx['id']}):
+                    if (purpose=='current' or purpose=='live' and sys_tx['phase'] in FINISHED) and (not _same(current,selected) or current.get('writer')!={'owner':'system-update','id':sys_tx['id']}):
                         raise TransitionUnknown('System current publication pending')
                 return _package(owner,system/'cache'/selected['sha256'],selected,uid)
             if owner==UPDATER:return _package(owner,system/'cache'/selected['sha256'],selected,uid)
@@ -315,6 +323,22 @@ def inventory(owner,*,purpose='current',states=None,uid=0):
             or not isinstance(receipt.get('files'),dict) or any(n not in receipt['files'] for n in receipt['executable'])):
         raise ValueError('Root Updater own-package proof requires migration/provisioning')
     return dict(_inventory(owner,receipt.get('files')))
+
+
+def owners_present(owners,observe):
+    """Check the whole product before deferring any touched transition."""
+    missing=False;unknown=None;failure=None
+    for owner in owners:
+        try:observe(owner)
+        except TransitionUnknown as error:
+            if unknown is None:unknown=error
+        except FileNotFoundError:missing=True
+        except Exception as error:
+            if failure is None:failure=error
+    if failure is not None:raise failure
+    if missing:return False
+    if unknown is not None:raise unknown
+    return True
 
 
 def worker_allowed(owner,*,states=None,uid=0):

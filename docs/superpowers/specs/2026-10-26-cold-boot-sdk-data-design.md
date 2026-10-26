@@ -79,7 +79,7 @@ Do not patch the currently installed private runtime. After reviewed builds are 
 
 `package_data.read_verified` is separate from strict `read`; every writable SDK
 read requires an independent SHA256. `package_identity.inventory` selects the
-private inventory for `current`, `worker`, or `admission`; `identity` returns
+private inventory for `current`, `worker`, `admission`, or Root `live` health; `identity` returns
 metadata parsed from the verified bytes and optionally checks the complete
 inventory. Only `bootstrap_inventory` may use the explicitly supplied original
 Root setup records; ordinary observations have no release.json fallback.
@@ -105,3 +105,20 @@ The original private worker may reconcile an owned replacement window, including
 known-terminal rollback with partial SDK DATA. Such an observation is uncertainty,
 not normal presence or confirmed external deletion. The original managers retain
 submission/terminal/no-replay control; private recovery does not enable intent.
+
+
+Final-review boundary correction: `live` keeps the exact committed prior healthy
+only in validated, untouched preparation/download phases, including the window
+before the actual original suspend ticket is captured. Only existing input health
+and confirmed shutdown retention use it; boot/rearm/new activation stay `current`.
+Mutation, candidate/rollback health and unknown submissions do not gain live
+presence. Changed bytes and explicit emergency/off still revoke health and cannot
+be restored as desired intent by a later suspension.
+
+Every required product owner is observed before deferring a touched transition.
+Integrity failure dominates absence, and either dominates uncertainty. Both
+worker adapters and their known rollback gates use the same aggregate rule.
+The DATA directory reader permits sticky only on its already allowlisted shared
+ancestors (including a real temporary container); shared setid, own SDK special
+bits and all private readers remain strict. This preserves legitimate Linux
+`/tmp` traversal rather than redirecting tests to a less representative location.

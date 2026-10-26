@@ -15,7 +15,7 @@ import signal
 import stat
 import subprocess
 import time
-from package_identity import identity, ROOT, UPDATER, SYSTEM
+from package_identity import identity, owners_present, TransitionUnknown, ROOT, UPDATER, SYSTEM
 from .core import IDENTITIES, SETS, release_set, version
 from .support.package import archive, members, safe_bytes, verify_payload
 from .support.luna import call
@@ -69,13 +69,10 @@ class Device:
                         states={ROOT:self.root_state,UPDATER:self.root_updater,SYSTEM:self.state})
 
     def components_present(self):
-        owners={SYSTEM}
+        owners=[SYSTEM]
         tx=self.store.read('transaction')
-        if tx and tx.get('edition')=='root':owners.update((ROOT,UPDATER))
-        for owner in owners:
-            try:self.owner_identity(owner)
-            except FileNotFoundError:return False
-        return True
+        if tx and tx.get('edition')=='root':owners.extend((ROOT,UPDATER))
+        return owners_present(owners,self.owner_identity)
 
     def require_components(self):
         if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
@@ -313,7 +310,8 @@ class Device:
                     or c['kind']!='infrastructure' and leg['submitted'] is not None or leg['terminal'] is not None
                     or any(e['installEvidence']['intent'] and e['installEvidence']['terminal'] is None and e['name']!='root-infrastructure' for e in tx['components'])):
                 raise ValueError('Original System rollback proof required')
-            self.owner_identity(SYSTEM)  # Replaced component DATA may be partial.
+            try:self.require_components()
+            except TransitionUnknown:pass  # Complete owner observation; only this original rollback may proceed.
         else:self.require_components()
         self.integrity();self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
         if c['kind']=='infrastructure':

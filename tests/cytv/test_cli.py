@@ -184,6 +184,7 @@ class CLITests(unittest.TestCase):
             def close(self): pass
         with tempfile.TemporaryDirectory() as tmp, \
              patch('cytv.cli.package.verify_payload', return_value={}), \
+             patch('cytv.cli.payload_dir', return_value=Path(tmp)/'unbuilt-payload'), \
              patch('cytv.cli.Installer.version_summary', return_value=['Root: 0.1.4 → 0.1.5 (Update)']), \
              patch('cytv.tv.SSAP') as ssap:
             remote = Remote()
@@ -198,7 +199,8 @@ class CLITests(unittest.TestCase):
         for flags, answers, expected in [(['--yes'], [''], 0), (['--yes','--non-interactive'], [], 2)]:
             with self.subTest(flags=flags), tempfile.TemporaryDirectory() as tmp, \
                  patch('cytv.cli.Installer.version_summary', return_value=['Root: 0.1.4 → 0.1.5 (Update)']), \
-                 patch('cytv.cli.package.verify_payload', return_value={}), patch('cytv.tv.SSAP') as ssap:
+                 patch('cytv.cli.package.verify_payload', return_value={}), \
+                 patch('cytv.cli.payload_dir', return_value=Path(tmp)/'unbuilt-payload'), patch('cytv.tv.SSAP') as ssap:
                 remote=Remote()
                 code, output, _ = self.run_cli(['--host','192.0.2.10','--edition','root','--data-dir',tmp]+flags, answers, remote=remote)
                 self.assertEqual(code, expected, output)

@@ -115,8 +115,9 @@ def apply(bundle,baseline):
     from updater.store import Store
     from python_binding import install_launcher, verify_binding
     verify_binding(ROOT_STATE)
-    install_launcher(STATE, atomic)
     store=Store(STATE)
+    store.write('bootstrap-bundle',{'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['root-updater.ipk'],'size':len(safe_bytes(bundle/'root-updater.ipk'))}})
+    install_launcher(STATE, atomic)
     store.write('bootstrap',{'phase':'prepared','bundle':manifest})
     code_files={k:v for k,v in manifest['files'].items() if k not in ('root-updater.ipk','setup-updater.py')}
     for name in code_files:
@@ -186,7 +187,14 @@ def resume(bundle):
     from updater.store import Store
     from updater.device import Device
     from installation import terminal_install
-    store=Store(STATE);bundle=Path(bundle);verify_bundle(bundle)
+    store=Store(STATE);bundle=Path(bundle);manifest=verify_bundle(bundle)
+    expected={'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['root-updater.ipk'],'size':len(safe_bytes(bundle/'root-updater.ipk'))}}
+    if store.read('bootstrap-bundle')!=expected:
+        raise ValueError('Matching original bootstrap bundle proof required; retain state for recovery')
+    code={k:v for k,v in manifest['files'].items() if k not in ('root-updater.ipk','setup-updater.py')}
+    infrastructure=store.read('infrastructure')
+    if not isinstance(infrastructure,dict) or infrastructure.get('code')!=code:
+        raise ValueError('Retained code differs from original bootstrap bundle')
     Device(store,code=STATE/'code').integrity()
     phase=store.read('bootstrap').get('phase')
     terminal=store.read('installed-terminal')

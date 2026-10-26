@@ -101,3 +101,26 @@ class CurrentInstallation:
         startup=self.installed/'usr/palm/applications/com.cleanyourtv.root.preview/startup.sh'
         test.assertEqual(startup.stat().st_mode&0o777,0o755)
     def __exit__(self,*args):return self.stack.__exit__(*args)
+
+
+def altered_bootstrap_bundle(source,target,package_name,code=False):
+    """A self-consistent alternate bundle: same IPK identity, changed payload bytes."""
+    import shutil,io,tarfile
+    from cytv import package
+    shutil.copytree(source,target)
+    if code:
+        (target/'service.js').write_bytes((target/'service.js').read_bytes()+b'\n// alternate bundle\n')
+        name='service.js'
+    else:
+        name=package_name
+        raw=(target/name).read_bytes();parts=package.read_ar(raw);files=package.data_files(raw)
+        index=next(n for n in files if n.endswith('/index.html'))
+        files[index]+=b'<!-- alternate same-version bytes -->'
+        with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']),mode='r:gz') as archive:
+            executable={m.name for m in archive if m.isfile() and m.mode&0o111}
+        parts['data.tar.gz']=package.tgz(files,executable=executable,directories=False)
+        (target/name).write_bytes(package.ar(parts))
+    manifest=json.loads((target/'bundle.json').read_text())
+    manifest['files'][name]=hashlib.sha256((target/name).read_bytes()).hexdigest()
+    (target/'bundle.json').write_text(json.dumps(manifest))
+    return target

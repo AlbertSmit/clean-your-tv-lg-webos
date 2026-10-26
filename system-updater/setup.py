@@ -290,6 +290,7 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     state=Path(state);bundle=Path(bundle);baseline=Path(baseline)
     state.mkdir(mode=0o700);code=state/'code';code.mkdir(mode=0o700);(state/'cache').mkdir(mode=0o700)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
+    record('bootstrap-bundle',{'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':len(safe(bundle/'system-updater.ipk'))}})
     sys.path.insert(0,str(bundle))
     from python_binding import install_launcher
     install_launcher(state, atomic)
@@ -355,6 +356,11 @@ def resume(bundle,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=No
     from installation import terminal_install
     from python_binding import verify_binding
     state=Path(state);bundle=Path(bundle);manifest=verify_bundle(bundle)
+    expected={'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':len(safe(bundle/'system-updater.ipk'))}}
+    try:binding=json.loads(safe(state/'bootstrap-bundle.json',os.geteuid()))
+    except FileNotFoundError:binding=None
+    if binding!=expected:
+        raise ValueError('Matching original bootstrap bundle proof required; retain state for recovery')
     verify_binding(state)
     receipt=json.loads(safe(state/'infrastructure.json',os.geteuid()))
     expected={name:manifest['files'][name] for name in sorted(CODE)}

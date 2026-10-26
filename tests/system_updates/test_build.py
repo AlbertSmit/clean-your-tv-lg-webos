@@ -274,7 +274,7 @@ class BuildTests(unittest.TestCase):
         import sys,shutil,functools
         from unittest.mock import patch
         sys.path.insert(0,str(ROOT/'root-edition/tests'));sys.path.insert(0,str(ROOT/'root-edition'))
-        from install_fixture import CurrentInstallation
+        from install_fixture import CurrentInstallation,altered_bootstrap_bundle
         from installation import terminal_install
         build=load('build');setup=load('setup')
         with CurrentInstallation() as fixture:
@@ -287,11 +287,28 @@ class BuildTests(unittest.TestCase):
                 target=state/'code'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes((bundle/name).read_bytes())
             def record(name,value):(state/(name+'.json')).write_text(json.dumps(value))
             record('infrastructure',{'schema':1,'code':{name:manifest['files'][name] for name in sorted(setup.CODE)}})
+            binding={'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':(bundle/'system-updater.ipk').stat().st_size}}
+            record('bootstrap-bundle',binding)
             record('bootstrap',{'phase':'accepted-supervisor','edition':'root'})
             base=fixture.base/'super-ls2';hook=fixture.base/'hooks/52';hook.parent.mkdir()
             with patch.object(setup,'ROOT_UPDATER_TRANSACTION',fixture.updater/'transaction.json'),patch.object(setup,'INSTALLED',fixture.installed),patch.object(setup,'finish_registration',wraps=setup.finish_registration) as finish:
                 with self.assertRaisesRegex(ValueError,'outcome unknown'):setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook)
                 finish.assert_not_called()
+            record('bootstrap',{'phase':'installing-supervisor','edition':'root'})
+            with patch('observed_install.install',return_value={'completed':True,'event':{'id':setup.APP,'statusValue':30,'details':{'packageId':setup.APP,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}) as install,patch.object(setup,'finish_registration',return_value={'installed':True}) as finish:
+                for code in (False,True):
+                    alternate=altered_bootstrap_bundle(bundle,fixture.base/('alternate-super-'+str(code)),'system-updater.ipk',code=code)
+                    setup.verify_bundle(alternate)
+                    with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):setup.resume(alternate,state,fixture.installed,base,hook)
+                    install.assert_not_called();finish.assert_not_called()
+                    self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'installing-supervisor')
+                (state/'bootstrap-bundle.json').unlink()
+                with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):setup.resume(bundle,state,fixture.installed,base,hook)
+                install.assert_not_called();finish.assert_not_called()
+                record('bootstrap-bundle',binding)
+                self.assertTrue(setup.resume(bundle,state,fixture.installed,base,hook)['installed'])
+                self.assertEqual(Path(install.call_args.args[1]).read_bytes(),(bundle/'system-updater.ipk').read_bytes())
+                self.assertEqual(json.loads((state/'bootstrap-bundle.json').read_text()),binding)
             terminal={'completed':True,'event':{'id':setup.APP,'statusValue':30,'details':{'packageId':setup.APP,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}
             self.assertTrue(terminal_install(terminal,setup.APP));record('installed-terminal',terminal);record('bootstrap',{'phase':'provisioning','edition':'root'})
             for name,raw in setup.package_files((bundle/'system-updater.ipk').read_bytes()).items():

@@ -490,6 +490,40 @@ class ComponentTerminalRecoveryTests(unittest.TestCase):
             self.assertEqual([call.args[0][-1] for call in command.call_args_list],['refresh','finalize'])
             fixture.assert_preserved(self)
 
+    def test_updater_resume_requires_original_full_bundle_before_submission(self):
+        import hashlib,json,shutil
+        from install_fixture import CurrentInstallation,altered_bootstrap_bundle
+        from updater import bootstrap,device as updater_device,store as updater_store
+        from unittest.mock import patch
+        with CurrentInstallation() as fixture:
+            original=fixture.payload/'root-updater'
+            manifest=bootstrap.verify_bundle(original)
+            binding={'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['root-updater.ipk'],'size':(original/'root-updater.ipk').stat().st_size}}
+            fixture.up_store.write('bootstrap-bundle',binding)
+            fixture.up_store.write('bootstrap',{'phase':'installing-updater'})
+            for folder,name in (('applications','com.cleanyourtv.root.updater'),('packages','com.cleanyourtv.root.updater'),('services','com.cleanyourtv.root.updater.service')):
+                shutil.rmtree(fixture.installed/'usr/palm'/folder/name)
+            real_store=updater_store.Store;real_device=updater_device.Device
+            class FixtureStore(real_store):
+                def __init__(self,root,uid=0):super().__init__(root,uid=os.getuid())
+            class FixtureDevice(real_device):
+                def __init__(self,store,code=None,**kwargs):super().__init__(store,code,root_state=fixture.root,installed=fixture.installed)
+            alternatives=[altered_bootstrap_bundle(original,fixture.base/('alternate-'+str(code)),'root-updater.ipk',code=code) for code in (False,True)]
+            before=fixture.up_store.read('bootstrap')
+            with patch.object(bootstrap,'STATE',fixture.updater),patch.object(bootstrap,'INSTALLED',fixture.installed),patch.object(bootstrap,'HOOK',fixture.base/'absent-hook'),patch.object(bootstrap,'safe_bytes',fixture.device_module.safe_bytes),patch.object(updater_store,'Store',FixtureStore),patch.object(updater_device,'Device',FixtureDevice),patch.object(FixtureDevice,'routing_status',return_value={'active':False,'safe':True}),patch('observed_install.install',return_value=self.terminal('com.cleanyourtv.root.updater')) as install,patch.object(bootstrap,'finish_registration',return_value={'installed':True}) as finish:
+                for alternate in alternatives:
+                    bootstrap.verify_bundle(alternate) # Actual valid manifest, not a mocked rejection.
+                    with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):bootstrap.resume(alternate)
+                    self.assertEqual(fixture.up_store.read('bootstrap'),before)
+                    install.assert_not_called();finish.assert_not_called()
+                (fixture.updater/'bootstrap-bundle.json').unlink()
+                with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):bootstrap.resume(original)
+                install.assert_not_called();finish.assert_not_called()
+                fixture.up_store.write('bootstrap-bundle',binding)
+                self.assertTrue(bootstrap.resume(original)['installed'])
+                self.assertEqual(Path(install.call_args.args[1]).read_bytes(),(original/'root-updater.ipk').read_bytes())
+                self.assertEqual(fixture.up_store.read('bootstrap-bundle'),binding)
+
     def test_updater_terminal_and_interrupted_registration_resume_exact_owned_writes(self):
         from install_fixture import CurrentInstallation
         from updater import bootstrap,device as updater_device,store as updater_store
@@ -510,6 +544,8 @@ class ComponentTerminalRecoveryTests(unittest.TestCase):
             def atomic(path,raw,mode=0o600):
                 if isinstance(raw,str):raw=raw.encode()
                 path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw);path.chmod(mode)
+            manifest=bootstrap.verify_bundle(fixture.payload/'root-updater')
+            fixture.up_store.write('bootstrap-bundle',{'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['root-updater.ipk'],'size':(fixture.payload/'root-updater/root-updater.ipk').stat().st_size}})
             fixture.up_store.write('bootstrap',{'phase':'provisioning'})
             fixture.up_store.write('installed-terminal',self.terminal('com.cleanyourtv.root.updater'))
             with patch.object(bootstrap,'STATE',fixture.updater),patch.object(bootstrap,'ROOT_STATE',fixture.root),patch.object(bootstrap,'INSTALLED',fixture.installed),patch.object(bootstrap,'BASE',base),patch.object(bootstrap,'HOOK',hook),patch.object(bootstrap,'safe_bytes',fixture.device_module.safe_bytes),patch.object(bootstrap,'atomic',atomic),patch.object(updater_store,'Store',FixtureStore),patch.object(updater_device,'Device',FixtureDevice),patch('startup_hook.install_link'),patch.object(provision,'refresh',side_effect=[RuntimeError('transient scanner failure'),None]):

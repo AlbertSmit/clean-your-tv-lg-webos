@@ -18,11 +18,16 @@ python3 root-edition/build_updater.py --output /absolute/path/to/new-updater
 export CYTV_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
 python3 /path/to/candidate/setup.py install --ssh television --bundle /path/to/candidate --updater-bundle /absolute/path/to/new-updater --operation "$CYTV_OPERATION"
 python3 /path/to/candidate/setup.py status --ssh television --bundle /path/to/candidate --updater-bundle /absolute/path/to/new-updater --operation "$CYTV_OPERATION"
+# Repeat the original UUID status until state=complete AND current=true before enabling.
 python3 /path/to/candidate/setup.py enable --ssh television
 python3 /path/to/candidate/setup.py restore --ssh television
 export CYTV_REMOVE_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
 python3 /path/to/candidate/setup.py uninstall --ssh television --bundle /path/to/candidate --updater-bundle /absolute/path/to/new-updater --operation "$CYTV_REMOVE_OPERATION"
 ```
+
+The install command returns a detached pending receipt. Repeat only status with
+the original UUID; pending/recovery/conflict stops subsequent steps. Do not retry
+installation automatically or infer completion from shell exit.
 
 `--identity /path/to/key` is optional. The scripts require strict host-key checking and batch authentication. Device operations require root, suitable Python 3.9+, TV Node.js 8+, Homebrew services,
 the webOS Luna tool, the developer-app directory and supported ARM32 remote input.

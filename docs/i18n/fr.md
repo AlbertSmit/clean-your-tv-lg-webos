@@ -129,3 +129,9 @@ Root uniquement : Réglages Home → Mises à jour du micrologiciel LG modifie l
 ## Candidat : récupération guidée sur ordinateur
 
 Ce comportement appartient au prochain candidat, pas à l’installateur publié v1.2.0. Après la vérification du TV, le diagnostic de connexion ou le retour à LG Home, une désinstallation No-root inachevée propose **Récupérer et réinstaller** pour le même TV et la même connexion. Confirmez explicitement la fin de la désinstallation (par défaut : Non), puis vérifiez les versions incluses avant l’installation. **Configurer ma TV** propose aussi ce parcours. Le retour à LG Home seul ne termine pas la désinstallation. En cas d’échec, utilisez **Enregistrer le rapport de diagnostic…** pour enregistrer le rapport de cette tentative et le joindre à votre signalement ; aucun terminal n’est nécessaire. Si le rapport n’a pas pu être créé, indiquez l’erreur affichée. Conservez les données de récupération ; les opérations échouées ou incertaines ne sont pas relancées automatiquement. Cela ne confirme pas encore la correction du problème G5 / firmware 43.21.71 (#65).
+
+## Prochain candidat : connexion et état de Home (issue #12)
+
+Préparation non publiée : les outils Android conservent le téléviseur, l’édition et le port SSH après un retour à l’écran d’accueil ; No-root utilise normalement 9922. Si les paramètres ne peuvent pas vérifier le contrôle Home, ils indiquent un état inconnu et masquent Changer Home jusqu’à une réponse valide. Cela ne signifie pas que Helper est arrêté et ne le redémarre pas. Ces changements ne figurent pas dans les paquets publiés de v1.2.0.
+
+Diagnostic Root du prochain candidat (#55) : après un échec d’installation, enregistrez le rapport de cette tentative. Il peut inclure des catégories d’erreurs de démarrage du service de récupération ; conservez les données de récupération et le pilote installé. La correction sur OLED Flex reste à confirmer.

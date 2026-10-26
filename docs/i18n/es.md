@@ -129,3 +129,9 @@ Solo Root: Ajustes de Home → Actualizaciones de firmware de LG cambia el ajust
 ## Candidato: recuperación guiada de escritorio
 
 Este comportamiento pertenece al próximo candidato, no al instalador publicado v1.2.0. Después de comprobar el estado, diagnosticar la conexión o volver a LG Home, una desinstalación No-root incompleta ofrece **Recuperar y reinstalar** para el mismo TV y conexión. Confirma expresamente terminar la desinstalación (opción predeterminada: No) y revisa las versiones incluidas antes de instalar. **Configurar mi TV** también ofrece este recorrido. Volver a LG Home por sí solo no termina la desinstalación. Si falla, usa **Guardar informe de diagnóstico…** para guardar el informe de ese intento fallido y adjúntalo a tu incidencia; no necesitas terminal. Si no se pudo crear, incluye el error visible. Conserva los datos de recuperación; las operaciones fallidas o de resultado incierto no se repiten automáticamente. Esto aún no confirma una solución para el G5 con firmware 43.21.71 (#65).
+
+## Próximo candidato: conexión y estado de Home (issue #12)
+
+Preparación sin publicar: Herramientas de Android conserva el televisor, la edición y el puerto SSH al volver a la pantalla inicial; No-root usa normalmente 9922. Si los ajustes no pueden comprobar el control de Home, muestran un estado desconocido y ocultan Cambiar Home hasta recibir una respuesta válida. Esto no significa que Helper se haya detenido ni lo reinicia. Estos cambios no están en los paquetes publicados de v1.2.0.
+
+Diagnóstico Root del próximo candidato (#55): tras fallar la instalación, guarde el informe de ese intento. Puede incluir categorías de errores de inicio del servicio de recuperación; conserve los datos de recuperación y el controlador instalado. La solución en OLED Flex aún no está confirmada.

@@ -25,6 +25,8 @@ def tracked_files(prefix):
                 'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
                 'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
                 'launcher': ['launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
+                             'launcher/fonts/outfit-300.ttf', 'launcher/fonts/outfit-400.ttf',
+                             'launcher/fonts/outfit-500.ttf', 'launcher/fonts/outfit-700.ttf',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
                              'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],

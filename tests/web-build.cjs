@@ -37,5 +37,6 @@ const acorn = require('acorn');
   assert(!/inset\s*:/.test(styled['index.html']), 'inline inset must be transformed');
   await assert.rejects(() => compile({'style.css': '.text{overflow-wrap:anywhere}'}), /anywhere/, 'unsupported values missed by doiuse must also fail');
   await assert.rejects(() => compile({'style.css': '.row{overflow:clip}'}), /css-overflow|overflow/, 'overflow exception must not allow newer values');
+  await assert.rejects(() => compile({'style.css': '@font-face{font-family:Outfit;src:url(outfit.ttf);font-weight:100 900}'}), /font-weight.*static/, 'variable font ranges must not reach legacy engines');
   console.log('PASS ES5 scripts and inline scripts, missing built-ins, physical CSS offsets, polyfill ordering and idempotent HTML');
 })().catch(error => {console.error(error); process.exitCode = 1;});

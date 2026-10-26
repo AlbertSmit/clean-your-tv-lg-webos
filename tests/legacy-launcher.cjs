@@ -74,6 +74,31 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
         }) + ';'}));
         await page.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
         await page.waitForFunction(() => document.querySelectorAll('#tiles .item').length === 8);
+        // Issue #68: verify the real downloaded face, not just computed CSS weight.
+        // SFNT tests separately ensure these are static outlines for old engines.
+        const fontSession = await page.context().newCDPSession(page);
+        await fontSession.send('DOM.enable');
+        await fontSession.send('CSS.enable');
+        for (const [weight, name] of [[300, 'Light'], [400, 'Regular'], [500, 'Medium'], [700, 'Bold']]) {
+          await page.evaluate(async weight => {
+            const probe = document.createElement('span');
+            probe.id = 'font-regression-probe';
+            probe.textContent = 'Home 0123456789';
+            probe.style.cssText = 'position:absolute;top:0;left:0;font-family:Outfit;font-size:48px;font-weight:' + weight;
+            document.body.appendChild(probe);
+            await document.fonts.load(weight + ' 48px Outfit', probe.textContent);
+            // Font loading resolves before the next layout/paint; CDP reads shaped glyphs.
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          }, weight);
+          const {root: doc} = await fontSession.send('DOM.getDocument');
+          const {nodeId} = await fontSession.send('DOM.querySelector', {nodeId: doc.nodeId, selector: '#font-regression-probe'});
+          const {fonts} = await fontSession.send('CSS.getPlatformFontsForNode', {nodeId});
+          assert.equal(fonts.length, 1, 'Outfit sample must not silently fall back');
+          assert.equal(fonts[0].postScriptName, 'Outfit-' + name, 'select the actual static face for weight ' + weight);
+          assert(fonts[0].isCustomFont && fonts[0].glyphCount > 0, 'render the packaged font');
+          await page.locator('#font-regression-probe').evaluate(probe => probe.remove());
+        }
+        await fontSession.detach();
         await page.waitForTimeout(900); // Wait for the entry/focus CSS transitions.
         const geometry = await page.evaluate(() => ['viewport', 'stage'].map(id => {
           const r = document.getElementById(id).getBoundingClientRect();

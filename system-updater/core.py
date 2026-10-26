@@ -173,15 +173,29 @@ class Manager:
         self.io.check_legacy()
         resuming_local=c['name']=='root-infrastructure' and e['intent']
         if not resuming_local and not self.io.routing_safe():raise ValueError('LG Home routing and input suspension unconfirmed')
-        e['intent']=True;c['phase']='rolling-back' if rollback else 'installing';self._save(tx)
+        # Rollback admission retains its original durable proof. The original
+        # install records intent only after the adapter's read-only preflight.
+        if rollback:e['intent']=True;c['phase']='rolling-back';self._save(tx)
+        intent_recorded=False
+        def intent():
+            nonlocal intent_recorded
+            if intent_recorded:raise ValueError('Duplicate installer intent callback')
+            if not rollback:
+                if e['intent'] and not resuming_local:raise ValueError('Original installer intent already exists')
+                e['intent']=True;c['phase']='installing';self._save(tx)
+            intent_recorded=True
         def submitted(value):
+            if not intent_recorded:raise ValueError('Installer intent callback required before submission')
             if c['name']=='root-infrastructure' and e['submitted']==value:return
             if e['submitted'] is not None or not isinstance(value,dict) or not value:raise ValueError('Invalid installer submission')
             e['submitted']=copy.deepcopy(value);self._save(tx)
         def terminal(value):
+            if not intent_recorded:raise ValueError('Installer intent callback required before terminal')
             if e['submitted'] is None or e['terminal'] is not None or not isinstance(value,dict) or type(value.get('success')) is not bool:raise ValueError('Invalid terminal proof')
             e['terminal']=copy.deepcopy(value);self._save(tx)
-        try:self.io.install(copy.deepcopy(selected),submitted,terminal)
+        try:
+            self.io.install(copy.deepcopy(selected),submitted,terminal,intent)
+            if not intent_recorded:raise ValueError('Installer intent callback was not invoked')
         except Exception as error:
             tx=self._load();e=tx['components'][index][leg]
             if e['terminal'] is None:return self._save(tx,'recovery-required',error)

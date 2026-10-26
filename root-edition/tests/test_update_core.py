@@ -147,6 +147,18 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual(profile(), self.m.restore_profile()['profile'])
         self.assertEqual(['install:1.1.0'], self.installs())
 
+    def test_current_writer_keeps_last_system_publication_without_changing_signed_candidate(self):
+        for previous in ({'owner':'system-update','id':'c'*32},{'owner':'root-update','id':'d'*32,'system':'c'*32}):
+            with self.subTest(previous=previous),tempfile.TemporaryDirectory() as temp:
+                self.io.prior['writer']=previous
+                store=Store(os.path.realpath(temp),uid=os.getuid());self.store=store;self.io.store=store;self.io.version='1.0.0';self.io.outcomes=[True];self.m=Manager(store,self.io)
+                original=copy.deepcopy(self.io.candidate);tx=self.start();self.advance('verifying');self.receipt(tx);self.advance('complete')
+                current=store.read('current')
+                self.assertEqual(current['writer'],{'owner':'root-update','id':tx['id'],'system':'c'*32})
+                self.assertEqual({k:v for k,v in current.items() if k!='writer'},original)
+                self.assertEqual(store.read('transaction')['candidate'],original)
+                self.assertEqual(self.io.candidate,original)
+
     def test_timely_confirmation_survives_late_poll_and_worker_restart(self):
         tx=self.start();self.advance('verifying')
         self.io.time+=119.9;self.receipt(tx)

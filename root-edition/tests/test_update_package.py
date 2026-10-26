@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import tarfile
@@ -43,9 +44,9 @@ class PackageTests(unittest.TestCase):
             root=Path(tmp).resolve()
             for name,data in files.items():
                 p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
-            verify_payload(root,hashes)
+            verify_payload(root,hashes,uid=os.getuid())
             (root/next(iter(files))).write_text('{}')
-            with self.assertRaises(ValueError):verify_payload(root,hashes)
+            with self.assertRaises(ValueError):verify_payload(root,hashes,uid=os.getuid())
 
     def test_rejects_foreign_payload_wrong_identity_and_hash(self):
         for extra in ({'etc/cron.d/unsafe':b'bad'}, {'usr/palm/applications/com.gathin.tvhome/index.html':b'bad'}):

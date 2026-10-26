@@ -144,3 +144,6 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 启动使用由收据标识归属的私有包装脚本，仅将已安装包的身份信息作为数据进行检查，不执行包内的启动脚本。包缺失或不安全时停止自动重新启用；独立恢复仍可恢复 LG Home。检查可能短暂地在私有目录暂存已验证文件，不会更改 Home 或产品。
 
 [候选版设置与恢复（英文）](../INSTALL.md#candidate-on-tv-root-installation) · [待完成实机验收（英文）](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+此源码候选版中，现有 Root 安装需要经过验证的恢复和重新设置，才能获得修正后的私有运行环境。仅更新 Installer 不会替换它。请保留恢复记录，并且只通过正常设置流程或设置页面启用 Home。

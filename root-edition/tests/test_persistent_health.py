@@ -76,7 +76,7 @@ import os,sys,time
 from pathlib import Path
 import persistent_health as h, intent_runtime, device_adapter as d
 d.STATE=Path(sys.argv[1]);d.EXPECTED_UID=os.getuid();h.ROOT=d.STATE/'health'
-d.home_present=lambda:True
+d.home_present=lambda **kwargs:True
 intent_runtime.boot_identity=lambda:'boot-a'
 """
    pub=setup+"\nseq=0\nwhile True:\n seq+=1;h.publish('tx',seq)\n if seq==1:print('READY',flush=True)\n time.sleep(.1)\n"

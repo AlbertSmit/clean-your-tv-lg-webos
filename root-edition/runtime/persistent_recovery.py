@@ -150,7 +150,7 @@ class Coordinator:
         # makes LG Home the first app on the next boot. Boot recovery still
         # restores the old transaction before arming a fresh guarded route.
         with self.locked(expected):
-            if not d.home_present():
+            if not d.home_present(purpose='live'):
                 intent,_=self.event(expected,'fault');self._recover(intent);return True
             if expected['phase'] not in ('active','stopping') or not expected['enabled']:
                 raise ValueError('Shutdown cannot promote unconfirmed intent')
@@ -270,7 +270,7 @@ def bound_exit(transaction, reason=None):
             c.exit(intent, reason='fault')
             raise
     from shutdown_state import stopping
-    shutdown = d.home_present() and reason != 'escape' and intent['enabled'] and (
+    shutdown = d.home_present(purpose='live') and reason != 'escape' and intent['enabled'] and (
         intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))
     print(json.dumps(dict(event='bound-exit-decision',transaction=transaction,reason=reason,
                          phase=intent['phase'],enabled=intent['enabled'],shutdown=shutdown)),flush=True)

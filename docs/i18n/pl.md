@@ -161,3 +161,6 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 [Instalacja i odzyskiwanie (angielski)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Oczekujące testy TV (angielski)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego odzyskiwania i nowej konfiguracji, aby otrzymać poprawione prywatne środowisko. Aktualizacja samego Installer go nie zastępuje. Zachowaj dane odzyskiwania i włącz Home tylko w zwykłej konfiguracji lub ustawieniach.

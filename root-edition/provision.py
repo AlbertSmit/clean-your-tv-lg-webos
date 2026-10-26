@@ -111,7 +111,7 @@ def manifest():
     if b'/var/lib/clean-your-tv-root/runtime/cli.py boot' not in secure(callback):
         raise ValueError('Unexpected boot callback')
     verify_binding(STATE)
-    binding = [STATE/name for name in ('python_binding.py','python_boot.js','package_data.py','startup_guard.py','python-launcher','python-runtime.json') if os.path.lexists(STATE/name)]
+    binding = [STATE/name for name in ('python_binding.py','python_boot.js','package_data.py','package_identity.py','startup_guard.py','updater/store.py','updater/package.py','python-launcher','python-runtime.json') if os.path.lexists(STATE/name)]
     paths = binding + [RUNNER] + [PRIVATE_SERVICE/name for name in PRIVATE_FILES] + sorted(RUNTIME.glob('*.py'))
     if RUNTIME/'cli.py' not in paths: raise ValueError('Missing runtime')
     return {'version':1,'mode':'recovery-only','boot_callback':str(callback),

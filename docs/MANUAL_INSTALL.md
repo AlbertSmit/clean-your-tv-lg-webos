@@ -309,12 +309,12 @@ From the source root; this operation does not connect to the TV:
 ```bash
 mkdir -p build
 npm ci --ignore-scripts --no-audit --no-fund
-python3 root-edition/build.py --output build/root-candidate --version 0.3.0
+python3 root-edition/build.py --output build/root-candidate --version 0.4.0
 ```
 
 The parent directory must exist, and `build/root-candidate` must be **new**, with
 no symlinks along its path. Choose a different name for the next build.
-This source candidate bundle contains `com.cleanyourtv.root.preview_0.3.0_all.ipk`, `setup.py`,
+This unreleased source candidate bundle contains `com.cleanyourtv.root.preview_0.4.0_all.ipk`, `setup.py`,
 `deploy.py`, `runtime/`, `bundle.json`, `release.json`, `SHA256SUMS` and the
 other required Python support files. Retain the entire directory. Installing
 the IPK alone through `ares-install` or another manager does not provision recovery.

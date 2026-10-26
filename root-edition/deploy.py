@@ -20,7 +20,7 @@ RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'devic
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',
                  'boot_gate.py', 'shutdown_state.py', 'persistent_health.py', 'persistent_lease.py', 'persistent_store.py', 'persistent_recovery.py', 'intent_runtime.py')
-SUPPORT_FILES = ('installation.py', 'updater/store.py', 'setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py','package_data.py','startup_guard.py', 'python_binding.py', 'python_boot.js')
+SUPPORT_FILES = ('installation.py', 'updater/store.py', 'updater/package.py', 'setup.py', 'deploy.py', 'provision.py', 'observed_install.py', 'installer_status.py', 'personalize.py', 'system_permissions.py', 'activity.py', 'startup_hook.py','package_data.py','package_identity.py','startup_guard.py', 'python_binding.py', 'python_boot.js')
 
 
 def require_device():
@@ -103,7 +103,8 @@ def verify_payload(release):
     for name, digest in files.items():
         if not (name.startswith(prefixes) or name == package_info):
             raise ValueError('Unexpected installed payload path')
-        if hashlib.sha256(checked_file(INSTALLED, name)).hexdigest() != digest:
+        from package_data import read_verified
+        if hashlib.sha256(read_verified(INSTALLED/name,sha256=digest,limit=32*1024*1024,installed=INSTALLED)).hexdigest() != digest:
             raise ValueError('Installed payload hash mismatch: ' + name)
 
 

@@ -1,7 +1,7 @@
 /* Synthetic TV filesystem/process fixture; never touches a real runtime slot. */
 'use strict';
 var assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),vm=require('vm'),crypto=require('crypto');
-var runtimeSource=fs.readFileSync(path.join(__dirname,'../runtime.js'),'utf8');
+var runtimeSource=fs.readFileSync(process.env.CYTV_RUNTIME_SOURCE||path.join(__dirname,'../runtime.js'),'utf8');
 var DRIVER_CODE='import support\nprint(support.VALUE)\n',SUPPORT_CODE='VALUE = "ORIGINAL_IMPORT"\n';
 var PIN='4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea';
 function remove(folder){if(!fs.existsSync(folder))return;fs.readdirSync(folder).forEach(function(entry){var full=path.join(folder,entry);if(fs.lstatSync(full).isDirectory())remove(full);else fs.unlinkSync(full);});fs.rmdirSync(folder);}
@@ -27,7 +27,7 @@ function fixture(shared){
     fakefs.fstatSync=function(fd){var st=fs.fstatSync(fd);st.uid=0;return st;};
     fakefs.realpathSync=function(name){return (name==='/bin/sh'||name==='/usr/bin/python3')?name:fs.realpathSync(name);};
     var elf=Buffer.alloc(40);elf.write('7f454c46',0,'hex');elf[4]=1;elf[5]=1;elf.writeUInt16LE(40,18);elf[39]=5;
-    fakefs.openSync=function(name,flags){return name==='/bin/sh'?999:fs.openSync(name,flags);};
+    fakefs.openSync=function(name,flags){return name==='/bin/sh'?999:fs.openSync.apply(fs,arguments);};
     fakefs.readSync=function(fd,buffer){if(fd===999){elf.copy(buffer);return 40;}return fs.readSync.apply(fs,arguments);};
     fakefs.closeSync=function(fd){if(fd!==999)fs.closeSync(fd);};
     function exec(executable,args,options,callback){
@@ -49,7 +49,7 @@ function fixture(shared){
     var sandbox={require:function(name){if(name==='fs')return fakefs;if(name==='child_process')return {execFile:exec};return require(name);},process:{geteuid:function(){return 0;},platform:platform,arch:arch},Promise:Promise,Buffer:Buffer,module:{exports:{}}};
     var originalPin=digest(fs.readFileSync(path.join(root,'manifest.json')));
     vm.runInNewContext(runtimeSource.replace(/'\/media([^']*)'/g,function(all,suffix){return JSON.stringify(base+'/media'+suffix);}).replace("'/var/lib/clean-your-tv-python'",JSON.stringify(runtimeBase)).replace("'/var/lib/clean-your-tv-installer'",JSON.stringify(execBase)),sandbox);
-    return {root:root,manifest:manifest,save:save,calls:calls,api:{inspect:function(root,recovery){return sandbox.module.exports.inspect(root,recovery,originalPin);},prepare:function(root){return sandbox.module.exports.prepare(root,originalPin);},stage:sandbox.module.exports.stage},base:base,runtimeBase:runtimeBase,execBase:execBase,setMachine:function(value){machine=value;},setSystem:function(){system=true;},setSpace:function(){space=false;},setArch:function(){sandbox.process.arch='x64';},badOwner:function(name){badOwner=name;},clean:function(){remove(base);}};
+    return {root:root,manifest:manifest,save:save,calls:calls,api:{inspect:function(root,recovery){return sandbox.module.exports.inspect(root,recovery,originalPin);},prepare:function(root){return sandbox.module.exports.prepare(root,originalPin);},stage:sandbox.module.exports.stage},base:base,runtimeBase:runtimeBase,execBase:execBase,setMachine:function(value){machine=value;},setSystem:function(value){system=value!==false;},setSpace:function(){space=false;},setArch:function(){sandbox.process.arch='x64';},badOwner:function(name){badOwner=name;},clean:function(){remove(base);}};
 }
 async function rejection(change){var f=fixture();try{change(f);await rejects(f.api.prepare(f.root));assert.strictEqual(f.calls.filter(function(c){return c.args.join(' ').indexOf('mktemp -d')>=0;}).length,0);assert(f.calls.every(function(c){return c.executable==='/usr/bin/python3'||c.executable==='/bin/sh';}),'preflight failure must not execute a candidate');}finally{f.clean();}}
 (async function(){
@@ -59,7 +59,8 @@ async function rejection(change){var f=fixture();try{change(f);await rejects(f.a
     await rejection(function(f){f.setSystem();f.setMachine('armv6l');});
     for(var machine of ['armv7l','armv8l','aarch64']){var supported=fixture();try{supported.setMachine(machine);assert.strictEqual((await supported.api.inspect(supported.root)).privateRuntimeRequired,true);assert(!fs.existsSync(supported.runtimeBase));}finally{supported.clean();}}
     var native64=fixture();try{native64.setMachine('aarch64');native64.setSystem();assert.strictEqual((await native64.api.inspect(native64.root)).python,'/usr/bin/python3');assert(!fs.existsSync(native64.runtimeBase));}finally{native64.clean();}
-    var shared=fixture(true);try{shared.setSystem();assert.equal((await shared.api.inspect(shared.root)).python,'/usr/bin/python3');fs.chmodSync(path.dirname(shared.root),511);await rejects(shared.api.inspect(shared.root));}finally{shared.clean();}
+    var cold=fixture(true);try{cold.setSystem();function writable(folder){fs.chmodSync(folder,511);fs.readdirSync(folder).forEach(function(entry){var full=path.join(folder,entry);if(fs.statSync(full).isDirectory())writable(full);else fs.chmodSync(full,511);});}writable(path.dirname(cold.root));var data=await cold.api.inspect(cold.root);var privateCopy=await cold.api.stage(data,true);assert.equal(fs.statSync(privateCopy.driver).mode&511,384);assert.equal(fs.readFileSync(privateCopy.driver,'utf8'),DRIVER_CODE);await privateCopy.cleanup();cold.setSystem(false);assert.equal(await cold.api.prepare(cold.root),path.join(cold.runtimeBase,PIN,'bin/python3.13'));fs.writeFileSync(path.join(cold.root,'root-updater/install_driver.py'),'X'.repeat(DRIVER_CODE.length));await rejects(cold.api.inspect(cold.root));}finally{cold.clean();}
+    var shared=fixture(true);try{shared.setSystem();assert.equal((await shared.api.inspect(shared.root)).python,'/usr/bin/python3');fs.chmodSync(path.dirname(shared.root),511);assert.equal((await shared.api.inspect(shared.root)).python,'/usr/bin/python3');}finally{shared.clean();}
     for(var boundary of ['media','media/developer','media/developer/apps','media/developer/apps/usr','media/developer/apps/usr/palm','media/developer/apps/usr/palm/applications','media/developer/apps/usr/palm/applications/com.cleanyourtv.installer']){var foreign=fixture(true);try{foreign.badOwner(path.join(foreign.base,boundary));await rejects(foreign.api.inspect(foreign.root));}finally{foreign.clean();}}
     for(var linkedBoundary of ['media','media/developer','media/developer/apps','media/developer/apps/usr','media/developer/apps/usr/palm','media/developer/apps/usr/palm/applications','media/developer/apps/usr/palm/applications/com.cleanyourtv.installer']){var linked=fixture(true);try{var boundaryPath=path.join(linked.base,linkedBoundary);fs.renameSync(boundaryPath,boundaryPath+'-saved');fs.symlinkSync(path.basename(boundaryPath)+'-saved',boundaryPath);await rejects(linked.api.inspect(linked.root));}finally{linked.clean();}}
     var reanchored=fixture();try{reanchored.setSystem();reanchored.manifest.files['root-updater/install_driver.py']={sha256:digest('SUBSTITUTE_CODE'),size:15};fs.writeFileSync(path.join(reanchored.root,'root-updater/install_driver.py'),'SUBSTITUTE_CODE');reanchored.save();await rejects(reanchored.api.inspect(reanchored.root));}finally{reanchored.clean();}

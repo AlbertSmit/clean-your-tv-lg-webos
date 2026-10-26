@@ -82,9 +82,14 @@ def safe_bytes(path, limit=32*1024*1024, uid=None):
         return raw
 
 
-def verify_payload(root, hashes):
+def verify_payload(root, hashes, uid=0):
     for name, digest in hashes.items():
         path = PurePosixPath(name)
         if path.is_absolute() or '..' in path.parts or str(path) != name: raise ValueError('Unsafe payload name')
-        if hashlib.sha256(safe_bytes(Path(root)/name)).hexdigest() != digest:
+        from package_data import OWNERS, read_verified
+        owner=path.parts[3] if len(path.parts)>=5 and path.parts[:2]==('usr','palm') else None
+        if owner in OWNERS or owner in {o+'.service' for o in OWNERS}:
+            raw=read_verified(Path(root)/name,sha256=digest,limit=32*1024*1024,uid=uid,installed=root)
+        else:raw=safe_bytes(Path(root)/name)
+        if hashlib.sha256(raw).hexdigest() != digest:
             raise ValueError('Installed payload mismatch: '+name)

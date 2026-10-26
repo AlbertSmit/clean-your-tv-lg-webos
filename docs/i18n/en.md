@@ -167,3 +167,6 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 [Candidate setup and recovery (English)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Pending physical acceptance (English)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.

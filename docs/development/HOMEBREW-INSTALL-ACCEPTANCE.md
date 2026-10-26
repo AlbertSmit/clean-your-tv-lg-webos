@@ -138,7 +138,7 @@ reuses their recovery contracts rather than adding a competing updater.
 
 | Persistent scope | Contents and ownership/lifetime |
 | --- | --- |
-| `/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/` | Installer web assets, fixed `bootstrap.js`, verified `payload/` (Root, Root Updater, supervisor, baseline, runtime archive/manifests/licenses). Package-owned regular files, 0644 or explicitly executable 0755; fixed root-owned real platform ancestors may be writable; the own app/payload leaf and files remain nonwritable by group/others. This is a DATA policy, not execution authority. No separate Installer LS2 service. |
+| `/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/` | Installer web assets, fixed `bootstrap.js`, verified `payload/` (Root, Root Updater, supervisor, baseline, runtime archive/manifests/licenses). Archive modes remain 0644 or explicitly executable 0755. Observed SDK 0777 own directories/files are accepted only as DATA against the original outer manifest and per-file SHA256; own objects remain root-owned, real and single-link. This is a DATA policy, not execution authority. No separate Installer LS2 service. |
 | `/media/developer/apps/usr/palm/packages/com.cleanyourtv.installer/packageinfo.json` | Package metadata owned/removed by the package manager. Removing Installer does not request product removal. |
 | `/var/lib/clean-your-tv-installation/` | Shared root-owned 0700 store; 0600 `operation.json` durable owner/lease, `request-<id>.json`, `submission-<id>.json`, `removal-<lease>.json`, `ownership.lock` product mutex and `worker.lock` submission/store mutex. Exact journals remain authoritative across clients. |
 | `/var/lib/clean-your-tv-installation/request-<id>/` | Original checked private worker/payload snapshot; 0700 directories, 0600 files and `worker.log`. Worker lifetime is independent of Installer UI. Retained for checked continuation and diagnosis, not deleted to reset an operation. |
@@ -153,8 +153,10 @@ reuses their recovery contracts rather than adding a competing updater.
 
 The package-DATA policy additionally permits observed metadata UID 501 only for
 the exact real shared `/media/developer/apps/usr/palm/packages` metadata container. Its own package
-leaves and `packageinfo.json` stay root-owned and nonwritable by group/others; all
-other application/private owner checks and fd/path/inode bindings remain strict.
+leaves and `packageinfo.json` stay root-owned. Ordinary observed SDK 0777 is
+accepted only by digest-required DATA reads with independent private expected
+bytes; unanchored reads and every private path remain nonwritable by group/others.
+Other owner checks and fd/path/inode bindings remain strict.
 Other foreign container owners are refused. This is a metadata-reading exception,
 not permission to execute shared code or change shared ownership/modes.
 
@@ -176,8 +178,11 @@ existing package/profile storage; changing installation clients does not reset t
 | `52-clean-your-tv-system-updater` | `/var/lib/clean-your-tv-system-updater/code/startup_guard.py` |
 
 Each wrapper invokes its private `python_boot.js` binding gate, then validates
-owner package metadata as DATA before marking normal Root boot or starting its
-updater. No shared package startup bytes execute. V3 receipts bind exact wrapper
+owner package metadata against its phase-selected private inventory before marking
+normal Root boot or starting its updater. The Root admission action writes the
+current-kernel marker and returns while the transient HBC failsafe may still be
+set; it never waits for that flag or enables intent. Later rearm retains the
+marker, cleared flag, current identity, profile, guardian and intent gates. No shared package startup bytes execute. V3 receipts bind exact wrapper
 hash/path/owner; exact v1 regular and v2 link receipts retain prior proof during
 migration. An exact owned link can be removed after its target is replaced or
 missing. Unknown hook/receipt bytes remain collisions. Package loss stops rearming;
@@ -191,6 +196,50 @@ manifest cannot authorize replacement code. Runtime preparation separately stage
 the authenticated archive privately before extraction/verification. Never chmod
 shared platform directories; new package archives explicitly secure only their
 own app/service/package leaves.
+
+### Cold-boot DATA authority correction
+
+Observed cold-boot SDK mode changes are a measured layout, not a firmware-wide
+claim about which component changed permissions. No chmod/chown repair is used.
+Root selects its private current descriptor and checked original cached IPK.
+Standalone and System publications tag that existing descriptor with their
+transaction id; standalone tags retain the last System publication id across
+successive updates. These fields are private provenance, not signed/public
+manifest bytes or a second current record. A merely captured System baseline
+cannot override a later standalone publication. A captured prior archive may
+have different control/tar bytes; its independently checked private full payload
+inventory must equal the committed original before that prior can explain an
+active publication window. Installed bytes never choose between anchors. The explicit initial provisioning
+reader uses the original private bundle/release pin and terminal; normal startup
+never falls back to that bootstrap release.
+
+System setup retains its independently pinned own IPK before submission, then
+publishes its own inventory only after the original terminal and full installed
+readback. Its product baseline does not prove the supervisor's own package.
+Missing legacy self proof inhibits automatic startup; explicit continuation may
+retain a supplied original IPK only against the existing original bootstrap pin.
+System completion also refreshes Root Updater's existing original-file/mode
+inventory. Root baseline capture verifies against private originals and keeps
+archive modes rather than learning modes or hashes from writable SDK files.
+
+Health selects only the phase-authorized candidate after actual terminal success,
+or prior after proved rollback. Unknown submissions remain unknown and cannot
+be replayed. A known owned replacement window may run only its original private
+recovery worker; it does not establish ordinary presence or normal rearm.
+Existing live input health keeps the exact committed prior through untouched
+preparation/download and the pre-ticket suspension window. Normal rearm remains
+current-only; the actual suspend captures active intent before disabling it. All
+required owners are checked before a touched transition is deferred, so another
+owner's absence or integrity failure stops the worker. Legitimate sticky shared
+ancestors remain readable; own SDK special bits, shared setid and private modes
+stay strict. Unchanged installed metadata is reread on every two-second observation; only
+expected inventories are cached in process against private anchor/cache identity.
+
+These private helper/inventory changes require checked removal/rebootstrap or
+an explicitly authenticated original-source continuation. Do not patch retained
+private code/receipts or clear disabled/emergency intent. Installation and
+activation remain separate. New exact artifacts still require supervised cold
+boot, standby and controls acceptance; earlier hardware records stay historical.
 
 ### Existing LS2 permissions and registrations reused
 

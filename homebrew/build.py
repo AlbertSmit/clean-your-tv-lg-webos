@@ -32,9 +32,12 @@ def build_payload(root_bundle, root_updater_bundle, supervisor_bundle, runtime_a
         if info.get('id')!=app: raise ValueError('Component identity mismatch')
         versions[key]=info['version']
     # Shared protocol/binding sources must come from the same component baseline.
-    for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','package_data.py','startup_guard.py','python_binding.py','python_boot.js'):
+    for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','package_data.py','package_identity.py','startup_guard.py','python_binding.py','python_boot.js'):
         hashes={components[key].get(name,{}).get('sha256') for key in inputs}
         if len(hashes)!=1 or None in hashes: raise ValueError('Mismatched component baseline: '+name)
+    for name in ('store.py','package.py'):
+        hashes={components[key].get(('system_updater/support/' if key=='supervisor' else 'updater/')+name,{}).get('sha256') for key in inputs}
+        if len(hashes)!=1 or None in hashes: raise ValueError('Mismatched component parser baseline: '+name)
     # Reuse each component's authoritative inventory contract, including required files.
     project=Path(__file__).resolve().parents[1]
     sys.path.insert(0,str(project/'root-edition'))

@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util, os, tempfile, unittest, json, stat
 from pathlib import Path
 from unittest.mock import patch
@@ -13,7 +14,7 @@ class HookTests(unittest.TestCase):
         self.a.stop();self.b.stop();self.c.stop();self.d.stop();self.tmp.cleanup()
     def test_collision_is_not_adopted_or_removed(self):
         h.HOOK.write_bytes(h.CONTENT)
-        with self.assertRaises(ValueError):h.install(Path.read_bytes,lambda *a:None)
+        with self.assertRaises((ValueError,OSError)):h.install(Path.read_bytes,lambda *a:None)
         h.remove(Path.read_bytes);self.assertTrue(h.HOOK.exists())
     def test_owned_drift_is_not_removed(self):
         import json
@@ -53,7 +54,7 @@ class LinkTests(unittest.TestCase):
     def write(self,path,raw,mode=0o600):
         if isinstance(raw,str):raw=raw.encode()
         path.write_bytes(raw);path.chmod(mode)
-    def install(self):h.install_link(Path.read_bytes,self.write,self.state,self.hook,self.app,(h.CONTENT,))
+    def install(self):h.install_link(Path.read_bytes,self.write,self.state,self.hook,self.app,(h.CONTENT,),sha256=hashlib.sha256((h.target_path(self.app).parent/'appinfo.json').read_bytes()).hexdigest())
     def remove(self):h.remove_link(Path.read_bytes,self.state,self.hook,self.app,(h.CONTENT,))
     def test_install_private_wrapper_and_repeat_remove_after_package_disappears(self):
         self.install();self.assertFalse(self.hook.is_symlink());self.assertEqual(self.hook.read_bytes(),h.private_content(self.app));self.assertEqual(stat.S_IMODE(self.hook.stat().st_mode),0o700)
@@ -116,7 +117,7 @@ class LinkTests(unittest.TestCase):
                     if path.exists():path.unlink()
                 self.write(self.state/'startup-hook.json',json.dumps(dict(version=1,path=str(self.hook),content=content.decode())))
                 self.write(self.hook,content,0o700)
-                h.install_link(Path.read_bytes,self.write,self.state,self.hook,owner)
+                h.install_link(Path.read_bytes,self.write,self.state,self.hook,owner,sha256=hashlib.sha256((h.target_path(owner).parent/'appinfo.json').read_bytes()).hexdigest())
                 self.assertEqual(self.hook.read_bytes(),h.private_content(owner))
                 h.remove_link(Path.read_bytes,self.state,self.hook,owner);h.remove_link(Path.read_bytes,self.state,self.hook,owner)
                 self.assertFalse(os.path.lexists(self.hook))

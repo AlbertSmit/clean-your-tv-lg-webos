@@ -246,16 +246,15 @@ class CurrentByteReadbackTests(unittest.TestCase):
         startup=next(n for n in files if n.endswith('startup.sh'))
         self.assertEqual((installed/startup).stat().st_mode & 0o777,0o755)
 
-    def test_byte_or_executable_mode_drift_refuses_current_contract(self):
+    def test_sdk_mode_drift_is_data_but_changed_bytes_refuse_current_contract(self):
         from unittest.mock import patch
         import install_device
-        for change in ('bytes','mode'):
-            root,updater,installed,_,files=self.fixture()
-            startup=installed/next(n for n in files if n.endswith('startup.sh'))
-            if change=='bytes':startup.write_bytes(b'changed')
-            else:startup.chmod(0o644)
-            with self.subTest(change=change),patch('updater.device.Device.integrity',return_value={}),self.assertRaises(ValueError):
-                install_device.current_root(root,updater,installed,uid=os.getuid())
+        root,updater,installed,_,files=self.fixture()
+        for path in installed.rglob('*'):path.chmod(0o777)
+        with patch('updater.device.Device.integrity',return_value={}):
+            self.assertTrue(install_device.current_root(root,updater,installed,uid=os.getuid())['local'])
+            startup=installed/next(n for n in files if n.endswith('startup.sh'));startup.write_bytes(b'changed')
+            with self.assertRaises(ValueError):install_device.current_root(root,updater,installed,uid=os.getuid())
 
     def test_invalid_saved_profile_is_recovery_and_never_rewritten(self):
         from unittest.mock import patch

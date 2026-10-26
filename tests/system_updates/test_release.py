@@ -24,9 +24,10 @@ class ReleaseTests(unittest.TestCase):
                 target={'home':'launcher.ipk','helper':'helper.ipk','updater':'updater.ipk','root':'root/root.ipk','root-updater':'root-updater/root-updater.ipk'}[name]
                 (payload/target).write_bytes(raw)
             (payload/'root/python_binding.py').write_bytes(b'fixed binding');(payload/'root/python_boot.js').write_bytes(b'fixed boot');(payload/'root/runtime').mkdir();(payload/'root/runtime/cli.py').write_bytes(b'fixed runtime')
-            for name in ('package_data.py','startup_guard.py'):(payload/'root'/name).write_bytes(b'fixed '+name.encode())
+            for name in ('package_data.py','package_identity.py','updater/store.py','updater/package.py','startup_guard.py'):
+                target=payload/'root'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(b'fixed '+name.encode())
             (payload/'root-updater/service.js').write_bytes(b'fixed updater')
-            (payload/'root/bundle.json').write_text(json.dumps({'package':'root.ipk','files':{'runtime/cli.py':build.digest(b'fixed runtime'),'python_binding.py':build.digest(b'fixed binding'),'python_boot.js':build.digest(b'fixed boot'),**{name:build.digest(b'fixed '+name.encode()) for name in ('package_data.py','startup_guard.py')}}}))
+            (payload/'root/bundle.json').write_text(json.dumps({'package':'root.ipk','files':{'runtime/cli.py':build.digest(b'fixed runtime'),'python_binding.py':build.digest(b'fixed binding'),'python_boot.js':build.digest(b'fixed boot'),**{name:build.digest(b'fixed '+name.encode()) for name in ('package_data.py','package_identity.py','updater/store.py','updater/package.py','startup_guard.py')}}}))
             (payload/'root-updater/bundle.json').write_text(json.dumps({'files':{'service.js':build.digest(b'fixed updater'),'root-updater.ipk':build.digest((payload/'root-updater/root-updater.ipk').read_bytes())}}))
             output=path/'release';manifests=build.prepare_release(payload,output,'v1.0.3','Changes')
             files={p.name:p.read_bytes() for p in output.iterdir()}

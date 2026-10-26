@@ -93,10 +93,10 @@ class RuntimeArchiveTests(unittest.TestCase):
                 folder=root/str(index);folder.mkdir();inputs.append(folder)
                 raw=package.ipk(identity,'0.1.0',{'usr/palm/applications/'+identity+'/appinfo.json':json.dumps({'id':identity,'version':'0.1.0'}).encode()})
                 files={'component.ipk':raw}
-                for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','package_data.py','startup_guard.py','python_binding.py','python_boot.js'): files[name]=b'same'
+                for name in ('installation.py','observed_install.py','installer_status.py','startup_hook.py','package_data.py','package_identity.py','startup_guard.py','python_binding.py','python_boot.js'): files[name]=b'same'
                 for name,data in files.items(): (folder/name).write_bytes(data)
                 (folder/'bundle.json').write_text(json.dumps({'files':{n:hashlib.sha256(b).hexdigest() for n,b in files.items()}}))
-            for name in ('python_binding.py','package_data.py','startup_guard.py'):
+            for name in ('python_binding.py','package_data.py','package_identity.py','startup_guard.py'):
                 (inputs[1]/name).write_bytes(b'different')
                 manifest=json.loads((inputs[1]/'bundle.json').read_text());manifest['files'][name]=hashlib.sha256(b'different').hexdigest();(inputs[1]/'bundle.json').write_text(json.dumps(manifest))
                 with self.subTest(name=name),self.assertRaisesRegex(ValueError,'Mismatched component baseline'):build_payload(*inputs,root/'absent-runtime',root/'output')

@@ -37,6 +37,8 @@ Home to ekran aplikacji. Home Helper sprawia, że przycisk Home otwiera ten ekra
 
 Po instalacji naciśnij Home, aby sprawdzić działanie. Jeśli otworzy się LG Home, otwórz Home Helper z listy aplikacji TV. Trzy krótkie naciśnięcia Home w ciągu dwóch sekund przywracają LG Home. Aby wznowić sterowanie Home, otwórz Home Helper, wybierz Uruchom Helper i potwierdź. Zapisany wybór ekranu Home zostaje zachowany.
 
+CYTV na komputerze pokazuje przygotowanie krok po kroku. Szczegóły otwierają dziennik operacji. Obrazy LG można powiększyć; użyj kodu ze swojego TV.
+
 [LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Opcjonalny Python dla Root

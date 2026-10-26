@@ -37,6 +37,8 @@ Home आपके ऐप की स्क्रीन है। Home Helper स�
 
 इंस्टॉल होने पर Home दबाकर देखें। LG Home खुले तो TV की ऐप सूची से Home Helper खोलें। दो सेकंड में Home तीन बार छोटा दबाने से LG Home खुलता है। Home नियंत्रण फिर शुरू करने के लिए Home Helper खोलें, Helper शुरू करें चुनें और पुष्टि करें। चुनी हुई Home स्क्रीन बनी रहती है।
 
+कंप्यूटर पर CYTV तैयारी एक-एक चरण में दिखाता है। विवरण से कार्य का लॉग खुलता है। LG की उदाहरण तस्वीरें बड़ी कर सकते हैं; कोड अपने TV से लें।
+
 [LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Root के लिए वैकल्पिक Python

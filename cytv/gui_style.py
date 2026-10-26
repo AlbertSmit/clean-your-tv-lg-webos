@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QWidget, QComboBox, QRadioButton
 # Approved B1 marks retain their original colours. The working UI uses quiet
 # warm charcoal surfaces and restrained controls rather than bright brand fills.
 STYLE = '''
-QMainWindow, QMessageBox { background: #1d1c1a; }
+QMainWindow, QMessageBox, QDialog { background: #1d1c1a; }
 QWidget { font-family: "Segoe UI", "Noto Sans", "Helvetica Neue"; font-size: 16px; color: #f3ede3; }
 QWidget#sidebar { background: #171614; }
 QLabel { background: transparent; }
@@ -43,6 +43,8 @@ QPushButton[primary="true"]:focus { border-color: #fff8eb; }
 QPushButton:disabled { background: #272521; color: #a79a88; border-color: #51483e; }
 QPushButton#maintenanceToggle { background: transparent; border: none; color: #d6c5ae; text-align: left; padding: 6px 0; }
 QPushButton#maintenanceToggle:focus { border: 2px solid #d6c5ae; padding: 4px; }
+QPushButton#detailsToggle { background: transparent; border: none; text-align: left; padding: 4px 0; font-size: 14px; color: #d6c5ae; }
+QPushButton#detailsToggle:focus { border: 2px solid #d6c5ae; padding: 2px; }
 QPushButton#close { background: transparent; padding: 6px 16px; }
 QLineEdit, QComboBox { background: #24221e; color: #f3ede3; border: 1px solid #8e7b68; border-radius: 7px; padding: 10px 12px; min-height: 22px; selection-background-color: #51483e; }
 QComboBox { padding-right: 30px; }

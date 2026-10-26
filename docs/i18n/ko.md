@@ -37,6 +37,8 @@ Home은 앱 화면입니다. Home Helper를 사용하면 Home 버튼으로 이 �
 
 설치 후 Home 버튼을 눌러 보세요. LG Home이 열리면 TV 앱 목록에서 Home Helper를 여세요. 2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다.
 
+컴퓨터의 CYTV는 준비 과정을 한 단계씩 보여 줍니다. 세부 정보에서 작업 로그를 볼 수 있습니다. LG 예시 이미지는 확대할 수 있으며 코드는 자신의 TV에 표시된 것을 사용하세요.
+
 [LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Root용 선택적 Python 런타임

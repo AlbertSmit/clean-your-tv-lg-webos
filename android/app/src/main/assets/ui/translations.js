@@ -144,7 +144,9 @@ const words = {
     "pairingHelp": "Сопряжение — отдельный шаг: когда телевизор покажет запрос, разрешите подключение CYTV с пульта.",
     "homeHelperHelp": "Home — экран с вашими приложениями. Home Helper нужен, чтобы открывать его кнопкой Home на пульте.",
     "tryHomeHelp": "После установки нажмите Home для проверки. Если открылся LG Home, запустите Home Helper из списка приложений телевизора.",
-    "resumeHomeHelp": "Трижды коротко нажмите Home за две секунды, чтобы вернуться в LG Home. Для возобновления откройте Home Helper, выберите «Запустить Helper» и подтвердите. Сохранённый выбор главного экрана не изменится."
+    "resumeHomeHelp": "Трижды коротко нажмите Home за две секунды, чтобы вернуться в LG Home. Для возобновления откройте Home Helper, выберите «Запустить Helper» и подтвердите. Сохранённый выбор главного экрана не изменится.",
+    "guideExample": "Пример экрана LG",
+    "guideNote": "Пример экрана LG. На вашем телевизоре он может выглядеть иначе. Вводите код со своего ТВ."
   },
   "en": {
     "detect": "Check connection",
@@ -275,7 +277,9 @@ const words = {
     "pairingHelp": "Pairing is a separate step: when the TV asks, approve CYTV with your remote.",
     "homeHelperHelp": "Home is your app screen. Home Helper makes the Home button open it.",
     "tryHomeHelp": "After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps.",
-    "resumeHomeHelp": "Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept."
+    "resumeHomeHelp": "Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.",
+    "guideExample": "Example from LG",
+    "guideNote": "Example from LG. The screen may look different on your TV. Use the code shown on your own TV."
   },
   "de": {
     "detect": "Verbindung prüfen",
@@ -406,7 +410,9 @@ const words = {
     "pairingHelp": "Die Kopplung ist ein eigener Schritt: Bestätigen Sie CYTV mit der Fernbedienung, wenn der TV danach fragt.",
     "homeHelperHelp": "Home ist Ihr App-Bildschirm. Home Helper sorgt dafür, dass die Home-Taste ihn öffnet.",
     "tryHomeHelp": "Drücken Sie nach der Installation zum Testen Home. Falls LG Home erscheint, öffnen Sie Home Helper in der App-Liste des TV.",
-    "resumeHomeHelp": "Drei kurze Home-Tastendrücke in zwei Sekunden öffnen LG Home. Öffnen Sie zum Neustart der Home-Steuerung Home Helper, wählen Sie Helper starten und bestätigen Sie. Ihre gespeicherte Home-Auswahl bleibt erhalten."
+    "resumeHomeHelp": "Drei kurze Home-Tastendrücke in zwei Sekunden öffnen LG Home. Öffnen Sie zum Neustart der Home-Steuerung Home Helper, wählen Sie Helper starten und bestätigen Sie. Ihre gespeicherte Home-Auswahl bleibt erhalten.",
+    "guideExample": "Beispiel von LG",
+    "guideNote": "Beispiel von LG. Der Bildschirm Ihres TV kann anders aussehen. Verwenden Sie den Code auf Ihrem eigenen TV."
   },
   "fr": {
     "detect": "Vérifier la connexion",
@@ -537,7 +543,9 @@ const words = {
     "pairingHelp": "L’appairage est une étape distincte : quand le TV le demande, autorisez CYTV avec la télécommande.",
     "homeHelperHelp": "Home est votre écran d’apps. Home Helper permet de l’ouvrir avec la touche Home.",
     "tryHomeHelp": "Après l’installation, appuyez sur Home pour essayer. Si LG Home s’ouvre, lancez Home Helper depuis les apps du TV.",
-    "resumeHomeHelp": "Trois pressions brèves sur Home en deux secondes ramènent à LG Home. Pour relancer le contrôle de Home, ouvrez Home Helper, choisissez Démarrer Helper et confirmez. Votre choix d’écran Home est conservé."
+    "resumeHomeHelp": "Trois pressions brèves sur Home en deux secondes ramènent à LG Home. Pour relancer le contrôle de Home, ouvrez Home Helper, choisissez Démarrer Helper et confirmez. Votre choix d’écran Home est conservé.",
+    "guideExample": "Exemple LG",
+    "guideNote": "Exemple LG. L’écran de votre TV peut être différent. Utilisez le code affiché sur votre propre TV."
   },
   "it": {
     "detect": "Verifica connessione",
@@ -668,7 +676,9 @@ const words = {
     "pairingHelp": "L’associazione è un passaggio separato: quando la TV lo chiede, autorizza CYTV con il telecomando.",
     "homeHelperHelp": "Home è la tua schermata delle app. Home Helper fa sì che il tasto Home la apra.",
     "tryHomeHelp": "Dopo l’installazione, premi Home per provare. Se si apre LG Home, apri Home Helper dalle app della TV.",
-    "resumeHomeHelp": "Tre pressioni brevi di Home entro due secondi riportano a LG Home. Per riavviare il controllo Home, apri Home Helper, scegli Avvia Helper e conferma. La tua scelta della schermata Home viene mantenuta."
+    "resumeHomeHelp": "Tre pressioni brevi di Home entro due secondi riportano a LG Home. Per riavviare il controllo Home, apri Home Helper, scegli Avvia Helper e conferma. La tua scelta della schermata Home viene mantenuta.",
+    "guideExample": "Esempio LG",
+    "guideNote": "Esempio LG. La schermata della tua TV potrebbe essere diversa. Usa il codice mostrato sulla tua TV."
   },
   "es": {
     "detect": "Comprobar conexión",
@@ -799,7 +809,9 @@ const words = {
     "pairingHelp": "El emparejamiento es un paso aparte: cuando el TV lo pida, acepta CYTV con el mando.",
     "homeHelperHelp": "Home es tu pantalla de apps. Home Helper hace que el botón Home la abra.",
     "tryHomeHelp": "Tras instalar, pulsa Home para probarlo. Si se abre LG Home, abre Home Helper desde las apps del TV.",
-    "resumeHomeHelp": "Pulsa Home brevemente tres veces en dos segundos para volver a LG Home. Para reiniciar el control de Home, abre Home Helper, elige Iniciar Helper y confirma. Se conserva tu pantalla Home elegida."
+    "resumeHomeHelp": "Pulsa Home brevemente tres veces en dos segundos para volver a LG Home. Para reiniciar el control de Home, abre Home Helper, elige Iniciar Helper y confirma. Se conserva tu pantalla Home elegida.",
+    "guideExample": "Ejemplo de LG",
+    "guideNote": "Ejemplo de LG. La pantalla de tu TV puede ser diferente. Usa el código que aparece en tu propio TV."
   },
   "pt-BR": {
     "detect": "Verificar conexão",
@@ -930,7 +942,9 @@ const words = {
     "pairingHelp": "O pareamento é uma etapa separada: quando a TV pedir, autorize o CYTV com o controle remoto.",
     "homeHelperHelp": "Home é sua tela de apps. Home Helper faz o botão Home abrir essa tela.",
     "tryHomeHelp": "Após instalar, pressione Home para testar. Se LG Home abrir, abra Home Helper na lista de apps da TV.",
-    "resumeHomeHelp": "Pressione Home brevemente três vezes em dois segundos para voltar ao LG Home. Para reiniciar o controle de Home, abra Home Helper, escolha Iniciar Helper e confirme. Sua tela Home escolhida será mantida."
+    "resumeHomeHelp": "Pressione Home brevemente três vezes em dois segundos para voltar ao LG Home. Para reiniciar o controle de Home, abra Home Helper, escolha Iniciar Helper e confirme. Sua tela Home escolhida será mantida.",
+    "guideExample": "Exemplo da LG",
+    "guideNote": "Exemplo da LG. A tela da sua TV pode ser diferente. Use o código exibido na sua própria TV."
   },
   "pl": {
     "detect": "Sprawdź połączenie",
@@ -1061,7 +1075,9 @@ const words = {
     "pairingHelp": "Parowanie to osobny krok: gdy TV zapyta, zatwierdź CYTV pilotem.",
     "homeHelperHelp": "Home to ekran aplikacji. Home Helper sprawia, że przycisk Home otwiera ten ekran.",
     "tryHomeHelp": "Po instalacji naciśnij Home, aby sprawdzić działanie. Jeśli otworzy się LG Home, otwórz Home Helper z listy aplikacji TV.",
-    "resumeHomeHelp": "Trzy krótkie naciśnięcia Home w ciągu dwóch sekund przywracają LG Home. Aby wznowić sterowanie Home, otwórz Home Helper, wybierz Uruchom Helper i potwierdź. Zapisany wybór ekranu Home zostaje zachowany."
+    "resumeHomeHelp": "Trzy krótkie naciśnięcia Home w ciągu dwóch sekund przywracają LG Home. Aby wznowić sterowanie Home, otwórz Home Helper, wybierz Uruchom Helper i potwierdź. Zapisany wybór ekranu Home zostaje zachowany.",
+    "guideExample": "Przykład LG",
+    "guideNote": "Przykład LG. Ekran Twojego TV może wyglądać inaczej. Użyj kodu widocznego na własnym TV."
   },
   "ko": {
     "detect": "연결 확인",
@@ -1192,7 +1208,9 @@ const words = {
     "pairingHelp": "페어링은 별도 단계입니다. TV에서 요청하면 리모컨으로 CYTV를 승인하세요.",
     "homeHelperHelp": "Home은 앱 화면입니다. Home Helper를 사용하면 Home 버튼으로 이 화면을 열 수 있습니다.",
     "tryHomeHelp": "설치 후 Home 버튼을 눌러 보세요. LG Home이 열리면 TV 앱 목록에서 Home Helper를 여세요.",
-    "resumeHomeHelp": "2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다."
+    "resumeHomeHelp": "2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다.",
+    "guideExample": "LG 예시 화면",
+    "guideNote": "LG 예시 화면입니다. TV에 따라 화면이 다를 수 있습니다. 자신의 TV에 표시된 코드를 사용하세요."
   },
   "hi": {
     "detect": "कनेक्शन जाँचें",
@@ -1323,7 +1341,9 @@ const words = {
     "pairingHelp": "पेयरिंग अलग चरण है: TV पर अनुरोध आने पर रिमोट से CYTV को अनुमति दें।",
     "homeHelperHelp": "Home आपके ऐप की स्क्रीन है। Home Helper से Home बटन दबाने पर यह स्क्रीन खुलती है।",
     "tryHomeHelp": "इंस्टॉल होने पर Home दबाकर देखें। LG Home खुले तो TV की ऐप सूची से Home Helper खोलें।",
-    "resumeHomeHelp": "दो सेकंड में Home तीन बार छोटा दबाने से LG Home खुलता है। Home नियंत्रण फिर शुरू करने के लिए Home Helper खोलें, Helper शुरू करें चुनें और पुष्टि करें। चुनी हुई Home स्क्रीन बनी रहती है।"
+    "resumeHomeHelp": "दो सेकंड में Home तीन बार छोटा दबाने से LG Home खुलता है। Home नियंत्रण फिर शुरू करने के लिए Home Helper खोलें, Helper शुरू करें चुनें और पुष्टि करें। चुनी हुई Home स्क्रीन बनी रहती है।",
+    "guideExample": "LG का उदाहरण",
+    "guideNote": "यह LG का उदाहरण है। आपके TV की स्क्रीन अलग दिख सकती है। अपने TV पर दिखा कोड ही उपयोग करें।"
   },
   "zh-Hans": {
   "detect": "检查连接",
@@ -1454,7 +1474,9 @@ const words = {
   "pairingHelp": "配对是单独的步骤：电视提示时，请用遥控器允许 CYTV 连接。",
   "homeHelperHelp": "Home 是您的应用主屏幕。Home Helper 让遥控器的 Home 键打开此屏幕。",
   "tryHomeHelp": "安装后按 Home 键试用。如果打开的是 LG Home，请从电视应用列表中打开 Home Helper。",
-  "resumeHomeHelp": "在两秒内短按 Home 三次可返回 LG Home。要重新启动 Home 控制，请打开 Home Helper，选择启动 Helper 并确认。已保存的主屏幕选择会保留。"
+  "resumeHomeHelp": "在两秒内短按 Home 三次可返回 LG Home。要重新启动 Home 控制，请打开 Home Helper，选择启动 Helper 并确认。已保存的主屏幕选择会保留。",
+  "guideExample": "LG 示例画面",
+  "guideNote": "LG 示例画面。您的电视界面可能有所不同。请使用您自己电视上显示的代码。"
 },
   "zh-Hant": {
   "detect": "檢查連線",
@@ -1585,6 +1607,8 @@ const words = {
   "pairingHelp": "配對是獨立步驟：電視提示時，請用遙控器允許 CYTV 連線。",
   "homeHelperHelp": "Home 是您的應用程式主畫面。Home Helper 讓遙控器的 Home 鍵開啟此畫面。",
   "tryHomeHelp": "安裝後按 Home 鍵試用。如果開啟的是 LG Home，請從電視應用程式列表開啟 Home Helper。",
-  "resumeHomeHelp": "在兩秒內短按 Home 三次可返回 LG Home。要重新啟動 Home 控制，請開啟 Home Helper，選擇啟動 Helper 並確認。已儲存的主畫面選擇會保留。"
+  "resumeHomeHelp": "在兩秒內短按 Home 三次可返回 LG Home。要重新啟動 Home 控制，請開啟 Home Helper，選擇啟動 Helper 並確認。已儲存的主畫面選擇會保留。",
+  "guideExample": "LG 範例畫面",
+  "guideNote": "LG 範例畫面。您的電視介面可能有所不同。請使用您自己電視上顯示的代碼。"
 }
 };

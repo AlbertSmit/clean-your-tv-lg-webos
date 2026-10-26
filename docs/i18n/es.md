@@ -39,6 +39,8 @@ Home es tu pantalla de apps. Home Helper hace que el botón Home la abra.
 
 Tras instalar, pulsa Home para probarlo. Si se abre LG Home, abre Home Helper desde las apps del TV. Pulsa Home brevemente tres veces en dos segundos para volver a LG Home. Para reiniciar el control de Home, abre Home Helper, elige Iniciar Helper y confirma. Se conserva tu pantalla Home elegida.
 
+CYTV en el ordenador muestra la preparación paso a paso. Detalles abre el registro de la operación. Puedes ampliar las imágenes de LG; usa el código de tu propio TV.
+
 [LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Python opcional para Root en v1.1.0

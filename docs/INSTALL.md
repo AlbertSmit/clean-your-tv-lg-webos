@@ -10,6 +10,8 @@ so your computer can be switched off during everyday use.
 
 ## Set up Developer Mode (No-root)
 
+Desktop CYTV shows preparation one step at a time. Details opens the operation log. LG example images can be enlarged; use the code from your own TV.
+
 Developer Mode lets CYTV install apps on a TV without root. Home is your app screen. Home Helper makes the Home button open it.
 
 1. On the TV, open LG Apps, search for Developer Mode and install it.

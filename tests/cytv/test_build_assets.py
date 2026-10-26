@@ -32,6 +32,17 @@ class BuildAssetsTests(unittest.TestCase):
                 self.assertEqual((Path(directory) / packaged).read_bytes(),
                                  (root / 'assets/brand' / master).read_bytes())
 
+    def test_setup_examples_are_staged_for_offline_desktop_use(self):
+        import tempfile
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        with tempfile.TemporaryDirectory() as directory:
+            build['stage_guide_assets'](Path(directory))
+            for name in ('sign-in.png', 'dev-mode.png', 'key-server.png'):
+                actual = (Path(directory) / 'setup-guide' / name).read_bytes()
+                self.assertTrue(actual.startswith(b'\x89PNG\r\n\x1a\n'))
+                self.assertEqual(actual, (root / 'android/app/src/main/assets/ui/guide' / name).read_bytes())
+
     def test_new_public_runtime_modules_are_packaged(self):
         build = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/build-cytv.py'))
         self.assertIn('state-permissions.js', list(build['tracked_files']('native/app')))

@@ -36,6 +36,8 @@ Home 是您的应用主屏幕。Home Helper 让遥控器的 Home 键打开此屏
 
 安装后按 Home 键试用。如果打开的是 LG Home，请从电视应用列表中打开 Home Helper。 在两秒内短按 Home 三次可返回 LG Home。要重新启动 Home 控制，请打开 Home Helper，选择启动 Helper 并确认。已保存的主屏幕选择会保留。
 
+电脑版 CYTV 会逐步显示准备说明。“详细信息”可打开操作日志。LG 示例图片可以放大；请使用您自己电视上的代码。
+
 [LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## v1.1.0 起的可选 Root Python

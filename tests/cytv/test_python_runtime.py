@@ -76,7 +76,7 @@ class RuntimeTests(unittest.TestCase):
         remote=Remote(system=False)
         runtime._preflight(remote)
         script=shlex.split(remote.commands[-1][0])[-1]
-        fragment=script[script.index('case "$(uname -m)" in '):script.index('\nbase=')]
+        fragment=script[script.index('abi() {'):script.index('\nabi ||')] + '\nabi\n'
         with tempfile.TemporaryDirectory() as folder:
             elf=Path(folder)/'shell'
             for kernel in ('armv7l','armv8l','aarch64'):

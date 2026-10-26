@@ -222,3 +222,5 @@ désactive l’automatisation jusqu’à activation explicite. Anciens runtimes 
 nouvelle configuration vérifiée nécessaire. Compatibilité et délai réduit non confirmés.
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Non publié : la vérification de Python privé distingue les erreurs ABI, de sécurité des répertoires et d’espace. La première installation exige 320 MiB libres dans /var/lib. WAM Session Storage peut expliquer le manque de place ; son effacement peut supprimer l’état des sessions. Voir la [récupération](../RECOVERY.md#private-python-and-low-var-space).

@@ -221,3 +221,5 @@ la automatización hasta activación explícita. Runtimes privados antiguos nece
 nueva configuración verificada. Compatibilidad y menor demora sin confirmar.
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Sin publicar: la comprobación de Python privado distingue errores de ABI, seguridad de directorios y espacio. La instalación inicial necesita 320 MiB libres en /var/lib. WAM Session Storage puede explicar la falta de espacio; borrarlo puede perder el estado de sesiones. Consulta la [recuperación](../RECOVERY.md#private-python-and-low-var-space).

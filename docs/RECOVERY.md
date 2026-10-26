@@ -1,5 +1,40 @@
 # No-root controls and recovery
 
+## Private Python and low /var space
+
+**Unreleased cytv change, related to issue #95:** private Python setup identifies
+ABI, directory safety and free-space failures separately. Low-space errors show
+available and required MiB; the issue-ready report retains bounded numeric facts,
+not raw directory listings. The normal initial threshold stays **320 MiB**.
+An existing private slot is still verified before reuse; low space does not
+authorize overwriting it. A later staging-space check can also stop installation.
+
+On an already rooted TV, these SSH commands inspect storage without deleting it:
+
+```sh
+df -Pk /var/lib
+du -xsk "/var/lib/wam/Default/Session Storage"
+```
+
+Measure the filesystem containing `/var/lib`, not the sum of every mounted
+filesystem. In particular, `/var/palm` can be a separate mount; use `du -x` to
+avoid counting mounted data as `/var` usage. On the reported OLED65C2AUA,
+firmware 04.40.90 / webOS 22, the author measured large WAM Session Storage and
+reported recovering space after clearing it and caches, then rebooting. This is
+one reporter observation, not acceptance of installation or other TV models.
+
+Session Storage contains app session state; it is not guaranteed disposable
+cache. Clearing it can lose sessions or unsaved state, even though this reporter
+was not logged out. Leave Local Storage, Service Worker, databases, managed
+Python slots and recovery records alone. Review the exact folders and close TV
+apps before any deliberate cleanup. Reboot afterwards: open deleted files may
+retain space until WAM exits. Recheck `df -Pk /var/lib` and retry setup explicitly;
+neither cleanup nor reboot proves Python or Root installation succeeded.
+
+If the ABI or ownership check fails, freeing space cannot resolve that failure.
+Do not disable those guards, change ownership broadly or lower the space threshold.
+Save the failed attempt's diagnostic report for investigation.
+
 ## Interrupted setup or removal in 1.1.0
 
 Run `cytv status` with the same saved TV/profile before retrying. The installer

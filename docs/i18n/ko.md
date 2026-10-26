@@ -209,3 +209,5 @@ ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. �
 재설정이 필요합니다. TV 호환성과 소리 시작 시간 단축은 확인되지 않았습니다.
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+미출시: 전용 Python 검사는 ABI, 디렉터리 안전 및 공간 오류를 구분합니다. 최초 설치에는 /var/lib에 320 MiB가 필요합니다. 큰 WAM Session Storage가 원인일 수 있으며, 지우면 앱 세션 상태가 손실될 수 있습니다. [복구 안내](../RECOVERY.md#private-python-and-low-var-space)를 확인하세요.

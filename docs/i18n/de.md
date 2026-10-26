@@ -222,3 +222,5 @@ Aktivierung. Alte private Runtimes brauchen geprüfte Neueinrichtung. TV-Kompati
 und schnellerer Ton sind unbestätigt.
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-, Verzeichnissicherheits- und Platzfehler. Die Ersteinrichtung braucht 320 MiB frei in /var/lib. Großer WAM Session Storage kann Platzmangel erklären; beim Löschen kann App-Sitzungszustand verloren gehen. Siehe [Wiederherstellung](../RECOVERY.md#private-python-and-low-var-space).

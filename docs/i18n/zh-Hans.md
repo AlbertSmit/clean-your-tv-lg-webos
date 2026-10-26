@@ -191,3 +191,5 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 电视兼容性或声音开始时间缩短。
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+尚未发布：专用 Python 检查分别报告 ABI、目录安全和空间不足。首次安装需要 /var/lib 有 320 MiB 可用空间。较大的 WAM Session Storage 可能是原因；清除可能丢失应用会话状态。请参阅[恢复指南](../RECOVERY.md#private-python-and-low-var-space)。

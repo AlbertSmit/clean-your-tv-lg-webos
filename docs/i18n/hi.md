@@ -210,3 +210,5 @@ ARC-only, संयुक्त/WOW Orchestra और अज्ञात मो�
 चाहिए। TV संगतता या जल्दी ध्वनि की पुष्टि नहीं हुई है।
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+अभी जारी नहीं: निजी Python जाँच ABI, निर्देशिका सुरक्षा और स्थान की त्रुटियाँ अलग बताती है। प्रारंभिक स्थापना के लिए /var/lib में 320 MiB खाली चाहिए। बड़ा WAM Session Storage कारण हो सकता है; इसे मिटाने से ऐप सत्र स्थिति खो सकती है। [रिकवरी गाइड](../RECOVERY.md#private-python-and-low-var-space) देखें।

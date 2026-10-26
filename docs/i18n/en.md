@@ -216,3 +216,5 @@ until explicit enable. Older private runtimes need checked fresh setup. TV compa
 and faster audio acquisition remain unconfirmed.
 
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Unreleased: private Python preflight reports ABI, directory safety and free-space failures separately. Initial setup needs 320 MiB free in /var/lib. A large WAM Session Storage may explain low space; clearing it can lose app session state. See the [recovery guide](../RECOVERY.md#private-python-and-low-var-space).

@@ -82,7 +82,7 @@
   },function(){busy=false;message=operation?'lost':'failed';if(operation)job=job||{state:'unknown'};render();});
  }
  function close(){if(root.close)root.close();}
- doc.getElementById('language').onclick=function(){if(busy)return;var old=screen;begin('language','language');var list=controls();Object.keys(i18n.names).forEach(function(code){button(list,'lang-'+code,i18n.names[code],function(){i18n.set(code);render();focus('language');});});button(list,'back',t('back'),function(){screen=old;render();focus('language');});focus('lang-'+doc.documentElement.lang);};
+ doc.getElementById('language').onclick=function(){if(busy)return;var old=screen;begin('language','language');var list=controls();Object.keys(i18n.names).forEach(function(code){var choice=button(list,'lang-'+code,i18n.names[code],function(){i18n.set(code);render();focus('language');});choice.lang=code;});button(list,'back',t('back'),function(){screen=old;render();focus('language');});focus('lang-'+doc.documentElement.lang);};
  doc.addEventListener('keydown',function(event){
   var code=event.keyCode,keyName=event.key,back=code===461||code===27||code===8||keyName==='Escape'||keyName==='Backspace';
   if(back){event.preventDefault();if(busy)return;if(screen==='confirm')cancel();else if(screen==='language'){render();focus('language');}else if(screen==='progress'){hint.textContent=t('progressBody');}else close();return;}

@@ -43,7 +43,7 @@ class Wizard(QMainWindow):
         self.setWindowTitle('Clean Your TV')
         self.resize(1060, 820)
         self.setMinimumSize(900, 680)
-        self.setStyleSheet(STYLE)
+        self.apply_language_font()
         self.current_step = 0
         self.command = 'install'
         self.events = Events()
@@ -167,6 +167,13 @@ class Wizard(QMainWindow):
         if hasattr(self, 'preview'):
             self.preview.setFixedHeight(144 if self.height() < 760 else 206)
 
+    def apply_language_font(self):
+        family = {'zh-Hans': 'Noto Sans SC', 'zh-Hant': 'Noto Sans TC'}.get(i18n.resolved_language())
+        # Keep the existing typography for other languages and use the script's
+        # packaged outlines ahead of system CJK fallback for Chinese.
+        style = STYLE.replace('font-family: ', 'font-family: "' + family + '", ', 1) if family else STYLE
+        self.setStyleSheet(style)
+
     def change_language(self):
         if self.running:
             return
@@ -179,6 +186,7 @@ class Wizard(QMainWindow):
             self.language.blockSignals(False)
             self.error_dialog('Could not save language preference', 'Check write access to the application data folder and try again.')
             return
+        self.apply_language_font()
         self.language.setAccessibleName(tr('Language'))
         self.language.setItemText(0, tr('Auto'))
         self.cancel.setText(tr('Close'))

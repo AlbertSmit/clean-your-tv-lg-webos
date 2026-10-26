@@ -39,7 +39,7 @@ or Homebrew catalog availability is claimed.
   verified offline bundles and optional pinned Python preparation. cytv retains
   No-root and Root installation. Both clients share durable ownership, original
   request/package proof, status, recovery and complete-product removal. The TV UI
-  supports ten languages and explicit activation. Owned package startup links and
+  supports twelve languages and explicit activation. Owned package startup links and
   package-disappearance guards preserve recovery boundaries. Homebrew updates
   Installer separately from product updates; removing Installer leaves the
   installed product. Publication and catalog acceptance remain gated below.
@@ -47,6 +47,13 @@ or Homebrew catalog availability is claimed.
 - #75: synchronized component/service versions and explicit pending acceptance;
   isolate the legacy CLI test from local build outputs. The inventory includes
   this metadata PR when it merges into the candidate.
+
+- Chinese localization: Simplified Chinese (`zh-Hans`) and Traditional Chinese
+  (`zh-Hant`) in Home, Root Home, the independent updaters, desktop/console,
+  Android and Homebrew installers. Automatic selection respects explicit script
+  tags and regional defaults; manual selection persists. Bundled static Noto
+  Sans SC/TC subsets cover the offline TV interface. Two localized user guides
+  are included. Physical Chinese-language TV acceptance remains pending.
 
 No telemetry blocking, rotating wallpaper or unrelated device issue is claimed
 fixed by this candidate. Included issues remain open where their original report

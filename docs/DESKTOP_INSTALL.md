@@ -99,7 +99,9 @@ The installer chooses the computer’s language automatically.
 Use the language selector to save another language, or choose **Auto** to follow
 system settings. On the TV, use **Settings → Language**; this is a separate preference.
 These language controls are included in v0.10.3 and later downloads.
-See the [ten localized installation, use and recovery guides](LANGUAGES.md).
+The unreleased 1.3.0 candidate adds Simplified and Traditional Chinese with
+script-specific bundled fonts; current v1.2.0 downloads retain ten languages.
+See the [twelve localized installation, use and recovery guides](LANGUAGES.md).
 
 ## In the wizard
 

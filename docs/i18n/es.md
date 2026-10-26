@@ -177,3 +177,5 @@ El inicio usa archivos privados respaldados por comprobantes de propiedad y comp
 
 
 Para este candidato de código fuente, una instalación Root existente necesita recuperación verificada y una nueva configuración para recibir el entorno privado corregido. Actualizar solo Installer no lo sustituye. Conserve los registros de recuperación y active Home únicamente desde la configuración habitual.
+
+Sin publicar: la comprobación de Python privado distingue errores de ABI, seguridad de directorios y espacio. La instalación inicial necesita 320 MiB libres en /var/lib. WAM Session Storage puede explicar la falta de espacio; borrarlo puede perder el estado de sesiones. Consulta la [recuperación](../RECOVERY.md#private-python-and-low-var-space).

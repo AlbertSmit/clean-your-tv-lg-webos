@@ -178,3 +178,5 @@ Le démarrage utilise des scripts privés liés aux preuves de propriété et v�
 
 
 Pour ce candidat issu des sources, une installation Root existante nécessite une récupération vérifiée et une nouvelle configuration pour recevoir l’environnement privé corrigé. Mettre à jour Installer seul ne le remplace pas. Conservez les données de récupération et activez Home uniquement par la configuration ou les paramètres habituels.
+
+Non publié : la vérification de Python privé distingue les erreurs ABI, de sécurité des répertoires et d’espace. La première installation exige 320 MiB libres dans /var/lib. WAM Session Storage peut expliquer le manque de place ; son effacement peut supprimer l’état des sessions. Voir la [récupération](../RECOVERY.md#private-python-and-low-var-space).

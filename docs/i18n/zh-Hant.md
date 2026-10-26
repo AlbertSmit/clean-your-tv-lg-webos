@@ -149,3 +149,5 @@ Installer 要求已有 root、可執行 root exec 的 Homebrew Channel、Node.js
 
 
 此原始碼候選版中，現有 Root 安裝需要經過驗證的復原和重新設定，才能取得修正後的私有執行環境。只更新 Installer 不會取代它。請保留復原記錄，並且只透過正常設定流程或設定頁面啟用 Home。
+
+尚未發佈：專用 Python 檢查分別報告 ABI、目錄安全與空間不足。首次安裝需要 /var/lib 有 320 MiB 可用空間。較大的 WAM Session Storage 可能是原因；清除可能遺失應用程式工作階段狀態。請參閱[復原指南](../RECOVERY.md#private-python-and-low-var-space)。

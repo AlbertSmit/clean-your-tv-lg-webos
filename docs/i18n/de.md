@@ -177,3 +177,5 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 
 Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.
+
+Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-, Verzeichnissicherheits- und Platzfehler. Die Ersteinrichtung braucht 320 MiB frei in /var/lib. Großer WAM Session Storage kann Platzmangel erklären; beim Löschen kann App-Sitzungszustand verloren gehen. Siehe [Wiederherstellung](../RECOVERY.md#private-python-and-low-var-space).

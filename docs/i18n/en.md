@@ -172,3 +172,5 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 
 For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+Unreleased: private Python preflight reports ABI, directory safety and free-space failures separately. Initial setup needs 320 MiB free in /var/lib. A large WAM Session Storage may explain low space; clearing it can lose app session state. See the [recovery guide](../RECOVERY.md#private-python-and-low-var-space).

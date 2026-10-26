@@ -166,3 +166,5 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 
 W tym kandydacie ze źródeł istniejąca instalacja Root wymaga zweryfikowanego odzyskiwania i nowej konfiguracji, aby otrzymać poprawione prywatne środowisko. Aktualizacja samego Installer go nie zastępuje. Zachowaj dane odzyskiwania i włącz Home tylko w zwykłej konfiguracji lub ustawieniach.
+
+Jeszcze niewydane: kontrola prywatnego Pythona rozróżnia błędy ABI, bezpieczeństwa katalogów i miejsca. Pierwsza instalacja wymaga 320 MiB wolnego w /var/lib. Duży WAM Session Storage może wyjaśniać brak miejsca; usunięcie może utracić stan sesji aplikacji. Zobacz [odzyskiwanie](../RECOVERY.md#private-python-and-low-var-space).

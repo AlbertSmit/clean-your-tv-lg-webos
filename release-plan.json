@@ -37,6 +37,13 @@
         68
       ],
       "summary": "Ship static Outfit weights for legacy webOS in Home and Root Home; partial #68, awaiting LM6370PSB visual acceptance and Helper-unavailable diagnostics"
+    },
+    {
+      "pr": 73,
+      "issues": [
+        55
+      ],
+      "summary": "Diagnose Root recovery startup/finalize failures with private observations and safe attempt-bound reports; partial #55, OLED Flex cause/device acceptance pending and supervisor inventory rebuild required"
     }
   ],
   "excluded": [],

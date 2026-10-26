@@ -8,6 +8,13 @@
         65
       ],
       "summary": "Guide desktop recovery and save failed-attempt diagnostics"
+    },
+    {
+      "pr": 67,
+      "issues": [
+        24
+      ],
+      "summary": "Prepare non-debuggable Android builds and preserve pending prompts"
     }
   ],
   "excluded": [],

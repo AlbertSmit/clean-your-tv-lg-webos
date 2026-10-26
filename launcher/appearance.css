@@ -14,8 +14,8 @@ html.home-tvos #leftBlock { display: none; }
 #homeShelf, #homeStatus { display: none; }
 html.home-tvos #homeShelf { display: block; position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; overflow: hidden; pointer-events: none; }
 .shelf-backdrop, .shelf-backdrop-soft, .shelf-shade { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
-.shelf-backdrop { background: #12252a url('assets/cinema-backdrop.jpg') center center / cover no-repeat; opacity: 0; transition: opacity 240ms ease; }
-.shelf-backdrop-soft { background: #12252a url('assets/cinema-backdrop-soft.jpg') center center / cover no-repeat; opacity: 1; transition: opacity 240ms ease; }
+.shelf-backdrop { background: #12252a url('assets/cinema-backdrop.jpg') center 62% / cover no-repeat; opacity: 0; transition: opacity 240ms ease; }
+.shelf-backdrop-soft { background: #12252a url('assets/cinema-backdrop-soft.jpg') center 62% / cover no-repeat; opacity: 1; transition: opacity 240ms ease; }
 .shelf-shade { background: linear-gradient(180deg, rgba(0,0,0,.04) 35%, rgba(0,0,0,.2) 100%); }
 .shelf-visible .shelf-backdrop { opacity: 1; }
 .shelf-visible .shelf-backdrop-soft { opacity: 0; }

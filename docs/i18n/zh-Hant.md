@@ -133,12 +133,14 @@ Root 若在 supervisor 引導後立即顯示 `Denied methods call status`，請�
 
 此原始碼候選版新增獨立的 **CYTV Installer** 電視應用，**僅用於 Root**。它尚未發佈到 Homebrew 目錄。Windows、macOS、Linux、Android 上的 cytv 仍支援兩種版本；現有下載鏈接仍指向已發佈 cytv。
 
-Installer 要求已有 root、可執行 root exec 的 Homebrew Channel、Node.js **8+** 和可用 Python **3.9+**。對於受支援的 ARMv7/`armv8l` 32 位使用者空間，離線內建固定 Python。打開應用/查看狀態只讀取資訊：需明確準備缺失的 Python，再檢查，然後檢查安裝摘要。執行環境設定要求 **Installer 安裝後仍有 320 MiB 可用空間**，另需尚未測量的電視安裝套件暫存空間。不代表新增型號/固件兼容性。
+Installer 要求已有 root、可執行 root exec 的 Homebrew Channel、Node.js **8+** 和可用 Python **3.9+**。對於受支援的 ARMv7/`armv8l`/`aarch64` 32 位使用者空間，離線內建固定 Python。打開應用/查看狀態只讀取資訊：需明確準備缺失的 Python，再檢查，然後檢查安裝摘要。執行環境設定要求 **Installer 安裝後仍有 320 MiB 可用空間**，另需尚未測量的電視安裝套件暫存空間。不代表新增型號/固件兼容性。
 
 設定會安裝 Root Home 和 Root Updater；準備 System Updater 是明確的可選步驟。驗證後單獨啟用 Change Home；設定絕不清除緊急停止或關閉狀態。經驗證的現有安裝可在 cytv/電視之間共享組態和恢復狀態，無需重裝或重置。未知舊基礎設施需先診斷；安裝套件偏好導入僅供首次設定，不用於瀏覽器儲存或基礎設施遷移。
 
 中斷後先檢查狀態。只有原始快照/租約仍存在且最終回讀已確認時才顯示“繼續”。其他階段需要檢查狀態、恢復或診斷；原始碼 CLI 可明確恢復更多已識別階段。cytv 的“完成 Root 設定”不會重啟未完成的工作進程。不要刪除日誌或盲目重試。Homebrew 只更新 Installer；現有更新程式負責產品更新/已簽名完整發行集。刪除 Installer 不會刪除產品。
 
 明確的完整移除會恢復 LG Home 並清理本項目的啟動鈎子，同時保留獨立恢復/歸檔證據及引用中的 Python 槽位。此路徑所有實機檢查仍待完成；上文 Root 0.2.0 的 C3 歷史結果不能驗證 Homebrew 設定。
+
+啟動使用由收據標識歸屬的私有包裝指令碼，僅將已安裝套件的身分資訊作為資料檢查，不執行套件內的啟動指令碼。套件遺失或不安全時停止自動重新啟用；獨立復原仍可還原 LG Home。檢查可能短暫地在私有目錄暫存已驗證檔案，不會變更 Home 或產品。
 
 [候選版設定與恢復（英文）](../INSTALL.md#candidate-on-tv-root-installation) · [待完成實機驗收（英文）](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

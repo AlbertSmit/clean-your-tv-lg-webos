@@ -6,6 +6,18 @@ is established. All current implementation and code reviews were AI-assisted;
 meaningful named human review and supervised TV testing are pending. This record
 does not approve public promotion or catalog submission.
 
+## Limited correction test (not product acceptance)
+
+At correction source `1be47b2c`, isolated Installer0.1.0 passed installation,
+actual package-file hashes and fixed HBC read-only inspection. Launch was
+acknowledged but the foreground screen was not confirmed. Only Installer was
+removed afterward, with terminal/absence proof and unchanged existing-product
+baseline. The packaged console also completed read-only status. Private device
+facts and logs are retained locally; no product update, activation, control,
+startup, boot or rollback acceptance is inferred. The local reproducible IPK
+SHA256 is `c3061975151fc9d25c54d7814cf670b0f7a9e3052dc4bf5d2ea9b1b0ee0077cd`
+(59,725,142 bytes). Later integrated packages need their own identity and checks.
+
 ## Historical candidate identity and automated artifact evidence
 
 The 2026-10-26 private staging/startup-guard correction supersedes the source and

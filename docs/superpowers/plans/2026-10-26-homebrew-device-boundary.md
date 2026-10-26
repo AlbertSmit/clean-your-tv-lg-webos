@@ -12,7 +12,7 @@ containers and ARM32-on-aarch64 while preserving private privileged execution.
   ProductABI1OK; all strict ELF checks retained.
 ## Task 1 — Correct the package trust and startup boundary
 
-- [ ] Implement approved package-data boundary, anchored private execution
+- [x] Implement approved package-data boundary, anchored private execution
   staging and private startup-wrapper migration as one coupled trust contract.
   Update all named observers/build inventories/host cleanup and affected docs,
   including ten localized guides; do not weaken private readers or leases.
@@ -21,7 +21,7 @@ containers and ARM32-on-aarch64 while preserving private privileged execution.
 
 ## Task 2 — Scoped review
 
-- [ ] Review complete correction against spec and actual counterevidence;
+- [x] Review complete correction against spec and actual counterevidence;
   fix any Critical/Important issues, scope re-review only to corrections.
 - [ ] Task3: Stable full suite, source-free/reproducible packages, actualNode8,
   and repeat the already approved isolated Installer test. Keep existing Root

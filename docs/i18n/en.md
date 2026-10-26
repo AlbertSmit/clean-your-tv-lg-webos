@@ -121,3 +121,11 @@ If Root shows `Denied methods call status` immediately after supervisor bootstra
 Root only: Home settings → LG firmware updates changes the existing Homebrew Channel preference. This includes firmware security updates; Clean Your TV updates remain separate. A real TV restart is needed in both directions; standby is not enough. The switch shows the saved preference, not verified active blocking. Some TVs check before blocking starts, so prompts may remain and router blocking may be needed. Homebrew keeps the preference after CYTV removal or rollback. If unavailable or unconfirmed, check Homebrew and refresh status. See the acceptance record for the scope of TV checks.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Candidate only: optional Home appearance — No-root
+
+This source candidate adds **Settings → Home screen → tvOS**; choose **Existing** to return to the current layout and its five color themes. **Reduce effects** limits visual effects. This feature is not included in the published stable release described above.
+
+In tvOS appearance, a static fictional-series backdrop, **Sundown**, fills the screen. The dock and grid use a locally preblurred copy; there are no streaming recommendations or live blur filters. Use Down to scroll the app grid, or use the mouse wheel. The compact clock and avatar-shaped Settings button sit at the top right. Click that button, or press Up from the top app row, to reveal Inputs, network and Settings actions. Back or Down returns to the grid.
+
+Appearance and effects preferences are saved only on this TV. They survive ordinary restarts, but are not included in profile backups and may be lost during reinstall or profile transfer. These new controls apply to No-root only. Exact Apple TV fonts, artwork, motion and effects are not reproduced; performance on LG 50UP77006LB has not been verified.

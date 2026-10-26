@@ -17,7 +17,7 @@ class PackageTests(unittest.TestCase):
             root = Path(tmp)
             for directory in ('scripts', 'native/app', 'native/published', 'launcher'):
                 (root/directory).mkdir(parents=True)
-            for name in ('build.sh', 'build-cytv.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'helper_build.py', 'compile-helper.cjs'):
+            for name in ('build.sh', 'build-cytv.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'bundle-home-ui.cjs', 'helper_build.py', 'compile-helper.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
             helper = 'com.local.nativehome_0.6.17_arm.ipk'
@@ -40,7 +40,7 @@ class PackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='helper build ') as tmp:
             root = Path(tmp)
             (root/'scripts').mkdir()
-            for name in ('build.sh', 'build-cytv.py', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'helper_build.py', 'compile-helper.cjs'):
+            for name in ('build.sh', 'build-cytv.py', 'fix-package-data.py', 'tv_web_build.py', 'compile-tv-web.cjs', 'bundle-home-ui.cjs', 'helper_build.py', 'compile-helper.cjs'):
                 shutil.copy(ROOT/'scripts'/name, root/'scripts'/name)
             shutil.copy(ROOT/'package.json', root/'package.json')
             for directory in ('native/app', 'native/service', 'launcher'):

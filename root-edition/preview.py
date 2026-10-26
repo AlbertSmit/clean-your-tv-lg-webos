@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import re
+import runpy
 from pathlib import Path
 
 APP_ID = 'com.cleanyourtv.root.preview'
@@ -11,6 +12,11 @@ SOURCE = Path(__file__).resolve().parents[1] / 'launcher'
 # Explicit public-source inventory: never recursively copy a developer workspace.
 FILES = (
     'appinfo.json', 'release-notes.js', 'system-updates.js', 'index.html', 'app.js', 'app-library.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'style.css',
+    'appearance.css', 'theme-panel.js', 'ui/index.jsx', 'ui/layouts.js', 'ui/preferences.js',
+    'ui/tile.jsx', 'ui/shelf.jsx', 'ui/appearance-panel.jsx',
+    'ui/status.jsx', 'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'ui/dock-glass.js', 'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 )
@@ -69,6 +75,8 @@ def prepare(version='0.0.1'):
 
 def stage(output):
     files = prepare()
+    compile_web = runpy.run_path(str(SOURCE.parent / 'scripts/tv_web_build.py'))['compile_web']
+    files = compile_web(files)
     # Exclusive creation: a previous build or user data is never overwritten.
     output.mkdir(parents=False, exist_ok=False)
     for name, data in files.items():

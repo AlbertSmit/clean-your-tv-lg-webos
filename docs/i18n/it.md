@@ -115,3 +115,11 @@ Se Root mostra `Denied methods call status` subito dopo la preparazione del supe
 Solo Root: Impostazioni Home → Aggiornamenti firmware LG modifica l’impostazione esistente di Homebrew Channel. Include gli aggiornamenti di sicurezza del firmware; quelli di Clean Your TV restano separati. Serve un vero riavvio della TV in entrambe le direzioni; lo standby non basta. L’interruttore mostra l’impostazione salvata, non un blocco effettivo verificato. Alcune TV controllano prima del blocco; gli avvisi possono restare e può servire un blocco sul router. Homebrew conserva l’impostazione dopo rimozione o rollback di CYTV. Se non disponibile o non confermato, controlla Homebrew e aggiorna lo stato. Il verbale di accettazione descrive la portata dei test TV.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Solo nella versione candidata: aspetto Home opzionale — No-root
+
+Questo codice candidato aggiunge **Impostazioni → Schermata Home → tvOS**. Scegli **Attuale** per tornare al layout attuale e ai suoi cinque temi colore. **Riduci effetti** limita gli effetti visivi. Questa funzione non è inclusa nella versione stabile pubblicata descritta sopra.
+
+L’aspetto tvOS mostra a schermo intero uno sfondo statico della serie immaginaria **Sundown**. Il dock e la griglia usano una copia locale già sfocata; non sono presenti suggerimenti di streaming né filtri di sfocatura in tempo reale. Scorri con Giù o con la rotellina del mouse. In alto a destra ci sono un orologio compatto e un pulsante Impostazioni a forma di avatar. Fai clic sul pulsante o premi Su dalla prima riga di app per mostrare ingressi, rete e impostazioni. Indietro o Giù riporta alla griglia.
+
+Le preferenze di aspetto ed effetti vengono salvate solo su questa TV. Restano dopo i normali riavvii, ma non sono incluse nei backup del profilo e possono andare perse con la reinstallazione o il trasferimento del profilo. Questi nuovi controlli sono disponibili solo in No-root. Caratteri, immagini, movimenti ed effetti di Apple TV non sono riprodotti esattamente; le prestazioni su LG 50UP77006LB non sono state verificate.

@@ -115,3 +115,11 @@ Se Root mostrar `Denied methods call status` logo após preparar o supervisor, f
 Somente Root: Configurações do Home → Atualizações de firmware da LG altera a configuração existente do Homebrew Channel. Inclui atualizações de segurança do firmware; as do Clean Your TV são separadas. Ambas as alterações exigem reiniciar a TV de verdade; o modo de espera não basta. O botão mostra a configuração salva, não um bloqueio ativo verificado. Algumas TVs verificam antes do bloqueio; os avisos podem continuar e pode ser necessário bloquear no roteador. O Homebrew mantém a configuração após remover ou reverter o CYTV. Se indisponível ou não confirmado, verifique o Homebrew e atualize o status. Veja o alcance dos testes no registro de aceitação.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Somente na versão candidata: aparência opcional da Home — No-root
+
+Este código candidato adiciona **Configurações → Tela inicial → tvOS**. Escolha **Atual** para voltar ao layout atual e seus cinco temas de cores. **Reduzir efeitos** limita os efeitos visuais. Este recurso não está incluído na versão estável publicada descrita acima.
+
+A aparência tvOS exibe em tela cheia um fundo estático da série fictícia **Sundown**. O dock e a grade usam uma cópia local previamente desfocada; não há recomendações de streaming nem filtros de desfoque em tempo real. Role com Para baixo ou com a roda do mouse. No canto superior direito há um relógio compacto e um botão de Configurações em forma de avatar. Clique nele ou pressione Para cima na primeira linha de aplicativos para revelar Entradas, rede e Configurações. Voltar ou Para baixo retorna à grade.
+
+As preferências de aparência e efeitos são salvas apenas nesta TV. Elas permanecem após reinicializações normais, mas não fazem parte do backup do perfil e podem ser perdidas ao reinstalar ou transferir o perfil. Estes novos controles são exclusivos de No-root. As fontes, imagens, animações e efeitos da Apple TV não são reproduzidos exatamente; o desempenho na LG 50UP77006LB ainda não foi verificado.

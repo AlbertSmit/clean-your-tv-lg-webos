@@ -95,6 +95,7 @@ jobs:
           npx playwright install --with-deps chromium
           python scripts/tv_web_build.py --input launcher --output build/legacy-ui
           BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:legacy-ui
+          BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:home-ui
       - name: Verify real webOS-style file ownership
         if: runner.os == 'Linux' && needs.scope.outputs.tv == 'true'
         run: sudo "$(command -v node)" native/prototype/test-state-permissions-linux.cjs

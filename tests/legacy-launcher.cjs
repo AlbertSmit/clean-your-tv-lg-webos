@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {fileURLToPath, pathToFileURL} = require('node:url');
 const root = path.resolve(__dirname, '..');
-const appRoot = process.env.TV_WEB_DIR ? path.resolve(process.env.TV_WEB_DIR) : path.join(root, 'launcher');
+const appRoot = require('./compiled-launcher.cjs')();
 const artifacts = path.join(root, 'build/tests/issue-20');
 const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
 

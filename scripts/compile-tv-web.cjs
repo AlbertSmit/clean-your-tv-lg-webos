@@ -8,6 +8,7 @@ const postcss = require('postcss');
 const presetEnv = require('postcss-preset-env');
 const doiuse = require('doiuse');
 const html = require('parse5');
+const {bundleHomeUI, isModule} = require('./bundle-home-ui.cjs');
 const targets = require('../package.json').browserslist;
 const root = path.resolve(__dirname, '..');
 const polyfillsName = 'compat-polyfills.js';
@@ -25,6 +26,48 @@ function javascript(code, filename) {
   return output + '\n';
 }
 
+function themeVariants(code, filename) {
+  const tree = postcss.parse(code, {from: filename});
+  const defaults = {};
+  const palettes = new Map();
+  tree.walkRules(rule => {
+    const definitions = rule.nodes.filter(node => node.type === 'decl' && node.prop.startsWith('--'));
+    if (!definitions.length) return;
+    for (const selector of rule.selectors) {
+      const theme = selector.match(/^html\.(theme-[\w-]+)$/);
+      if (selector !== 'html' && !theme) continue;
+      const palette = theme ? palettes.get(theme[1]) || {} : defaults;
+      for (const declaration of definitions) palette[declaration.prop] = declaration.value;
+      if (theme) palettes.set(theme[1], palette);
+    }
+  });
+  // Scope complete rules consistently: cloning only variable declarations would
+  // raise their specificity above literal overrides in focus and other states.
+  const rules = [];
+  tree.walkRules(rule => {rules.push(rule);});
+  for (const rule of rules) {
+    let parent = rule.parent;
+    while (parent && !(parent.type === 'atrule' && /(?:^|-)keyframes$/.test(parent.name))) parent = parent.parent;
+    if (parent) continue;
+    const declarations = (rule.nodes || []).filter(node => node.type === 'decl' &&
+      !node.prop.startsWith('--'));
+    if (!declarations.length) continue;
+    for (const [theme, overrides] of palettes) {
+      const palette = {...defaults, ...overrides};
+      const variant = rule.clone({selector: rule.selectors.map(selector =>
+        /^html(?=[\s.#[:>+~]|$)/.test(selector) ? selector.replace(/^html/, 'html.' + theme) :
+          'html.' + theme + ' ' + selector).join(', ')});
+      variant.removeAll();
+      for (const declaration of declarations) variant.append(declaration.clone({
+        value: declaration.value.replace(/var\(\s*(--[\w-]+)\s*\)/g,
+          (reference, name) => Object.hasOwn(palette, name) ? palette[name] : reference)
+      }));
+      rule.after(variant);
+    }
+  }
+  return tree.toString();
+}
+
 async function stylesheet(code, filename) {
   // First, compile CSS custom properties (variables) for Chrome 38 compatibility
   // Stage 0 + explicit feature enables custom-properties transformation
@@ -35,7 +78,12 @@ async function stylesheet(code, filename) {
         'logical-properties-and-values': true,
         'hexadecimal-alpha-notation': true
       }})
-  ]).process(code, {from: filename, map: false});
+  ]).process(themeVariants(code, filename), {from: filename, map: false});
+
+  // Values are now literals. Discard unsupported palette definitions, also making
+  // repeated compilation a no-op rather than generating another set of variants.
+  compiled.root.walkDecls(/^--/, declaration => declaration.remove());
+  compiled.root.walkRules(rule => {if (!rule.nodes.length) rule.remove();});
 
   const unsupported = [];
   compiled.root.walkDecls(/^(overflow-wrap|word-wrap)$/, declaration => {
@@ -51,7 +99,7 @@ async function stylesheet(code, filename) {
   }})])
     .process(compiled.css, {from: filename, map: false});
   if (unsupported.length) throw Error(filename + ': unsupported CSS after PostCSS:\n' + unsupported.join('\n'));
-  return compiled.css;
+  return compiled.root.toString();
 }
 
 async function document(code, filename) {
@@ -92,8 +140,15 @@ async function document(code, filename) {
 
 async function compile(files) {
   const output = {...files};
+  const homeUI = await bundleHomeUI(files);
+  if (homeUI) {
+    for (const name of Object.keys(output)) if (isModule(name)) delete output[name];
+    output['home-ui.js'] = javascript(homeUI.code, 'home-ui.js');
+    output['home-ui-LICENSE.txt'] = homeUI.license;
+  }
   for (const [name, code] of Object.entries(files)) {
     if (name === polyfillsName) continue;
+    if (homeUI && (isModule(name) || name === 'home-ui.js')) continue;
     if (name.endsWith('.js')) output[name] = javascript(code, name);
     if (name.endsWith('.css')) output[name] = await stylesheet(code, name);
     if (name.endsWith('.html')) output[name] = await document(code, name);

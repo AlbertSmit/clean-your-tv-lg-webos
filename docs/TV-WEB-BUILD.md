@@ -43,11 +43,62 @@ scoped source comment because older engines safely ignore that media query.
 Newer overflow values are still rejected. The linter uses compatibility data;
 it is not an exhaustive proof of browser behavior.
 
-Scripts remain separate classic scripts so the existing globals and UMD
+Legacy scripts remain separate classic scripts so their existing globals and UMD
 wrappers keep their behavior. Compatible ES5 sources keep their original bytes.
-No webpack or application-module migration is needed. Build products are staged
-separately; the compiler never overwrites a developer's app configuration,
-inventory or icons in the source tree.
+The Home presentation has one additional bundle step, described below. Build
+products are staged separately; the compiler never overwrites a developer's app
+configuration, inventory or icons in the source tree.
+
+## Home presentation modules
+
+The candidate Home UI uses small modules under `launcher/ui/`, with
+`launcher/ui/index.jsx` as their entry point. Nano JSX **0.2.1** provides
+lightweight declarative markup; esbuild **0.28.2** bundles these modules into
+`home-ui.js` before the existing Babel ES5 conversion and Acorn gate. JSX is a
+source-authoring choice; it does not change the Chromium 38 target. Legacy
+inventory, input and modal scripts continue to own their existing behavior.
+Do not introduce a second renderer for the app grid or duplicate input handlers.
+
+After installing dependencies, work through the preview or compiled output:
+
+```sh
+npm run dev
+# Opens the preview on http://127.0.0.1:8765/
+npm run build:home
+# Compiles launcher/ into build/home-app/
+```
+
+These scripts invoke `python3 scripts/preview.py --open --port 8765` and
+`python3 scripts/tv_web_build.py --input launcher --output build/home-app`,
+respectively. Opening the raw `launcher/index.html` directly is unsupported:
+the generated `home-ui.js` exists in the compiled output. Edit source modules,
+then reload the preview to rebuild. Do not edit the generated bundle.
+Nano JSX core and its MIT notice are included locally in `home-ui.js` and
+`home-ui-LICENSE.txt`; the TV does not download a framework from a CDN.
+
+The optional No-root tvOS appearance defaults off. `cytv-appearance` selects `existing`
+or `tvos`, while `cytv-reduced-effects` stores its boolean effects preference.
+Both are device-local cosmetic settings, separate from the five `cytv-theme`
+palettes and excluded from the strict profile backup envelope. Ordinary
+restarts retain them; reinstall and profile transfer need not. The full-bleed
+static backdrop depicts the fictional series **Sundown**, with a local preblurred
+copy for the dock and grid. There is no dynamic streaming integration or live
+blur filter. Asset provenance and the generation prompt are recorded in
+[`launcher/assets/README.md`](../launcher/assets/README.md).
+
+The idle header shows a compact clock and an avatar-shaped Settings button at
+the top right. Clicking the button or pressing Up from the top app row reveals
+the existing Inputs, network and Settings actions; Back or Down returns to the
+grid. Down scrolls the grid with a muted backdrop, and mouse-wheel navigation is
+supported. All five Existing themes remain available.
+
+The candidate bundles static Inter Display **4.1** Regular, Medium and SemiBold
+WOFF2 files, under the SIL Open Font License in `launcher/fonts/Inter-OFL.txt`.
+These are substitutes for Apple's fonts, not a claim of exact font matching.
+See [third-party notices](../THIRD_PARTY_NOTICES.md) for the official archive and
+Apple font-license restriction.
+Browser/build verification does not establish performance or visual fidelity on
+LG 50UP77006LB; physical-TV acceptance remains pending.
 
 ## Regression checks
 

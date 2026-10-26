@@ -1,23 +1,26 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert=require('node:assert/strict');
+const appRoot=require('../compiled-launcher.cjs')();
 (async()=>{
  const browser=await chromium.launch({headless:true,channel:'chrome'});
  try {
  const page=await browser.newPage({viewport:{width:1920,height:1080},locale:'en'}), errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- await page.addInitScript(()=>{
+ await page.addInitScript(appearance=>{
+  if(appearance==='tvos')localStorage.setItem('cytv-appearance','tvos');
   window.calls=[]; window.offline=false;
   window.PalmServiceBridge=function(){this.cancel=()=>{};this.call=(uri,raw)=>{calls.push({uri,p:JSON.parse(raw)});setTimeout(()=>{
    let r={returnValue:false};
+   if(uri.indexOf('luna://com.cleanyourtv.system.updater.service/')===0)r={returnValue:false,errorCode:-1,errorText:'Service does not exist: com.cleanyourtv.system.updater.service'};
    if(uri.endsWith('/listApps')&&!window.offline)r={returnValue:true,apps:[{id:'a',title:'Alpha'},{id:'b',title:'Beta'},{id:'c',title:'Gamma'}]};
    if(uri.endsWith('/listApps')&&window.inventoryOverride)r={returnValue:true,apps:window.inventoryOverride};
    if(uri.endsWith('/launch'))r={returnValue:true};
    this.onservicecallback(JSON.stringify(r));
   },10);};};
- });
+ },process.env.HOME_APPEARANCE);
  await page.route('**/apps.js',r=>r.fulfill({body:'window.TV_APPS={apps:[{id:"a",title:"Alpha",icon:"brand-v2-icon.png"},{id:"b",title:"Beta",icon:"brand-v2-icon.png"}],inputs:[]};'}));
  // Home Helper polling has its own tests; isolate app editing from its startup RPCs.
- await page.goto('file://'+require('path').resolve(__dirname,'../../launcher/index.html'));
+ await page.goto(require('node:url').pathToFileURL(require('node:path').join(appRoot,'index.html')).href);
  await page.locator('#tiles .item').first().waitFor();
  assert.equal(await page.locator('#tiles .add-app').count(),1,'last tile adds apps');
  const ids=()=>page.locator('#tiles .item').evaluateAll(els=>els.map(e=>e.dataset.appId||'+'));
@@ -43,7 +46,8 @@ const assert=require('node:assert/strict');
  await page.reload();await page.locator('.add-app').waitFor();assert.deepEqual(await ids(),['b','a','c','+']);
  // Releasing a pointer hold over another tile must not swallow the next placement click.
  await page.locator('[data-app-id="b"]').hover();await page.mouse.down();await page.waitForTimeout(680);
- await page.locator('[data-app-id="c"]').hover();await page.mouse.up();await page.waitForTimeout(50);
+ const target=await page.locator('[data-app-id="c"]').boundingBox();
+ await page.mouse.move(target.x+target.width/2,target.y+target.height/2);await page.mouse.up();await page.waitForTimeout(50);
  await page.locator('.moving').click();assert.equal(await page.locator('.moving').count(),0);
  // Restore the test order with a fresh persisted layout before the remaining scenarios.
  await page.evaluate(()=>{let state=JSON.parse(localStorage.getItem('tvhome.layout'));state.ids=['b','a','c'];localStorage.setItem('tvhome.layout',JSON.stringify(state));});

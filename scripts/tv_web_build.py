@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def compile_web(files):
     web = {name: raw.decode('utf-8') for name, raw in files.items()
-           if name.endswith(('.js', '.css', '.html'))}
+           if name.endswith(('.js', '.jsx', '.css', '.html'))}
     try:
         result = subprocess.run(['node', str(ROOT / 'scripts/compile-tv-web.cjs')],
                                 input=json.dumps(web), capture_output=True, text=True, encoding='utf-8',
@@ -19,7 +19,7 @@ def compile_web(files):
         raise RuntimeError('TV web compilation requires Node.js 20.19+ and npm ci.') from error
     except subprocess.CalledProcessError as error:
         raise RuntimeError('TV web compilation failed. Run npm ci in the source checkout.\n' + error.stderr) from error
-    output = dict(files)
+    output = {name: raw for name, raw in files.items() if name not in web}
     output.update({name: text.encode('utf-8') for name, text in json.loads(result.stdout).items()})
     return output
 

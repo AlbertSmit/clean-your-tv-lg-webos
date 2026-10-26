@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="renewal-panel.css">
   <link rel="stylesheet" href="i18n.css">
+  <link rel="stylesheet" href="appearance.css">
 </head>
 <body>
   <!-- Ambient glow in the colour of the focused dock app; two layers so colours crossfade. -->
@@ -41,7 +42,7 @@
   <!-- Everything below the header scrolls together: dock band, tiles and the glass highlight. -->
   <div id="viewport">
     <div id="stage">
-      <div id="dockBand"></div>
+      <div id="dockBand"><div id="dockTexture"></div></div>
       <div id="tiles"></div>
       <div id="glass"></div>
     </div>
@@ -55,6 +56,7 @@
   <script src="config.js"></script>
   <script src="i18n.js"></script>
   <script src="catalogs.js"></script>
+  <script src="home-ui.js"></script>
   <script src="apps.js"></script>
   <script src="app-library.js"></script>
   <script src="user-data.js"></script>

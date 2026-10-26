@@ -115,3 +115,11 @@ Jeśli Root pokazuje `Denied methods call status` zaraz po konfiguracji nadzorcy
 Tylko Root: Ustawienia Home → Aktualizacje oprogramowania LG zmienia istniejące ustawienie Homebrew Channel. Dotyczy też aktualizacji zabezpieczeń TV; aktualizacje Clean Your TV są oddzielne. Obie zmiany wymagają prawdziwego ponownego uruchomienia TV; czuwanie nie wystarczy. Przełącznik pokazuje zapisane ustawienie, nie potwierdza działania blokady. Niektóre TV sprawdzają wcześniej; powiadomienia mogą pozostać i może być potrzebna blokada na routerze. Homebrew zachowuje ustawienie po usunięciu lub cofnięciu wersji CYTV. Przy niedostępności lub braku potwierdzenia sprawdź Homebrew i odśwież stan. Zakres testów TV opisuje zapis akceptacji.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Tylko wersja kandydująca: opcjonalny wygląd Home — No-root
+
+Ten kandydat w kodzie źródłowym dodaje **Ustawienia → Ekran główny → tvOS**. Wybierz **Dotychczasowy**, aby wrócić do obecnego układu i pięciu motywów kolorystycznych. **Ogranicz efekty** ogranicza efekty wizualne. Ta funkcja nie jest częścią opisanego powyżej opublikowanego wydania stabilnego.
+
+Wygląd tvOS wyświetla na całym ekranie statyczne tło fikcyjnego serialu **Sundown**. Dock i siatka aplikacji używają lokalnej, wcześniej rozmytej kopii; nie ma rekomendacji ze streamingu ani filtrów rozmycia na żywo. Przewijaj przyciskiem W dół lub kółkiem myszy. W prawym górnym rogu są niewielki zegar i przycisk Ustawienia w kształcie awatara. Kliknij go lub naciśnij W górę w pierwszym rzędzie aplikacji, aby pokazać wejścia, sieć i ustawienia. Wstecz lub W dół wraca do siatki.
+
+Preferencje wyglądu i efektów są zapisywane tylko na tym telewizorze. Pozostają po zwykłym ponownym uruchomieniu, ale nie są częścią kopii zapasowej profilu i mogą zostać utracone podczas ponownej instalacji lub przenoszenia profilu. Nowe elementy sterowania dotyczą tylko No-root. Czcionki, grafika, ruch i efekty Apple TV nie są odtworzone dokładnie; wydajność na LG 50UP77006LB nie została zweryfikowana.

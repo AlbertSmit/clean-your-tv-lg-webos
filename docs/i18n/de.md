@@ -125,3 +125,11 @@ Zeigt Root direkt nach der Supervisor-Einrichtung `Denied methods call status`, 
 Nur Root: Home-Einstellungen → LG-Firmware-Updates ändert die vorhandene Homebrew-Channel-Einstellung. Dies betrifft auch Firmware-Sicherheitsupdates; Clean Your TV wird separat aktualisiert. Beide Richtungen erfordern einen echten TV-Neustart; Standby reicht nicht aus. Der Schalter zeigt die gespeicherte Einstellung, keine geprüfte aktive Sperre. Manche TVs prüfen vor Beginn der Sperre; Hinweise können bleiben und eine Router-Sperre kann nötig sein. Homebrew behält die Einstellung nach Entfernung oder Rollback von CYTV. Bei fehlender Verfügbarkeit oder Bestätigung Homebrew prüfen und Status aktualisieren. Den Umfang der TV-Prüfung beschreibt der Abnahmebericht.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Nur im Kandidaten: optionaler Startbildschirm — No-root
+
+Dieser Quellcode-Kandidat ergänzt **Einstellungen → Startbildschirm → tvOS**. Mit **Bisherig** kehren Sie zum bisherigen Layout und seinen fünf Farbthemen zurück. **Effekte reduzieren** begrenzt visuelle Effekte. Diese Funktion gehört nicht zur oben beschriebenen veröffentlichten stabilen Version.
+
+Die tvOS-Darstellung zeigt ein bildfüllendes, statisches Motiv der fiktiven Serie **Sundown**. Dock und App-Raster nutzen eine lokal vorab weichgezeichnete Kopie; Streaming-Empfehlungen und Live-Weichzeichner werden nicht verwendet. Scrollen Sie mit Abwärts oder dem Mausrad. Oben rechts stehen eine kompakte Uhr und eine avatarförmige Einstellungstaste. Klicken Sie darauf oder drücken Sie in der obersten App-Reihe Aufwärts, um Eingänge, Netzwerk und Einstellungen einzublenden. Zurück oder Abwärts führt zum Raster.
+
+Darstellung und Effekte werden nur auf diesem Fernseher gespeichert. Sie bleiben bei normalen Neustarts erhalten, sind aber nicht Teil der Profilsicherung und können bei Neuinstallation oder Profilübertragung verloren gehen. Diese neuen Bedienelemente gelten nur für No-root. Apple-TV-Schriften, -Motive, -Bewegungen und -Effekte werden nicht exakt nachgebildet; die Leistung auf dem LG 50UP77006LB ist noch nicht geprüft.

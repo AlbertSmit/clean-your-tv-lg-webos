@@ -20,6 +20,9 @@
 - Compiled TV web apps include core-js (MIT) for ECMAScript compatibility and may
   include Babel helpers (MIT). Their license texts are retained in each web app's
   `compat-LICENSE.txt`. Babel and PostCSS are build tools, pinned by package-lock.json.
+- Home presentation modules bundle Nano JSX core 0.2.1 (MIT) locally in
+  `home-ui.js`, with its license retained as `home-ui-LICENSE.txt`. esbuild
+  0.28.2 is a build tool pinned by package-lock.json. No CDN runtime is required.
 - Compiled Helper app and service include core-js, safe-buffer and Babel helpers
   (MIT), with licenses in each package directory's `compat-LICENSE.txt`.
 
@@ -51,3 +54,18 @@ The independent System Updater bundles Mozilla CA root certificates from the
 curl CA Extract bundle. The certificate data and MPL 2.0 license are distributed
 as `updater-service/ca-bundle.crt` and `updater-service/ca-LICENSE.txt`, and copied
 into the supervisor bootstrap bundle.
+
+## Inter Display and candidate cinematic artwork
+
+The No-root tvOS appearance bundles static Inter Display 4.1 Regular, Medium and
+SemiBold, from the [official Inter 4.1 release archive](https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip):
+`launcher/fonts/InterDisplay-Regular.woff2`, `InterDisplay-Medium.woff2` and
+`InterDisplay-SemiBold.woff2`. Copyright (c) 2016 The Inter Project Authors;
+distributed under SIL Open Font License 1.1, retained as
+`launcher/fonts/Inter-OFL.txt`. [Inter source](https://github.com/rsms/inter).
+Apple SF fonts are not embedded; see [Apple's font license, section 2B](https://developer.apple.com/fonts/).
+
+The candidate **Sundown** backdrop is original fictional artwork generated with
+the built-in image-generation tool on 2026-10-26, with a local preblurred derivative.
+It is not Apple artwork or a third-party series still. Files, prompt and processing
+provenance are recorded in [`launcher/assets/README.md`](launcher/assets/README.md).

@@ -117,7 +117,8 @@
  document.getElementById('homeLanguage').onclick=function(){if(window.HomeI18n)HomeI18n.openLanguagePicker();};
  document.getElementById('renewalUpdates').onclick=function(){panel.classList.add('hidden');window.HomeUpdates.open({onClose:function(){panel.classList.remove('hidden');focus(buttons.indexOf(document.getElementById('renewalUpdates')));checkUpdates();}});};
  document.getElementById('renewalTV').onclick=function(){close();try{var b=new PalmServiceBridge();b.onservicecallback=function(){b.cancel();};b.call('luna://com.webos.applicationManager/launch',JSON.stringify({id:'com.palm.app.settings',params:{}}));}catch(_){}};
- buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.addEventListener('mouseover',function(){focus(i);});});
+ function bindButtons(){buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.onmouseover=function(){focus(i);};});}
+ bindButtons();
  document.addEventListener('keydown',function(e){if(!openNow())return;var k=e.keyCode;
   if([9,37,38,39,40,13,461,27].indexOf(k)<0)return;
   e.preventDefault();e.stopImmediatePropagation();
@@ -127,11 +128,12 @@
  // Mount theme panel after panel is in DOM, then rebuild buttons array
  setTimeout(function(){
   var container=document.getElementById('themeSection');
+  if(container && window.HomeUI)window.HomeUI.mountAppearance(container);
   if(container && window.ThemePanel && window.ThemePanel.mount){
    window.ThemePanel.mount(container);
    // Rebuild buttons array to include theme buttons
    buttons=Array.prototype.slice.call(panel.querySelectorAll('button'));
-   buttons.forEach(function(b,i){b.onfocus=function(){index=i;};b.addEventListener('mouseover',function(){focus(i);});});
+   bindButtons();
   }
  }, 0);
  // No session request, token access or scheduler setup happens on launcher startup.

@@ -81,6 +81,9 @@ class PreviewTest(unittest.TestCase):
             page = get('/launcher/index.html')
             self.assertLess(page.index('/preview/bridge.js'), page.index('profile-bootstrap.js'))
             self.assertEqual(get('/launcher/style.css'), (ROOT / 'launcher/style.css').read_text())
+            self.assertIn('HomeUI', get('/launcher/home-ui.js'))
+            self.assertIn('MIT License', get('/launcher/home-ui-LICENSE.txt'))
+            self.assertIn('home-tvos', get('/launcher/appearance.css'))
             apps = json.loads(get('/launcher/apps.js').removeprefix('window.TV_APPS = ').rstrip(';\n'))
             self.assertGreaterEqual(len(apps['apps']), 10)
             for app in apps['apps']:
@@ -106,7 +109,8 @@ class PreviewTest(unittest.TestCase):
                 self.assertNotEqual(get('/preview/version'), before_profile)
             for path in ['/README.md', '/.lgtv-key.json', '/launcher/../config.js',
                          '/launcher/%2e%2e/.env', '/launcher/icons/private.png', '/scripts/build.sh',
-                         '/preview/icons/%2e%2e/bridge.js', '/preview/icons/private.png']:
+                         '/preview/icons/%2e%2e/bridge.js', '/preview/icons/private.png',
+                         '/launcher/ui/index.jsx', '/launcher/ui/preferences.js']:
                 with self.assertRaises(HTTPError) as error:
                     urlopen(base + path)
                 self.assertEqual(error.exception.code, 404)

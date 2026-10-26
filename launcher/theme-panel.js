@@ -14,19 +14,18 @@
   const CLASS_PREFIX = 'theme-';
 
   function applyTheme(themeId) {
+    if (!THEMES.some(t => t.id === themeId)) themeId = 'classic';
     const html = document.documentElement;
-    // Remove all theme classes
     THEMES.forEach(t => html.classList.remove(CLASS_PREFIX + t.id));
-    // Add selected theme class (except classic which is default)
     if (themeId !== 'classic') {
       html.classList.add(CLASS_PREFIX + themeId);
     }
-    localStorage.setItem(STORAGE_KEY, themeId);
+    try { localStorage.setItem(STORAGE_KEY, themeId); } catch (_) {}
     updateButtonStates(themeId);
   }
 
   function getCurrentTheme() {
-    return localStorage.getItem(STORAGE_KEY) || 'classic';
+    try { return localStorage.getItem(STORAGE_KEY) || 'classic'; } catch (_) { return 'classic'; }
   }
 
   function updateButtonStates(activeId) {
@@ -38,9 +37,6 @@
   function createThemePanel() {
     const panel = document.createElement('section');
     panel.className = 'theme-panel';
-    panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-modal', 'true');
-    panel.setAttribute('aria-label', 'Theme');
 
     const card = document.createElement('div');
     card.className = 'theme-panel-card';

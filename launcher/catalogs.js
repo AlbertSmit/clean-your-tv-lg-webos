@@ -1912,3 +1912,55 @@ HomeI18n.add({
     "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "Не удалось проверить состояние Helper на этом телевизоре. Запускайте Helper, только когда будете готовы снова использовать управление Home."
   }
 });
+HomeI18n.add({
+  "en": {
+    "Home screen": "Home screen",
+    "Existing": "Existing",
+    "Reduce effects": "Reduce effects"
+  },
+  "de": {
+    "Home screen": "Startbildschirm",
+    "Existing": "Bisherig",
+    "Reduce effects": "Effekte reduzieren"
+  },
+  "es": {
+    "Home screen": "Pantalla de inicio",
+    "Existing": "Actual",
+    "Reduce effects": "Reducir efectos"
+  },
+  "pt-BR": {
+    "Home screen": "Tela inicial",
+    "Existing": "Atual",
+    "Reduce effects": "Reduzir efeitos"
+  },
+  "fr": {
+    "Home screen": "Écran d’accueil",
+    "Existing": "Actuel",
+    "Reduce effects": "Réduire les effets"
+  },
+  "it": {
+    "Home screen": "Schermata Home",
+    "Existing": "Attuale",
+    "Reduce effects": "Riduci effetti"
+  },
+  "ko": {
+    "Home screen": "홈 화면",
+    "Existing": "기존",
+    "Reduce effects": "효과 줄이기"
+  },
+  "hi": {
+    "Home screen": "होम स्क्रीन",
+    "Existing": "मौजूदा",
+    "Reduce effects": "प्रभाव कम करें"
+  },
+  "pl": {
+    "Home screen": "Ekran główny",
+    "Existing": "Dotychczasowy",
+    "Reduce effects": "Ogranicz efekty"
+  },
+  "ru": {
+    "Home screen": "Главный экран",
+    "Existing": "Прежний",
+    "Reduce effects": "Уменьшить эффекты"
+  }
+});

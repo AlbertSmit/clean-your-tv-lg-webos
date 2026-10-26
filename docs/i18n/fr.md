@@ -125,3 +125,11 @@ Si Root affiche `Denied methods call status` juste après la préparation du sup
 Root uniquement : Réglages Home → Mises à jour du micrologiciel LG modifie le réglage existant de Homebrew Channel. Cela inclut les mises à jour de sécurité du micrologiciel ; celles de Clean Your TV restent séparées. Un vrai redémarrage du TV est nécessaire dans les deux sens ; la veille ne suffit pas. Le bouton montre le réglage enregistré, pas un blocage effectif vérifié. Certains TV vérifient avant le blocage ; les alertes peuvent rester et un blocage sur le routeur peut être nécessaire. Homebrew conserve le réglage après suppression ou retour arrière de CYTV. En cas d’indisponibilité ou de résultat non confirmé, vérifiez Homebrew et actualisez l’état. Le périmètre des tests TV figure dans le compte rendu de validation.
 
 [LG firmware blocking](../LG-FIRMWARE-UPDATES.md) · [1.2.0](../RELEASE-1.2.0-ACCEPTANCE.md)
+
+## Version candidate uniquement : apparence Home facultative — No-root
+
+Ce code candidat ajoute **Paramètres → Écran d’accueil → tvOS**. Choisissez **Actuel** pour retrouver la disposition actuelle et ses cinq thèmes de couleur. **Réduire les effets** limite les effets visuels. Cette fonction ne fait pas partie de la version stable publiée décrite ci-dessus.
+
+L’apparence tvOS affiche en plein écran un fond statique de la série fictive **Sundown**. Le dock et la grille utilisent une copie locale floutée à l’avance ; il n’y a ni recommandations de streaming ni filtres de flou en direct. Faites défiler avec Bas ou la molette de la souris. Une horloge compacte et un bouton Paramètres en forme d’avatar se trouvent en haut à droite. Cliquez dessus ou appuyez sur Haut depuis la première rangée d’applications pour afficher les entrées, le réseau et les paramètres. Retour ou Bas ramène à la grille.
+
+Les préférences d’apparence et d’effets sont enregistrées uniquement sur ce téléviseur. Elles survivent aux redémarrages ordinaires, mais ne sont pas incluses dans les sauvegardes du profil et peuvent être perdues lors d’une réinstallation ou d’un transfert de profil. Ces nouvelles commandes concernent uniquement No-root. Les polices, illustrations, mouvements et effets d’Apple TV ne sont pas reproduits exactement ; les performances sur LG 50UP77006LB n’ont pas été vérifiées.

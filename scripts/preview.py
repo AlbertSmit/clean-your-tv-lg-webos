@@ -15,7 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER_FILES = {
     'index.html', 'style.css', 'renewal-panel.css', 'app.js', 'app-library.js', 'config.js',
     'user-data.js', 'release-notes.js', 'system-updates.js', 'update-panel.js', 'renewal-panel.js', 'helper-control.js', 'profile-bootstrap.js',
-    'native-bootstrap.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
+    'native-bootstrap.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'theme-panel.js',
+    'appearance.css', 'home-ui.js', 'home-ui-LICENSE.txt',
+    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
+    'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 }
 DEMO_APPS = [
     ('youtube', 'YouTube', '#ffffff'),
@@ -34,8 +39,32 @@ ROOT_LAUNCHER_FILES = {
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
     'i18n.js', 'catalogs.js', 'i18n.css', 'root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css',
     'root-profile-data.js', 'root-profile.js', 'release-notes.js', 'system-updates.js', 'root-updates.js',
+    'appearance.css', 'theme-panel.js', 'home-ui.js', 'home-ui-LICENSE.txt',
+    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
+    'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
 }
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}
+_home_ui_revision = None
+_home_ui_files = {}
+
+
+def home_ui():
+    """Compile only the UI island; never expose module sources over HTTP."""
+    global _home_ui_revision, _home_ui_files
+    files = {path.relative_to(ROOT / 'launcher').as_posix(): path.read_bytes()
+             for path in sorted((ROOT / 'launcher/ui').rglob('*'))
+             if path.is_file() and path.suffix in ('.js', '.jsx')}
+    digest = hashlib.sha256()
+    for name, raw in files.items():
+        digest.update(name.encode())
+        digest.update(raw)
+    version = digest.hexdigest()
+    if version != _home_ui_revision:
+        compile_web = runpy.run_path(str(ROOT / 'scripts/tv_web_build.py'))['compile_web']
+        _home_ui_files = compile_web(files)
+        _home_ui_revision = version
+    return _home_ui_files
 
 
 def inventory():
@@ -50,6 +79,8 @@ def inventory():
 
 def revision():
     files = [ROOT / 'launcher' / name for name in sorted(LAUNCHER_FILES)]
+    files += sorted((ROOT / 'launcher/ui').rglob('*'))
+    files += [ROOT / 'scripts/compile-tv-web.cjs', ROOT / 'scripts/bundle-home-ui.cjs']
     files += [ROOT / 'root-edition/preview.py']
     files += [ROOT / 'root-edition/ui' / name for name in ('root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')]
     files += [ROOT / 'preview/index.html', ROOT / 'preview/bridge.js', ROOT / 'preview/live-reload.js']
@@ -72,6 +103,7 @@ def launcher_html():
 def root_launcher():
     # Reuse the isolated Root UI staging, without any installer or runtime services.
     staged = runpy.run_path(str(ROOT / 'root-edition/preview.py'))['prepare']()
+    staged.update(home_ui())
     files = {name: staged[name] for name in ROOT_LAUNCHER_FILES}
     files['apps.js'] = ('window.TV_APPS = ' + json.dumps(inventory()) + ';\n').encode()
     files['index.html'] = files['index.html'].replace(
@@ -91,7 +123,9 @@ def export_site(destination):
     for name in sorted(LAUNCHER_FILES):
         target = destination / 'launcher' / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        if name == 'index.html':
+        if name in ('home-ui.js', 'home-ui-LICENSE.txt'):
+            target.write_bytes(home_ui()[name])
+        elif name == 'index.html':
             target.write_text(launcher_html(), encoding='utf-8')
         else:
             shutil.copyfile(ROOT / 'launcher' / name, target)
@@ -114,6 +148,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
         file = None
+        if path in ('/launcher/home-ui.js', '/launcher/home-ui-LICENSE.txt'):
+            name = path.rsplit('/', 1)[1]
+            try:
+                self.respond(home_ui()[name], 'text/javascript; charset=utf-8' if name.endswith('.js') else 'text/plain; charset=utf-8')
+            except RuntimeError as error:
+                self.send_error(500, 'UI compilation failed')
+                print(error, flush=True)
+            return
         if path == '/preview/version':
             self.respond(revision().encode(), 'text/plain; charset=utf-8')
             return

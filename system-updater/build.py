@@ -42,7 +42,7 @@ def build(output):
         code['system_updater/'+name]=source(ROOT/'updater-service'/name)
     runtime=assigned(ROOT/'root-edition/deploy.py','RUNTIME_FILES')
     updater=assigned(ROOT/'root-edition/build_updater.py','UPDATER_FILES')
-    support=assigned(ROOT/'root-edition/build_updater.py','SUPPORT')
+    support=assigned(ROOT/'root-edition/build_updater.py','SUPPORT')+assigned(ROOT/'root-edition/build_updater.py','COORDINATOR_FILES')
     private=assigned(ROOT/'root-edition/provision.py','PRIVATE_FILES')
     infra=['support/python_binding.py','support/python_boot.js']+['service/'+n for n in private]+['runtime/'+n for n in runtime]+['updater/updater/'+n for n in updater]+['updater/'+n for n in support]+['updater/updater/release-public.pem','updater/service.js','updater/run-updater.py','updater/services.json','updater/package.json']
     code['infrastructure-paths.json']=(json.dumps(sorted(infra))+'\n').encode()

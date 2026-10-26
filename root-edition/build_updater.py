@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 UPDATER_FILES=('core.py','store.py','profile.py','device.py','package.py','cli.py','fetch.js','bridge.js','luna.py','bootstrap.py','ca-bundle.crt','ca-LICENSE.txt')
 SUPPORT=('installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js')
+COORDINATOR_FILES=('install_driver.py', 'install_device.py', 'system_setup.py', 'root_package.py', 'app-inventory.js', 'cleanup_root_updater.py', 'cleanup_system_updater.py', 'cleanup_legacy_permissions.py', 'cleanup_app_permissions.py', 'cleanup_root_archive.py', 'system_updater/__init__.py', 'system_updater/core.py', 'system_updater/device.py', 'system_updater/support/__init__.py', 'system_updater/support/package.py', 'system_updater/support/store.py', 'system_updater/support/profile.py', 'system_updater/support/luna.py')
 APP='com.cleanyourtv.root.updater'
 
 
@@ -25,6 +26,23 @@ def build(output):
     builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
     code={'updater/'+name:source(ROOT/'updater'/name) for name in UPDATER_FILES}
     code.update({name:source(ROOT/name) for name in SUPPORT})
+    for name in ('install_driver.py','install_device.py'):
+        code[name]=source(ROOT/name)
+    code['system_setup.py']=source(ROOT.parent/'system-updater/setup.py')
+    code['root_package.py']=source(ROOT.parent/'cytv/package.py')
+    code['app-inventory.js']=source(ROOT/'service/app-inventory.js')
+    import sys
+    sys.path.insert(0,str(ROOT.parent))
+    sys.path.insert(0,str(ROOT))
+    from cytv import root_updater_remove, system_updater_remove, legacy_permissions_remove, app_permissions_remove, root_archive
+    for name,module in (('root_updater',root_updater_remove),('system_updater',system_updater_remove),('legacy_permissions',legacy_permissions_remove),('app_permissions',app_permissions_remove),('root_archive',root_archive)):
+        code['cleanup_'+name+'.py']=module.SCRIPT.encode()
+    code['system_updater/__init__.py']=b''
+    code['system_updater/support/__init__.py']=b''
+    for name in ('core.py','device.py'):
+        code['system_updater/'+name]=source(ROOT.parent/'system-updater'/name)
+    for name in ('package.py','store.py','profile.py','luna.py'):
+        code['system_updater/support/'+name]=source(ROOT/'updater'/name)
     code['updater/release-public.pem']=source(ROOT.parent/'updater-service/release-public.pem')
     code['service.js']=source(ROOT/'updater/service.js')
     code['run-updater.py']=b'from updater.cli import entry\nentry()\n'

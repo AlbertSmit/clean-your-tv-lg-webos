@@ -28,7 +28,7 @@ class SetupTests(unittest.TestCase):
             self.assertIn('updater/core.py',manifest['files'])
             self.assertIn('installation.py',manifest['files'])
             result=subprocess.run([sys.executable,'-I','-B','-c',
-                'import sys;sys.path.insert(0,sys.argv[1]);import installation;'
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation,install_driver,install_device,system_setup,root_package;'
                 'assert installation.Store.__module__ == "updater.store"',str(out)],
                 cwd=Path(temp),capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)

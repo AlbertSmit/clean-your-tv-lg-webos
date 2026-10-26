@@ -133,13 +133,13 @@ def verify_baseline(baseline,bundle=None):
             if item.get('kind')!='ipk' or item.get('application')!=app or info.get('id')!=app or info.get('version')!=item['version']:raise ValueError('Baseline package identity mismatch')
     return manifest
 
-def tgz(files):
+def tgz(files,executable=None):
     buffer=io.BytesIO()
     with tarfile.open(fileobj=buffer,mode='w',format=tarfile.USTAR_FORMAT) as archive:
         for name,raw in sorted(files.items()):
             item=tarfile.TarInfo(name);item.size=len(raw);item.mode=0o644;item.mtime=1704067200
             # Helper native binaries must remain runnable after rollback.
-            if name.rsplit('/',1)[-1] in ('detach','relay','resume','boot-recover.sh'):item.mode=0o755
+            if (name in executable if executable is not None else name.rsplit('/',1)[-1] in ('detach','relay','resume','boot-recover.sh')):item.mode=0o755
             archive.addfile(item,io.BytesIO(raw))
     return gzip.compress(buffer.getvalue(),mtime=0)
 
@@ -162,7 +162,7 @@ def snapshot(bundle,edition,output,installed=INSTALLED,runtime=Path('/var/lib/cl
         services=metadata.get('services',[])
         allowed={'home':['com.gathin.tvhome.renewal'],'helper':['com.local.nativehome.service'],'updater':['com.cleanyourtv.updater.service'],'root':['com.cleanyourtv.root.preview.service'],'root-updater':['com.cleanyourtv.root.updater.service']}
         if metadata.get('id')!=app or metadata.get('version')!=info['version'] or services!=allowed[name]:raise ValueError('Installed package services invalid')
-        files={}
+        files={};executable=set()
         prefixes=['usr/palm/applications/'+app,'usr/palm/packages/'+app]+['usr/palm/services/'+s for s in services]
         for prefix in prefixes:
             folder=Path(installed)/prefix
@@ -170,10 +170,12 @@ def snapshot(bundle,edition,output,installed=INSTALLED,runtime=Path('/var/lib/cl
                 rel=path.relative_to(folder)
                 if 'state' in rel.parts:continue
                 if path.is_symlink():raise ValueError('Indirect installed package')
-                if path.is_file():files[prefix+'/'+rel.as_posix()]=safe(path)
+                if path.is_file():
+                    relative_name=prefix+'/'+rel.as_posix();files[relative_name]=safe(path)
+                    if path.stat().st_mode&0o111:executable.add(relative_name)
         control=('Package: '+app+'\nVersion: '+info['version']+'\nArchitecture: '+('arm' if name=='helper' else 'all')+'\nMaintainer: Clean Your TV\nDescription: Captured installed baseline\n').encode()
         raw=bytearray(b'!<arch>\n')
-        for part,data in {'debian-binary':b'2.0\n','control.tar.gz':tgz({'control':control}),'data.tar.gz':tgz(files)}.items():
+        for part,data in {'debian-binary':b'2.0\n','control.tar.gz':tgz({'control':control}),'data.tar.gz':tgz(files,executable)}.items():
             raw.extend(f'{part + "/":<16}{0:<12}{0:<6}{0:<6}{"100644":<8}{len(data):<10}`\n'.encode());raw.extend(data)
             if len(data)%2:raw.extend(b'\n')
         raw=bytes(raw);sha=digest(raw);(output/'cache'/sha).write_bytes(raw)
@@ -295,7 +297,8 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         sys.path.insert(0,str(code));from observed_install import install
     require_legacy_idle()
     record('bootstrap',{'phase':'installing-supervisor'})
-    install(APP,str(bundle/'system-updater.ipk'),timeout=180,on_ready=lambda:record('bootstrap',{'phase':'submitting-supervisor'}),on_accepted=lambda evidence:record('bootstrap',{'phase':'accepted-supervisor','evidence':evidence}))
+    terminal=install(APP,str(bundle/'system-updater.ipk'),timeout=180,on_ready=lambda:record('bootstrap',{'phase':'submitting-supervisor'}),on_accepted=lambda evidence:record('bootstrap',{'phase':'accepted-supervisor','evidence':evidence}))
+    if terminal is not None:record('installed-terminal',terminal)
     for name,data in package_files(safe(bundle/'system-updater.ipk')).items():
         if safe(Path(installed)/name)!=data:raise ValueError('Installed supervisor payload mismatch')
     record('bootstrap',{'phase':'provisioning'})

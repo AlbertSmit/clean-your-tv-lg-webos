@@ -202,9 +202,11 @@ def install(bundle, run=command, observe=observed_install, migrate=False):
         target.write_bytes(checked_file(Path(bundle).resolve(), 'runtime/' + name)); target.chmod(0o600)
     install_launcher(STATE, write_binding)
     package = str(Path(bundle).resolve() / manifest['package'])
-    observe(APP, package, timeout=120,
+    terminal = observe(APP, package, timeout=120,
             on_ready=lambda: write_stage('install-submitting', package=package),
             on_accepted=lambda event: write_stage('install-accepted', package=package, evidence=event))
+    if terminal is not None:
+        write_binding(STATE/'install-terminal.json',json.dumps(terminal,sort_keys=True).encode())
     write_stage('install-observed')
     release = json.loads((Path(bundle) / 'release.json').read_text())
     verify_payload(release)
@@ -289,7 +291,7 @@ def _remove_root(run, proof):
     evidence = remove(APP, timeout=120)
     write_stage('remove-observed', evidence=evidence, **proof)
     verify_removed(evidence)
-    write_stage('uninstalled-state-retained', **proof)
+    write_stage('uninstalled-state-retained', evidence=evidence, **proof)
     return {'returnValue': True, 'removed': APP, 'state_retained': str(STATE)}
 
 

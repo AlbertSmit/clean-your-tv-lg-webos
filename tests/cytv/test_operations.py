@@ -11,6 +11,7 @@ from cytv import operations, package, state
 class Remote:
     def __init__(self, fail=None):
         self.calls, self.fail = [], fail
+        self.uploads = {}
         self.installed = []
         self.active = {'recovery': {'integrity_verified': True}, 'intent': {'enabled': True, 'phase': 'active'}, 'guardian_active': True, 'effective': {'sam_home': package.ROOT_APP, 'profiles': {'idleApp': {'appId': package.ROOT_APP}, 'defaultApps': {'categories': {'home': package.ROOT_APP}}}}}
 
@@ -26,6 +27,18 @@ class Remote:
             return ''
         if 'CYTV_ROOT_READY' in command:
             return 'CYTV_ROOT_READY'
+        if 'install_driver.py' in command:
+            words=shlex.split(command)
+            action=words[next(i for i,w in enumerate(words) if w.endswith('/install_driver.py'))+1]
+            operation=words[words.index('--operation')+1] if '--operation' in words else None
+            if action=='inspect': return json.dumps({'operation':None,'state':'fresh','installation':{'state':'fresh','can_maintain':False}})
+            if self.fail=='deploy': raise RuntimeError('connection interrupted')
+            if self.fail=='updater': return json.dumps({'operation':operation,'state':'recovery_required','stage':'root-updater','code':'installation_requires_recovery'})
+            payload=words[words.index('--payload')+1]
+            manifest=json.loads(self.uploads[payload+'/root/bundle.json'])
+            import hashlib
+            baseline=hashlib.sha256(self.uploads[payload+'/root/'+manifest['package']]).hexdigest()
+            return json.dumps({'operation':operation,'state':'complete','stage':'complete','code':'verified','result':{'installed':package.ROOT_APP,'home_changed':False,'verified':True,'baseline_sha':baseline}})
         if 'setup-updater.py' in command:
             if self.fail == 'updater': raise RuntimeError('updater setup interrupted')
             return json.dumps({'installed': True})
@@ -43,6 +56,7 @@ class Remote:
 
     def upload(self, path, data, mode=0o600):
         self.calls.append(('upload', path, mode))
+        self.uploads[path]=data
 
     def luna(self, uri, payload, terminal=None, timeout=30, app_id=None):
         self.calls.append(('luna', uri, payload))
@@ -495,12 +509,10 @@ class OperationTests(unittest.TestCase):
         remote = Remote()
         result = self.installer(remote, 'root').install(self.inventory)
         commands = [c[1] for c in remote.calls if c[0] == 'run']
-        install = next(c for c in commands if 'deploy.py install' in c)
-        setup = next(c for c in commands if 'setup-updater.py' in c)
-        baseline = shlex.split(install)[-1]
-        self.assertIn('--baseline ' + baseline, setup)
-        self.assertLess(commands.index(install), commands.index(setup))
-        self.assertLess(commands.index(setup), next(i for i,c in enumerate(commands) if c.endswith(' enable')))
+        install = next(c for c in commands if '/install_driver.py install ' in c)
+        self.assertIn('--payload ',install)
+        self.assertFalse(any('setup-updater.py --device' in c or 'deploy.py install' in c for c in commands))
+        self.assertLess(commands.index(install),next(i for i,c in enumerate(commands) if c.endswith(' enable')))
         self.assertTrue(result['updates_ready'])
         self.assertTrue(any(c[0] == 'luna' and c[1] == 'com.cleanyourtv.root.updater.service/status' for c in remote.calls))
 
@@ -511,9 +523,10 @@ class OperationTests(unittest.TestCase):
                 self.store = state.Store(Path(tmp) / 'state')
                 remote = Remote(fail=failure)
                 installer = self.installer(remote, 'root')
-                with self.assertRaisesRegex(RuntimeError, 'updater'):
+                with self.assertRaises(RuntimeError):
                     installer.install(self.inventory)
-                self.assertEqual(self.store.pending(installer.profile)['action'], 'setup-root-updater')
+                self.assertEqual(self.store.pending(installer.profile)['action'], 'install')
+                self.assertRegex(self.store.pending(installer.profile)['product_operation'],'^[a-f0-9]{32}$')
                 self.assertFalse(any(c[0] == 'run' and c[1].endswith(' enable') for c in remote.calls))
 
     def test_bad_rollback_format_stops_before_removing_existing_root(self):
@@ -576,7 +589,7 @@ class OperationTests(unittest.TestCase):
         installer = self.installer(remote, 'root')
         installer.install(self.inventory, None)
         commands = [c[1] for c in remote.calls if c[0] == 'run']
-        self.assertTrue(any('deploy.py install --bundle' in cmd for cmd in commands))
+        self.assertEqual(sum('/install_driver.py install --operation' in cmd for cmd in commands),1)
         self.assertTrue(any(cmd.endswith(' enable') for cmd in commands))
         self.assertEqual(remote.calls[-2][1:], ('com.webos.applicationManager/launch', {'id': package.ROOT_APP}))
         self.assertTrue(remote.calls[-1][1].endswith(' status'))
@@ -743,7 +756,7 @@ class OperationTests(unittest.TestCase):
         installer=self.installer(remote, 'root')
         result=installer.install(self.inventory, reinstall='installed')
         self.assertEqual(result['installed'], package.ROOT_APP)
-        self.assertEqual(actions, ['uninstall','inspect','archive','install','status','status','enable','status'])
+        self.assertEqual(actions, ['uninstall','inspect','archive','status','status','enable','status'])
         self.assertIsNone(self.store.pending(installer.profile))
 
     def test_no_root_accepts_arm32_userspace_on_aarch64_kernel(self):

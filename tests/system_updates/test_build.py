@@ -213,10 +213,18 @@ class BuildTests(unittest.TestCase):
             for kind,app in (('root','com.cleanyourtv.root.preview'),('root-updater','com.cleanyourtv.root.updater')):
                 appdir=installed/'usr/palm/applications'/app;appdir.mkdir(parents=True)
                 (appdir/'appinfo.json').write_text(json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html'}));(appdir/'index.html').write_text('Home')
+                (appdir/'startup.sh').write_text('#!/bin/sh\nexit 0\n');(appdir/'startup.sh').chmod(0o755)
                 package_dir=installed/'usr/palm/packages'/app;package_dir.mkdir(parents=True);(package_dir/'packageinfo.json').write_text(json.dumps({'id':app,'app':app,'version':'1.0.0','services':[app+'.service']}))
                 service_dir=installed/'usr/palm/services'/(app+'.service');service_dir.mkdir(parents=True);(service_dir/'service.js').write_text('service')
             baseline=setup.snapshot(bundle,'root',root/'baseline',installed=installed,**roots)
             manifest=setup.verify_baseline(baseline,bundle)
+            import io,tarfile
+            from cytv.package import read_ar
+            for item in manifest['components']:
+                if item['kind']!='ipk':continue
+                raw=(baseline/'cache'/item['sha256']).read_bytes()
+                with tarfile.open(fileobj=io.BytesIO(read_ar(raw)['data.tar.gz']),mode='r:gz') as archive:
+                    self.assertEqual(archive.getmember('usr/palm/applications/'+item['application']+'/startup.sh').mode,0o755)
             captured=next(c for c in manifest['components'] if c['name']=='root-infrastructure')
             self.assertEqual(set(captured['absent']),missing)
             self.assertEqual(set(captured['files']),set(names)-missing)

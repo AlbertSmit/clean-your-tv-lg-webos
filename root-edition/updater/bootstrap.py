@@ -39,6 +39,8 @@ def verify_bundle(bundle):
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
               'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
               'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','python_binding.py','python_boot.js'}
+    from install_driver import BUNDLED_FILES
+    required.update(BUNDLED_FILES)
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')
     for name,sha in manifest['files'].items():
         if digest(safe_bytes(bundle/name))!=sha:raise ValueError('Updater bundle hash mismatch: '+name)
@@ -111,12 +113,17 @@ def apply(bundle,baseline):
     if status['active'] or not status['safe']:raise ValueError('Verify LG Home routing before one-time updater setup')
     from observed_install import install
     store.write('bootstrap',{'phase':'installing-updater'})
-    install('com.cleanyourtv.root.updater',str(bundle/'root-updater.ipk'),timeout=180,
+    terminal=install('com.cleanyourtv.root.updater',str(bundle/'root-updater.ipk'),timeout=180,
             on_ready=lambda:store.write('bootstrap',{'phase':'submitting-updater'}),
             on_accepted=lambda event:store.write('bootstrap',{'phase':'accepted-updater','evidence':event}))
+    if terminal is not None: store.write('installed-terminal',terminal)
     from updater.package import members,archive,verify_payload
     payload=archive(members(safe_bytes(bundle/'root-updater.ipk'))['data.tar.gz'])
     verify_payload(Path('/media/developer/apps'),{name:digest(raw) for name,raw in payload.items()})
+    import io, tarfile
+    with tarfile.open(fileobj=io.BytesIO(members(safe_bytes(bundle/'root-updater.ipk'))['data.tar.gz']),mode='r:gz') as stream:
+        executable=sorted(member.name for member in stream if member.isfile() and member.mode & 0o111)
+    store.write('installed-package',{'schema':1,'files':{name:digest(raw) for name,raw in payload.items()},'executable':executable})
     store.write('bootstrap',{'phase':'provisioning'})
     paths={'service':BASE/'services.d'/(SERVICE+'.service'),'role':BASE/'roles.d'/(SERVICE+'.service.json'),
            'client':BASE/'client-permissions.d'/(SERVICE+'.service.json'),'api':BASE/'api-permissions.d'/(SERVICE+'.api.json')}

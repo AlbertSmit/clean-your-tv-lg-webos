@@ -58,7 +58,8 @@ def snapshot(supported, observe):
         except (OSError, ValueError, TypeError, KeyError, ImportError):
             value = dict(present=True, packages_match=False, receipts_match=False,
                          pending=False, retained=True, complete=False, migration_supported=False)
-        observations.append(value)
+        if name != 'system-updater' or value['present']:
+            observations.append(value)
     present = any(v['present'] for v in observations)
     result = dict(supported=supported,
                   packages_match=all(v['packages_match'] for v in observations),
@@ -201,7 +202,7 @@ def device_operation(owner, recovery=False, ownership=None, read=read_journal):
             ownership.stage(record,stage,terminal=terminal)
 
 
-def device_snapshot(supported=True, read=read_journal):
+def device_snapshot(supported=True, read=read_journal, owned_operation=None):
     """Read existing device evidence without modifying state or executing workers.
 
     Legacy bootstrap receipts do not inventory all installed app bytes. They
@@ -280,5 +281,5 @@ def device_snapshot(supported=True, read=read_journal):
     except ValueError:
         values['retained'] = True
         operation = None
-    if operation and not operation['terminal']: values['pending'] = True
+    if operation and not operation['terminal'] and operation['id'] != owned_operation: values['pending'] = True
     return values

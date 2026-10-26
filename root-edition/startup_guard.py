@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-from package_data import read
+from package_identity import identity, worker_allowed, TransitionUnknown
 
 OWNERS={'com.cleanyourtv.root.preview':Path('/var/lib/clean-your-tv-root'),
         'com.cleanyourtv.root.updater':Path('/var/lib/clean-your-tv-root-updater'),
@@ -14,14 +14,21 @@ INSTALLED=Path('/media/developer/apps')
 
 def present(owner):
     try:
-        info=json.loads(read(INSTALLED/'usr/palm/applications'/owner/'appinfo.json',installed=INSTALLED))
-        return isinstance(info,dict) and info.get('id')==owner and info.get('type')=='web'
-    except (OSError,ValueError,TypeError):return False
+        identity(owner,purpose='admission',installed=INSTALLED,full=True)
+        return True
+    except (OSError,ValueError,TypeError,KeyError):return False
 
 
 def start(owner):
     if owner not in OWNERS:raise ValueError('Foreign startup owner')
-    if not present(owner):return False
+    try:
+        if not worker_allowed(owner):return False
+    except (OSError,ValueError,TypeError,KeyError):return False
+    if not present(owner):
+        if owner=='com.cleanyourtv.root.preview':return False
+        try:identity(owner,purpose='worker',installed=INSTALLED,full=True)
+        except TransitionUnknown:pass
+        except (OSError,ValueError,TypeError,KeyError):return False
     state=OWNERS[owner]
     if owner=='com.cleanyourtv.root.preview':
         subprocess.run(['/bin/sh',str(state/'service/boot-recover.sh'),'mark'],check=True)

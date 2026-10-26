@@ -117,7 +117,7 @@ def verify_existing(secure,state,hook,owner,legacy,saved):
     verify_existing(secure,state,hook,owner,legacy,previous)
 
 
-def install_link(secure,write,state,hook,owner,legacy=()):
+def install_link(secure,write,state,hook,owner,legacy=(),sha256=None):
     state,hook=Path(state),Path(hook)
     legacy=legacy or owned_legacy(owner,state)
     trusted_directory(hook.parent)
@@ -130,8 +130,12 @@ def install_link(secure,write,state,hook,owner,legacy=()):
     elif os.path.lexists(hook):raise ValueError('Startup hook name collision')
     value=private_receipt(hook,owner)
     if saved==value and os.path.lexists(hook) and not hook.is_symlink():return
-    from package_data import read
-    info=json.loads(read(target_path(owner).parent/'appinfo.json',installed=INSTALLED,uid=EXPECTED_UID))
+    if sha256 is None:
+        from package_identity import identity
+        info=identity(owner,purpose='admission',installed=INSTALLED,uid=EXPECTED_UID)
+    else:
+        from package_data import read_verified
+        info=json.loads(read_verified(target_path(owner).parent/'appinfo.json',sha256=sha256,installed=INSTALLED,uid=EXPECTED_UID))
     if not isinstance(info,dict) or info.get('id')!=owner:raise ValueError('Startup owner identity changed')
     if saved and saved.get('version') in (1,2):
         previous=state/'startup-hook.previous.json'
@@ -170,8 +174,11 @@ def remove_link(secure,state,hook,owner,legacy=()):
 
 
 def install(secure,write):
+    from package_identity import bootstrap_inventory
+    files=bootstrap_inventory(STATE,uid=EXPECTED_UID)
     install_link(secure,write,STATE,HOOK,'com.cleanyourtv.root.preview',
-                 (CONTENT,managed_content(),previous_managed_content()))
+                 (CONTENT,managed_content(),previous_managed_content()),
+                 sha256=files['usr/palm/applications/com.cleanyourtv.root.preview/appinfo.json'])
 
 
 def remove(secure):

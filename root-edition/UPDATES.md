@@ -64,7 +64,7 @@ For a fresh manual Root installation, build fresh output directories. These
 commands do not migrate an existing retained updater:
 
 ```sh
-python3 root-edition/build.py --version 0.3.0 --output build/root-candidate
+python3 root-edition/build.py --version 0.4.0 --output build/root-candidate
 python3 root-edition/build_updater.py --output build/root-updater
 export CYTV_OPERATION=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
 python3 root-edition/setup_updater.py --bundle build/root-updater --baseline build/root-candidate --ssh my-tv --apply --operation "$CYTV_OPERATION"
@@ -158,3 +158,15 @@ rollback approval; approval of 0.6.18 is insufficient. QEMU and automated tests
 cannot establish TV acceptance. Issue #37's UK6540PTD / firmware 05.50.70 remains
 unvalidated for the managed runtime; issue #24's unfinished removal is not claimed
 resolved by the Android receipt fix.
+
+
+Unreleased cold-boot correction: rooted SDK DATA may have ordinary `0777` modes.
+The corrected private readers require independent original package hashes; they
+do not repair shared permissions or execute shared source. Missing/conflicting
+current, transaction or own-package proof keeps automatic Home rearm inhibited,
+while independent private LG Home restoration remains available. Deliver the
+changed helper closure through checked fresh setup/rebootstrap, preserving
+existing recovery archives and unknown-operation records. Updating Installer
+alone does not replace retained private product code. Root remains disabled until
+an explicit activation through the normal setup/settings flow. See the
+[candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).

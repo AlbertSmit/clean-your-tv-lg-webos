@@ -162,3 +162,6 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 [Installazione e recupero (inglese)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Test fisici in attesa (inglese)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.

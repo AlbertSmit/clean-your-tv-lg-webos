@@ -161,3 +161,6 @@ Homebrew 설치를 검증하지 않습니다.
 
 [설치와 복구 안내 (영어)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [미실행 실제 TV 검사 (영어)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+이 소스 후보에서 기존 Root 설치에 수정된 비공개 런타임을 적용하려면 검증된 복구와 새 설정이 필요합니다. Installer만 업데이트해도 기존 런타임은 교체되지 않습니다. 복구 기록을 보존하고 일반 설정 절차나 설정 화면에서만 Home을 활성화하세요.

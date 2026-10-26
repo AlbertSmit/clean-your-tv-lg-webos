@@ -91,6 +91,9 @@ class BuildTests(unittest.TestCase):
             for item in manifest['components']:
                 self.assertFalse(any('/state/' in n for n in package.data_files((baseline/'cache'/item['sha256']).read_bytes())))
             def install(app,filename,timeout,on_ready,on_accepted):
+                original=Path(filename).read_bytes()
+                self.assertEqual((state/'cache'/(hashlib.sha256(original).hexdigest()+'.ipk')).read_bytes(),original)
+                self.assertFalse((state/'installed-package.json').exists())
                 on_ready();on_accepted({'confirmed':True})
                 for name,data in package.data_files(Path(filename).read_bytes()).items():
                     target=installed/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
@@ -129,6 +132,9 @@ class BuildTests(unittest.TestCase):
                         self.assertEqual(lease['id'],pending)
                         result=setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
                 self.assertTrue(owner.status()['terminal'])
+                own=json.loads((state/'installed-package.json').read_text())
+                self.assertEqual((state/'cache'/(own['package']['sha256']+'.ipk')).read_bytes(),(bundle/'system-updater.ipk').read_bytes())
+                self.assertEqual(own['files'],{n:hashlib.sha256(b).hexdigest() for n,b in package.data_files((bundle/'system-updater.ipk').read_bytes()).items()})
                 completed=owner.status()
                 with self.assertRaises(FileExistsError):
                     with device_operation('system-bootstrap',ownership=owner,read=read,check=eligible):pass
@@ -232,7 +238,7 @@ class BuildTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp).resolve();bundle=root/'bundle';build.build(bundle)
             names=json.loads((bundle/'infrastructure-paths.json').read_text())
-            roots={kind:root/kind for kind in ('runtime','updater','service')}
+            roots={'runtime':root/'lib/clean-your-tv-root/runtime','service':root/'lib/clean-your-tv-root/service','updater':root/'lib/clean-your-tv-root-updater/code'}
             missing={'updater/updater/ca-bundle.crt','updater/updater/ca-LICENSE.txt'}
             self.assertTrue(missing<=set(names))
             for name in names:
@@ -241,12 +247,26 @@ class BuildTests(unittest.TestCase):
             files,absent=setup.capture_infrastructure(names,**roots)
             self.assertEqual(set(absent),missing);self.assertEqual(set(files)|set(absent),set(names))
             installed=root/'installed'
+            originals={}
             for kind,app in (('root','com.cleanyourtv.root.preview'),('root-updater','com.cleanyourtv.root.updater')):
                 appdir=installed/'usr/palm/applications'/app;appdir.mkdir(parents=True)
-                (appdir/'appinfo.json').write_text(json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html'}));(appdir/'index.html').write_text('Home')
+                (appdir/'appinfo.json').write_text(json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html','type':'web'}));(appdir/'index.html').write_text('Home')
                 (appdir/'startup.sh').write_text('#!/bin/sh\nexit 0\n');(appdir/'startup.sh').chmod(0o755)
                 package_dir=installed/'usr/palm/packages'/app;package_dir.mkdir(parents=True);(package_dir/'packageinfo.json').write_text(json.dumps({'id':app,'app':app,'version':'1.0.0','services':[app+'.service']}))
                 service_dir=installed/'usr/palm/services'/(app+'.service');service_dir.mkdir(parents=True);(service_dir/'service.js').write_text('service')
+                # Independently constructed original IPKs/receipts precede the
+                # writable SDK fixture; capture cannot invent authority from it.
+                prefix='usr/palm/applications/'+app+'/'
+                original={prefix+'appinfo.json':json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html','type':'web'}).encode(),prefix+'index.html':b'Home',prefix+'startup.sh':b'#!/bin/sh\nexit 0\n','usr/palm/packages/'+app+'/packageinfo.json':json.dumps({'id':app,'app':app,'version':'1.0.0','services':[app+'.service']}).encode(),'usr/palm/services/'+app+'.service/service.js':b'service'}
+                originals[kind]=(package.ipk(app,'1.0.0',original,executable={prefix+'startup.sh'}),original)
+            from updater.store import Store
+            import os
+            store=Store(roots['updater'].parent,uid=os.getuid());(roots['updater'].parent/'cache').mkdir()
+            raw=originals['root'][0];pin=hashlib.sha256(raw).hexdigest();(roots['updater'].parent/'cache'/(pin+'.ipk')).write_bytes(raw)
+            store.write('current',{'version':'1.0.0','sha256':pin,'size':len(raw),'local':True})
+            own=originals['root-updater'][1]
+            store.write('installed-package',{'schema':1,'files':{n:hashlib.sha256(b).hexdigest() for n,b in own.items()},'executable':['usr/palm/applications/com.cleanyourtv.root.updater/startup.sh']})
+            for target in installed.rglob('*'):target.chmod(0o777)
             baseline=setup.snapshot(bundle,'root',root/'baseline',installed=installed,**roots)
             manifest=setup.verify_baseline(baseline,bundle)
             import io,tarfile

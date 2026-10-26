@@ -172,3 +172,6 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 [Einrichtung und Wiederherstellung (Englisch)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Ausstehende TV-Prüfungen (Englisch)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.

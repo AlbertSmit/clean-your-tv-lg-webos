@@ -24,17 +24,17 @@ APPLICATIONS = Path('/media/developer/apps/usr/palm/applications')
 FAILSAFE = Path('/var/luna/preferences/webosbrew_failsafe')
 
 
-def home_present():
-    """Package presence is checked by the existing two-second health channel."""
+def home_present(*,purpose='current'):
+    """Ordinary authority and established live health use distinct selectors."""
     try:
-        from package_data import read
-        info=json.loads(read(APPLICATIONS/CANDIDATE/'appinfo.json',installed=APPLICATIONS.parents[2],uid=EXPECTED_UID))
+        from package_identity import identity
+        info=identity(CANDIDATE,purpose=purpose,installed=APPLICATIONS.parents[2],uid=EXPECTED_UID)
         return isinstance(info,dict) and info.get('id')==CANDIDATE and info.get('type')=='web'
-    except (OSError,ValueError,TypeError):return False
+    except (OSError,ValueError,TypeError,KeyError):return False
 
 
-def require_home():
-    if not home_present():raise ValueError('Root Home package is unavailable')
+def require_home(*,purpose='current'):
+    if not home_present(purpose=purpose):raise ValueError('Root Home package is unavailable')
 
 
 def process_start(pid):

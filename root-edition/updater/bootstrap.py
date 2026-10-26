@@ -39,7 +39,7 @@ def verify_bundle(bundle,reader=None):
               'updater/core.py','updater/store.py','updater/profile.py','updater/device.py','updater/package.py','updater/cli.py',
               'updater/fetch.js','updater/bridge.js','updater/luna.py','updater/bootstrap.py','updater/release-public.pem',
               'updater/ca-bundle.crt','updater/ca-LICENSE.txt',
-              'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','package_data.py','startup_guard.py','python_binding.py','python_boot.js'}
+              'installation.py','observed_install.py','installer_status.py','provision.py','deploy.py','setup.py','system_permissions.py','activity.py','startup_hook.py','package_data.py','package_identity.py','startup_guard.py','python_binding.py','python_boot.js'}
     from coordinator_inventory import BUNDLED_FILES
     required.update(BUNDLED_FILES)
     if set(manifest['files'])!=required:raise ValueError('Unexpected updater bundle inventory')
@@ -79,7 +79,7 @@ def preflight(bundle,baseline):
     release=json.loads(safe_bytes(baseline/'release.json'))
     raw=safe_bytes(baseline/baseline_manifest['package'])
     descriptor={'version':release['version'],'sha256':digest(raw),'size':len(raw),'local':True}
-    inspect_package(raw,descriptor)
+    hashes=inspect_package(raw,descriptor)
     # Compatibility bootstrap is refused on legacy infrastructure. Host migration
     # must restore and provision the new runtime; never overwrite a live runtime.
     proof=safe_bytes(ROOT_STATE/'recovery-provision.json',limit=65536,uid=0)
@@ -95,7 +95,11 @@ def preflight(bundle,baseline):
             raise ValueError('Updater-compatible Root infrastructure required; migrate from computer first')
     from updater.device import Device
     Device.require_home_resume_runtime(ROOT_STATE)
-    current=json.loads(safe_bytes(INSTALLED/'usr/palm/applications'/APP/'appinfo.json'))
+    from package_data import read_verified
+    from updater.package import verify_payload
+    verify_payload(INSTALLED,hashes)
+    info='usr/palm/applications/'+APP+'/appinfo.json'
+    current=json.loads(read_verified(INSTALLED/info,sha256=hashes[info],installed=INSTALLED))
     if current.get('version')!=descriptor['version']:raise ValueError('Baseline must match installed Root version')
     if STATE.exists() or STATE.is_symlink():raise FileExistsError('Updater setup exists; inspect retained state')
     if os.path.lexists(HOOK):raise FileExistsError('Updater boot hook collision')
@@ -143,6 +147,8 @@ def finish_registration(bundle):
     from updater.store import Store
     bundle=Path(bundle);verify_bundle(bundle);store=Store(STATE);code=STATE/'code'
     from updater.package import members,archive,verify_payload
+    from installation import terminal_install
+    if not terminal_install(store.read('installed-terminal'),'com.cleanyourtv.root.updater'):raise ValueError('Exact updater terminal required')
     payload=archive(members(safe_bytes(bundle/'root-updater.ipk'))['data.tar.gz'])
     verify_payload(INSTALLED,{name:digest(raw) for name,raw in payload.items()})
     import io, tarfile
@@ -175,7 +181,7 @@ def finish_registration(bundle):
     for key,path in paths.items():
         mode=stat.S_IMODE(path.stat().st_mode);atomic(path,updated[key],mode)
     import startup_hook
-    startup_hook.install_link(safe_bytes,atomic,STATE,HOOK,'com.cleanyourtv.root.updater')
+    startup_hook.install_link(safe_bytes,atomic,STATE,HOOK,'com.cleanyourtv.root.updater',sha256=digest(payload['usr/palm/applications/com.cleanyourtv.root.updater/appinfo.json']))
     import provision
     provision.refresh()
     store.write('bootstrap',{'phase':'complete','hardware_validated':False})

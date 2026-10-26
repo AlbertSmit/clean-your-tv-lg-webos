@@ -72,9 +72,11 @@ class PackageDataTests(unittest.TestCase):
             with patch.object(self.reader.os,'fstat',side_effect=changed):
                 with self.assertRaises(ValueError):self.read()
 
-    def read_as_root(self,path,owners):
+    def read_as_root(self,path,owners,verified=False):
         # Real fds, modes, inodes and bytes; model only platform ownership on a
         # host that cannot chown fixtures to root or the observed metadata owner.
+        import hashlib
+        expected=hashlib.sha256(path.read_bytes()).hexdigest() if verified else None
         original_fstat,original_lstat=os.fstat,Path.lstat
         identities={(value.st_dev,value.st_ino):uid
                     for name,uid in owners.items() for value in (original_lstat(name),)}
@@ -84,6 +86,7 @@ class PackageDataTests(unittest.TestCase):
             return SimpleNamespace(**values)
         with patch.object(self.reader.os,'fstat',side_effect=lambda fd:ownership(original_fstat(fd))), \
              patch.object(Path,'lstat',lambda path:ownership(original_lstat(path))):
+            if verified:return self.reader.read_verified(path,sha256=expected,installed=self.root,uid=0)
             return self.reader.read(path,installed=self.root,uid=0)
 
     def test_fixed_package_metadata_container_uid501_accepts_strict_root_owned_leaf_and_file(self):
@@ -128,3 +131,72 @@ class PackageDataTests(unittest.TestCase):
 
     def test_uid501_metadata_own_leaf_replacement_is_detected(self):
         self.assert_metadata_replacement_rejected(self.metadata.parent)
+
+    def test_verified_data_accepts_complete_0777_sdk_tree_and_checks_digest(self):
+        import hashlib
+        for path in (self.file.parent,self.file,self.metadata.parent,self.metadata):path.chmod(0o777)
+        for path in (self.file,self.metadata):
+            raw=path.read_bytes();digest=hashlib.sha256(raw).hexdigest()
+            self.assertEqual(self.reader.read_verified(path,sha256=digest,installed=self.root,uid=os.getuid()),raw)
+            with self.assertRaises(ValueError):self.reader.read_verified(path,sha256='0'*64,installed=self.root,uid=os.getuid())
+        with self.assertRaises(ValueError):self.read()
+
+    def test_verified_data_refuses_unpinned_private_special_bits_and_hardlinks(self):
+        import hashlib
+        digest=hashlib.sha256(self.file.read_bytes()).hexdigest()
+        for invalid in (None,'','A'*64,'0'*63):
+            with self.assertRaises(ValueError):self.reader.read_verified(self.file,sha256=invalid,installed=self.root,uid=os.getuid())
+        private=self.root.parent/'private.json';private.write_bytes(self.file.read_bytes());private.chmod(0o777)
+        with self.assertRaises(ValueError):self.reader.read_verified(private,sha256=digest,installed=self.root,uid=os.getuid())
+        original=os.fstat;inode=self.file.stat().st_ino
+        def special(fd):
+            info=original(fd)
+            values={name:getattr(info,name) for name in dir(info) if name.startswith('st_')}
+            if info.st_ino==inode:values['st_mode']|=0o4000
+            return SimpleNamespace(**values)
+        with patch.object(self.reader.os,'fstat',side_effect=special),self.assertRaises(ValueError):
+            self.reader.read_verified(self.file,sha256=digest,installed=self.root,uid=os.getuid())
+        self.file.chmod(0o777);os.link(self.file,self.file.with_name('hard'))
+        with self.assertRaises(ValueError):self.reader.read_verified(self.file,sha256=digest,installed=self.root,uid=os.getuid())
+
+    def test_verified_uid501_container_with_full_0777_and_same_byte_replacement(self):
+        import hashlib
+        self.metadata.parent.chmod(0o777);self.metadata.chmod(0o777)
+        self.assertEqual(json.loads(self.read_as_root(self.metadata,{self.metadata.parent.parent:501},verified=True))['id'],self.owner)
+        original=self.metadata.read_bytes();expected=hashlib.sha256(original).hexdigest();read=os.read;switched=[]
+        def replace(fd,count):
+            raw=read(fd,count)
+            if not switched:
+                switched.append(True);old=self.metadata.parent.with_name('old');self.metadata.parent.rename(old)
+                self.metadata.parent.mkdir();self.metadata.parent.chmod(0o777);self.metadata.write_bytes(original);self.metadata.chmod(0o777)
+            return raw
+        with patch.object(self.reader.os,'read',side_effect=replace),self.assertRaises(ValueError):
+            self.reader.read_verified(self.metadata,sha256=expected,installed=self.root,uid=os.getuid())
+        self.assertTrue(switched)
+
+    def test_sticky_shared_ancestor_is_data_but_own_sticky_leaf_is_refused(self):
+        import hashlib
+        ancestor=self.root.parent;ancestor.chmod(0o1777)
+        self.assertTrue(ancestor.stat().st_mode&0o1000)
+        expected=hashlib.sha256(self.file.read_bytes()).hexdigest()
+        self.assertEqual(self.read(),self.file.read_bytes())
+        self.assertEqual(self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid()),self.file.read_bytes())
+        self.file.parent.chmod(0o1755)
+        for reader in (self.read,lambda:self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid())):
+            with self.assertRaises(ValueError):reader()
+        self.file.parent.chmod(0o755)
+        import python_binding
+        with patch.object(python_binding,'EXPECTED_UID',os.getuid()),self.assertRaises(ValueError):python_binding._read(self.file)
+
+    def test_shared_setid_bits_are_refused_even_with_sticky(self):
+        import hashlib
+        ancestor=self.root.parent;ancestor.chmod(0o1777);inode=ancestor.stat().st_ino;original=os.fstat
+        expected=hashlib.sha256(self.file.read_bytes()).hexdigest()
+        for bit in (0o2000,0o4000):
+            def setid(fd):
+                info=original(fd);values={name:getattr(info,name) for name in dir(info) if name.startswith('st_')}
+                if info.st_ino==inode:values['st_mode']|=bit
+                return SimpleNamespace(**values)
+            with patch.object(self.reader.os,'fstat',side_effect=setid):
+                with self.assertRaises(ValueError):self.read()
+                with self.assertRaises(ValueError):self.reader.read_verified(self.file,sha256=expected,installed=self.root,uid=os.getuid())

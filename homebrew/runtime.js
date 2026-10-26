@@ -11,64 +11,76 @@ function safeName(name) {
     if (typeof name !== 'string' || name.length > 512 || !/^[A-Za-z0-9_+.,@=/-]+$/.test(name) || name.split('/').some(function (p) { return !p || p === '.' || p === '..'; })) fail('Unsafe payload path');
     return name;
 }
+function sdkData(name) {
+    var app = '/media/developer/apps/usr/palm/applications/com.cleanyourtv.installer';
+    return name === app || name.indexOf(app + '/') === 0;
+}
 function owned(name, directory, packageData) {
     var s = fs.lstatSync(name);
-    if (s.uid !== 0 || ((s.mode & 18) && !(packageData && directory && SHARED.indexOf(name) >= 0)) || s.isSymbolicLink() || (directory ? !s.isDirectory() : !s.isFile() || s.nlink !== 1)) fail('Unsafe root-owned path: ' + name);
+    if (s.uid !== 0 || ((s.mode & 18) && !(packageData && ((directory && SHARED.indexOf(name) >= 0) || sdkData(name)))) || (sdkData(name) && (s.mode & 3584)) || s.isSymbolicLink() || (directory ? !s.isDirectory() : !s.isFile() || s.nlink !== 1)) fail('Unsafe root-owned path: ' + name);
     return s;
 }
 function ancestors(name, packageData) {
     name = path.resolve(name);
     while (true) { owned(name, true, packageData); var parent = path.dirname(name); if (parent === name) return; name = parent; }
 }
-function checkedBytes(name, limit, packageData) {
+function checkedBytes(name, limit, packageData, expected) {
+    if (packageData && (!expected || !/^[0-9a-f]{64}$/.test(expected.sha256))) fail('Independent SDK DATA digest required');
     ancestors(path.dirname(name), packageData);
     var bindings = [], parent = path.dirname(name);
     while (true) { var item = owned(parent, true, packageData); bindings.push([parent, item.dev, item.ino]); if (parent === path.dirname(parent)) break; parent = path.dirname(parent); }
     var fd = fs.openSync(name, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0) | (fs.constants.O_NONBLOCK || 0));
     try {
         var before = fs.fstatSync(fd);
-        if (!before.isFile() || before.uid !== 0 || (before.mode & 18) || before.nlink !== 1 || before.size > limit) fail('Unsafe payload file');
+        if (!before.isFile() || before.uid !== 0 || ((before.mode & 18) && !(packageData && sdkData(name))) || (before.mode & 3584) || before.nlink !== 1 || before.size > limit) fail('Unsafe payload file');
         var raw = Buffer.alloc(before.size + 1), count = 0, n;
         while ((n = fs.readSync(fd, raw, count, raw.length - count, null)) > 0) { count += n; if (count > before.size) fail('Payload grew'); }
-        var after = fs.fstatSync(fd), now = owned(name, false);
+        var after = fs.fstatSync(fd), now = owned(name, false, packageData);
         function same(a, b) { return a.dev === b.dev && a.ino === b.ino && a.size === b.size && a.mtime.getTime() === b.mtime.getTime() && a.ctime.getTime() === b.ctime.getTime(); }
         if (count !== before.size || !same(before, after) || !same(before, now)) fail('Payload file binding changed');
         bindings.forEach(function (b) { var st = owned(b[0], true, packageData); if (st.dev !== b[1] || st.ino !== b[2]) fail('Payload ancestor changed'); });
-        return raw.slice(0, count);
+        raw = raw.slice(0, count);
+        if (packageData && (crypto.createHash('sha256').update(raw).digest('hex') !== expected.sha256 || (expected.size !== undefined && raw.length !== expected.size))) fail('SDK DATA digest mismatch');
+        return raw;
     } finally { fs.closeSync(fd); }
 }
 function json(name, expected) {
-    var raw = checkedBytes(name, 4 * 1024 * 1024, true);
+    var raw = checkedBytes(name, 4 * 1024 * 1024, true, expected);
     if (expected && (raw.length !== expected.size || crypto.createHash('sha256').update(raw).digest('hex') !== expected.sha256)) fail('Payload metadata changed');
     return JSON.parse(raw.toString('utf8'));
 }
-function hash(name, expected, destination) {
+function hash(name, expected, destination, packageData) {
     return new Promise(function (resolve, reject) {
+        if (!expected || !/^[0-9a-f]{64}$/.test(expected.sha256)) return reject(new Error('Independent DATA digest required'));
+        var bindings = [], parent = path.dirname(name);
+        try { while (true) { var item = owned(parent, true, packageData); bindings.push([parent, item.dev, item.ino]); if (parent === path.dirname(parent)) break; parent = path.dirname(parent); } } catch (e) { return reject(e); }
         var flags = fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0) | (fs.constants.O_NONBLOCK || 0);
         fs.open(name, flags, function (error, fd) {
             if (error) return reject(error);
             var before;
             try {
                 before = fs.fstatSync(fd);
-                if (!before.isFile() || before.nlink !== 1 || before.uid !== 0 || (before.mode & 18) || before.size !== expected.size) fail('Payload size or ownership mismatch');
+                if (!before.isFile() || before.nlink !== 1 || before.uid !== 0 || ((before.mode & 18) && !(packageData && sdkData(name))) || (before.mode & 3584) || before.size !== expected.size) fail('Payload size or ownership mismatch');
             } catch (e) { fs.closeSync(fd); return reject(e); }
             var output;
             try { if (destination) output = fs.openSync(destination, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | (fs.constants.O_NOFOLLOW || 0), 384); } catch (e) { fs.closeSync(fd); return reject(e); }
             function closeOutput() { if (output !== undefined) { fs.fsyncSync(output); fs.closeSync(output); output = undefined; } }
             var h = crypto.createHash('sha256'), bytes = 0;
-            var stream = fs.createReadStream(name, { fd: fd, autoClose: true });
+            var stream = fs.createReadStream(name, { fd: fd, autoClose: false });
             stream.on('data', function (chunk) {
                 try { bytes += chunk.length; if (bytes > expected.size) fail('Payload grew during verification'); h.update(chunk); if (output !== undefined) { var offset = 0; while (offset < chunk.length) offset += fs.writeSync(output, chunk, offset, chunk.length - offset); } }
                 catch (e) { stream.destroy(e); }
             });
-            stream.on('error', function (e) { closeOutput(); reject(e); });
+            stream.on('error', function (e) { closeOutput(); fs.closeSync(fd); reject(e); });
             stream.on('end', function () {
                 try {
                     closeOutput();
-                    var after = owned(name, false);
-                    if (bytes !== expected.size || h.digest('hex') !== expected.sha256 || before.ino !== after.ino || before.dev !== after.dev || before.mtime.getTime() !== after.mtime.getTime()) fail('Payload hash or binding mismatch');
-                    resolve();
-                } catch (e) { reject(e); }
+                    var after = owned(name, false, packageData), finalFd = fs.fstatSync(fd);
+                    if (before.ino !== finalFd.ino || before.dev !== finalFd.dev || before.size !== finalFd.size || before.ctime.getTime() !== finalFd.ctime.getTime()) fail('Payload fd changed');
+                    bindings.forEach(function (b) { var st = owned(b[0], true, packageData); if (st.dev !== b[1] || st.ino !== b[2]) fail('Payload ancestor changed'); });
+                    if (bytes !== expected.size || h.digest('hex') !== expected.sha256 || before.ino !== after.ino || before.dev !== after.dev || before.mtime.getTime() !== after.mtime.getTime() || before.ctime.getTime() !== after.ctime.getTime()) fail('Payload hash or binding mismatch');
+                    fs.closeSync(fd); resolve();
+                } catch (e) { fs.closeSync(fd); reject(e); }
             });
         });
     });
@@ -90,7 +102,7 @@ function walk(root, expected, packageData) {
                 if (!dirs[name]) fail('Unexpected payload directory');
                 owned(full, true, packageData); visit(full, name + '/');
             } else {
-                owned(full, false);
+                owned(full, false, packageData);
                 if (!Object.prototype.hasOwnProperty.call(expected, name)) fail('Unexpected payload file');
                 seen[name] = true; total += s.size;
             }
@@ -99,7 +111,7 @@ function walk(root, expected, packageData) {
     visit(root, '');
     if (Object.keys(seen).length !== names.length) fail('Missing payload file');
     // Sequential streaming keeps memory and descriptor usage bounded on the TV.
-    return names.reduce(function (promise, name) { return promise.then(function () { return hash(path.join(root, name), expected[name]); }); }, Promise.resolve()).then(function () { return total; });
+    return names.reduce(function (promise, name) { return promise.then(function () { return hash(path.join(root, name), expected[name], undefined, packageData); }); }, Promise.resolve()).then(function () { return total; });
 }
 function run(executable, args, marker) {
     return new Promise(function (resolve, reject) {
@@ -124,7 +136,7 @@ function abi(bootstrap) {
 }
 function verifiedPayload(root, pin) {
     root = path.resolve(root); ancestors(root, true);
-    var raw = checkedBytes(path.join(root, 'manifest.json'), 4 * 1024 * 1024, true);
+    var raw = checkedBytes(path.join(root, 'manifest.json'), 4 * 1024 * 1024, true, { sha256: pin });
     if (!/^[0-9a-f]{64}$/.test(pin || '') || crypto.createHash('sha256').update(raw).digest('hex') !== pin) fail('Payload manifest identity changed');
     var manifest = JSON.parse(raw.toString('utf8'));
     if (manifest.schema !== 1 || !manifest.runtime || manifest.runtime.archive_sha256 !== PIN || manifest.runtime.max_unpacked !== MAX || manifest.runtime.max_files !== COUNT || !Number.isSafeInteger(manifest.runtime.required_space) || manifest.runtime.required_space < 320 * 1024 * 1024) fail('Invalid runtime binding');
@@ -197,7 +209,7 @@ function prepare(payloadRoot, pin) {
         return shell(context.bootstrap, 'ancestors ' + quote(BASE) + '\nstage=$(mktemp -d ' + quote(BASE + '/.stage-XXXXXXXXXXXX') + ')\nprintf "%s" "$stage"\n').then(function (created) {
             if (!new RegExp('^' + BASE + '/\\.stage-[A-Za-z0-9]{6,32}$').test(created)) fail('Unsafe runtime staging result');
             stage = created;
-            return hash(path.join(context.root, 'runtime.tar.gz'), context.manifest.files['runtime.tar.gz'], stage + '/runtime.tar.gz');
+            return hash(path.join(context.root, 'runtime.tar.gz'), context.manifest.files['runtime.tar.gz'], stage + '/runtime.tar.gz', true);
         }).then(function () {
             return shell(context.bootstrap, 'ancestors ' + quote(stage) + '\nmkdir -m 755 ' + quote(stage + '/tree') + '\ntar -xzf ' + quote(stage + '/runtime.tar.gz') + ' -C ' + quote(stage + '/tree') + '\n');
         }).then(function () { return walk(stage + '/tree', context.manifest.runtime.files); }).then(function () {
@@ -255,7 +267,7 @@ function stage(state, full) {
             names.forEach(function (name) {
                 safeName(name); var record = expected[name]; total += record.size;
                 if (record.size > 16 * 1024 * 1024 || total > 32 * 1024 * 1024) fail('Execution snapshot too large');
-                var raw = checkedBytes(path.join(context.root, name), record.size, true);
+                var raw = checkedBytes(path.join(context.root, name), record.size, true, record);
                 if (raw.length !== record.size || crypto.createHash('sha256').update(raw).digest('hex') !== record.sha256) fail('Execution source changed');
                 var destination = path.join(root, name); mkdir(path.dirname(destination));
                 var fd = fs.openSync(destination, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | (fs.constants.O_NOFOLLOW || 0), 384);

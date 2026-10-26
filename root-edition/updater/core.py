@@ -274,7 +274,9 @@ class Manager:
                         selected=tx['prior' if rollback else 'candidate']
                         if not self.io.verify_installed(selected):
                             return self._save(tx,'recovery-required' if rollback else 'rolling-back','confirmed application identity mismatch')
-                        self.store.write('current',selected)
+                        previous=tx['prior'].get('writer',{})
+                        system=previous.get('id') if previous.get('owner')=='system-update' else previous.get('system')
+                        self.store.write('current',dict(selected,writer={'owner':'root-update','id':tx['id'],'system':system}))
                         return self._save(tx,'rolled-back' if rollback else 'complete')
                     if now < tx['launched'] or now >= tx['deadline']:
                         return self._save(tx,'recovery-required' if rollback else 'rolling-back','restored profile readiness unconfirmed' if rollback else 'application health confirmation timed out')

@@ -49,7 +49,8 @@
     heroVisible = false,
     focusGlassVisible = false,
     moveState = null,
-    activeBridges = [];
+    activeBridges = [],
+    topButtonRects = null;
   // Retain service bridges until their replies arrive; subscriptions stay alive.
   function callLuna(uri, params, callback, timeout) {
     var bridge, timer, done = false;
@@ -692,6 +693,8 @@
     dockBand.style.height = layout.dockHeight + "px";
     var header = document.querySelector("header");
     headerBottom = header.offsetTop + header.offsetHeight;
+    // Tile positions changed, so any cached top-button geometry is stale.
+    topButtonRects = null;
   }
   function animateTiles() {
     tiles.forEach(function (e, t) {
@@ -999,9 +1002,11 @@
         } else if (39 === key) {
           column < columnCount - 1 && focusedTile < lastIndex && focusTile(focusedTile + 1);
         } else if (38 === key) {
-          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, topButtons.forEach(function (e, t) {
-            var n = e.getBoundingClientRect(),
-              a = Math.abs(n.left + n.width / 2 - tileCenter);
+          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, (topButtonRects || (topButtonRects = topButtons.map(function (e) {
+            var n = e.getBoundingClientRect();
+            return n.left + n.width / 2;
+          }))).forEach(function (center, t) {
+            var a = Math.abs(center - tileCenter);
             a < nearestDistance && (nearestDistance = a, nearestButton = t);
           }), nearestButton)) : focusTile(focusedTile - columnCount);
         } else if (40 === key) {

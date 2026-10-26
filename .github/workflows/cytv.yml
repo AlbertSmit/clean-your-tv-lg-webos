@@ -57,7 +57,8 @@ jobs:
           python -m pip install -r cytv/requirements.txt ziglang==0.14.1
           python scripts/build-cytv.py --payload-only
           python -m unittest discover -s android/tests
-      - name: Restore the persistent preview signer
+      # Preserve the published APK identity so upgrades retain private recovery data.
+      - name: Restore the persistent Android signer
         env:
           CYTV_PREVIEW_KEYSTORE: ${{ secrets.CYTV_ANDROID_PREVIEW_KEYSTORE_B64 }}
         run: |
@@ -73,12 +74,12 @@ jobs:
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write('CYTV_ANDROID_KEYSTORE=' + str(path) + '\n')
           PY
-      - name: Build and verify the Android preview
+      - name: Build and verify the Android release APK
         run: |
           export CYTV_BUILD_PYTHON="$(command -v python)"
-          android/gradlew -p android :app:assembleDebug :app:lintDebug --no-daemon
+          android/gradlew -p android :app:assembleRelease :app:lintRelease :app:assembleDebugAndroidTest --no-daemon
           mkdir -p dist/android
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/android/cytv-android-arm64.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/android/cytv-android-arm64.apk
           python android/verify_release.py dist/android/cytv-android-arm64.apk --output dist/android/cytv-android-arm64.build.json
       - name: Remove the signing material
         if: always()

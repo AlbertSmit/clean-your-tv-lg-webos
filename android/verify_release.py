@@ -15,6 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def parse_badging(badging):
     """Read release identity from aapt's compiled Android manifest output."""
+    if re.search(r'^application-debuggable(?:\s|$)', badging, re.MULTILINE):
+        raise ValueError('Release APK must not be debuggable')
     package_line = re.search(r'^package: (.*)$', badging, re.MULTILINE)
     if not package_line:
         raise ValueError('APK package metadata is missing')
@@ -31,7 +33,8 @@ def parse_badging(badging):
     try:
         return {'package': fields['name'], 'android_version_name': fields['versionName'],
                 'android_version_code': int(fields['versionCode']), 'abi': abis[0],
-                'min_sdk': sdk('sdkVersion'), 'target_sdk': sdk('targetSdkVersion')}
+                'min_sdk': sdk('sdkVersion'), 'target_sdk': sdk('targetSdkVersion'),
+                'debuggable': False}
     except KeyError as error:
         raise ValueError('APK version metadata is missing') from error
 
@@ -54,7 +57,7 @@ def verify_apk(apk, root=ROOT):
     metadata = parse_badging(badging)
     expected = {'package': 'com.cleanyourtv.android', 'android_version_name': versions['android'],
                 'android_version_code': versions['android_version_code'], 'abi': 'arm64-v8a',
-                'min_sdk': 24, 'target_sdk': 35}
+                'min_sdk': 24, 'target_sdk': 35, 'debuggable': False}
     if metadata != expected:
         raise ValueError('APK package, version or SDK metadata mismatch')
     certificates = subprocess.check_output(

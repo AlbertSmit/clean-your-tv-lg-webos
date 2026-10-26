@@ -38,7 +38,14 @@ object Operation {
         }
         events.add(event)
         // Retain the first started event for Activity replay.
-        if (events.size > 450) events.removeAt(1)
+        if (events.size > 450) {
+            // Keep the started event and any unanswered prompt available to a
+            // recreated Activity, even when background logs fill the replay.
+            val disposable = (1 until events.size).first {
+                JSONObject(events[it]).optString("id") != promptId
+            }
+            events.removeAt(disposable)
+        }
         listener?.invoke(event)
     }
 

@@ -376,6 +376,17 @@ body.editing #glass { opacity: 0 !important; }
   transform: translateX(-50%);
 }
 
+/* Full-bleed square artwork (e.g. Apple TV) fills the card edge-to-edge.
+   The icon is an opaque square, so we stretch it to the wide card
+   instead of letterboxing it between the colored edges. */
+.item[data-app-id="com.apple.appletv"] .card img {
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  transform: none;
+}
+
 .card.glyph img {
   top: 50%;
   height: 62%;

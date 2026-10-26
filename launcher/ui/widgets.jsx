@@ -125,6 +125,7 @@ export function createWidgets(dataSource) {
   const artImgEl = document.createElement('img');
   artImgEl.alt = '';
   artImgEl.draggable = false;
+  artImgEl.decoding = 'async';
   artImgEl.onload = function () {
     artImgEl.classList.add('loaded');
     artEl.classList.remove('loading');

@@ -181,14 +181,13 @@ html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display:
 }
 .w-np-art-animate { animation: wNpArtIn 480ms cubic-bezier(.22,.61,.36,1) both; }
 html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { animation: none !important; }
-/* LQIP blur-up for album art: instant blurred preview, sharp crossfade. */
+/* LQIP blur-up for album art: a pre-blurred miniature, then a sharp crossfade. */
 .w-np-art { position: relative; }
 .w-np-art-thumb {
   position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   background-size: cover; background-position: center;
-  filter: blur(3px) saturate(1.05);
-  transform: scale(1.08);
-  opacity: 0; transition: opacity 240ms ease;
+  transform: scale(1.05);
+  opacity: 0; will-change: opacity; transition: opacity 260ms ease;
 }
 .w-np-art.has-thumb .w-np-art-thumb { opacity: 1; }
 .w-np-glyph {
@@ -198,9 +197,11 @@ html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { ani
 .w-np-art img {
   position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   width: 100%; height: 100%; object-fit: cover;
-  display: block; opacity: 0; transition: opacity 340ms ease;
+  display: block; opacity: 0; transform: scale(1.04);
+  will-change: opacity, transform;
+  transition: opacity 300ms ease, transform 520ms cubic-bezier(.22,.61,.36,1);
 }
-.w-np-art img.loaded { opacity: 1; }
+.w-np-art img.loaded { opacity: 1; transform: none; }
 .w-np-shimmer {
   position: absolute; top: 0; bottom: 0; left: 0; width: 60%;
   pointer-events: none;
@@ -216,7 +217,7 @@ html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { ani
 html.reduced-effects .w-np-art-thumb,
 html.reduced-effects .w-np-art img,
 html.reduced-effects .w-np-shimmer { transition: none !important; animation: none !important; }
-html.reduced-effects .w-np-art img { opacity: 1; }
+html.reduced-effects .w-np-art img { opacity: 1; transform: none; }
 html.reduced-effects .w-np-art-thumb { opacity: 0; }
 
 /* The master widget switch belongs to status navigation, outside decoration. */

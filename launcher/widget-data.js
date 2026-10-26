@@ -142,10 +142,18 @@ window.WidgetData = (function () {
                   var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
                   var w = Math.max(1, Math.round(img.width * scale));
                   var h = Math.max(1, Math.round(img.height * scale));
+                  var tinyW = Math.max(1, Math.round(w / 2.5));
+                  var tinyH = Math.max(1, Math.round(h / 2.5));
+                  var tiny = document.createElement('canvas');
+                  tiny.width = tinyW; tiny.height = tinyH;
+                  tiny.getContext('2d').drawImage(img, 0, 0, tinyW, tinyH);
                   var cv = document.createElement('canvas');
                   cv.width = w; cv.height = h;
-                  cv.getContext('2d').drawImage(img, 0, 0, w, h);
-                  thumb = cv.toDataURL('image/jpeg', 0.65);
+                  var gx = cv.getContext('2d');
+                  gx.imageSmoothingEnabled = true;
+                  gx.imageSmoothingQuality = 'high';
+                  gx.drawImage(tiny, 0, 0, w, h);
+                  thumb = cv.toDataURL('image/jpeg', 0.7);
                 } catch (e) {}
                 done({ src: full, thumb: thumb });
               };

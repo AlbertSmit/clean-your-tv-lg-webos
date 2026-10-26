@@ -133,3 +133,5 @@ Dieses Verhalten gehört zum nächsten Release-Kandidaten, nicht zum veröffentl
 ## Nächster Kandidat: Verbindung und Home-Status (Issue #12)
 
 Noch nicht veröffentlicht: Android behält beim Aufruf der Werkzeuge nach der Rückkehr zum Startbildschirm den gewählten Fernseher, die Edition und den SSH-Port bei; No-root verwendet normalerweise 9922. Kann der Home-Status nicht geprüft werden, zeigen die Einstellungen einen unbekannten Status und blenden Home ändern bis zu einer gültigen Antwort aus. Das bedeutet nicht, dass Helper gestoppt wurde, und startet ihn nicht neu. Diese Änderungen sind nicht in den veröffentlichten v1.2.0-Paketen enthalten.
+
+Root-Diagnose im nächsten Kandidaten (#55): Speichern Sie nach einem Einrichtungsfehler den Diagnosebericht dieses Versuchs. Er kann Kategorien von Startfehlern des Wiederherstellungsdienstes enthalten; bewahren Sie Wiederherstellungsdaten und den installierten Treiber auf. Eine Behebung auf OLED Flex ist noch nicht bestätigt.

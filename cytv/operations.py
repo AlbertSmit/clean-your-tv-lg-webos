@@ -10,7 +10,7 @@ import time
 import uuid
 
 from . import package, i18n, diagnostics
-from .errors import UserError, TVRejected, ExistingRoot
+from .errors import UserError, TVRejected, ExistingRoot, TVCommandError, root_recovery_details
 
 HOME = 'com.gathin.tvhome'
 HELPER = 'com.local.nativehome'
@@ -184,7 +184,29 @@ if ! env -u PYTHONHOME -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=
             args += ['--bundle', bundle]
         if migrate:
             args.append('--migrate-packaged-home')
-        raw = self.remote.run(self._python_command(args), timeout=1080 if action == 'uninstall' else 720 if action == 'restore' else 180)
+        attempt = uuid.uuid4().hex if action == 'install' else None
+        command = self._python_command(args)
+        if attempt: command = 'env CYTV_ROOT_INSTALL_ATTEMPT='+attempt+' '+command
+        try:
+            raw = self.remote.run(command, timeout=1080 if action == 'uninstall' else 720 if action == 'restore' else 180)
+        except TVCommandError as error:
+            if action == 'install':
+                # Read data only; never rerun the retained driver or installation.
+                code = """import os,stat,json
+p='/var/lib/clean-your-tv-root/recovery-failure.json'
+f=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+with os.fdopen(f,'rb') as stream:
+ s=os.fstat(stream.fileno())
+ if not stat.S_ISREG(s.st_mode) or s.st_uid!=0 or s.st_nlink!=1 or s.st_mode & 0o077 or s.st_size>4096: raise ValueError('Unsafe recovery diagnostic')
+ print(json.dumps(json.loads(stream.read(4097))))
+"""
+                try:
+                    value = json.loads(self.remote.run(self._python_command([args[0], '-c', code]), timeout=15))
+                    if isinstance(value, dict) and value.get('attempt') == attempt:
+                        error.root_recovery = root_recovery_details(value)
+                except Exception:
+                    pass  # Preserve the original failure, even when diagnostics are unavailable.
+            raise
         reply = json.loads(raw)
         if not isinstance(reply, dict) or reply.get('returnValue') is not True:
             raise UserError('Root operation was not confirmed. Run cytv status; retain recovery state.')

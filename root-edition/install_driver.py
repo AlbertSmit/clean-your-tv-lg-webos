@@ -329,6 +329,41 @@ def request_status(identifier, store):
     return _optional_record(store,'submission-'+operation_id(identifier)) or status
 
 
+
+def continuation_status(identifier, store, device=None):
+    """Prove a narrow continuation without creating locks, records or workers."""
+    import fcntl, os
+    from pathlib import Path
+    from install_device import LocalDevice
+    result=dict(can_resume=False,resume_reason='recovery_evidence_required')
+    directory=fd=None
+    try:
+        identifier=operation_id(identifier)
+        owner=Ownership.__new__(Ownership);owner.store=store
+        # Opening an existing checked mutex read-only never provisions absent state.
+        directory=store._directory()
+        fd=os.open('ownership.lock',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=directory)
+        store._check(os.fstat(fd))
+        fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        record=Coordinator(device,owner).status(identifier)
+        lease=owner.status()
+        if (lease is None or lease['terminal'] or lease['owner']!='product'
+                or lease['journal']!='product-'+identifier+'.json' or record.get('lease')!=lease['id']):return result
+        submission=_optional_record(store,'submission-'+identifier)
+        if (not isinstance(submission,dict) or submission.get('operation')!=identifier
+                or submission.get('action')!=record.get('action')):return result
+        device=device if device is not None else LocalDevice()
+        device.verify_resume(Path(store.root)/('request-'+identifier),submission)
+        device.operation=lease;device.ownership=owner
+        if device.continuation_ready(record,submission,store) and owner.status()==lease:
+            return dict(can_resume=True,resume_reason='original_final_readback_verified')
+    except (OSError,ValueError,RuntimeError,KeyError,TypeError):pass
+    finally:
+        if fd is not None:os.close(fd)
+        if directory is not None:os.close(directory)
+    return result
+
+
 def main():
     import argparse
     import json
@@ -336,7 +371,7 @@ def main():
     from install_device import LocalDevice, checked_store
     from installation import STATE
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=('inspect','install','status','restore','remove'))
+    parser.add_argument('action',choices=('inspect','install','status','restore','remove','activate'))
     parser.add_argument('--operation')
     parser.add_argument('--payload',type=Path)
     parser.add_argument('--candidate',help='SHA-256 of the reviewed component bundle manifests')
@@ -349,7 +384,7 @@ def main():
     if args.action in ('install','remove','status'): operation_id(args.operation)
     if args.action not in ('install','inspect') and (args.migrate_packaged_home or args.prepare_supervisor): parser.error('install options require install')
     device=LocalDevice()
-    if args.action in ('inspect','status','restore'):
+    if args.action in ('inspect','status','restore','activate'):
         ownership=Ownership.__new__(Ownership);ownership.store=checked_store(STATE)
     else: ownership=Ownership()
     coordinator=Coordinator(device,ownership)
@@ -371,6 +406,7 @@ def main():
                 result=submit(args.operation,args.payload,action='remove',candidate=args.candidate)
         elif args.action=='status':
             result=request_status(args.operation,ownership.store)
+            result=dict(result,**continuation_status(args.operation,ownership.store))
             if args.verify_current:
                 result=dict(result,current=False)
                 if result['state']=='complete':
@@ -382,10 +418,11 @@ def main():
             try:
                 active=ownership.status()
                 match=re.fullmatch(r'product-([0-9a-f]{32})\.json',active['journal']) if active and active['owner']=='product' and not active['terminal'] else None
-                result['active_operation']=request_status(match.group(1),ownership.store) if match else None
+                result['active_operation']=dict(request_status(match.group(1),ownership.store),**continuation_status(match.group(1),ownership.store)) if match else None
             except (OSError,ValueError):result['active_operation']=None
             if args.payload:
                 result['candidate_sha256']=candidate_digest(args.payload,_verified_payload(args.payload,args.prepare_supervisor))
+        elif args.action=='activate':result=dict(operation=None,stage='activate',state='complete',code='activated',result=device.activate())
         else: result=dict(operation=None,stage='restore',state='complete',code='restored',result=coordinator.restore())
     except Exception as error:
         device.log(error)

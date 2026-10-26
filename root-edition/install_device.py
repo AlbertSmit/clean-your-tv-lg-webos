@@ -146,6 +146,7 @@ class LocalDevice:
             if sys.version_info<(3,9): raise RuntimeError('unsupported_python')
         except (OSError,PermissionError,RuntimeError):
             return classify(dict(supported=False,packages_match=False,receipts_match=False,pending=False,retained=False,complete=False,migration_supported=False))
+        versions=None
         operation=getattr(self,'operation',None)
         values=device_snapshot(owned_operation=operation['id'] if operation else None)
         # device_snapshot intentionally refuses to bless lifecycle markers alone.
@@ -153,11 +154,19 @@ class LocalDevice:
         if not any(values[k] for k in ('pending','retained')) and os.path.lexists(ROOT) and os.path.lexists(UPDATER):
             try:
                 if os.path.lexists(SUPERVISOR): self.verify_supervisor()
-                current_updater(UPDATER,INSTALLED,hashes=getattr(self,'supervisor_updater',None));current_root(ROOT,UPDATER,INSTALLED)
+                current_updater(UPDATER,INSTALLED,hashes=getattr(self,'supervisor_updater',None))
+                descriptor=current_root(ROOT,UPDATER,INSTALLED)
+                # Only display versions after exact current package/code readback.
+                info=json.loads(safe_bytes(INSTALLED/'usr/palm/applications/com.cleanyourtv.root.updater/appinfo.json'))
+                if info.get('id')!='com.cleanyourtv.root.updater':raise ValueError('updater_identity_mismatch')
+                versions={'root':descriptor['version'],'root-updater':info['version']}
+                if any(not isinstance(v,str) or not __import__('re').fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+',v) for v in versions.values()):raise ValueError('invalid_installed_version')
                 values.update(packages_match=True,receipts_match=True,complete=True)
             except (OSError,ValueError,TypeError,KeyError,RuntimeError,subprocess.SubprocessError):
-                values['retained']=True
-        return classify(values)
+                values['retained']=True;versions=None
+        result=classify(values)
+        if result['state']=='installed' and versions is not None:result['versions']=versions
+        return result
 
     def verify_resume(self, payload, submission):
         from install_driver import _verified_payload,root_review_binding
@@ -175,6 +184,31 @@ class LocalDevice:
             if sha(safe_bytes(payload/'root'/name,uid=os.geteuid()))!=digest:raise ValueError('static_snapshot_changed')
         self.preflight(payload,options)
         return options
+
+    def continuation_ready(self, record, submission, store):
+        """Read-only final-stage proof; uncertain package submissions stay blocked."""
+        if record.get('action')=='install':
+            if record.get('stage') not in ('readback','complete'):return False
+            if self.inspect()['state']!='installed':return False
+            return self.readback().get('verified') is True
+        if record.get('action')!='remove' or record.get('stage') not in ('removal-readback','removal-verified','complete'):return False
+        from installation import terminal_removal
+        journal=store.read('removal-'+record['lease'])
+        if not isinstance(journal,dict) or journal.get('schema')!=1:return False
+        initial=journal.get('initial_apps')
+        if not isinstance(initial,list) or not isinstance(journal.get('removals'),dict):return False
+        for app in ('com.cleanyourtv.root.updater','com.cleanyourtv.updater','com.local.nativehome','com.gathin.tvhome','com.cleanyourtv.system.updater'):
+            receipt=journal['removals'].get(app)
+            if not isinstance(receipt,dict):return False
+            if app in initial:
+                if receipt.get('state')!='terminal' or not terminal_removal(receipt.get('evidence'),app):return False
+            elif receipt.get('state')!='absent-before-submission':return False
+        if APP in initial:
+            proof=self.root_journal()
+            if not isinstance(proof,dict) or not terminal_removal(proof.get('evidence'),APP):return False
+        self.verify_removed()
+        if os.path.lexists(ROOT) and self.cleanup('root_archive','inspect').get('busy') is not False:return False
+        return True
 
     def resume_install(self, payload, options, stage, checkpoint):
         import deploy
@@ -336,6 +370,13 @@ class LocalDevice:
             if digest!=sha(safe_bytes(ROOT/'runtime'/name,uid=0)):
                 raise ValueError('root_recovery_runtime_mismatch')
         Device.require_home_resume_runtime(ROOT)
+
+    def activate(self):
+        import deploy
+        if self.inspect()['state']!='installed':raise ValueError('current_installation_required')
+        self.validate_root_driver()
+        # The existing public runtime gate owns the mutex, emergency/off and input checks.
+        return deploy.runtime('enable')
 
     def restore(self):
         import deploy

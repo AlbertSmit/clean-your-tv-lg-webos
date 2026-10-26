@@ -161,3 +161,7 @@ Uruchamianie korzysta z prywatnych skryptów powiązanych z potwierdzeniem włas
 
 [Instalacja i odzyskiwanie (angielski)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Oczekujące testy TV (angielski)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Tylko w następnym kandydacie: No-root Ustawienia → Tryb programisty → Pokaż diagnostykę zawiera bezpieczne kategorie błędów zapisu i RPC Home oraz rzeczywistą wersję usługi. Podgląd nie włącza odnawiania ani nie uruchamia Helpera. Nieudana kontrola nie dowodzi zatrzymania Helpera. Poprawka dla C5 nie jest potwierdzona; [szczegóły (angielski)](../SETTINGS-DIAGNOSTICS.md).
+
+Raport otrzymuje fokus pilota. Góra/Dół przewija; Lewo/Prawo lub OK wraca do pobliskich działań, a Wstecz do ustawień Home.

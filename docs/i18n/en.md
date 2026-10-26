@@ -167,3 +167,7 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 [Candidate setup and recovery (English)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Pending physical acceptance (English)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Next candidate only: No-root Settings → Developer Mode → Show diagnostics includes safe storage/Home RPC failure categories and the actual service version. Viewing diagnostics does not enable renewal or start Helper. A failed status check does not prove Helper stopped. This does not establish a C5 fix; see [diagnostics (English)](../SETTINGS-DIAGNOSTICS.md).
+
+The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.

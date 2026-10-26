@@ -161,3 +161,7 @@ Homebrew 설치를 검증하지 않습니다.
 
 [설치와 복구 안내 (영어)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [미실행 실제 TV 검사 (영어)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+다음 후보 버전 전용: No-root 설정 → 개발자 모드 → 진단 표시에서 저장소 및 Home RPC 오류의 안전한 분류와 실제 서비스 버전을 확인할 수 있습니다. 진단을 보는 것만으로 자동 연장을 켜거나 Helper를 시작하지 않습니다. 상태 확인 실패가 Helper 중단을 뜻하지는 않습니다. C5 수정은 아직 확인되지 않았습니다. [자세히 보기(영어)](../SETTINGS-DIAGNOSTICS.md).
+
+보고서에 리모컨 포커스가 이동합니다. 위/아래로 스크롤하고, 왼쪽/오른쪽 또는 OK로 주변 동작에 돌아가며, 뒤로 버튼으로 Home 설정에 돌아갑니다.

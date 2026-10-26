@@ -172,3 +172,7 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 [Einrichtung und Wiederherstellung (Englisch)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Ausstehende TV-Prüfungen (Englisch)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Nur im nächsten Kandidaten: No-root Einstellungen → Entwicklermodus → Diagnose anzeigen enthält sichere Fehlerkategorien für Speicherung und Home-RPC sowie die tatsächliche Dienstversion. Das Anzeigen aktiviert weder die Verlängerung noch Helper. Ein fehlgeschlagener Statustest beweist keinen gestoppten Helper. Eine C5-Korrektur ist nicht bestätigt; [Details (Englisch)](../SETTINGS-DIAGNOSTICS.md).
+
+Der Bericht erhält den Fernbedienungsfokus. Auf/Ab scrollt; Links/Rechts oder OK führt zu den benachbarten Aktionen, Zurück zu den Home-Einstellungen.

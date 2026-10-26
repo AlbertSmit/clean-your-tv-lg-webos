@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('nod
 const methods={};let calls=[];
 function Service(){this.register=(name,fn)=>methods[name]=fn;}
 const manager={importUpdatePause:async receipt=>{calls.push(['import',receipt]);return {enabled:false}},pauseForUpdate:async id=>{calls.push(['pause',id]);return {enabled:false}},resumeAfterUpdate:async id=>{calls.push(['resume',id]);return {enabled:false}}};
-vm.runInNewContext(fs.readFileSync('renewal-service/service.js','utf8'),{require:n=>n==='fs'?{}:n==='webos-service'?Service:n==='./home-control'?require('../../renewal-service/home-control'):n==='./manager'?()=>manager:n==='./local-io'?{createLocalIO:()=>({})}:n==='./transport'?{createRequest:()=>{}}:n==='./renewal'?{createRenewal:()=>({})}:null,__dirname:'/unused',setTimeout,clearTimeout,Date,Promise});
+vm.runInNewContext(fs.readFileSync('renewal-service/service.js','utf8'),{require:n=>n==='fs'?{}:n==='webos-service'?Service:n==='./diagnostics'?require('../../renewal-service/diagnostics'):n==='./package.json'?require('../../renewal-service/package.json'):n==='./home-control'?require('../../renewal-service/home-control'):n==='./manager'?()=>manager:n==='./local-io'?{createLocalIO:()=>({})}:n==='./transport'?{createRequest:()=>{}}:n==='./renewal'?{createRenewal:()=>({})}:null,__dirname:'/unused',setTimeout,clearTimeout,Date,Promise});
 function request(method,sender,appId=''){return new Promise(resolve=>methods[method]({payload:{id:'job-1'},ls2Message:{applicationID:()=>appId,senderServiceName:()=>sender},respond:resolve}));}
 (async()=>{
  assert.equal(typeof methods.pauseForUpdate,'function');

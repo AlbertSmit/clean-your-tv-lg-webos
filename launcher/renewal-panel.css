@@ -24,6 +24,7 @@
 .settings-danger{color:#ffd1bd!important}
 #renewalDetails,.root-updates .root-update-details{font-size:21px;line-height:1.4;white-space:pre-wrap;overflow-wrap:break-word;color:#ccd1db}
 #renewalDetails.hidden,.root-settings button[hidden],#homeRoutingToggle[hidden]{display:none}
+#renewalDetails:focus{outline:3px solid #e2e8f1;outline-offset:4px;border-radius:4px}
 #updateStatus,#updateNotes{white-space:pre-line}
 .root-updates button{display:block;width:100%;margin-top:12px;text-align:left}
 .root-updates h1{margin-bottom:18px}

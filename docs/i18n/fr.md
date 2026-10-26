@@ -173,3 +173,7 @@ Le démarrage utilise des scripts privés liés aux preuves de propriété et v�
 
 [Installation et récupération (anglais)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Essais TV en attente (anglais)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Uniquement dans le prochain candidat : No-root Paramètres → Mode développeur → Afficher les diagnostics indique des catégories sûres pour les erreurs de stockage et RPC Home ainsi que la version réelle du service. La consultation ne lance ni le renouvellement ni Helper. Un échec de lecture ne prouve pas que Helper est arrêté. La correction sur C5 reste non confirmée ; [détails (anglais)](../SETTINGS-DIAGNOSTICS.md).
+
+Le rapport reçoit le focus de la télécommande. Haut/Bas fait défiler ; Gauche/Droite ou OK revient aux actions voisines, Retour aux paramètres Home.

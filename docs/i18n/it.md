@@ -162,3 +162,7 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 [Installazione e recupero (inglese)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Test fisici in attesa (inglese)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Solo nel prossimo candidato: No-root Impostazioni → Modalità sviluppatore → Mostra diagnostica include categorie sicure degli errori di archiviazione e RPC Home e la versione effettiva del servizio. La consultazione non abilita il rinnovo né avvia Helper. Un controllo fallito non dimostra che Helper sia fermo. La correzione su C5 non è confermata; [dettagli (inglese)](../SETTINGS-DIAGNOSTICS.md).
+
+Il rapporto riceve il focus del telecomando. Su/Giù scorre; Sinistra/Destra o OK torna alle azioni vicine e Indietro alle impostazioni Home.

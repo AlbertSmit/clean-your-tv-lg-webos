@@ -144,3 +144,7 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 启动使用由收据标识归属的私有包装脚本，仅将已安装包的身份信息作为数据进行检查，不执行包内的启动脚本。包缺失或不安全时停止自动重新启用；独立恢复仍可恢复 LG Home。检查可能短暂地在私有目录暂存已验证文件，不会更改 Home 或产品。
 
 [候选版设置与恢复（英文）](../INSTALL.md#candidate-on-tv-root-installation) · [待完成实机验收（英文）](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+仅适用于下一候选版本：No-root 设置 → 开发者模式 → 显示诊断会提供安全的存储和 Home RPC 错误分类及实际服务版本。查看诊断不会启用自动续期或启动 Helper。状态检查失败不代表 Helper 已停止。C5 上的修复尚未确认；参阅[诊断说明（英文）](../SETTINGS-DIAGNOSTICS.md)。
+
+报告会获得遥控器焦点。上/下键滚动，左/右键或 OK 返回相邻操作，返回键回到 Home 设置。

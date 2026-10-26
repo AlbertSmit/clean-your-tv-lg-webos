@@ -23,6 +23,8 @@ node tests/renewal-transport.cjs
 node tests/tls-ca.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
+node tests/renewal-diagnostics.cjs
+node tests/settings-diagnostics.cjs
 node tests/helper-entry.cjs
 node tests/helper-service-status.cjs
 node tests/helper-published-ui.cjs

@@ -162,3 +162,7 @@ A inicialização usa arquivos privados vinculados aos comprovantes de proprieda
 
 [Instalação e recuperação (inglês)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Testes físicos pendentes (inglês)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+Somente no próximo candidato: No-root Configurações → Modo de desenvolvedor → Mostrar diagnóstico inclui categorias seguras de falhas de armazenamento e RPC do Home e a versão real do serviço. A consulta não ativa a renovação nem inicia o Helper. Uma falha na consulta não prova que o Helper parou. A correção no C5 não foi confirmada; [detalhes (inglês)](../SETTINGS-DIAGNOSTICS.md).
+
+O relatório recebe o foco do controle. Cima/Baixo rola; Esquerda/Direita ou OK volta às ações próximas e Voltar às configurações do Home.

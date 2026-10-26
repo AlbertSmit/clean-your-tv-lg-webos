@@ -1,6 +1,6 @@
 'use strict';
 const native = typeof window.CYTV !== 'undefined';
-function resolveLanguage(tag){const base=String(tag).replace('_','-').toLowerCase().split('-')[0];return base==='pt'?'pt-BR':Object.hasOwn(languages,base)?base:null}
+function resolveLanguage(tag){const parts=String(tag).replace(/_/g,'-').toLowerCase().split('-'),base=parts[0];if(base==='zh'){if(parts.includes('hant'))return 'zh-Hant';if(parts.includes('hans'))return 'zh-Hans';return parts.some(part=>['tw','hk','mo'].includes(part))?'zh-Hant':'zh-Hans'}return base==='pt'?'pt-BR':Object.hasOwn(languages,base)?base:null}
 const savedLanguage=localStorage.getItem('cytv-language');
 let language=Object.hasOwn(languages,savedLanguage)?savedLanguage:(navigator.languages||[navigator.language]).map(resolveLanguage).find(Boolean)||'en';
 let screen = 'welcome', edition = null, action = 'install', host = '', port = '22';

@@ -5,7 +5,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ui = path.resolve(__dirname, '../app/src/main/assets/ui');
 const {words, languages} = vm.runInNewContext(fs.readFileSync(path.join(ui, 'translations.js'), 'utf8') + ';({words,languages})');
-const expected = ['de','en','es','fr','hi','it','ko','pl','pt-BR','ru'];
+const resolver = vm.runInNewContext(fs.readFileSync(path.join(ui, 'app.js'), 'utf8').match(/function resolveLanguage\(tag\)\{[^\n]+/)[0] + ';resolveLanguage', {languages});
+for (const [tag, selected] of [['zh','zh-Hans'],['zh-CN','zh-Hans'],['zh-SG','zh-Hans'],['zh-TW','zh-Hant'],['zh-HK','zh-Hant'],['zh-MO','zh-Hant'],['zh-Hant-CN','zh-Hant'],['zh-Hans-TW','zh-Hans'],['ZH_hAnT_sG','zh-Hant'],['zh-Hans-HK','zh-Hans']]) assert.equal(resolver(tag),selected,tag);
+const expected = ['de','en','es','fr','hi','it','ko','pl','pt-BR','ru','zh-Hans','zh-Hant'];
 assert.deepEqual(Object.keys(languages).sort(), expected);
 assert.deepEqual(Object.keys(words).sort(), expected);
 for (const [code, dictionary] of Object.entries(words)) {
@@ -17,6 +19,10 @@ for (const [code, dictionary] of Object.entries(words)) {
       assert(!/<(?!br\s*\/?>)[^>]*>/i.test(text), `Unexpected markup in ${code}.${key}`);
     }
   }
+}
+for (const [code, script] of [['zh-Hans','Hans'],['zh-Hant','Hant']]) {
+  const xml=fs.readFileSync(path.join(ui,'../../res/values-b+zh+'+script+'/strings.xml'),'utf8');
+  for(const [name,key] of [['installation_channel','notificationChannel'],['installation_progress','notificationText'],['webview_update','webviewUpdate']]) assert(xml.includes('name="'+name+'" formatted="false">'+words[code][key]+'</string>'),code+': '+name);
 }
 let browser;
 (async () => {
@@ -34,7 +40,7 @@ let browser;
   await page.locator('#host').fill('192.168.1.50');
   for (const code of expected) {
     await page.locator('.language').click();
-    assert.equal(await page.locator('#language-picker [role=radio]').count(), 10);
+    assert.equal(await page.locator('#language-picker [role=radio]').count(), expected.length);
     await page.locator(`[data-language="${code}"]`).click();
     assert.equal(await page.locator('html').getAttribute('lang'), code);
     assert.equal(await page.locator('.language').textContent(), code.toUpperCase());
@@ -74,7 +80,7 @@ let browser;
   assert.equal(await page.evaluate(()=>requests.at(-1).action), 'install');
   assert.deepEqual(errors, []);
   await page.close();
-  for (const [locale, saved, selected] of [['pt-PT',null,'pt-BR'],['ko-KR','invalid','ko'],['ja-JP',null,'en']]) {
+  for (const [locale, saved, selected] of [['pt-PT',null,'pt-BR'],['ko-KR','invalid','ko'],['ja-JP',null,'en'],['zh-CN',null,'zh-Hans'],['zh-SG',null,'zh-Hans'],['zh-TW',null,'zh-Hant'],['zh-HK',null,'zh-Hant'],['zh-MO',null,'zh-Hant'],['zh-Hant-CN',null,'zh-Hant'],['zh-Hans-TW',null,'zh-Hans'],['zh-CN','zh-Hant','zh-Hant']]) {
     const context=await browser.newContext({locale});
     const p=await context.newPage();
     if(saved) await p.addInitScript(value=>localStorage.setItem('cytv-language',value),saved);
@@ -97,5 +103,5 @@ let browser;
   }
   assert.deepEqual(errors, []);
   await browser.close();
-  console.log('All ten Android locales: complete catalogs, current-language picker, persistence, system locale, form preservation and localized native requests passed.');
+  console.log('All twelve Android locales: complete catalogs, current-language picker, persistence, system locale, form preservation and localized native requests passed.');
 })().catch(async error=>{console.error(error);if(browser)await browser.close();process.exitCode=1});

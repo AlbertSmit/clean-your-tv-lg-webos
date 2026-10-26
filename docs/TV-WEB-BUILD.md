@@ -127,3 +127,31 @@ References: [LG engine versions](https://webostv.developer.lge.com/develop/speci
 [Babel preset-env](https://babeljs.io/docs/babel-preset-env),
 [PostCSS preset-env](https://preset-env.cssdb.org/),
 [doiuse](https://github.com/anandthakker/doiuse).
+
+
+## Chinese UI fonts
+
+The 1.3.0 candidate adds `zh-Hans` (Simplified Chinese) and `zh-Hant`
+(Traditional Chinese). Explicit script tags take precedence over a region;
+`zh`, CN and SG default to Hans, while TW, HK and MO default to Hant.
+The preference is selectable and persisted using the existing language setting.
+Home, Root Home, both independent updaters and Homebrew Installer carry static
+Regular Noto Sans SC/TC subsets and their SIL OFL licenses. Desktop payloads
+also include them; Android uses its platform font fallback.
+
+The sources are [Google Fonts Noto Sans SC](https://github.com/google/fonts/tree/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/notosanssc)
+and [Noto Sans TC](https://github.com/google/fonts/tree/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/notosanstc),
+pinned at commit `e7db6ca603fd4862010383ff17ffd6cc4ffac1c0`. To regenerate,
+download each original `NotoSansSC[wght].ttf` / `NotoSansTC[wght].ttf` into a
+temporary directory as `NotoSansSC-variable.ttf` / `NotoSansTC-variable.ttf`,
+then run:
+
+```sh
+/path/to/fonttools-4.60.1/bin/python scripts/subset-chinese-fonts.py /path/to/original-fonts
+```
+
+This developer-only tool bakes weight 400 and retains the catalog character set
+plus Chinese date text. Regenerate after adding Chinese strings; package tests
+reject missing catalog glyphs or variable fonts. User app names outside this
+subset continue to use the TV's system fallback. These fonts do not establish
+physical-TV rendering acceptance; verify both scripts on the candidate packages.

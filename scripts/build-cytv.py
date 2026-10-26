@@ -29,7 +29,9 @@ def tracked_files(prefix):
                              'launcher/fonts/outfit-500.ttf', 'launcher/fonts/outfit-700.ttf',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
-                             'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],
+                             'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt',
+                             'launcher/fonts/NotoSansSC.ttf', 'launcher/fonts/NotoSansSC-OFL.txt',
+                             'launcher/fonts/NotoSansTC.ttf', 'launcher/fonts/NotoSansTC-OFL.txt'],
                 'native/service': ['native/service/app-inventory.js']}
     if prefix == 'native/app':
         required[prefix] += [p.relative_to(ROOT).as_posix() for p in (ROOT/'native/app/vendor/ws-legacy').rglob('*') if p.is_file()]

@@ -15,7 +15,8 @@ from .translations import MESSAGES
 
 LANGUAGES = {'auto': 'Auto', 'en': 'English', 'de': 'Deutsch', 'es': 'Español',
              'pt-BR': 'Português (Brasil)', 'fr': 'Français', 'it': 'Italiano',
-             'ko': '한국어', 'hi': 'हिन्दी', 'pl': 'Polski', 'ru': 'Русский'}
+             'ko': '한국어', 'hi': 'हिन्दी', 'pl': 'Polski', 'ru': 'Русский',
+             'zh-Hans': '简体中文', 'zh-Hant': '繁體中文'}
 _choice = 'auto'
 _language = 'en'
 
@@ -52,6 +53,13 @@ def resolve_language(choice='auto', preferred=None):
     for candidate in candidates:
         tag = str(candidate).split('.')[0].split('@')[0].replace('_', '-').lower()
         base = tag.split('-')[0]
+        if base == 'zh':
+            subtags = tag.split('-')[1:]
+            if 'hans' in subtags:
+                return 'zh-Hans'
+            if 'hant' in subtags:
+                return 'zh-Hant'
+            return 'zh-Hant' if any(region in subtags for region in ('tw', 'hk', 'mo')) else 'zh-Hans'
         if base == 'pt':
             return 'pt-BR'
         if base in LANGUAGES and base != 'auto':

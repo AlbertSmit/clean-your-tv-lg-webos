@@ -151,7 +151,7 @@ def build_installer(payload, output, version='0.0.0'):
     app['index.html']=app['index.html'].replace(b'<script src="i18n.js">',b'<script src="candidate.js"></script><script src="i18n.js">')
     # Existing installer icon provenance: assets/icons/README.md (installer.svg).
     app['icon.png']=read_file(project/'assets/icons/installer-256.png')
-    for name in ('NotoSans.ttf','NotoSans-OFL.txt','NotoSansDevanagari.ttf','NotoSansDevanagari-OFL.txt','NotoSansKR.ttf','NotoSansKR-OFL.txt'):
+    for name in ('NotoSans.ttf','NotoSans-OFL.txt','NotoSansDevanagari.ttf','NotoSansDevanagari-OFL.txt','NotoSansKR.ttf','NotoSansKR-OFL.txt','NotoSansSC.ttf','NotoSansSC-OFL.txt','NotoSansTC.ttf','NotoSansTC-OFL.txt'):
         app['fonts/'+name]=read_file(project/'launcher/fonts'/name)
     # Backend and offline runtime are deliberately added AFTER web compilation.
     files={APP_PREFIX+name:raw for name,raw in compile_web(app).items()}

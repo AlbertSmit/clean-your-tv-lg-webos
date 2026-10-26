@@ -144,6 +144,42 @@ class GuiTests(unittest.TestCase):
                 self.assertNotEqual(w.title.text(), 'Make your TV feel like yours')
         w.close()
 
+    def test_chinese_fonts_follow_startup_and_language_changes(self):
+        from PySide6.QtGui import QFontDatabase, QTextLayout
+        from cytv import i18n
+        from cytv.gui_style import STYLE
+        fonts = Path(__file__).resolve().parents[2] / 'launcher/fonts'
+        for name in ('SC', 'TC'):
+            self.assertGreaterEqual(QFontDatabase.addApplicationFont(str(fonts / ('NotoSans%s.ttf' % name))), 0)
+        i18n.configure('zh-Hant')
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        self.app.processEvents()
+
+        def rendered_family():
+            layout = QTextLayout('中文', w.title.font())
+            layout.beginLayout()
+            layout.createLine()
+            layout.endLayout()
+            return {run.rawFont().familyName() for run in layout.glyphRuns()}
+
+        self.assertEqual(rendered_family(), {'Noto Sans TC'})
+        for code, family in [('zh-Hans', 'Noto Sans SC'), ('zh-Hant', 'Noto Sans TC')]:
+            w.language.setCurrentIndex(list(i18n.LANGUAGES).index(code))
+            self.app.processEvents()
+            self.assertEqual(rendered_family(), {family})
+        w.language.setCurrentIndex(list(i18n.LANGUAGES).index('en'))
+        self.assertEqual(w.styleSheet(), STYLE)
+        w.close()
+        i18n.configure('auto')
+        with patch('cytv.i18n.system_languages', return_value=['zh-TW']):
+            w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        self.app.processEvents()
+        self.assertEqual(rendered_family(), {'Noto Sans TC'})
+
     def test_translated_secret_and_confirmation_keep_semantics(self):
         from cytv import i18n
         w = Wizard()

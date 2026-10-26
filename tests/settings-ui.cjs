@@ -69,7 +69,7 @@ const output=process.env.CYTV_TEST_OUTPUT_DIR||'build/tests';
    await updates.evaluate(el=>el.setAttribute('data-update-available','true'));
    fs.mkdirSync(output,{recursive:true});
    await page.screenshot({path:output+'/settings-'+edition+'.png'});
-   for(const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']){
+   for(const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru','zh-Hans','zh-Hant']){
     await page.evaluate(code=>localStorage.setItem('tvhome.language',code),locale);
     await page.reload();await page.locator('#tiles .item').first().waitFor();await page.locator('#btnSettings').click();await card.waitFor();
     await page.evaluate(()=>document.fonts.ready);
@@ -115,6 +115,6 @@ const output=process.env.CYTV_TEST_OUTPUT_DIR||'build/tests';
    assert(await card.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'no horizontal overflow at 720p');
    assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('PASS settings layout, update indicator, Developer Mode remote/Back/error handling and ten languages in both editions');
+  console.log('PASS settings layout, update indicator, Developer Mode remote/Back/error handling and twelve languages in both editions');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -241,8 +241,9 @@ Source references: [fixed bridge](../../homebrew/app/bridge.js),
 ## Publication and handoff checklist
 
 - [x] Run and record final whole-branch automated verification on a stable commit.
-- [ ] Parent completes whole-branch review, push and draft implementation PR to
-  `release/next`, attaches it, and preserves needed artifacts before managed-worktree cleanup.
+- [x] Whole-branch review, push and [draft implementation PR #74](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/74)
+  to `release/next` completed; PR attached and needed artifacts preserved outside
+  the managed worktree for cleanup.
 - [ ] Complete every physical matrix row with exact observations/artifacts, resolving
   material recovery/removal failures; obtain genuine named human review.
 - [ ] Freeze independent nondevelopment Installer version and exact artifact hashes.

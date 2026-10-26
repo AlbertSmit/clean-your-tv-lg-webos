@@ -369,7 +369,7 @@ git diff --check
 git diff --stat origin/release/next...HEAD
 ```
 
-- [ ] Open a draft implementation PR to `release/next` with accurate tests and
+- [x] Open a draft implementation PR to `release/next` with accurate tests and
   outstanding hardware gates. Attach it to this task. If any issue is linked,
   read its full discussion and maintain its status per AGENTS.md; do not invent
   an issue or claim unrelated reports fixed.
@@ -409,9 +409,18 @@ git diff --stat origin/release/next...HEAD
   catalog change with honest evidence. Maintainers decide acceptance; an open PR
   is not availability in Homebrew Channel.
 
-## Planning-turn verification and remaining handoff
+## Implementation handoff
 
-Only these two documentation files and the new branch reference were created by
-this planning task. No application code, device state, release, issue or external
-catalog entry was changed. Implementation boxes intentionally remain unchecked.
-The model switch and exclusive-checkout handoff must precede Task 0 execution.
+Tasks 0–7 are implemented and reviewed. Draft implementation PR:
+[Homebrew installer #74](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/74),
+targeting `release/next`. Final executable source is `7b8738bc`; subsequent commits
+update verification records only. The full suite passed (1,151 Python cases,
+23 environmental skips), actual Node 0.12.2/8 gates passed, and two Installer
+builds are byte-identical. See the [candidate record](../../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+for exact artifact identity, state/permission inventory and remaining gates.
+
+Task 8 remains pending: all new-path physical rows are NOT RUN; meaningful human
+review, public release verification and catalog submission are not complete.
+Keep promotion disabled until those gates are satisfied. Preserve candidate
+artifacts and review/test evidence outside the temporary worktree, then remove
+that worktree as required by CONTRIBUTING.

@@ -226,6 +226,7 @@ def main():
     executable = ROOT / 'dist' / ('cytv.exe' if os.name == 'nt' else 'cytv')
     subprocess.run([str(executable), '--version'], check=True)
     subprocess.run([str(executable), '--check-payload'], check=True)
+    subprocess.run([str(executable), '--check-runtime'], check=True)
     print('Built:', executable)
     if args.desktop:
         from desktop_packaging import build_desktop

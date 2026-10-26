@@ -115,8 +115,12 @@ def inventory_script(inventory):
 def personalize(data, app, inventory):
     parts = read_ar(data)
     files = data_files(data)
+    # Preserve execution from the validated regular files; tgz normalizes all
+    # permissions to 0755/0644, without retaining setuid or other special bits.
+    with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']), mode='r:gz') as archive:
+        executable = {member.name for member in archive if member.isfile() and member.mode & 0o111}
     files['usr/palm/applications/' + app + '/apps.js'] = inventory_script(inventory)
-    parts['data.tar.gz'] = tgz(files, directories=app != ROOT_APP)
+    parts['data.tar.gz'] = tgz(files, executable=executable, directories=app != ROOT_APP)
     return ar(parts), files
 
 

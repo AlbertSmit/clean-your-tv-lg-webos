@@ -151,6 +151,13 @@ reuses their recovery contracts rather than adding a competing updater.
 | Component `python-launcher` and `python-runtime.json` | Existing binding under each Root/Root Updater/System Updater private state directory; launcher 0700, receipt 0600, plus checked `python_binding.py`/`python_boot.js`. Maintenance reuses the original verified interpreter without downloads. |
 | `/tmp/cytv-product-<id>/`, `/tmp/clean-your-tv-root-<id>/`, `/tmp/cytv-root-updater-<id>/`, `/tmp/cytv-system-updater-<id>/` | Existing host-transfer staging (private umask 077); not new public endpoints or durable authority. Failed staging may remain and must not be confused with completion. |
 
+The package-DATA policy additionally permits observed metadata UID 501 only for
+the exact real shared `/media/developer/apps/usr/palm/packages` metadata container. Its own package
+leaves and `packageinfo.json` stay root-owned and nonwritable by group/others; all
+other application/private owner checks and fd/path/inode bindings remain strict.
+Other foreign container owners are refused. This is a metadata-reading exception,
+not permission to execute shared code or change shared ownership/modes.
+
 Package-managed product scopes remain `/media/developer/apps/usr/palm/` under
 `applications/<app>`, `services/<app>.service`, and `packages/<app>` for
 `com.cleanyourtv.root.preview`, `com.cleanyourtv.root.updater`, and optional

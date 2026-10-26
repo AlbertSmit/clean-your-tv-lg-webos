@@ -128,7 +128,11 @@ private `python_boot.js` and `startup_guard.py` under their owner's `/var/lib`
 state. The guard reads installed package identity as bounded DATA through checked
 descriptors and never executes a package startup script. Only the exact fixed
 root-owned developer platform ancestor chain may be writable; package leaves and
-files stay root-owned and nonwritable by group/others. Private readers stay strict.
+files stay root-owned and nonwritable by group/others. Only the fixed shared
+`/media/developer/apps/usr/palm/packages` metadata container additionally permits
+observed metadata owner UID 501 as DATA. Application ancestors, package leaves/files
+and private readers retain their existing owner and descriptor-binding checks; no shared
+metadata path gains execution authority.
 The 2026-10-26 [device-boundary correction](2026-10-26-homebrew-device-boundary.md)
 supersedes the former package-target symlink design.
 

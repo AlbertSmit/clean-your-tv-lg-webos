@@ -11,8 +11,10 @@ or update of the TV's existing Root installation is implied.
   Keep all foreign OS/ELF64/hard-float/ARMv6/unsafe-tool refusals. Applied in5e4d482f.
 - Standard shared developer application containers can be root-owned writable
   directories. Treat only their exact fixed chain as a package-data boundary:
-  require real root-owned directories, reject symlinks/foreign ownership, and
-  require the package leaf/descendants/files to be root-owned and not writable by
+  require real root-owned directories and reject symlinks/foreign ownership, with
+  one DATA-only owner exception: exactly `/media/developer/apps/usr/palm/packages`
+  may also have observed metadata UID 501. No other ancestor gains that owner
+  exception. The package leaf/descendants/files remain root-owned and not writable by
   group/others. Read metadata through stable descriptors and detect replacement.
   Keep private Store/runtime/interpreter checks strict. Legacy writable leaves
   stay recovery/migration cases, not implicitly trusted current packages.
@@ -51,8 +53,10 @@ or update of the TV's existing Root installation is implied.
 
 Targeted matrix in /private/tmp/cytv-device-boundary-review-report.md is the review
 brief (local scratch, not a public dependency). Maintain durable regression tests
-for shared chain/strict leaf/private boundaries, fd/path replacement, original
-manifest/file replacement before execution, no import from original source,
+for shared chain/strict leaf/private boundaries, the exact UID-501 shared metadata
+container with root-owned own leaves/files (other owners and paths refused),
+fd/path replacement, original manifest/file replacement before execution, no
+import from original source,
 private hook replacement/deletion and v1/v2 migration/removal. Use actual emitted
 packages and source-free payload checks; actual Node8 must pass.
 

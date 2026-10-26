@@ -1,8 +1,10 @@
 """Bounded installed-package DATA reads; never authorize execution from this tree.
 
 Only the fixed developer platform ancestors may be writable. Private readers and
-package leaves remain strict. Directory descriptors bind every open, and every
-binding is checked again after reading; concurrent package replacement fails shut.
+package leaves remain strict. Only the fixed shared packages metadata container
+also permits observed metadata owner 501; it grants no execution authority.
+Directory descriptors bind every open and are checked again after reading; concurrent
+package replacement fails shut.
 """
 import os
 from pathlib import Path
@@ -23,7 +25,9 @@ def read(path,limit=65536,uid=0,installed=INSTALLED):
     shared={installed,*list(installed.parents)[:-1],installed/'usr',installed/'usr/palm',installed/'usr/palm'/relative[2]}
     descriptors=[];bindings=[]
     def directory(info,name):
-        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0,uid) or (name not in shared and info.st_mode&0o022):
+        # Shared SDK metadata storage is DATA, distinct from strict package leaves.
+        owners=(0,uid,501) if name==installed/'usr/palm/packages' else (0,uid)
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (name not in shared and info.st_mode&0o022):
             raise ValueError('Unsafe package directory')
     def identity(info):return (info.st_dev,info.st_ino)
     def file_identity(info):return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)

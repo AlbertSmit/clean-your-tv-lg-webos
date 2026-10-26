@@ -32,6 +32,37 @@ class HostCancellationTests(unittest.TestCase):
             with self.subTest(change=change),self.assertRaises(ValueError):
                 self.tool.reconcile(self.store,self.profile,self.identifier,'c'*64,self.proof,lambda *args:{**self.disposition,**change})
             self.assertEqual(self.store.pending(self.profile),self.original)
+    def test_internal_recovery_staging_keeps_tv_parents_posix_on_windows(self):
+        import contextlib,hashlib,io,json,sys
+        from pathlib import PureWindowsPath
+        from unittest.mock import patch
+        from tests.cytv.test_remote_directories import RemoteTree
+        self.store.save(self.profile)
+        folder=Path(self.tmp.name)/'code';files={'install_driver.py':b'driver','system_updater/support/core.py':b'core'}
+        for name,raw in files.items():
+            target=folder/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw)
+        manifest={'files':{n:hashlib.sha256(raw).hexdigest() for n,raw in files.items()}}
+        (folder/'bundle.json').write_text(json.dumps(manifest))
+        class Remote(RemoteTree):
+            def run(remote,command,**kwargs):
+                if 'cancel_install.py inspect' in command:return '{"state":"admissible"}'
+                if command.startswith('rm -rf -- '):return ''
+                return super().run(command,**kwargs)
+            def close(remote):pass
+        remote=Remote()
+        def inventory(bundle):
+            # argparse has already made a real LOCAL bundle Path; only later
+            # remote parent conversions should see simulated Windows semantics.
+            self.tool.Path=PureWindowsPath
+            return manifest,b'recovery','c'*64
+        argv=['recovery','inspect','--code-bundle',str(folder),'--operation',self.identifier,'--candidate','d'*64,'--code-sha256','c'*64]
+        with patch.object(self.tool.state,'Store',return_value=self.store),patch.object(self.tool,'Path',Path), \
+             patch.object(self.tool,'code_inventory',side_effect=inventory),patch.object(sys,'argv',argv), \
+             patch('cytv.transport.SSH.connect',return_value=remote),patch('cytv.operations.Installer._python',return_value='/usr/bin/python3'),contextlib.redirect_stdout(io.StringIO()):
+            self.tool.main()
+        self.assertEqual(remote.uploads,{'install_driver.py','system_updater/support/core.py','bundle.json','cancel_install.py'})
+        self.assertEqual(self.store.pending(self.profile),self.original)
+
     def test_other_host_operation_does_not_even_request_reconciliation(self):
         inspect=Mock();self.store.checkpoint(self.profile,product_operation='d'*32)
         with self.assertRaises(ValueError):self.tool.reconcile(self.store,self.profile,self.identifier,'c'*64,self.proof,inspect)

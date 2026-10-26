@@ -8,7 +8,7 @@ reconcile only archives host pending history after fresh device verification.
 import argparse
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shlex
 import sys
@@ -82,7 +82,7 @@ def main():
             remote.run('umask 077; mkdir '+shlex.quote(stage))
             finished=False
             try:
-                for directory in sorted({str(Path(n).parent) for n in manifest['files']}-{'.'}):
+                for directory in sorted({str(PurePosixPath(n).parent) for n in manifest['files']}-{'.'}):
                     remote.run('mkdir -p '+shlex.quote(stage+'/'+directory))
                 for name in (*manifest['files'],'bundle.json'):
                     remote.upload(stage+'/'+name,(args.code_bundle/name).read_bytes(),mode=0o600)

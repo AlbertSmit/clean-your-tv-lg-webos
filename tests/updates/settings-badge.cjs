@@ -5,7 +5,7 @@ function harness(root){
  class E{
   constructor(tag){this.tag=tag;this.attrs={};this.children=[];this.className='';this.hidden=false;if(tag==='button')buttons.push(this);this.classList={toggle:(n,on)=>{const has=this.className.split(' ').includes(n);if(on===undefined)on=!has;if(on&&!has)this.className+=' '+n;else if(!on)this.className=this.className.split(' ').filter(x=>x!==n).join(' ');},contains:n=>this.className.split(' ').includes(n),add:n=>{this.className+=' '+n;},remove:n=>{this.className=this.className.split(' ').filter(x=>x!==n).join(' ');}};}
   set innerHTML(html){for(const match of html.matchAll(/<(button|p|div|pre|span)\b[^>]*id="([^"]+)"[^>]*>/g)){const e=new E(match[1]);ids[match[2]]=e;this.children.push(e);}}
-  appendChild(e){this.children.push(e);}setAttribute(k,v){this.attrs[k]=v;}addEventListener(){}focus(){focused=this;if(this.onfocus)this.onfocus();}querySelectorAll(){return buttons;}
+  appendChild(e){this.children.push(e);}setAttribute(k,v){this.attrs[k]=v;}addEventListener(){}focus(){focused=this;document.activeElement=this;if(this.onfocus)this.onfocus();}querySelectorAll(){return buttons;}
  }
  const document={body:new E('body'),activeElement:{focus(){}},createElement:t=>new E(t),getElementById:id=>ids[id],addEventListener(){}};
  const updates={open(){},rpc(method,payload,callback){calls.push(method);assert.equal(method,'check');return root?new Promise((resolve,reject)=>pending.push({resolve,reject})):pending.push(callback);}};
@@ -23,14 +23,16 @@ function harness(root){
  assert.equal(home.routing().disabled,false);
  assert.equal(home.routing().attrs['aria-checked'],'true');
  for(const reply of [{returnValue:false,errorText:'Home Helper data unavailable'},null,{returnValue:true,enabled:'false'}]){
-  home.close();home.panel.open();
+  if(!home.routing().disabled)home.routing().focus();home.close();home.panel.open();
+  assert.notEqual(home.focus(),home.routing(),'hiding the routing switch must preserve visible focus');
   assert.equal(home.routing().hidden,true,'rechecking must not show the previous choice as current');
   home.replyHome(reply);
   assert.equal(home.routing().hidden,true,'unknown status must not expose an off switch');
   assert.equal(home.routing().disabled,true);
   assert.match(home.routingStatus().textContent,/unknown/);
  }
- home.close();home.panel.open();home.replyHome({returnValue:true,enabled:false});
+ if(!home.routing().disabled)home.routing().focus();home.close();home.panel.open();
+  assert.notEqual(home.focus(),home.routing(),'hiding the routing switch must preserve visible focus');home.replyHome({returnValue:true,enabled:false});
  assert.equal(home.routing().hidden,false,'a confirmed LG Home choice remains visible');
  assert.equal(home.routing().attrs['aria-checked'],'false');
  assert.equal(home.rpcCalls.some(uri=>uri.endsWith('/setHomeControl')||uri.includes('applicationManager')),false,'opening settings cannot change Home or launch Helper');

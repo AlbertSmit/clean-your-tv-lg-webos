@@ -41,6 +41,11 @@
   try{bridge=new PalmServiceBridge();bridge.onservicecallback=function(raw){try{finish(JSON.parse(raw));}catch(_){finish(null);}};bridge.call('luna://com.gathin.tvhome.renewal/'+method,'{}');}catch(_){finish(null);}
  }
  var homeToggle=document.getElementById('homeRoutingToggle'),homeVisit=document.getElementById('homeVisit'),homeStatus=document.getElementById('homeRoutingStatus'),homeEnabled=null,homeBusy=false;
+ function hideHomeChoice(){
+  var focused=document.activeElement===homeToggle;
+  homeToggle.hidden=true;homeToggle.disabled=true;
+  if(focused&&openNow())focus(index);
+ }
  function homeRPC(method,payload,callback){
   var b,done=false,t=setTimeout(function(){finish({returnValue:false});},10000);
   function finish(r){if(done)return;done=true;clearTimeout(t);if(b)try{b.cancel();}catch(_){}callback(r);}
@@ -49,13 +54,13 @@
  function renderHome(r){
   homeBusy=false;homeVisit.disabled=false;
   if(!r||r.returnValue!==true||typeof r.enabled!=='boolean'){
-   homeEnabled=null;homeToggle.hidden=true;homeToggle.disabled=true;homeStatus.textContent=tr('Home status is unknown. The Home button may still work.');return;
+   homeEnabled=null;hideHomeChoice();homeStatus.textContent=tr('Home status is unknown. The Home button may still work.');return;
   }
   homeEnabled=r.enabled;homeToggle.hidden=false;homeToggle.disabled=false;homeToggle.setAttribute('aria-checked',String(homeEnabled));
   homeStatus.textContent=homeEnabled?tr('Home and return from apps open Clean Your TV.'):tr('Home and return from apps open LG Home.');
   if(openNow())focus(index);
  }
- function refreshHome(){homeToggle.hidden=true;homeToggle.disabled=true;homeStatus.textContent=tr('Checking Home control…');homeRPC('homeStatus',{},renderHome);}
+ function refreshHome(){hideHomeChoice();homeStatus.textContent=tr('Checking Home control…');homeRPC('homeStatus',{},renderHome);}
  homeToggle.onclick=function(){
   if(homeBusy||homeEnabled===null)return;homeBusy=true;homeToggle.disabled=true;homeVisit.disabled=true;homeStatus.textContent=tr('Changing Home control…');
   homeRPC('setHomeControl',{enabled:!homeEnabled},function(r){

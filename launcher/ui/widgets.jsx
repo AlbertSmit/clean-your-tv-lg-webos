@@ -118,6 +118,18 @@ export function createWidgets(dataSource) {
 
   // — Now Playing cell —
   const artEl = <div class="w-np-art"></div>;
+  artEl.innerHTML = '<div class="w-np-art-thumb" aria-hidden="true"></div><span class="w-np-glyph" aria-hidden="true"></span><div class="w-np-shimmer" aria-hidden="true"></div>';
+  const artThumbEl = artEl.querySelector('.w-np-art-thumb');
+  const artGlyphEl = artEl.querySelector('.w-np-glyph');
+  artGlyphEl.innerHTML = musicGlyph;
+  const artImgEl = document.createElement('img');
+  artImgEl.alt = '';
+  artImgEl.draggable = false;
+  artImgEl.onload = function () {
+    artImgEl.classList.add('loaded');
+    artEl.classList.remove('loading');
+  };
+  artEl.appendChild(artImgEl);
   const label = window.HomeI18n ? window.HomeI18n.t('Now Playing') : 'Now Playing';
   const titleEl = <div class="w-np-title"></div>;
   const artistEl = <div class="w-np-artist"></div>;
@@ -190,10 +202,22 @@ export function createWidgets(dataSource) {
     el.classList.add(cls);
   }
 
+  function applyArtwork(url) {
+    const has = !!(url && /^data:image\//.test(url));
+    artEl.classList.toggle('has-thumb', has);
+    artEl.classList.toggle('loading', has);
+    const nextSrc = has ? url : '';
+    if (artImgEl.getAttribute('src') !== nextSrc) {
+      artImgEl.classList.remove('loaded');
+      artImgEl.src = nextSrc;
+    }
+    artThumbEl.style.backgroundImage = has ? 'url("' + url + '")' : '';
+  }
+
   function setNowPlaying(snap) {
     applyNowPlayingVisibility();
     if (!hasMusic(snap)) {
-      artEl.innerHTML = '';
+      applyArtwork(null);
       titleEl.textContent = '';
       artistEl.textContent = '';
       lastNP = null;
@@ -203,16 +227,7 @@ export function createWidgets(dataSource) {
       lastNP.title !== snap.title ||
       lastNP.artist !== (snap.artist || '') ||
       lastNP.artwork !== snap.artwork;
-    if (snap.artwork && /^data:image\//.test(snap.artwork)) {
-      artEl.innerHTML = '';
-      const img = document.createElement('img');
-      img.src = snap.artwork;
-      img.alt = '';
-      img.draggable = false;
-      artEl.appendChild(img);
-    } else {
-      artEl.innerHTML = musicGlyph;
-    }
+    applyArtwork(snap.artwork);
     titleEl.textContent = snap.title;
     artistEl.textContent = snap.artist || '';
     if (changed) {

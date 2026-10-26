@@ -181,6 +181,43 @@ html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display:
 }
 .w-np-art-animate { animation: wNpArtIn 480ms cubic-bezier(.22,.61,.36,1) both; }
 html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { animation: none !important; }
+/* LQIP blur-up for album art: instant blurred preview, sharp crossfade. */
+.w-np-art { position: relative; }
+.w-np-art-thumb {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  background-size: cover; background-position: center;
+  filter: blur(22px) saturate(1.2);
+  transform: scale(1.15);
+  opacity: 0; transition: opacity 240ms ease;
+}
+.w-np-art.has-thumb .w-np-art-thumb { opacity: 1; }
+.w-np-glyph {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.w-np-art img {
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  display: block; opacity: 0; transition: opacity 340ms ease;
+}
+.w-np-art img.loaded { opacity: 1; }
+.w-np-shimmer {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 60%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.09) 48%, transparent 66%);
+  transform: translateX(-130%);
+  animation: wNpShimmer 2s ease-in-out infinite;
+}
+.w-np-art:not(.loading) .w-np-shimmer { display: none; }
+@keyframes wNpShimmer {
+  0% { transform: translateX(-130%); }
+  55%, 100% { transform: translateX(230%); }
+}
+html.reduced-effects .w-np-art-thumb,
+html.reduced-effects .w-np-art img,
+html.reduced-effects .w-np-shimmer { transition: none !important; animation: none !important; }
+html.reduced-effects .w-np-art img { opacity: 1; }
+html.reduced-effects .w-np-art-thumb { opacity: 0; }
 
 /* The master widget switch belongs to status navigation, outside decoration. */
 .status-widgets { display: none; }

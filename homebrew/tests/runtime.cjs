@@ -32,7 +32,7 @@ function fixture(){
         if(executable==='/usr/bin/python3') return callback(system?null:new Error('missing'),system?(args.indexOf('SMOKE')>=0?'CYTV_RUNTIME_SMOKE':'CYTV_SYSTEM_PYTHON'):'');
         if(executable==='/bin/sh'){
             var script=args[1];
-            if(script.indexOf('uname -m')>=0)return callback(/^(armv7l|armv8l)$/.test(machine)?null:new Error('unsupported machine'),/^(armv7l|armv8l)$/.test(machine)?'CYTV_MACHINE_READY':'');
+            if(script.indexOf('uname -m')>=0){var kernels=script.match(/case \"\$\(uname -m\)\" in ([a-z0-9|]+)\)/);var accepted=kernels&&kernels[1].split('|').indexOf(machine)>=0;return callback(accepted?null:new Error('unsupported machine'),accepted?'CYTV_MACHINE_READY':'');}
             if(script.indexOf('df -Pk')>=0)return callback(space?null:new Error('space'),space?'CYTV_SPACE_READY':'');
             if(script.indexOf('mktemp -d')>=0){var stage=path.join(runtimeBase,'.stage-123456789abc');fs.mkdirSync(stage);return callback(null,stage);}
             if(script.indexOf('tar -xzf')>=0){var tree=path.join(runtimeBase,'.stage-123456789abc/tree');fs.mkdirSync(tree);fs.mkdirSync(path.join(tree,'bin'));fs.writeFileSync(path.join(tree,'bin/python3.13'),'candidate');fs.chmodSync(path.join(tree,'bin/python3.13'),493);fs.writeFileSync(path.join(tree,'.cytv-runtime.json'),bindraw);return callback(null,'');}
@@ -53,7 +53,8 @@ async function rejection(change){var f=fixture();try{change(f);await rejects(f.a
     await rejection(function(f){f.setMachine('armv6l');});
     await rejection(function(f){f.setSystem();f.setArch();});
     await rejection(function(f){f.setSystem();f.setMachine('armv6l');});
-    for(var machine of ['armv7l','armv8l']){var supported=fixture();try{supported.setMachine(machine);assert.strictEqual((await supported.api.inspect(supported.root)).privateRuntimeRequired,true);assert(!fs.existsSync(supported.runtimeBase));}finally{supported.clean();}}
+    for(var machine of ['armv7l','armv8l','aarch64']){var supported=fixture();try{supported.setMachine(machine);assert.strictEqual((await supported.api.inspect(supported.root)).privateRuntimeRequired,true);assert(!fs.existsSync(supported.runtimeBase));}finally{supported.clean();}}
+    var native64=fixture();try{native64.setMachine('aarch64');native64.setSystem();assert.strictEqual((await native64.api.inspect(native64.root)).python,'/usr/bin/python3');assert(!fs.existsSync(native64.runtimeBase));}finally{native64.clean();}
     var f=fixture();try{var state=await f.api.inspect(f.root);assert.strictEqual(state.privateRuntimeRequired,true);assert(!fs.existsSync(f.runtimeBase));assert(f.calls.every(function(c){return c.args.indexOf('SMOKE')<0 && c.args.join(' ').indexOf('mktemp -d')<0;}));var selected=await f.api.prepare(f.root);assert.strictEqual(selected,path.join(f.runtimeBase,PIN,'bin/python3.13'));assert(!fs.existsSync(path.join(f.runtimeBase,'.stage-123456789abc')));var count=f.calls.length;assert.strictEqual((await f.api.inspect(f.root)).python,selected);assert(f.calls.slice(count).every(function(c){return c.args.indexOf('SMOKE')<0;}));}finally{f.clean();}
     f=fixture();try{f.setSystem();assert.strictEqual(await f.api.prepare(f.root),'/usr/bin/python3');assert(!fs.existsSync(f.runtimeBase));}finally{f.clean();}
     f=fixture();try{f.setSystem();f.setArch();assert.strictEqual((await f.api.inspect(f.root,true)).python,'/usr/bin/python3');assert(!fs.existsSync(f.runtimeBase));assert(f.calls.every(function(c){return c.executable==='/usr/bin/python3';}));}finally{f.clean();}

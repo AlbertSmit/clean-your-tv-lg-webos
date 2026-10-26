@@ -121,7 +121,7 @@ def _capture_migrated_baseline(bundle):
 
 def require_product_abi():
     """Product support is independent of the selected Python interpreter."""
-    if sys.platform != 'linux' or platform.machine() not in ('armv7l','armv8l'):
+    if sys.platform != 'linux' or platform.machine() not in ('armv7l','armv8l','aarch64'):
         raise RuntimeError('unsupported_product_abi')
     executable=Path('/bin/sh').resolve(strict=True)
     header=safe_bytes(executable,uid=0)[:40]

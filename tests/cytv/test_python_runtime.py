@@ -70,6 +70,22 @@ class Remote:
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_shell_abi_accepts_arm32_userspace_on_aarch64_without_accepting_elf64(self):
+        import shlex
+        remote=Remote(system=False)
+        runtime._preflight(remote)
+        script=shlex.split(remote.commands[-1][0])[-1]
+        fragment=script[script.index('case "$(uname -m)" in '):script.index('\nbase=')]
+        with tempfile.TemporaryDirectory() as folder:
+            elf=Path(folder)/'shell'
+            for kernel in ('armv7l','armv8l','aarch64'):
+                for elf_class in (1,2):
+                    header=bytearray(40);header[:6]=b'\x7fELF\x01\x01';header[4]=elf_class;header[18]=40;header[39]=5;elf.write_bytes(header)
+                    prefix='set -e\nuname() { printf "%s\n" "$CYTV_TEST_KERNEL"; }\nreadlink() { printf "%s\n" "$CYTV_TEST_ELF"; }\n'
+                    with self.subTest(kernel=kernel,elf_class=elf_class):
+                        result=subprocess.run(['/bin/sh','-c',prefix+fragment],env=dict(os.environ,CYTV_TEST_KERNEL=kernel,CYTV_TEST_ELF=str(elf)),capture_output=True,text=True)
+                        self.assertEqual(result.returncode==0,elf_class==1,result.stderr)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

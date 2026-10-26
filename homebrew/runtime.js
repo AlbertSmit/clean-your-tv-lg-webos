@@ -91,7 +91,7 @@ function abi(bootstrap) {
     var fd = fs.openSync(executable, 'r'), header = Buffer.alloc(40);
     try { if (fs.readSync(fd, header, 0, 40, 0) !== 40) fail('Unknown Linux ABI'); } finally { fs.closeSync(fd); }
     if (header.toString('hex', 0, 4) !== '7f454c46' || header[4] !== 1 || header[5] !== 1 || header.readUInt16LE(18) !== 40 || (header[37] & 4) || header[39] !== 5) fail('Unsupported ARM ABI; private Python was not installed');
-    return shell(bootstrap, 'case "$(uname -m)" in armv7l|armv8l) ;; *) exit 1;; esac\nprintf CYTV_MACHINE_READY\n').then(function (result) {
+    return shell(bootstrap, 'case "$(uname -m)" in armv7l|armv8l|aarch64) ;; *) exit 1;; esac\nprintf CYTV_MACHINE_READY\n').then(function (result) {
         if (result !== 'CYTV_MACHINE_READY') fail('Unsupported ARM machine; private Python requires ARMv7 or ARMv8 little-endian Linux');
     }, function () { fail('Private Python requires ARMv7 or ARMv8 little-endian Linux and verified system tools'); });
 }

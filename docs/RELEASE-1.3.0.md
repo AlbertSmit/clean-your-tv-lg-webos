@@ -48,7 +48,7 @@ or Homebrew catalog availability is claimed.
   isolate the legacy CLI test from local build outputs. The inventory includes
   this metadata PR when it merges into the candidate.
 
-- Chinese localization: Simplified Chinese (`zh-Hans`) and Traditional Chinese
+- #76, Chinese localization: Simplified Chinese (`zh-Hans`) and Traditional Chinese
   (`zh-Hant`) in Home, Root Home, the independent updaters, desktop/console,
   Android and Homebrew installers. Automatic selection respects explicit script
   tags and regional defaults; manual selection persists. Bundled static Noto

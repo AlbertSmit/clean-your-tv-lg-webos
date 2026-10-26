@@ -86,7 +86,7 @@ auto.respond([
   {entity_id: 'weather.home', state: 'sunny', attributes: {temperature: 20, temperature_unit: '°C'}}
 ]);
 assert.deepEqual(auto.snapshot.nowPlaying, {
-  playing: true, title: 'Song', artist: 'Artist', album: 'Album', source: 'kitchen', artwork: null
+  playing: true, title: 'Song', artist: 'Artist', album: 'Album', source: 'kitchen', artwork: null, artworkThumb: null
 });
 assert.equal(auto.snapshot.weather.temp, 20, 'music filtering must preserve weather');
 

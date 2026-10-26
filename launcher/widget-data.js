@@ -131,7 +131,30 @@ window.WidgetData = (function () {
         if (x.status !== 200 && x.status !== 0) { done(null); return; }
         try {
           var fr = new FileReader();
-          fr.onload = function () { done(fr.result); };
+          fr.onload = function () {
+            var full = fr.result;
+            try {
+              var img = new Image();
+              img.onload = function () {
+                var thumb = null;
+                try {
+                  var maxDim = 56;
+                  var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                  var w = Math.max(1, Math.round(img.width * scale));
+                  var h = Math.max(1, Math.round(img.height * scale));
+                  var cv = document.createElement('canvas');
+                  cv.width = w; cv.height = h;
+                  cv.getContext('2d').drawImage(img, 0, 0, w, h);
+                  thumb = cv.toDataURL('image/jpeg', 0.65);
+                } catch (e) {}
+                done({ src: full, thumb: thumb });
+              };
+              img.onerror = function () { done({ src: full, thumb: null }); };
+              img.src = full;
+            } catch (e) {
+              done({ src: full, thumb: null });
+            }
+          };
           fr.onerror = function () { done(null); };
           fr.readAsDataURL(x.response);
         } catch (e) { done(null); }
@@ -166,7 +189,8 @@ window.WidgetData = (function () {
         artist: text(a.media_artist),
         album: text(a.media_album_name),
         source: text(a.friendly_name),
-        artwork: null
+        artwork: null,
+        artworkThumb: null
       };
     }
     return out;
@@ -186,7 +210,10 @@ window.WidgetData = (function () {
       var completed = false;
       (artworkLoader || artworkDataUrl)(np, cfg.ha.url, 'Bearer ' + cfg.ha.token, function (durl) {
         completed = true;
-        out.nowPlaying.artwork = durl;
+        if (durl) {
+          out.nowPlaying.artwork = durl.src;
+          out.nowPlaying.artworkThumb = durl.thumb || null;
+        }
         if (done) done(out);
       });
       if (immediate && !completed && done) done(out);

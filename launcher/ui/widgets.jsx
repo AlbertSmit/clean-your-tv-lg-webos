@@ -202,7 +202,7 @@ export function createWidgets(dataSource) {
     el.classList.add(cls);
   }
 
-  function applyArtwork(url) {
+  function applyArtwork(url, thumb) {
     const has = !!(url && /^data:image\//.test(url));
     artEl.classList.toggle('has-thumb', has);
     artEl.classList.toggle('loading', has);
@@ -211,7 +211,7 @@ export function createWidgets(dataSource) {
       artImgEl.classList.remove('loaded');
       artImgEl.src = nextSrc;
     }
-    artThumbEl.style.backgroundImage = has ? 'url("' + url + '")' : '';
+    artThumbEl.style.backgroundImage = has ? 'url("' + (thumb || url) + '")' : '';
   }
 
   function setNowPlaying(snap) {
@@ -227,7 +227,7 @@ export function createWidgets(dataSource) {
       lastNP.title !== snap.title ||
       lastNP.artist !== (snap.artist || '') ||
       lastNP.artwork !== snap.artwork;
-    applyArtwork(snap.artwork);
+    applyArtwork(snap.artwork, snap.artworkThumb);
     titleEl.textContent = snap.title;
     artistEl.textContent = snap.artist || '';
     if (changed) {

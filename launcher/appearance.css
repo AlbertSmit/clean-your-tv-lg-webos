@@ -186,8 +186,8 @@ html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { ani
 .w-np-art-thumb {
   position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   background-size: cover; background-position: center;
-  filter: blur(22px) saturate(1.2);
-  transform: scale(1.15);
+  filter: blur(3px) saturate(1.05);
+  transform: scale(1.08);
   opacity: 0; transition: opacity 240ms ease;
 }
 .w-np-art.has-thumb .w-np-art-thumb { opacity: 1; }

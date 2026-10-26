@@ -37,12 +37,22 @@ class PrivateGuardTests(unittest.TestCase):
     def test_missing_marker_with_transient_failsafe_admits_marks_and_returns(self):
         sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'runtime'))
         import boot_gate
+        from persistent_store import Store
         marker=self.root/'marker';failsafe=self.root/'failsafe';failsafe.touch()
-        with patch.object(boot_gate,'ROOT',marker),patch.object(boot_gate.d,'EXPECTED_UID',os.getuid()),patch.object(boot_gate.d,'FAILSAFE',failsafe),patch('intent_runtime.boot_identity',return_value='boot-a'),patch.object(boot_gate,'wait',side_effect=AssertionError('init must never wait')),patch.object(guard.subprocess,'run',side_effect=lambda *a,**kw:boot_gate.mark()):
+        state=self.fixture.states[self.owner]
+        with patch.object(boot_gate,'ROOT',marker),patch.object(boot_gate.d,'STATE',state),patch.object(boot_gate.d,'EXPECTED_UID',os.getuid()),patch.object(boot_gate.d,'FAILSAFE',failsafe),patch('intent_runtime.boot_identity',return_value='boot-a'),patch.object(boot_gate,'wait',side_effect=AssertionError('init must never wait')),patch.object(guard.subprocess,'run',side_effect=lambda *a,**kw:boot_gate.mark()):
+            store=Store(state);intent=store.read()
+            for kind in ('enable','confirmed','exit','restored'):
+                event=dict(kind=kind,generation=intent['generation'],token='emergency-off')
+                if kind=='enable':event['boot']='boot-before-emergency'
+                intent,_=store.apply(intent,event)
+            self.assertEqual((intent['phase'],intent['enabled']),('disabled',False))
+            self.assertEqual(store.path,state/'persistent-intent.json')
+            disabled_bytes=store.path.read_bytes()
             self.assertFalse(marker.exists());self.assertTrue(guard.start(self.owner))
             self.assertEqual(boot_gate.observation(),(True,True))
             self.assertEqual(json.loads((marker/'normal.json').read_text()),{'version':1,'boot':'boot-a'})
-            self.assertFalse(any(self.root.rglob('home-intent.json')))
+            self.assertEqual(store.path.read_bytes(),disabled_bytes)
     def test_updater_workers_start_only_from_private_code(self):
         with patch.object(guard.subprocess,'Popen') as spawn:
             self.assertTrue(guard.start(package_identity.UPDATER));command=spawn.call_args.args[0]

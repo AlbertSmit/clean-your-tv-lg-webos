@@ -16,6 +16,29 @@ TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연
 
 - **Root:** 기존 root SSH 접근 권한이 필요합니다. 설치 프로그램은 TV를 루팅하지 않습니다. 이미 루팅한 TV에는 Developer Mode를 켜지 마세요. root 접근 및 복구 서비스를 유지하세요.
 
+
+## Developer Mode 설정 (No-root)
+
+Developer Mode를 사용하면 root 없이 TV에 CYTV 앱을 설치할 수 있습니다.
+
+1. TV에서 LG Apps를 열고 Developer Mode를 검색하여 설치하세요.
+2. Developer Mode를 열고 LG Developer 계정으로 로그인하세요. 계정이 없으면 webostv.developer.lge.com에서 만드세요.
+3. Dev Mode Status를 켜세요. TV가 재시작되면 Developer Mode를 다시 여세요.
+4. Key Server를 켜고 Developer Mode를 열어 두세요. 표시된 IP Address를 CYTV의 TV 주소로 입력하세요.
+5. TV의 Developer Mode에 표시된 6자리 Passphrase를 입력하세요. 대소문자를 구분하세요.
+
+LG 계정 비밀번호가 아닌 TV 화면의 코드를 사용하세요. 코드가 보이지 않으면 Key Server를 켜세요.
+
+페어링은 별도 단계입니다. TV에서 요청하면 리모컨으로 CYTV를 승인하세요.
+
+타이머가 끝나기 전에 Developer Mode를 열고 TV가 인터넷에 연결된 상태에서 EXTEND를 누르세요. 만료되면 LG가 이 앱들을 삭제할 수 있습니다.
+
+Home은 앱 화면입니다. Home Helper를 사용하면 Home 버튼으로 이 화면을 열 수 있습니다.
+
+설치 후 Home 버튼을 눌러 보세요. LG Home이 열리면 TV 앱 목록에서 Home Helper를 여세요. 2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
+
 ## Root용 선택적 Python 런타임
 
 Root에는 TV의 Python 3.9 이상이 필요합니다. 설치 프로그램은 버전 번호뿐 아니라 `json`, `fcntl`, 잠금, 파일 및 하위 프로세스 등 필요한 모듈과 동작을 실제로 확인합니다. 기존 인터프리터가 적합하면 Python을 추가로 다운로드하지 않습니다. 적합한 Python이 없으면 설정 과정에서 컴퓨터나 Android가 URL·크기·SHA-256이 고정된 **ARMv7 soft-float용 CPython 3.13.17**을 받아 기존에 신뢰한 SSH 연결로 전송할 수 있습니다. 일반 데스크톱/Android 설치 패키지에 이 압축 파일은 포함되지 않으며, 이 단계에서는 TV의 인터넷 연결이 필요하지 않습니다.
@@ -59,7 +82,7 @@ Root 제거가 중단되면 앱에서 제거를 다시 선택하세요. TV의 �
 
 **새 빌드에서는 2초 안에 Home을 세 번 짧게 누르세요.** 매번 버튼을 놓아야 합니다. 설정을 지우지 않고 LG Home으로 복귀하며 Home 제어를 중지합니다. No-root Helper 0.6.13 이하에서는 대신 Home을 약 2초 동안 누릅니다. Home 길게 누르기는 Root의 비상 복구 동작이 아닙니다.
 
-No-root는 LG 앱 목록에서 **Home Helper**를 열어 재개하세요. Home만 열어서는 중지가 해제되지 않습니다. Root는 Home 설정에서 **Home 변경**을 켜서 재개하세요. **LG Home 열기**는 Home의 연결 대상을 바꾸지 않고 LG Home을 한 번 엽니다. LG Home을 계속 사용할 기본 대상으로 복원하려면 **Home 변경**을 끄거나 `cytv restore`를 실행하세요. 두 제어 프로그램을 동시에 실행하지 마세요. 문제가 반복되면 LG Home을 유지하세요.
+No-root: 2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다. Root는 Home 설정에서 **Home 변경**을 켜서 재개하세요. **LG Home 열기**는 Home의 연결 대상을 바꾸지 않고 LG Home을 한 번 엽니다. LG Home을 계속 사용할 기본 대상으로 복원하려면 **Home 변경**을 끄거나 `cytv restore`를 실행하세요. 두 제어 프로그램을 동시에 실행하지 마세요. 문제가 반복되면 LG Home을 유지하세요.
 
 ```sh
 ./cytv --language ko status

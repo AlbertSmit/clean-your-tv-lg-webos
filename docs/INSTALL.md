@@ -8,6 +8,26 @@ Use **cytv** to install either edition. It includes the runtime and TV packages;
 you do not need to build from source. Both editions run on the TV after setup,
 so your computer can be switched off during everyday use.
 
+## Set up Developer Mode (No-root)
+
+Developer Mode lets CYTV install apps on a TV without root. Home is your app screen. Home Helper makes the Home button open it.
+
+1. On the TV, open LG Apps, search for Developer Mode and install it.
+2. Open Developer Mode and sign in with your LG Developer account. Create an account at webostv.developer.lge.com if needed.
+3. Turn on Dev Mode Status. The TV restarts. Open Developer Mode again.
+4. Turn on Key Server and leave Developer Mode open. Its IP Address is the TV address to enter in CYTV.
+5. Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.
+
+Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.
+
+Pairing is a separate step: when the TV asks, approve CYTV with your remote.
+
+Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.
+
+After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps. Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.
+
+See [LG’s Developer Mode instructions](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app). Root TVs use their existing SSH access; do not enable Developer Mode on them.
+
 ## Candidate: on-TV Root installation
 
 **Unreleased source candidate; not a published Homebrew download or catalog

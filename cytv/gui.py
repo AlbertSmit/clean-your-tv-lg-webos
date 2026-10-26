@@ -6,7 +6,7 @@ import sys
 import threading
 
 from PySide6.QtCore import QObject, Signal, QUrl, QTimer, Qt
-from PySide6.QtGui import QDesktopServices, QIcon, QFontDatabase, QFont
+from PySide6.QtGui import QDesktopServices, QIcon, QFontDatabase, QFont, QTextCursor
 from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout,
                               QLabel, QLineEdit, QMainWindow, QMessageBox, QProgressBar,
                               QPushButton, QTextBrowser, QVBoxLayout, QWidget, QButtonGroup)
@@ -269,6 +269,9 @@ class Wizard(QMainWindow):
         actions.setAccessibleName(tr('Maintenance action'))
         for label, command in MAINTENANCE_ACTIONS:
             actions.addItem(tr(label), command)
+        help_text = QLabel(tr('Check TV status shows what is installed. Return to LG Home restores the standard screen. Uninstall Clean Your TV removes the CYTV apps.'))
+        help_text.setWordWrap(True)
+        maintenance_layout.addWidget(help_text)
         maintenance_layout.addWidget(actions)
         execute = QPushButton(tr('Run selected maintenance action'))
         execute.setMinimumHeight(44)
@@ -394,7 +397,7 @@ class Wizard(QMainWindow):
         self.progress.hide()
         self.cancel.setEnabled(True)
         self.clear_form()
-        label = QLabel(tr('Connection check' if self.command != 'install' and prompt.label.startswith('Edition [') else prompt.title))
+        label = QLabel(tr('Connection check' if self.command != 'install' and prompt.label.startswith('Edition [') else 'Developer Mode code (Passphrase)' if prompt.secret and prompt.label.startswith('Developer Mode') else prompt.title))
         label.setWordWrap(True)
         label.setObjectName('promptTitle')
         self.form_layout.addWidget(label)
@@ -443,7 +446,7 @@ class Wizard(QMainWindow):
             self.button('TV is on — check again', lambda: self.submit(''), True).setFocus()
         else:
             entry = QLineEdit()
-            entry.setAccessibleName(tr(prompt.title))
+            entry.setAccessibleName(label.text())
             label.setBuddy(entry)
             if prompt.secret:
                 entry.setEchoMode(QLineEdit.EchoMode.Password)
@@ -466,6 +469,9 @@ class Wizard(QMainWindow):
                 self.button('Search again', lambda: self.submit('r'))
                 self.button('Help finding my TV', lambda: self.submit('?'))
             entry.setFocus()
+            if prompt.secret:
+                # Wait for the form layout before revealing the current help.
+                QTimer.singleShot(0, lambda: self.content.moveCursor(QTextCursor.MoveOperation.End))
 
     def submit(self, value):
         if not self.pending:

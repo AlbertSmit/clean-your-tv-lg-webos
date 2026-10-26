@@ -16,6 +16,29 @@ O Helper No-root atualizado exige Node.js 0.12.2 ou posterior na TV. O instalado
 
 - **Root:** é necessário acesso SSH root já existente. O instalador não faz root. Não ative Developer Mode em uma TV que já tenha root. Mantenha o acesso root e os serviços de recuperação disponíveis.
 
+
+## Configurar Developer Mode (No-root)
+
+Developer Mode permite ao CYTV instalar apps em uma TV sem root.
+
+1. Na TV, abra LG Apps, procure Developer Mode e instale o app.
+2. Abra Developer Mode e entre com sua conta LG Developer. Se necessário, crie uma conta em webostv.developer.lge.com.
+3. Ative Dev Mode Status. A TV reiniciará. Depois, abra Developer Mode novamente.
+4. Ative Key Server e deixe Developer Mode aberto. Use o IP Address exibido como endereço da TV no CYTV.
+5. Digite a Passphrase: os seis caracteres exibidos no Developer Mode da TV. Respeite maiúsculas e minúsculas.
+
+Use o código da TV, não a senha da sua conta LG. Se o código não aparecer, ative Key Server.
+
+O pareamento é uma etapa separada: quando a TV pedir, autorize o CYTV com o controle remoto.
+
+Mantenha Developer Mode ativo: antes de o tempo acabar, abra o app e pressione EXTEND com a TV conectada à Internet. Se expirar, a LG pode remover esses apps.
+
+Home é sua tela de apps. Home Helper faz o botão Home abrir essa tela.
+
+Após instalar, pressione Home para testar. Se LG Home abrir, abra Home Helper na lista de apps da TV. Pressione Home brevemente três vezes em dois segundos para voltar ao LG Home. Para reiniciar o controle de Home, abra Home Helper, escolha Iniciar Helper e confirme. Sua tela Home escolhida será mantida.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
+
 ## Python opcional para Root
 
 Root exige Python 3.9+ na TV. O instalador verifica os módulos e operações de verdade, incluindo `json`, `fcntl`, bloqueios, arquivos e subprocessos; o número da versão não basta. Se o interpretador existente for adequado, não há outro download de Python. Caso contrário, durante a configuração, o computador ou Android pode baixar CPython **3.13.17 para ARMv7 soft-float**, fixado por URL, tamanho e SHA-256, e transferi-lo pela conexão SSH já confiável. Os pacotes comuns dos instaladores não incluem esse arquivo; a TV não precisa de Internet nessa etapa.
@@ -59,7 +82,7 @@ Setas selecionam; OK abre; segure OK para reorganizar. Um toque em Voltar manté
 
 **Novas compilações: pressione Home três vezes em dois segundos**, soltando entre os toques. Isso restaura LG Home e interrompe o controle sem apagar preferências. No No-root Helper até a versão 0.6.13, segure Home por cerca de dois segundos. Segurar Home não é o gesto de emergência do Root.
 
-No-root: abra **Home Helper** na lista de aplicativos LG para retomar; abrir apenas Home não remove a parada. Root: ative **Alterar Home** nas configurações do Home para retomar. **Abrir LG Home** abre LG Home uma vez sem mudar o destino de Home. Para restaurar LG Home como destino permanente, desative **Alterar Home** ou execute `cytv restore`. Nunca execute os dois controladores juntos. Se a falha voltar, mantenha LG Home ativo.
+No-root: Pressione Home brevemente três vezes em dois segundos para voltar ao LG Home. Para reiniciar o controle de Home, abra Home Helper, escolha Iniciar Helper e confirme. Sua tela Home escolhida será mantida. Root: ative **Alterar Home** nas configurações do Home para retomar. **Abrir LG Home** abre LG Home uma vez sem mudar o destino de Home. Para restaurar LG Home como destino permanente, desative **Alterar Home** ou execute `cytv restore`. Nunca execute os dois controladores juntos. Se a falha voltar, mantenha LG Home ativo.
 
 ```sh
 ./cytv --language pt-BR status

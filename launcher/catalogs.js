@@ -2281,3 +2281,81 @@ HomeI18n.add({
     "Helper status could not be checked on this TV. Start Helper only when you are ready to use Home control again.": "無法在此電視上檢查 Helper 狀態。請在準備好再次使用 Home 控制時再啟動 Helper。"
   }
 });
+
+HomeI18n.add({
+  "en": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps."
+  },
+  "de": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Halten Sie Developer Mode aktiv: Öffnen Sie die App vor Ablauf des Timers und drücken Sie bei bestehender Internetverbindung EXTEND. Nach Ablauf kann LG diese Apps entfernen."
+  },
+  "es": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Mantén Developer Mode activo: antes de que termine el tiempo, ábrelo y pulsa EXTEND con el TV conectado a Internet. Si caduca, LG puede eliminar estas apps."
+  },
+  "pt-BR": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Mantenha Developer Mode ativo: antes de o tempo acabar, abra o app e pressione EXTEND com a TV conectada à Internet. Se expirar, a LG pode remover esses apps."
+  },
+  "fr": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Gardez Developer Mode actif : avant la fin du compte à rebours, ouvrez-le et appuyez sur EXTEND avec le TV connecté à Internet. À expiration, LG peut supprimer ces apps."
+  },
+  "it": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Mantieni Developer Mode attivo: prima che scada il timer, aprilo e premi EXTEND con la TV connessa a Internet. Alla scadenza, LG può rimuovere queste app."
+  },
+  "ko": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "타이머가 끝나기 전에 Developer Mode를 열고 TV가 인터넷에 연결된 상태에서 EXTEND를 누르세요. 만료되면 LG가 이 앱들을 삭제할 수 있습니다."
+  },
+  "hi": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Developer Mode चालू रखें: समय खत्म होने से पहले इसे खोलें और TV के इंटरनेट से जुड़े होने पर EXTEND दबाएँ। समय खत्म होने पर LG ये ऐप हटा सकता है।"
+  },
+  "pl": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Utrzymuj Developer Mode aktywny: przed końcem odliczania otwórz aplikację i naciśnij EXTEND, gdy TV ma internet. Po wygaśnięciu LG może usunąć te aplikacje."
+  },
+  "ru": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "Следите за таймером Developer Mode: до его окончания откройте приложение и нажмите EXTEND при подключённом интернете. Если время истечёт, LG может удалить эти приложения."
+  },
+  "zh-Hans": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "请保持 Developer Mode 有效：计时结束前打开它，并在电视联网时按 EXTEND。过期后 LG 可能会删除这些应用。"
+  },
+  "zh-Hant": {
+    "Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.": "請保持 Developer Mode 有效：計時結束前開啟它，並在電視連網時按 EXTEND。過期後 LG 可能會刪除這些應用程式。"
+  }
+});
+
+HomeI18n.add({
+  "en": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home is your app screen. Home Helper makes the Home button open it."
+  },
+  "de": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home ist Ihr App-Bildschirm. Home Helper sorgt dafür, dass die Home-Taste ihn öffnet."
+  },
+  "es": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home es tu pantalla de apps. Home Helper hace que el botón Home la abra."
+  },
+  "pt-BR": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home é sua tela de apps. Home Helper faz o botão Home abrir essa tela."
+  },
+  "fr": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home est votre écran d’apps. Home Helper permet de l’ouvrir avec la touche Home."
+  },
+  "it": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home è la tua schermata delle app. Home Helper fa sì che il tasto Home la apra."
+  },
+  "ko": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home은 앱 화면입니다. Home Helper를 사용하면 Home 버튼으로 이 화면을 열 수 있습니다."
+  },
+  "hi": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home आपके ऐप की स्क्रीन है। Home Helper से Home बटन दबाने पर यह स्क्रीन खुलती है।"
+  },
+  "pl": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home to ekran aplikacji. Home Helper sprawia, że przycisk Home otwiera ten ekran."
+  },
+  "ru": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home — экран с вашими приложениями. Home Helper нужен, чтобы открывать его кнопкой Home на пульте."
+  },
+  "zh-Hans": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home 是您的应用主屏幕。Home Helper 让遥控器的 Home 键打开此屏幕。"
+  },
+  "zh-Hant": {
+    "Home is your app screen. Home Helper makes the Home button open it.": "Home 是您的應用程式主畫面。Home Helper 讓遙控器的 Home 鍵開啟此畫面。"
+  }
+});

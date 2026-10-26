@@ -190,6 +190,22 @@ class GuiTests(unittest.TestCase):
         self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
         w.close()
 
+    def test_secret_prompt_scrolls_to_its_help_after_reading_earlier_steps(self):
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        w.content.setPlainText('\n'.join('Earlier setup instruction' for _ in range(150)))
+        self.app.processEvents()
+        scroll = w.content.verticalScrollBar()
+        scroll.setValue(0)
+        w.receive('text', 'Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.')
+        w.show_prompt(Prompt('Developer Mode passphrase: ', secret=True))
+        self.app.processEvents()
+        self.assertGreater(scroll.maximum(), 0)
+        self.assertGreater(scroll.value(), 0)
+        self.assertTrue(w.content.viewport().rect().contains(w.content.cursorRect().center()))
+        self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
+
     def test_failed_language_save_keeps_visible_and_active_selection(self):
         from cytv import i18n
         w = Wizard()

@@ -15,6 +15,29 @@ v1.2.0 包含 cytv **0.3.1**、Home **1.4.1**、Home Helper **0.6.19**、Root Ed
 
 新版 No-root Helper 要求電視 Node.js **0.12.2+**；安裝程式會預先檢查。舊的已發佈安裝套件不會自動獲得此兼容性。每種型號仍需檢查輸入設備訪問、待機和冷啟動。
 
+
+## 設定 Developer Mode（No-root）
+
+Developer Mode 讓 CYTV 可以在沒有 root 的電視上安裝應用程式。
+
+1. 在電視上開啟 LG Apps，搜尋並安裝 Developer Mode。
+2. 開啟 Developer Mode 並登入 LG Developer 帳號。如需註冊，請前往 webostv.developer.lge.com。
+3. 開啟 Dev Mode Status。電視將重新啟動，之後請再次開啟 Developer Mode。
+4. 開啟 Key Server 並保持 Developer Mode 開啟。將其中的 IP Address 填入 CYTV 的電視位址欄。
+5. 輸入電視上 Developer Mode 顯示的六位 Passphrase，注意區分大小寫。
+
+請使用電視上的代碼，而非 LG 帳號密碼。如未顯示代碼，請開啟 Key Server。
+
+配對是獨立步驟：電視提示時，請用遙控器允許 CYTV 連線。
+
+請保持 Developer Mode 有效：計時結束前開啟它，並在電視連網時按 EXTEND。過期後 LG 可能會刪除這些應用程式。
+
+Home 是您的應用程式主畫面。Home Helper 讓遙控器的 Home 鍵開啟此畫面。
+
+安裝後按 Home 鍵試用。如果開啟的是 LG Home，請從電視應用程式列表開啟 Home Helper。 在兩秒內短按 Home 三次可返回 LG Home。要重新啟動 Home 控制，請開啟 Home Helper，選擇啟動 Helper 並確認。已儲存的主畫面選擇會保留。
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
+
 ## v1.1.0 起的可選 Root Python
 
 Root 要求電視上有可用的 Python **3.9+**。安裝程式會檢查必需模塊（包括 `json`、`fcntl`）、鎖、檔案系統及子進程操作；僅版本號滿足要求並不足夠。如果已有合適解釋器，則無需額外下載。否則會在電腦或 Android 上下載經過驗證的 **ARMv7 soft-float CPython 3.13.17**，再透過可信 SSH 傳到電視；電視無需聯網。
@@ -58,7 +81,7 @@ Root 移除中斷時，在應用中再次選擇“移除”。它會先檢查電
 
 **新建置：兩秒內按 Home 三次，每次都鬆開**，即可返回 LG Home 並停止 Home 控制，偏好設定保留。No-root Helper 0.6.13 及更早版本改為按住 Home 約兩秒；按住 Home 不是 Root 的緊急退出方式。
 
-No-root：從 LG Apps 打開 **Home Helper** 恢復；只打開 Home 不會解除停止狀態。Root：在 Home 設定中啟用 **Change Home** 恢復。**Open LG Home** 只打開 LG Home 一次，不更改路由。要持續使用 LG Home，請關閉 **Change Home** 或執行 `cytv restore`。不要同時執行兩種控制器。若故障重復出現，請保持 LG Home 啟用。
+No-root: 在兩秒內短按 Home 三次可返回 LG Home。要重新啟動 Home 控制，請開啟 Home Helper，選擇啟動 Helper 並確認。已儲存的主畫面選擇會保留。 Root：在 Home 設定中啟用 **Change Home** 恢復。**Open LG Home** 只打開 LG Home 一次，不更改路由。要持續使用 LG Home，請關閉 **Change Home** 或執行 `cytv restore`。不要同時執行兩種控制器。若故障重復出現，請保持 LG Home 啟用。
 
 ```sh
 ./cytv --language zh-Hant status

@@ -119,3 +119,7 @@ Tylko Root: Ustawienia Home → Aktualizacje oprogramowania LG zmienia istnieją
 ## Kandydat: odzyskiwanie w instalatorze komputerowym
 
 To działanie następnego kandydata, jeszcze niedostępne w opublikowanym instalatorze v1.2.0. Po sprawdzeniu stanu TV, diagnostyce połączenia lub powrocie do LG Home niedokończone usuwanie No-root oferuje **Odzyskaj i zainstaluj ponownie** dla tego samego TV i połączenia. Jawnie potwierdź dokończenie usuwania (domyślnie: Nie), następnie sprawdź dołączone wersje przed instalacją. **Skonfiguruj mój TV** również udostępnia tę ścieżkę. Sam powrót do LG Home nie kończy usuwania. Przy błędzie użyj **Zapisz raport diagnostyczny…**, aby zapisać raport z tej nieudanej próby i dołączyć go do zgłoszenia; terminal nie jest potrzebny. Jeśli raport nie powstał, podaj widoczny błąd. Zachowaj dane odzyskiwania; operacje nieudane lub o niepewnym wyniku nie są automatycznie ponawiane. Nie potwierdza to jeszcze rozwiązania problemu G5 / firmware 43.21.71 (#65).
+
+## Następny kandydat: połączenie i stan Home (issue #12)
+
+Zmiany jeszcze nieopublikowane: narzędzia Androida zachowują wybrany telewizor, edycję i port SSH po powrocie do ekranu początkowego; No-root zwykle używa 9922. Jeśli ustawienia nie mogą sprawdzić sterowania Home, pokazują stan nieznany i ukrywają Zmień Home do czasu poprawnej odpowiedzi. Nie oznacza to zatrzymania Helpera i nie uruchamia go ponownie. Tych zmian nie ma w opublikowanych pakietach v1.2.0.

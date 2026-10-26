@@ -119,3 +119,7 @@ Somente Root: Configurações do Home → Atualizações de firmware da LG alter
 ## Candidato: recuperação guiada no computador
 
 Este comportamento pertence ao próximo candidato, não ao instalador publicado v1.2.0. Após verificar o estado da TV, diagnosticar a conexão ou voltar ao LG Home, uma remoção No-root incompleta oferece **Recuperar e reinstalar** para a mesma TV e conexão. Confirme explicitamente a conclusão da remoção (padrão: Não) e revise as versões incluídas antes de instalar. **Configurar minha TV** também oferece esse caminho. Voltar ao LG Home sozinho não conclui a remoção. Em caso de falha, use **Salvar relatório de diagnóstico…** para salvar o relatório daquela tentativa e anexá-lo ao problema; não é necessário terminal. Se o relatório não puder ser criado, informe o erro visível. Mantenha os dados de recuperação; operações com falha ou resultado incerto não são repetidas automaticamente. Isso ainda não confirma a correção da falha no G5 com firmware 43.21.71 (#65).
+
+## Próximo candidato: conexão e estado do Home (issue #12)
+
+Preparação ainda não publicada: as Ferramentas do Android mantêm a TV, a edição e a porta SSH ao retornar à tela inicial; No-root normalmente usa 9922. Se os ajustes não conseguirem verificar o controle de Home, mostram um estado desconhecido e ocultam Alterar Home até receber uma resposta válida. Isso não significa que o Helper parou e não o reinicia. Essas mudanças não estão nos pacotes publicados da v1.2.0.

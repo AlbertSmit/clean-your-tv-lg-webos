@@ -172,3 +172,6 @@ El inicio usa archivos privados respaldados por comprobantes de propiedad y comp
 
 [Instalación y recuperación (inglés)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Pruebas físicas pendientes (inglés)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+Para este candidato de código fuente, una instalación Root existente necesita recuperación verificada y una nueva configuración para recibir el entorno privado corregido. Actualizar solo Installer no lo sustituye. Conserve los registros de recuperación y active Home únicamente desde la configuración habitual.

@@ -73,3 +73,35 @@ Regression fixtures must reproduce complete root-owned SDK0777 trees and metadat
 Run meaningful affected suites, full scripts/test.sh with actual Node0.12.2/8 where available, emitted/source-free/cross-client checks and reproducible payloads. One coupled implementation owner, scoped spec/quality review, final whole-change review; no parallel mutation of this trust contract.
 
 Do not patch the currently installed private runtime. After reviewed builds are ready, use standard verified removal/rebootstrap with archives to test final exact artifacts, preferably the clean on-TV Installer path and cross-client maintenance. Record fresh consent at normal setup/activation UI; retain unknown outcomes instead of replaying. Repeat controls/emergency, standby and true cold boot separately. Publication, human Homebrew review, exact artifact approval, final trusted platform builds, notifications and issue labels remain their existing gates.
+
+
+## Implemented interface decisions (local source, acceptance still pending)
+
+`package_data.read_verified` is separate from strict `read`; every writable SDK
+read requires an independent SHA256. `package_identity.inventory` selects the
+private inventory for `current`, `worker`, or `admission`; `identity` returns
+metadata parsed from the verified bytes and optionally checks the complete
+inventory. Only `bootstrap_inventory` may use the explicitly supplied original
+Root setup records; ordinary observations have no release.json fallback.
+
+Root private current descriptors gain a writer owner/id. Standalone publications
+also carry the last System publication id from their prior descriptor, so
+consecutive standalone updates and rollback/abort remain distinguishable from
+stale System state without clocks or version ordering. Signed/public descriptors,
+proof bytes and cache SHA identities are unchanged. System completion refreshes
+the existing Root Updater original-file/executable inventory. Comparing captured
+prior archives permits only exact equality of independently checked private full
+payload maps, never a prior-or-target match against observed SDK bytes.
+
+System retains its original own IPK before submission and publishes its own
+inventory after terminal/full readback. Explicit original-bundle continuation
+can retain a missing own IPK against the existing private bootstrap pin; inspection
+and boot cannot create it. Root's bundle declares `updater/store.py` and the
+existing bounded `updater/package.py` parser; System uses its own bundled support
+copies. No retained installation is an import source. Expected-map caching is
+in-process and keyed by strictly reread descriptor plus checked cache identity.
+
+The original private worker may reconcile an owned replacement window, including
+known-terminal rollback with partial SDK DATA. Such an observation is uncertainty,
+not normal presence or confirmed external deletion. The original managers retain
+submission/terminal/no-replay control; private recovery does not enable intent.

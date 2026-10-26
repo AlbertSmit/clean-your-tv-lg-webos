@@ -32,16 +32,14 @@ def sha(raw): return hashlib.sha256(raw).hexdigest()
 
 
 def verify_package_modes(raw, installed):
+    # Archive modes describe deterministic desired package metadata only. SDK
+    # ordinary rwx drift cannot authenticate installed bytes or privileged exec.
     import io
-    import stat
     import tarfile
     with tarfile.open(fileobj=io.BytesIO(members(raw)['data.tar.gz']),mode='r:gz') as tar:
         for member in tar:
-            # inspect_package/archive validated paths and regular-file types first.
-            if member.isfile():
-                info=(Path(installed)/member.name).stat()
-                if stat.S_IMODE(info.st_mode)&0o7111 != member.mode&0o7111:
-                    raise ValueError('installed_executable_mode_mismatch')
+            if member.isfile() and member.mode not in (0o644,0o755):
+                raise ValueError('unsafe_archive_executable_mode')
 
 
 def current_root(root=ROOT, updater=UPDATER, installed=INSTALLED, uid=0):
@@ -55,7 +53,7 @@ def current_root(root=ROOT, updater=UPDATER, installed=INSTALLED, uid=0):
     descriptor=store.read('current')
     device.descriptor(descriptor)
     raw=safe_bytes(device.cached(descriptor),uid=uid)
-    verify_payload(installed,inspect_package(raw,descriptor))
+    verify_payload(installed,inspect_package(raw,descriptor),uid=uid)
     verify_package_modes(raw,installed)
     tx=store.read('transaction')
     if tx is not None:
@@ -67,20 +65,17 @@ def current_root(root=ROOT, updater=UPDATER, installed=INSTALLED, uid=0):
 
 
 def current_updater(updater=UPDATER, installed=INSTALLED, uid=0, hashes=None):
-    value={'schema':1,'files':hashes,'executable':None} if hashes is not None else checked_store(updater,uid).read('installed-package')
-    if not isinstance(value,dict) or set(value)!={'schema','files','executable'} or value.get('schema')!=1 or not isinstance(value['files'],dict) or not value['files']:
-        raise ValueError('updater_package_inventory_requires_migration')
-    executable=value['executable']
-    if hashes is None and (not isinstance(executable,list) or len(executable)!=len(set(executable)) or any(name not in value['files'] for name in executable)):
-        raise ValueError('updater_executable_inventory_unknown')
+    if hashes is None:
+        from package_identity import inventory, ROOT as ROOT_OWNER, UPDATER as UPDATER_OWNER, SYSTEM as SYSTEM_OWNER
+        hashes=inventory(UPDATER_OWNER,states={ROOT_OWNER:updater.parent/'clean-your-tv-root',UPDATER_OWNER:updater,SYSTEM_OWNER:updater.parent/'clean-your-tv-system-updater'},uid=uid)
+    if not isinstance(hashes,dict) or not hashes:raise ValueError('updater_package_inventory_requires_migration')
     prefixes=('usr/palm/applications/com.cleanyourtv.root.updater/',
               'usr/palm/services/com.cleanyourtv.root.updater.service/')
-    for name,digest in value['files'].items():
+    for name,digest in hashes.items():
         if not (name.startswith(prefixes) or name=='usr/palm/packages/com.cleanyourtv.root.updater/packageinfo.json'):
             raise ValueError('foreign_updater_package_file')
-        if sha(safe_bytes(installed/name))!=digest: raise ValueError('updater_package_mismatch')
-        if hashes is None and (installed/name).stat().st_mode & 0o7111 != (0o111 if name in executable else 0):
-            raise ValueError('updater_executable_mode_mismatch')
+        from package_data import read_verified
+        read_verified(installed/name,sha256=digest,limit=32*1024*1024,installed=installed,uid=uid)
     return True
 
 
@@ -104,7 +99,8 @@ def _capture_migrated_baseline(bundle):
     for name,digest in receipt['files'].items():
         root_package.safe_name(name)
         target='usr/palm/applications/'+APP+'/'+name
-        data=safe_bytes(INSTALLED/target)
+        from package_data import read_verified
+        data=read_verified(INSTALLED/target,sha256=digest,limit=32*1024*1024,installed=INSTALLED)
         if sha(data)!=digest: raise ValueError('personalization_changed')
         files[target]=data
     with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']),mode='r:gz') as tar:
@@ -170,7 +166,8 @@ class LocalDevice:
                 current_updater(UPDATER,INSTALLED,hashes=getattr(self,'supervisor_updater',None))
                 descriptor=current_root(ROOT,UPDATER,INSTALLED)
                 # Only display versions after exact current package/code readback.
-                info=json.loads(safe_bytes(INSTALLED/'usr/palm/applications/com.cleanyourtv.root.updater/appinfo.json'))
+                from package_identity import identity
+                info=identity('com.cleanyourtv.root.updater',installed=INSTALLED)
                 if info.get('id')!='com.cleanyourtv.root.updater':raise ValueError('updater_identity_mismatch')
                 versions={'root':descriptor['version'],'root-updater':info['version']}
                 if any(not isinstance(v,str) or not __import__('re').fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+',v) for v in versions.values()):raise ValueError('invalid_installed_version')
@@ -343,7 +340,11 @@ class LocalDevice:
             if name not in device._legacy_lockdown_paths() or safe_bytes(name,uid=0)!=entry['disabled'].encode():
                 raise ValueError('supervisor_lockdown_mismatch')
         baseline=device._baseline('root')
-        if not device.verify_baseline(baseline): raise ValueError('supervisor_baseline_mismatch')
+        # Standalone Root publication is separately proved by current_root(); a
+        # historical System Root component cannot override that current writer.
+        if not all(device.verify_installed(c) for c in baseline['components'] if c['name']!='root'):raise ValueError('supervisor_baseline_mismatch')
+        from package_identity import identity
+        identity('com.cleanyourtv.system.updater',installed=INSTALLED,full=True)
         updater=next(item for item in baseline['components'] if item['name']=='root-updater')
         raw=device.cache_bytes(updater)
         self.supervisor_updater=device.inspect(raw,updater)
@@ -370,7 +371,7 @@ class LocalDevice:
             raise ValueError('root_recovery_requires_existing_cytv_recovery')
         files=bundle['files']
         support=('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py')
-        support+=tuple(name for name in ('package_data.py','startup_guard.py') if name in files)
+        support+=tuple(name for name in ('package_data.py','package_identity.py','startup_guard.py') if name in files)
         for name in support:
             if files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)):
                 raise ValueError('root_recovery_support_mismatch')

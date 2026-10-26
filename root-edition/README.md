@@ -157,3 +157,15 @@ the supervisor/bootstrap and validate its migration or explicit computer
 rebootstrap before shipping; an old pinned inventory cannot accept the new path.
 Existing failed installations and rollback baselines must remain recoverable.
 Component versions and the release candidate inventory are unchanged here.
+
+
+Unreleased cold-boot correction: rooted SDK DATA may have ordinary `0777` modes.
+The corrected private readers require independent original package hashes; they
+do not repair shared permissions or execute shared source. Missing/conflicting
+current, transaction or own-package proof keeps automatic Home rearm inhibited,
+while independent private LG Home restoration remains available. Deliver the
+changed helper closure through checked fresh setup/rebootstrap, preserving
+existing recovery archives and unknown-operation records. Updating Installer
+alone does not replace retained private product code. Root remains disabled until
+an explicit activation through the normal setup/settings flow. See the
+[candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).

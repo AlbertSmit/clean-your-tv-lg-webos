@@ -173,3 +173,6 @@ Le démarrage utilise des scripts privés liés aux preuves de propriété et v�
 
 [Installation et récupération (anglais)](../INSTALL.md#candidate-on-tv-root-installation) ·
 [Essais TV en attente (anglais)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+Pour ce candidat issu des sources, une installation Root existante nécessite une récupération vérifiée et une nouvelle configuration pour recevoir l’environnement privé corrigé. Mettre à jour Installer seul ne le remplace pas. Conservez les données de récupération et activez Home uniquement par la configuration ou les paramètres habituels.

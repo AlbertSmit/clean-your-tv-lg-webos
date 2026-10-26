@@ -37,19 +37,14 @@ class SystemRemovalTests(CoreBase):
         self.fail(manager.status())
 
 class PackagePresenceTests(unittest.TestCase):
-    def test_owner_absence_and_foreign_metadata_are_not_presence(self):
+    def test_unproven_owner_is_never_learned_from_sdk_metadata(self):
         from system_updater.device import Device
         with tempfile.TemporaryDirectory() as temp:
             from test_core import Store
-            root=Path(temp).resolve();state=root/'state';state.mkdir();installed=root/'installed';installed.mkdir()
-            device=Device(Store(state,uid=os.getuid()),installed=installed,uid=os.getuid())
-            self.assertFalse(device.components_present())
+            root=Path(temp).resolve();installed=root/'installed';installed.mkdir()
+            device=Device(Store(root/'state',uid=os.getuid()),installed=installed,uid=os.getuid())
+            with self.assertRaisesRegex(ValueError,'own-package proof'):device.components_present()
             app=installed/'usr/palm/applications/com.cleanyourtv.system.updater';app.mkdir(parents=True)
-            (app/'appinfo.json').write_text(json.dumps({'id':'foreign'}))
-            self.assertFalse(device.components_present())
-            (app/'appinfo.json').write_text(json.dumps({'id':'com.cleanyourtv.system.updater'}))
-            for shared in (installed,installed/'usr',installed/'usr/palm',app.parent):shared.chmod(0o777)
-            self.assertTrue(device.components_present())
-            app.chmod(0o777);self.assertFalse(device.components_present());app.chmod(0o755)
-            (app/'appinfo.json').unlink();(app/'appinfo.json').symlink_to(root/'foreign')
-            self.assertFalse(device.components_present())
+            (app/'appinfo.json').write_text(json.dumps({'id':'com.cleanyourtv.system.updater','type':'web','version':'1.1.0'}))
+            with self.assertRaisesRegex(ValueError,'own-package proof'):device.components_present()
+            self.assertFalse((root/'state/installed-package.json').exists())

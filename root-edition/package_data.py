@@ -1,12 +1,14 @@
 """Bounded installed-package DATA reads; never authorize execution from this tree.
 
-Only the fixed developer platform ancestors may be writable. Private readers and
-package leaves remain strict. Only the fixed shared packages metadata container
+Unanchored reads keep strict own leaves. Independently pinned reads tolerate
+ordinary SDK rwx drift; private readers stay strict. Only the shared packages container
 also permits observed metadata owner 501; it grants no execution authority.
 Directory descriptors bind every open and are checked again after reading; concurrent
 package replacement fails shut.
 """
 import os
+import hashlib
+import re
 from pathlib import Path
 import stat
 
@@ -16,6 +18,20 @@ OWNERS=frozenset(('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater',
 
 
 def read(path,limit=65536,uid=0,installed=INSTALLED):
+    """Strict unanchored DATA; writable own leaves require read_verified."""
+    return _read(path,limit,uid,installed,False)
+
+
+def read_verified(path, *, sha256, limit=65536, uid=0, installed=INSTALLED):
+    """Only independently pinned SDK DATA may tolerate ordinary rwx drift."""
+    if not isinstance(sha256,str) or not re.fullmatch('[a-f0-9]{64}',sha256):
+        raise ValueError('Independent package digest required')
+    raw=_read(path,limit,uid,installed,True)
+    if hashlib.sha256(raw).hexdigest()!=sha256:raise ValueError('Package DATA digest mismatch')
+    return raw
+
+
+def _read(path,limit,uid,installed,verified):
     path,installed=Path(path),Path(installed)
     if not path.is_absolute() or '..' in path.parts or not installed.is_absolute():raise ValueError('Unsafe package path')
     relative=path.relative_to(installed).parts
@@ -27,12 +43,12 @@ def read(path,limit=65536,uid=0,installed=INSTALLED):
     def directory(info,name):
         # Shared SDK metadata storage is DATA, distinct from strict package leaves.
         owners=(0,uid,501) if name==installed/'usr/palm/packages' else (0,uid)
-        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (name not in shared and info.st_mode&0o022):
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (info.st_mode&0o7000 or (not verified and name not in shared and info.st_mode&0o022)):
             raise ValueError('Unsafe package directory')
     def identity(info):return (info.st_dev,info.st_ino)
     def file_identity(info):return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
     def regular(info):
-        if (not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_mode&0o022
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_mode&0o7000 or (not verified and info.st_mode&0o022)
                 or info.st_nlink!=1 or info.st_size>limit):raise ValueError('Unsafe package file')
     try:
         current=Path(path.anchor)

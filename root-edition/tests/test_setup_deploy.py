@@ -131,6 +131,7 @@ class DeployTests(unittest.TestCase):
             bundle = root / 'bundle'
             builder.build(bundle)
             events = []
+            from package_data import read_verified as package_reader
             def observe(app, path, **kwargs):
                 kwargs['on_ready']()
                 raise deploy.OutcomeUnknown('No terminal evidence')
@@ -254,6 +255,7 @@ class DeployTests(unittest.TestCase):
             package = builder.build(bundle)
             installed = root / 'installed'
             calls = []
+            from package_data import read_verified as package_reader
             def observe(app, path, **kwargs):
                 kwargs['on_ready']()
                 with tarfile.open(fileobj=io.BytesIO(ar_members(package.read_bytes())['data.tar.gz'])) as archive:
@@ -263,7 +265,7 @@ class DeployTests(unittest.TestCase):
                         target.parent.mkdir(parents=True, exist_ok=True)
                         target.write_bytes(archive.extractfile(member).read())
                 return {'completed':True}
-            with patch.object(deploy, 'STATE', root / 'state'), patch.object(deploy, 'INSTALLED', installed):
+            with patch.object(deploy, 'STATE', root / 'state'), patch.object(deploy, 'INSTALLED', installed), patch('package_data.read_verified',side_effect=lambda path,**kw: package_reader(path,**{**kw,'uid':__import__('os').getuid()})):
                 result = deploy.install(bundle, run=lambda args: calls.append(args[-1]), observe=observe)
             self.assertTrue(result['returnValue'])
             self.assertFalse(result['home_changed'])

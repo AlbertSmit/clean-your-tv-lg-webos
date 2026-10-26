@@ -9,7 +9,7 @@ class CurrentInstallation:
         self.stack=ExitStack();self.temp=self.stack.enter_context(tempfile.TemporaryDirectory())
         self.base=Path(self.temp).resolve();project=Path(__file__).resolve().parents[2]
         sys.path.insert(0,str(project/'root-edition'))
-        import installation,install_device,python_binding,deploy,package_data
+        import installation,install_device,python_binding,deploy,package_data,package_identity
         from updater import device as updater_device,package as updater_package
         from updater.store import Store,encode
         from cytv import package
@@ -59,10 +59,14 @@ class CurrentInstallation:
             def _walk(self,path):self.uid=uid;return super()._walk(path)
         original_safe=updater_package.safe_bytes
         def safe(path,limit=32*1024*1024,uid=None):return original_safe(path,limit=limit,uid=os.getuid() if uid==0 else uid)
-        original_package_read=package_data.read
+        original_package_read=package_data.read_verified
         def package_read(path,**kw):return original_package_read(path,**{**kw,'uid':os.getuid(),'installed':self.installed})
-        self.stack.enter_context(patch.object(package_data,'read',side_effect=package_read))
-        self.stack.enter_context(patch.object(updater_device,'package_read',side_effect=package_read))
+        self.stack.enter_context(patch.object(package_data,'read_verified',side_effect=package_read))
+        self.stack.enter_context(patch.object(package_identity,'read_verified',side_effect=package_read))
+        self.stack.enter_context(patch.object(package_identity,'STATES',{package_identity.ROOT:self.root,package_identity.UPDATER:self.updater,package_identity.SYSTEM:self.lib/'clean-your-tv-system-updater'}))
+        self.stack.enter_context(patch.object(package_identity,'Store',FixtureStore))
+        original_identity=package_identity.identity
+        self.stack.enter_context(patch.object(package_identity,'identity',side_effect=lambda *a,**kw:original_identity(*a,**{**kw,'uid':os.getuid()})))
         real_path=Path
         def path(value):
             raw=str(value)

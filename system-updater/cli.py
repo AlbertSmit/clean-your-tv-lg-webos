@@ -58,7 +58,10 @@ def worker(store,device):
             if store.read('transaction') is None:return
             from installation import device_operation
             with device_operation('system-update', recovery=True):
-                if not device.components_present():
+                from package_identity import TransitionUnknown
+                try:present=device.components_present()
+                except TransitionUnknown:present=True  # Original manager owns uncertainty/no replay.
+                if not present:
                     manager.component_removed();return
                 tx=manager.run()
                 if tx is None or tx['phase']=='recovery-required':return

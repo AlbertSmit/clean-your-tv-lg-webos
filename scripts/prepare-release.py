@@ -197,7 +197,7 @@ def verify_system_assets(manifests,build,files):
                     seen=set()
                     for member in archive:
                         safe_name(member.name)
-                        allowed = member.name.startswith(('runtime/','updater/','service/')) or member.name in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/startup_guard.py')
+                        allowed = member.name.startswith(('runtime/','updater/','service/')) or member.name in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/package_identity.py','support/updater/store.py','support/updater/package.py','support/startup_guard.py')
                         if not member.isfile() or not allowed or member.name in seen or member.size>32*1024*1024:raise ValueError('Invalid system infrastructure inventory')
                         seen.add(member.name)
                     if not seen:raise ValueError('Empty system infrastructure')

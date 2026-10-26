@@ -25,7 +25,7 @@ BASE=Path('/var/luna-service2-dev')
 HOOK=Path('/var/lib/webosbrew/init.d/52-clean-your-tv-system-updater')
 ROOT_UPDATER_TRANSACTION=Path('/var/lib/clean-your-tv-root-updater/transaction.json')
 APPS={'home':'com.gathin.tvhome','helper':'com.local.nativehome','updater':'com.cleanyourtv.updater','root':'com.cleanyourtv.root.preview','root-updater':'com.cleanyourtv.root.updater'}
-CODE={'startup_hook.py','package_data.py','startup_guard.py','installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
+CODE={'startup_hook.py','package_data.py','package_identity.py','startup_guard.py','installation.py','python_boot.js','python_binding.py','infrastructure-paths.json','system_updater/__init__.py','system_updater/support/__init__.py','system_updater/core.py','system_updater/device.py','system_updater/cli.py','system_updater/policy.js','system_updater/release-public.pem','system_updater/ca-bundle.crt','system_updater/ca-LICENSE.txt','system_updater/support/store.py','system_updater/support/package.py','system_updater/support/profile.py','system_updater/support/luna.py','observed_install.py','installer_status.py','service.js','run-system-updater.py','services.json','package.json'}
 
 def digest(raw):return hashlib.sha256(raw).hexdigest()
 
@@ -74,7 +74,7 @@ def infrastructure_name(name):
     if not isinstance(name,str):raise ValueError('Invalid infrastructure inventory')
     path=PurePosixPath(name)
     if path.is_absolute() or str(path)!=name or '..' in path.parts or '\\' in name or '\x00' in name or len(path.parts)<2 or path.parts[0] not in ('runtime','updater','service','support'):raise ValueError('Invalid infrastructure inventory')
-    if path.parts[0]=='support' and name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/startup_guard.py'):raise ValueError('Invalid infrastructure support path')
+    if path.parts[0]=='support' and name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/package_identity.py','support/updater/store.py','support/updater/package.py','support/startup_guard.py'):raise ValueError('Invalid infrastructure support path')
     return name
 
 def infrastructure_paths(bundle):
@@ -145,34 +145,65 @@ def tgz(files,executable=None):
 
 def require_transition_home(installed,edition):
     app=APPS['root' if edition=='root' else 'home']
-    info=json.loads(safe(Path(installed)/'usr/palm/applications'/app/'appinfo.json'))
+    if edition=='root':
+        from package_identity import identity
+        info=identity(app,installed=installed,uid=os.geteuid())
+    else:info=json.loads(safe(Path(installed)/'usr/palm/applications'/app/'appinfo.json'))
     if info.get('id')!=app or type(info.get('systemUpdateProtocol')) is not int or info['systemUpdateProtocol']!=1:raise ValueError('Install the transition Home from computer before enabling System Updates')
 
 def snapshot(bundle,edition,output,installed=INSTALLED,runtime=Path('/var/lib/clean-your-tv-root/runtime'),updater=Path('/var/lib/clean-your-tv-root-updater/code'),service=Path('/var/lib/clean-your-tv-root/service')):
     verify_bundle(bundle)
     names=('root','root-updater') if edition=='root' else ('home','helper','updater')
     if edition not in ('root','no-root'):raise ValueError('Invalid edition')
-    require_transition_home(installed,edition)
+    rooted={};desired={}
+    if edition=='root':
+        import package_identity
+        from package_data import read_verified
+        states={**package_identity.STATES,package_identity.ROOT:Path(runtime).parent,package_identity.UPDATER:Path(updater).parent}
+        for name in names:
+            app=APPS[name]
+            rooted[name]=package_identity.inventory(app,states=states,uid=os.geteuid())
+        # Root archive modes are original pinned metadata; Updater keeps its
+        # original archive executable inventory through System publication.
+        root_store=package_identity.store(Path(updater).parent,os.geteuid())
+        descriptor=root_store.read('current')
+        original=safe(Path(updater).parent/'cache'/(descriptor['sha256']+'.ipk'),os.geteuid())
+        if len(original)!=descriptor['size'] or digest(original)!=descriptor['sha256'] or {n:digest(b) for n,b in package_files(original).items()}!=rooted['root']:raise ValueError('Root original cache/identity conflict')
+        # Read modes only after the original private package has been checked.
+        try:from updater.package import members
+        except ModuleNotFoundError:from system_updater.support.package import members
+        parts=members(original)
+        with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz']),mode='r:gz') as archive:
+            desired['root']={m.name for m in archive if m.isfile() and m.mode&0o111}
+        receipt=root_store.read('installed-package')
+        if not isinstance(receipt,dict) or receipt.get('files')!=rooted['root-updater'] or not isinstance(receipt.get('executable'),list):raise ValueError('Root Updater original mode inventory unavailable')
+        desired['root-updater']=set(receipt['executable'])
+    else:require_transition_home(installed,edition)
     output=Path(output);output.mkdir(mode=0o700);(output/'cache').mkdir(mode=0o700)
     components=[]
     for name in names:
-        app=APPS[name];info=json.loads(safe(Path(installed)/'usr/palm/applications'/app/'appinfo.json'))
+        app=APPS[name];appinfo='usr/palm/applications/'+app+'/appinfo.json';packageinfo='usr/palm/packages/'+app+'/packageinfo.json'
+        if edition=='root':
+            files={n:read_verified(Path(installed)/n,sha256=h,limit=32*1024*1024,installed=installed,uid=os.geteuid()) for n,h in rooted[name].items()}
+            info=json.loads(files[appinfo]);metadata=json.loads(files[packageinfo]);executable=desired[name]
+            if name=='root' and info.get('systemUpdateProtocol')!=1:raise ValueError('Transition Root required')
+        else:
+            info=json.loads(safe(Path(installed)/appinfo));metadata=json.loads(safe(Path(installed)/packageinfo));files={};executable=set()
         if info.get('id')!=app or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}',info.get('version','')):raise ValueError('Installed package identity invalid')
-        metadata=json.loads(safe(Path(installed)/'usr/palm/packages'/app/'packageinfo.json'))
         services=metadata.get('services',[])
         allowed={'home':['com.gathin.tvhome.renewal'],'helper':['com.local.nativehome.service'],'updater':['com.cleanyourtv.updater.service'],'root':['com.cleanyourtv.root.preview.service'],'root-updater':['com.cleanyourtv.root.updater.service']}
         if metadata.get('id')!=app or metadata.get('version')!=info['version'] or services!=allowed[name]:raise ValueError('Installed package services invalid')
-        files={};executable=set()
-        prefixes=['usr/palm/applications/'+app,'usr/palm/packages/'+app]+['usr/palm/services/'+s for s in services]
-        for prefix in prefixes:
-            folder=Path(installed)/prefix
-            for path in sorted(folder.rglob('*')):
-                rel=path.relative_to(folder)
-                if 'state' in rel.parts:continue
-                if path.is_symlink():raise ValueError('Indirect installed package')
-                if path.is_file():
-                    relative_name=prefix+'/'+rel.as_posix();files[relative_name]=safe(path)
-                    if path.stat().st_mode&0o111:executable.add(relative_name)
+        if edition!='root':
+            prefixes=['usr/palm/applications/'+app,'usr/palm/packages/'+app]+['usr/palm/services/'+s for s in services]
+            for prefix in prefixes:
+                folder=Path(installed)/prefix
+                for path in sorted(folder.rglob('*')):
+                    rel=path.relative_to(folder)
+                    if 'state' in rel.parts:continue
+                    if path.is_symlink():raise ValueError('Indirect installed package')
+                    if path.is_file():
+                        relative_name=prefix+'/'+rel.as_posix();files[relative_name]=safe(path)
+                        if path.stat().st_mode&0o111:executable.add(relative_name)
         control=('Package: '+app+'\nVersion: '+info['version']+'\nArchitecture: '+('arm' if name=='helper' else 'all')+'\nMaintainer: Clean Your TV\nDescription: Captured installed baseline\n').encode()
         raw=bytearray(b'!<arch>\n')
         for part,data in {'debian-binary':b'2.0\n','control.tar.gz':tgz({'control':control}),'data.tar.gz':tgz(files,executable)}.items():
@@ -268,6 +299,12 @@ def apply_legacy_lockdown(state,bases=None,root_updater=Path('/var/lib/clean-you
     return value
 
 
+def installed_data(path,expected,installed,edition):
+    if edition!='root':return safe(path)
+    from package_data import read_verified
+    return read_verified(path,sha256=digest(expected),limit=32*1024*1024,installed=installed,uid=os.geteuid())
+
+
 def preflight(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK):
     state=Path(state)
     if os.path.lexists(state):raise FileExistsError('Supervisor setup exists; inspect retained state from computer before changing it')
@@ -280,7 +317,7 @@ def preflight(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
         raw=safe(baseline/'cache'/item['sha256'])
         if item['kind']=='ipk':
             for name,data in package_files(raw).items():
-                if safe(Path(installed)/name)!=data:raise ValueError('Installed baseline payload mismatch: '+name)
+                if installed_data(Path(installed)/name,data,installed,current['edition'])!=data:raise ValueError('Installed baseline payload mismatch: '+name)
         else:infrastructure_readback(item,raw)
     return manifest,current
 
@@ -290,7 +327,11 @@ def provision(bundle,baseline,state=STATE,installed=INSTALLED,base=BASE,hook=HOO
     state=Path(state);bundle=Path(bundle);baseline=Path(baseline)
     state.mkdir(mode=0o700);code=state/'code';code.mkdir(mode=0o700);(state/'cache').mkdir(mode=0o700)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
-    record('bootstrap-bundle',{'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':len(safe(bundle/'system-updater.ipk'))}})
+    own=safe(bundle/'system-updater.ipk')
+    record('bootstrap-bundle',{'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':len(own)}})
+    # Retain the independently verified original before submission/source loss.
+    # It gains installed authority only after exact terminal and full readback.
+    atomic(state/'cache'/(digest(own)+'.ipk'),own)
     sys.path.insert(0,str(bundle))
     from python_binding import install_launcher
     install_launcher(state, atomic)
@@ -313,8 +354,19 @@ def finish_registration(bundle,baseline,state=STATE,installed=INSTALLED,base=BAS
     bundle=Path(bundle);baseline=Path(baseline);state=Path(state);code=state/'code'
     verify_bundle(bundle);current=verify_baseline(baseline,bundle)
     def record(name,value):atomic(state/(name+'.json'),json.dumps(value,sort_keys=True))
-    for name,data in package_files(safe(bundle/'system-updater.ipk')).items():
-        if safe(Path(installed)/name)!=data:raise ValueError('Installed supervisor payload mismatch')
+    from installation import terminal_install
+    terminal=json.loads(safe(state/'installed-terminal.json',os.geteuid()))
+    if not terminal_install(terminal,APP):raise ValueError('Exact supervisor terminal required')
+    own=safe(bundle/'system-updater.ipk');files=package_files(own)
+    binding=json.loads(safe(state/'bootstrap-bundle.json',os.geteuid()))
+    pin={'sha256':digest(own),'size':len(own)}
+    if binding.get('package')!=pin or binding.get('bundle')!=verify_bundle(bundle):raise ValueError('Original supervisor pin changed')
+    if safe(state/'cache'/(pin['sha256']+'.ipk'),os.geteuid())!=own:raise ValueError('Original supervisor cache changed')
+    from package_data import read_verified
+    for name,data in files.items():
+        read_verified(Path(installed)/name,sha256=digest(data),limit=32*1024*1024,installed=installed,uid=os.geteuid())
+    version=json.loads(files['usr/palm/applications/'+APP+'/appinfo.json'])['version']
+    record('installed-package',{'schema':1,'package':dict(pin,version=version,local=True),'files':{n:digest(b) for n,b in files.items()}})
     record('bootstrap',{'phase':'provisioning'})
     paths={'service':Path(base)/'services.d'/(SERVICE+'.service'),'role':Path(base)/'roles.d'/(SERVICE+'.service.json'),'client':Path(base)/'client-permissions.d'/(SERVICE+'.service.json'),'api':Path(base)/'api-permissions.d'/(SERVICE+'.api.json')}
     saved=json.loads(safe(state/'registration.json',os.geteuid())) if os.path.lexists(state/'registration.json') else None
@@ -336,7 +388,7 @@ def finish_registration(bundle,baseline,state=STATE,installed=INSTALLED,base=BAS
     for key,path in paths.items():atomic(path,updated[key],stat.S_IMODE(path.stat().st_mode))
     apply_legacy_lockdown(state)
     import startup_hook
-    startup_hook.install_link(safe,atomic,state,Path(hook),APP)
+    startup_hook.install_link(safe,atomic,state,Path(hook),APP,sha256=digest(files['usr/palm/applications/'+APP+'/appinfo.json']))
     if refresh is None:
         executable=next((p for p in (Path('/usr/bin/ls-control'),Path('/usr/sbin/ls-control')) if p.is_file()),None)
         if executable is None:raise ValueError('ls-control unavailable')
@@ -346,7 +398,7 @@ def finish_registration(bundle,baseline,state=STATE,installed=INSTALLED,base=BAS
     for item in current['components']:
         if item['kind']=='ipk':
             for name,data in package_files(safe(baseline/'cache'/item['sha256'])).items():
-                if safe(Path(installed)/name)!=data:raise ValueError('Installed baseline changed during bootstrap')
+                if installed_data(Path(installed)/name,data,installed,current['edition'])!=data:raise ValueError('Installed baseline changed during bootstrap')
         else:infrastructure_readback(item,safe(baseline/'cache'/item['sha256']))
     record('bootstrap',{'phase':'complete','edition':current['edition'],'hardware_validated':False})
     return {'installed':True,'edition':current['edition'],'hardware_validated':False}
@@ -379,6 +431,8 @@ def resume(bundle,state=STATE,installed=INSTALLED,base=BASE,hook=HOOK,refresh=No
         terminal=install(APP,str(bundle/'system-updater.ipk'),timeout=180,on_ready=lambda:record('bootstrap',{'phase':'submitting-supervisor'}),on_accepted=lambda evidence:record('bootstrap',{'phase':'accepted-supervisor','evidence':evidence}))
         record('installed-terminal',terminal)
         if not terminal_install(terminal,APP):raise ValueError('Exact supervisor terminal required')
+    own=safe(bundle/'system-updater.ipk');cache=state/'cache'/(digest(own)+'.ipk')
+    if not os.path.lexists(cache):atomic(cache,own)  # Explicit original-pin continuation, never SDK adoption.
     return finish_registration(bundle,state,state,installed,base,hook,refresh)
 
 

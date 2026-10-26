@@ -9,44 +9,35 @@ does not approve public promotion or catalog submission.
 ## Candidate identity and automated artifact evidence
 
 The integration base is `2b76134a` (includes `origin/release/next` at `fe7e8c1b`).
-The parent-owned post-integration build completed successfully twice with
-byte-identical IPKs. Do not test or freeze against the earlier prototype. Installer remains
-**0.0.0 development**, with embedded Root **0.3.0**, Root Updater **0.2.1** and
-System Updater supervisor **1.0.0**; these are not selected public Homebrew versions.
+The final source is `7b8738bceaf1d5ffc79ba9987d27c2e12ef6619d`. Two builds from that source
+produced byte-identical IPKs. Installer remains **0.0.0 development**, with
+embedded Root **0.3.0**, Root Updater **0.2.1** and System Updater supervisor
+**1.0.0**; these are not selected public Homebrew versions.
 
-| Integrated automated artifact (source `2b76134a2a6b09d7c9d733b8a81df9e8ac858d86`) | Exact value |
+| Final automated artifact | Exact value |
 | --- | --- |
 | IPK filename | `com.cleanyourtv.installer_0.0.0_all.ipk` |
-| IPK bytes | 59,710,462 |
-| Installed regular bytes | 63,974,662 |
-| IPK SHA256 | `936c4f232d675504e8b2f098aa1c88db52b44ff54c932a8fafa71d0379398e53` |
-| Serialized local manifest SHA256 | `2237ea170d4c2d63a981a87977a24e381c7e800731077f201debba37f3fda64e` |
-| Offline payload manifest SHA256 | `18e97ba0b18afd20170d42d0bba295b4bf014874daf00f5ddf86d1400d5d0b7b` |
+| IPK bytes | 59,713,434 |
+| Installed regular bytes | 63,982,503 |
+| IPK SHA256 | `e498f6164c4d10a0aa1be06bb433de581b09861e7f8ff53412a0c5630186e506` |
+| Serialized local manifest SHA256 | `0ad3e0e7e3e6ca78c5ecc6cacbf6dd9ec1649c585a0e8097e49742ab349d7b6d` |
+| Offline payload manifest SHA256 | `579b6fc21603397a2ea79bf9bb91983c4cc23cde474625bba1c53a812e03d40b` |
 
-Local evidence is retained outside the worktree at
-`/private/tmp/homebrew-integrated-2b76134a/summary.json`,
-`/private/tmp/homebrew-integrated-2b76134a/one/com.cleanyourtv.installer_0.0.0_all.ipk`,
-its identical `two/` package, and
-`/private/tmp/homebrew-integrated-2b76134a/homebrew-manifest.json`;
-build output is `/private/tmp/homebrew-integrated-build.log`. These are local
-development artifacts, not approved public releases or reachable download claims.
+Local artifacts and redacted verification/review evidence are preserved outside
+the temporary worktree at `homebrew-candidate-7b8738bc`. These are development artifacts;
+manifest URL strings do not establish reachable public downloads. Earlier
+`b45dd5...`, `936c4f...` and `11d35b...` prototypes are superseded for acceptance.
 
-The pre-integration Task 5/6 prototype was 59,594,044 bytes, installed regular
-bytes 63,838,666, SHA256
-`b45dd5a06c63eb3cdd8431c5cff4f538c15d90410fde4408bd6efac1883ee91f`.
-That identity is **superseded for integrated acceptance** because merged Root
-fonts/startup code changes the payload. It is retained only to distinguish old
-local evidence, not as the current release candidate.
-
-Prior focused automated evidence covers verified payload/runtime inventories,
-Node 8 bootstrap/bridge, conservative continuation, source-free emitted packages,
-repeat-build equality, upstream catalog/manifest schema validation, and release
-acceptance/carry-forward gates. Browser tests mock only the HBC boundary and cover
-ten locales at 1280×720 and 1920×1080; they do not invoke a TV. These checks establish
-software properties only. The final aggregate command is `bash scripts/test.sh`
-against a committed, stable source tree; its log/result belongs in the task/PR
-handoff. Package/build checks and their exact final artifact identity must be
-recorded below before a supervised acceptance session.
+The final all-scopes `bash scripts/test.sh` run on the source above passed with
+exact Helper Node 0.12.2 enabled. The Python suites ran 1,151 cases with 23 environment skips (21 optional Qt
+cases and two isolated-Linux-root runtime cases). JavaScript/native/compatibility
+and all ten locale browser checks also passed. The preserved test log and
+implementation PR retain the command and scope. Focused real-manifest tests
+reject changed same-version packages, changed bundle identity and absent original
+bootstrap receipts before standalone continuation. Actual Node 8 runtime/bridge,
+source-free payload, release/catalog metadata and reproducibility checks passed.
+Browser tests mock only the HBC boundary and cover ten locales at 1280×720 and
+1920×1080; they do not invoke a TV. These establish software properties only.
 
 Runtime preparation requires **335,544,320 bytes (320 MiB) free in `/var/lib`
 after Installer is installed**. The embedded normalized runtime archive is
@@ -136,7 +127,7 @@ reuses their recovery contracts rather than adding a competing updater.
 | `/var/lib/clean-your-tv-installation/` | Shared root-owned 0700 store; 0600 `operation.json` durable owner/lease, `request-<id>.json`, `submission-<id>.json`, `removal-<lease>.json`, `ownership.lock` product mutex and `worker.lock` submission/store mutex. Exact journals remain authoritative across clients. |
 | `/var/lib/clean-your-tv-installation/request-<id>/` | Original checked private worker/payload snapshot; 0700 directories, 0600 files and `worker.log`. Worker lifetime is independent of Installer UI. Retained for checked continuation and diagnosis, not deleted to reset an operation. |
 | `/var/lib/clean-your-tv-root/` | Existing root-owned recovery/deploy code and `runtime/`, `service/`, manifests, `deploy.json`, `install-terminal.json`, `personalization.json`, `recovery-provision.json`/pending, `ls2-provision-snapshot.json`, `system-permissions.json`, `activity-registration.json`, startup/binding and routing/intent/update receipts/locks. Private files normally 0600, directories 0700, fixed executable launchers/runners 0700. Retained after removal; verified cytv reinstall may create `.archive-<id>`, never blind deletion. |
-| `/var/lib/clean-your-tv-root-updater/` and `/var/lib/clean-your-tv-system-updater/` | Existing private 0700 `code/`, `cache/`, bootstrap/infrastructure/installed-package/installed-terminal receipts, transactions, baselines/profiles, `run-service`, bindings and `startup-hook.json` (plus `startup-hook.previous.json` on exact legacy migration). Full removal disables/archives owned state under `.archive-<id>` and retains removal evidence. Regular data 0600; fixed runners 0700. |
+| `/var/lib/clean-your-tv-root-updater/` and `/var/lib/clean-your-tv-system-updater/` | Existing private 0700 `code/`, `cache/`, bootstrap/infrastructure/installed-package/installed-terminal receipts, original full-bundle/IPK `bootstrap-bundle.json` continuation binding, transactions, baselines/profiles, `run-service`, bindings and `startup-hook.json` (plus `startup-hook.previous.json` on exact legacy migration). Full removal disables/archives owned state under `.archive-<id>` and retains removal evidence. Regular data 0600; fixed runners 0700. |
 | `/var/lib/clean-your-tv-installer/cytv-root-install-<id>/package.ipk` | Existing bounded observed-install staging; exact terminal event must match it. Preserve uncertain operation evidence. Root-owned 0755 staging directories and 0644 IPK permit package-manager read access; no private bundle is exposed and no user-supplied path is accepted. |
 | `/var/lib/clean-your-tv-python/<sha256>/` | Immutable pinned private CPython slot with `.cytv-runtime.json` inventory; 0755 directories/executables and 0644 regular data, root owned and not group/world writable. Pin is `4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea`. No `/usr/bin` replacement or global PATH change. |
 | `/var/lib/clean-your-tv-python/.stage-<id>/` and `.install.lock` | Checked runtime staging/tree and 0600 immutable-promotion lock, separate from the product lease. Only the exact owned runtime stage is cleaned; drift is retained. Referenced slots remain after application removal. |
@@ -249,7 +240,7 @@ Source references: [fixed bridge](../../homebrew/app/bridge.js),
 
 ## Publication and handoff checklist
 
-- [ ] Run and record final whole-branch automated verification on a stable commit.
+- [x] Run and record final whole-branch automated verification on a stable commit.
 - [ ] Parent completes whole-branch review, push and draft implementation PR to
   `release/next`, attaches it, and preserves needed artifacts before managed-worktree cleanup.
 - [ ] Complete every physical matrix row with exact observations/artifacts, resolving

@@ -354,12 +354,12 @@ approval remain pending; no catalog submission or public delivery occurred.
 and all affected guides in `docs/i18n/` (`en`, `ru`, `de`, `es`, `fr`, `hi`,
 `it`, `ko`, `pl`, `pt-BR`).
 
-- [ ] Explain supported TV requirements, two installation paths, installer-vs-product
+- [x] Explain supported TV requirements, two installation paths, installer-vs-product
   updates, direct package deletion, full removal, interpreter delivery and
   cross-installer recovery. Keep unreleased instructions clearly marked.
-- [ ] List every persistent path, startup link, service permission and network
+- [x] List every persistent path, startup link, service permission and network
   endpoint changed by this feature in the PR description.
-- [ ] Run the combined suite, package build and integrity checks on this feature
+- [x] Run the combined suite, package build and integrity checks on this feature
   branch after integrating any changed base. Review the complete diff for unintended
   Android/No-root/telemetry changes.
 

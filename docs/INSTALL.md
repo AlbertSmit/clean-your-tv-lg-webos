@@ -8,6 +8,57 @@ Use **cytv** to install either edition. It includes the runtime and TV packages;
 you do not need to build from source. Both editions run on the TV after setup,
 so your computer can be switched off during everyday use.
 
+## Candidate: on-TV Root installation
+
+**Unreleased source candidate; not a published Homebrew download or catalog
+listing.** The separate CYTV Installer is Root-only. The existing cytv choices
+for No-root and Root on Windows/macOS/Linux/Android remain available.
+
+For a supervised candidate test, use the exact privately supplied, verified
+Installer IPK and record its hash. The TV must already have root, working Homebrew
+Channel exec with effective root privileges, Node.js 8+, webOS installer services,
+compatible ARM32 input and Python 3.9+ with the required modules. For supported
+ARMv7/`armv8l` 32-bit userspace only, Installer embeds a pinned offline private
+runtime; a 64-bit CPU/kernel alone is not support. It requires at least 320 MiB
+free **after** installing Installer, plus actual package-manager staging capacity
+which has not been measured on a TV. Existing suitable Python is reused.
+
+1. Open Installer to inspect prerequisites and retained operations. Opening,
+   reopening and status do not install components or Python.
+2. If Python is missing, explicitly choose runtime preparation. Reinspect after
+   it finishes, then review the actual candidate and components before installation.
+3. Normal setup installs Root Home and Root Updater. Choose System Updater
+   preparation explicitly if wanted; it is optional. Fresh app discovery stays
+   local to the TV. `--migrate-packaged-home` imports only validated packaged
+   preferences into a fresh setup, not browser storage or old infrastructure.
+4. Wait for verified completion. **Home activation is separate:** explicitly
+   enable Change Home after recovery/input checks. Setup never clears an off or
+   emergency-stop preference. Test triple-Home, standby and cold boot separately.
+
+A verified current installation opens maintenance with the same profile and
+recovery records used by cytv; changing clients needs no reinstall or reset.
+Unknown old infrastructure, inconsistent receipts and unfinished operations stop
+new setup. Keep the original journals, snapshots, logs and interpreter bindings.
+After a lost reply, reopen/status first. The TV Continue action is offered only
+for an original request/snapshot with proven final-readback install/removal state.
+Other uncertain stages require status, restore or diagnosis. The source
+[explicit CLI continuation](MANUAL_INSTALL.md#candidate-shared-product-continuation)
+can recognize additional safe stages; it never blindly repeats an unknown
+submission. cytv's Finish Root setup verifies completed setup before activation;
+it does not restart an incomplete product worker.
+
+Homebrew upgrades Installer only. Product updates still use existing Root/System
+Updater contracts and signed complete release sets. Deleting Installer in LG or
+Homebrew leaves separately installed product components and recovery intact.
+Complete-product removal is an explicit Installer/cytv action: restore LG Home,
+verify ownership, remove packages/registrations and owned startup links, and retain
+independent recovery/archive evidence and referenced Python slots. Direct deletion
+of Root Home or either updater is a different scenario requiring physical testing;
+package-owned hooks disable when their package disappears, while live routing and
+worker disappearance protections must also be verified. See the exact
+[acceptance matrix and state/permission inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+Historical C3 checks do not certify this new path.
+
 ## 1. Choose your edition
 
 | | No-root | Root |
@@ -97,8 +148,10 @@ uses the guarded fallback; it is not proof of early restoration.
 **Root:** cytv installs Root Home, independent recovery and Root Updater, prepares
 its rollback baseline, verifies setup, then activates Home and opens it.
 There is **no trial countdown or Keep confirmation** in this normal setup flow.
-The manual Root bundle has a separate updater-setup step; do not substitute a
-standalone Root IPK for the complete installation.
+Published manual bundles have their own updater-setup procedure. The unreleased
+source setup instead takes both bundles in one shared request; see
+[manual setup](MANUAL_INSTALL.md#7-root-first-installation-checks-and-persistent-activation).
+Do not substitute a standalone Root IPK for the complete installation.
 
 For an interrupted operation, use **Check TV status** first. If offered, use
 **Finish Root setup** to complete a verified installation. Retain recovery files;

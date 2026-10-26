@@ -84,3 +84,26 @@ Artifact SHA-256:
 The upstream license files accompany the optional runtime. Installing this
 component adds a separately versioned dependency whose security updates require
 a reviewed artifact-pin update and fresh validation.
+
+## Candidate: offline runtime in CYTV Installer
+
+**Unreleased on-TV Root path:** CYTV Installer embeds the authenticated normalized
+runtime and its licenses, binding, inventory and provenance. The TV performs no
+runtime download. Node.js 8+ verifies the fixed offline payload without needing
+Python; only existing root with Homebrew exec can run it. The private ABI is
+ARMv7 soft-float EABI5 Linux, including verified `armv8l` 32-bit userspace with a
+compatible loader/libc. It does not support arbitrary ARM64 userspace.
+
+Opening or checking status is read-only. Missing Python requires an explicit
+**Prepare runtime** action, followed by reinspection and final product review.
+Suitable system Python 3.9+ or the verified private slot is reused. The free-space
+threshold remains **335,544,320 bytes (320 MiB) after Installer installation**;
+package-manager/TV staging capacity remains unmeasured. See the
+[exact candidate artifact](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+
+The slot, promotion lock, private staging and launch bindings remain independently
+retained for recovery. Setup never changes global PATH or `/usr/bin`, activates
+Home, or clears emergency off. Removing Installer or product apps does not grant
+permission to delete referenced runtime slots. The host download/cache procedure
+above continues to apply to ordinary cytv; it is distinct from the embedded
+Homebrew payload.

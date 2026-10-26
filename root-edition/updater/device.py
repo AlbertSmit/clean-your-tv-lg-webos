@@ -23,6 +23,19 @@ class Device:
         self.installed_root=Path(installed)
         self.state=Path(store.root)
 
+    def components_present(self):
+        owners={'com.cleanyourtv.root.updater'}
+        owners.add(APP)
+        try:
+            for owner in owners:
+                info=json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),limit=65536,uid=0))
+                if not isinstance(info,dict) or info.get('id')!=owner:return False
+            return True
+        except (OSError,ValueError,TypeError):return False
+
+    def require_components(self):
+        if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
+
     def integrity(self):
         receipt=self.store.read('infrastructure')
         if not receipt or receipt.get('schema')!=1 or receipt.get('runtime')!=1 or receipt.get('updater')!=1:
@@ -82,6 +95,7 @@ class Device:
         return {'version':app['version']}
 
     def offer(self):
+        self.require_components()
         self.integrity()
         candidate=self.fetch('offer')['candidate'];self.descriptor(candidate,True)
         prior=self.store.read('current');installed=self.installed()['version']
@@ -98,6 +112,7 @@ class Device:
         return self.state/'cache'/(digest+'.ipk')
 
     def prepare(self, candidate, prior):
+        self.require_components()
         self.integrity();self.descriptor(candidate,True);self.descriptor(prior)
         previous=safe_bytes(self.cached(prior),uid=0);inspect_package(previous,prior)
         # Include decompressed application, cached rollback and filesystem overhead.
@@ -163,6 +178,7 @@ class Device:
         if intent and intent.get('phase')!='disabled':raise ValueError('Root intent remains enabled')
 
     def finish(self, transaction):
+        self.require_components()
         if not transaction or transaction.get('phase') not in ('complete','rolled-back','aborted'):return
         with self.store.lock():
             current=self.store.read('transaction')
@@ -180,6 +196,7 @@ class Device:
             return result
 
     def install(self, manifest, on_submit, on_terminal):
+        self.require_components()
         self.descriptor(manifest)
         path=self.cached(manifest);inspect_package(safe_bytes(path,uid=0),manifest)
         from observed_install import install
@@ -215,6 +232,7 @@ class Device:
         return True
 
     def launch(self):
+        self.require_components()
         from updater.luna import call
         return call('luna://com.webos.applicationManager/launch',{'id':APP})
 

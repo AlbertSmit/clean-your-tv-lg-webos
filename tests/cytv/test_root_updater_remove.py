@@ -31,6 +31,39 @@ class UpdaterRemovalTests(unittest.TestCase):
         return state,base,hook,installed,str(state)+'.archive-'+'a'*32
 
 
+    def link_fixture(self,root):
+        import hashlib
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('hook_build',Path(__file__).parents[2]/'root-edition/startup_hook.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        args=self.fixture(root);state,base,hook,installed,_=args
+        app='com.cleanyourtv.root.updater';target=installed/'applications'/app/'startup.sh';target.parent.mkdir(parents=True)
+        target.write_bytes(module.packaged_content(app));(target.parent/'appinfo.json').write_text(json.dumps({'id':app}))
+        hook.unlink();hook.symlink_to(target)
+        (state/'startup-hook.json').write_text(json.dumps(dict(version=2,path=str(hook),target=str(target),owner_app=app,target_sha256=hashlib.sha256(target.read_bytes()).hexdigest())))
+        return args,target
+
+    def test_owned_link_archives_without_following_after_target_deletion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args,target=self.link_fixture(Path(tmp).resolve())
+            run=lambda action:namespace['operate'](action,*args,lambda:None,lambda _:None)
+            self.assertTrue(run('inspect')['ownership_verified'])
+            target.unlink();(target.parent/'appinfo.json').unlink();target.parent.rmdir()
+            self.assertTrue(run('disable')['disabled']);self.assertTrue(run('disable')['disabled'])
+            self.assertTrue((args[0]/'removed-registration/hook').is_symlink())
+            self.assertTrue(run('finalize')['removed'])
+            self.assertTrue((Path(args[4])/'startup-hook.json').exists())
+
+    def test_foreign_link_or_changed_package_is_never_archived(self):
+        for case in ('foreign','changed','receipt'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as tmp:
+                args,target=self.link_fixture(Path(tmp).resolve());state,_,hook,_,_=args
+                if case=='foreign':hook.unlink();hook.symlink_to(state/'registration.json')
+                elif case=='changed':target.write_bytes(b'changed')
+                else:(state/'startup-hook.json').unlink()
+                with self.assertRaises((ValueError,OSError)):namespace['operate']('disable',*args,lambda:self.fail('refresh'),lambda _:None)
+                self.assertTrue(hook.is_symlink());self.assertFalse((state/'cytv-removal.json').exists())
+
     def test_managed_hook_requires_literal_owned_binding(self):
         managed='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
         with tempfile.TemporaryDirectory() as tmp:

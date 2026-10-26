@@ -63,6 +63,21 @@ class Device:
         self.root_state=Path(root_state);self.root_updater=Path(root_updater);self.installed_root=Path(installed)
         self.legacy_states=[self.root_updater/'transaction.json',self.installed_root/'usr/palm/services/com.cleanyourtv.updater.service/state/transaction.json']
 
+    def components_present(self):
+        owners={'com.cleanyourtv.system.updater'}
+        tx=self.store.read('transaction')
+        if tx and tx.get('edition')=='root':
+            owners.update(('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'))
+        try:
+            for owner in owners:
+                info=json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+owner+'/appinfo.json'),limit=65536,uid=self.uid))
+                if not isinstance(info,dict) or info.get('id')!=owner:return False
+            return True
+        except (OSError,ValueError,TypeError):return False
+
+    def require_components(self):
+        if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
+
     def integrity(self):
         if os.path.lexists(self.state/'cytv-removal.json'):raise ValueError('System updater removal is in progress. Continue removal from the computer.')
         receipt=self.store.read('infrastructure')
@@ -122,6 +137,7 @@ class Device:
         return all(self.verify_installed(c) for c in baseline['components'])
 
     def offer(self,edition):
+        self.require_components()
         self.integrity()
         if edition not in SETS:raise ValueError('Invalid edition')
         value=self.fetch('offer',{'edition':edition})
@@ -215,6 +231,7 @@ class Device:
         return {name:digest(value) for name,value in files.items()}
 
     def prepare(self,candidate,prior):
+        self.require_components()
         self.integrity();self._verify_release(candidate,candidate['edition']);self._verify_release(prior,prior['edition'])
         for c in prior['components']:self.inspect(self.cache_bytes(c),c)
         required=sum(c['size'] for c in candidate['components'])+128*1024*1024
@@ -283,6 +300,7 @@ class Device:
         raise ValueError('Component outside reserved release')
 
     def install(self,c,on_submit,on_terminal):
+        self.require_components()
         self.integrity();self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
         if c['kind']=='infrastructure':
             # Infrastructure writes have a durable intent in core and per-file
@@ -504,6 +522,7 @@ class Device:
         self.enforce_legacy_lockdown()
 
     def finish(self,tx):
+        self.require_components()
         if tx['phase'] not in ('complete','rolled-back','aborted'):raise ValueError('Update not finished')
         if tx['edition']=='root':
             if tx['phase']!='aborted':self.sync_root_baseline(tx)
@@ -526,7 +545,9 @@ class Device:
         self.rpc('luna://com.webos.applicationManager/launch',{'id':'com.local.nativehome','params':{'nativeHomeAuto':True}})
         return {'status':'attempted'}
 
-    def launch(self,edition):return self.rpc('luna://com.webos.applicationManager/launch',{'id':IDENTITIES['root' if edition=='root' else 'home']})
+    def launch(self,edition):
+        self.require_components()
+        return self.rpc('luna://com.webos.applicationManager/launch',{'id':IDENTITIES['root' if edition=='root' else 'home']})
 
     @staticmethod
     def now():return time.time()

@@ -72,6 +72,12 @@ if has setup; then
   python3 -m unittest discover -s tests/setup
 fi
 if has installer; then
+  python3 -m unittest discover -s homebrew/tests -p test_payload.py
+  node homebrew/tests/runtime.cjs
+  node homebrew/tests/bridge.cjs
+  node homebrew/tests/ui.cjs
+  python3 -m unittest discover -s homebrew/tests -p 'test_installer*.py'
+  python3 -m unittest discover -s homebrew/tests -p test_continuation.py
   python3 -m unittest discover -s tests/cytv
 fi
 if has android; then

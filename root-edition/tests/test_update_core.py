@@ -97,6 +97,31 @@ class UpdateTests(unittest.TestCase):
         self.m.confirm(tx['id'], '1.1.0')
     def installs(self): return [c for c in self.io.calls if c.startswith('install:')]
 
+    def test_removal_at_each_phase_retains_evidence_without_install_replay(self):
+        for phase in ('preparing','downloading','backed-up','restoring-route','installing','awaiting-launch','verifying','rolling-back','verifying-rollback'):
+            with self.subTest(phase=phase),tempfile.TemporaryDirectory() as tmp:
+                store=Store(os.path.realpath(tmp),uid=os.getuid());io=Device();io.store=store;m=Manager(store,io)
+                m.install('1.1.0',profile())
+                if phase in ('rolling-back','verifying-rollback'):
+                    while m.status()['phase']!='verifying':m.run()
+                    m.rollback()
+                if phase=='installing':
+                    # Durable submission without a terminal event must remain unknown.
+                    io.outcomes=['crash']
+                    with self.assertRaises(KeyboardInterrupt):
+                        while True:m.run()
+                else:
+                    for _ in range(20):
+                        if m.status()['phase']==phase:break
+                        m.run()
+                    self.assertEqual(m.status()['phase'],phase)
+                before=copy.deepcopy(m.status());installs=[c for c in io.calls if c.startswith('install:')]
+                result=m.component_removed()
+                self.assertIn(result['phase'],('aborted','recovery-required'))
+                self.assertEqual(result['installEvidence'],before['installEvidence']);self.assertEqual(result['rollbackEvidence'],before['rollbackEvidence'])
+                self.assertEqual(store.read(before['profile']),profile());self.assertFalse(io.active)
+                m.run();self.assertEqual(installs,[c for c in io.calls if c.startswith('install:')])
+
     def test_install_only_enqueues_and_preserves_exact_immutable_snapshot(self):
         original = profile()
         tx = self.m.install('1.1.0', original)

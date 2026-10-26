@@ -40,6 +40,43 @@ class RemovalTests(unittest.TestCase):
         return dict(state=state,base=base,hook=hook,installed=installed,proc=proc,refresh=lambda:None,stop_processes=lambda _:None)
 
 
+    def link_fixture(self,root):
+        import sys
+        sys.path.insert(0,str(Path(__file__).parents[2]/'root-edition'))
+        import startup_hook
+        args=self.fixture(root);state=args['state'];hook=args['hook'];app=APP
+        target=args['installed']/'applications'/app/'startup.sh';target.parent.mkdir(parents=True)
+        target.write_bytes(startup_hook.packaged_content(app));(target.parent/'appinfo.json').write_text(json.dumps({'id':app}))
+        hook.unlink();hook.symlink_to(target)
+        (state/'startup-hook.json').write_text(json.dumps(dict(version=2,path=str(hook),target=str(target),owner_app=app,target_sha256=hashlib.sha256(target.read_bytes()).hexdigest())))
+        return args,target
+
+    def test_owned_link_survives_interrupted_disable_and_missing_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args,target=self.link_fixture(Path(tmp).resolve())
+            self.assertTrue(namespace['operate']('status',**args)['ownership_verified'])
+            def interrupt():raise OSError('scan interrupted')
+            args['refresh']=interrupt
+            with self.assertRaises(OSError):namespace['operate']('disable',**args)
+            target.unlink();(target.parent/'appinfo.json').unlink();target.parent.rmdir()
+            args['refresh']=lambda:None
+            self.assertTrue(namespace['operate']('disable',**args)['disabled'])
+            self.assertTrue((args['state']/'removed-registration/hook').is_symlink())
+            self.assertTrue(namespace['operate']('archive',**args)['removed'])
+
+    def test_repeat_disable_accepts_exact_receipted_root_archival_link(self):
+        from unittest.mock import patch
+        import startup_hook
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve());namespace['operate']('disable',**args)
+            root,api,after=self.root_removal_fixture(args);hook=Path('/var/lib/webosbrew/init.d/51-clean-your-tv-root-updater')
+            app='com.cleanyourtv.root.updater';target=Path('/media/developer/apps/usr/palm/applications')/app/'startup.sh'
+            saved=root/'removed-registration/hook';saved.unlink();saved.symlink_to(target)
+            (root/'startup-hook.json').write_text(json.dumps(dict(version=2,path=str(hook),target=str(target),owner_app=app,target_sha256=hashlib.sha256(startup_hook.packaged_content(app)).hexdigest())))
+            with patch.dict(namespace,ROOT_UPDATER=root):namespace['operate']('disable',**args)
+            self.assertEqual((root/'registration.json').read_text(),after)
+            self.assertTrue(saved.is_symlink())
+
     def test_managed_hook_requires_literal_owned_binding(self):
         managed='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
         with tempfile.TemporaryDirectory() as tmp:

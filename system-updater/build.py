@@ -36,13 +36,13 @@ def build(output):
         code['system_updater/'+name]=source(ROOT/'system-updater'/name)
     for name in ('store.py','package.py','profile.py','luna.py'):
         code['system_updater/support/'+name]=source(ROOT/'root-edition/updater'/name)
-    for name in ('observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
+    for name in ('startup_hook.py','installation.py','observed_install.py','installer_status.py','python_binding.py','python_boot.js'):
         code[name]=source(ROOT/'root-edition'/name)
     for name in ('release-public.pem','ca-bundle.crt','ca-LICENSE.txt'):
         code['system_updater/'+name]=source(ROOT/'updater-service'/name)
     runtime=assigned(ROOT/'root-edition/deploy.py','RUNTIME_FILES')
     updater=assigned(ROOT/'root-edition/build_updater.py','UPDATER_FILES')
-    support=assigned(ROOT/'root-edition/build_updater.py','SUPPORT')
+    support=assigned(ROOT/'root-edition/build_updater.py','SUPPORT')+assigned(ROOT/'root-edition/build_updater.py','COORDINATOR_FILES')
     private=assigned(ROOT/'root-edition/provision.py','PRIVATE_FILES')
     infra=['support/python_binding.py','support/python_boot.js']+['service/'+n for n in private]+['runtime/'+n for n in runtime]+['updater/updater/'+n for n in updater]+['updater/'+n for n in support]+['updater/updater/release-public.pem','updater/service.js','updater/run-updater.py','updater/services.json','updater/package.json']
     code['infrastructure-paths.json']=(json.dumps(sorted(infra))+'\n').encode()
@@ -58,7 +58,10 @@ def build(output):
            ap+'index.html':b'<!doctype html><title>System Updater</title><p>Open Software updates from Home.</p>',
            ap+'icon.png':source(ROOT/'updater-app/updater-icon.png') if (ROOT/'updater-app/updater-icon.png').exists() else source(ROOT/'assets/icons/installer.png'),
            'usr/palm/packages/'+APP+'/packageinfo.json':json.dumps({'id':APP,'version':VERSION,'app':APP,'services':[SERVICE]}).encode()}
-    code['system-updater.ipk']=package.ipk(APP,VERSION,files)
+    sys.path.insert(0,str(ROOT/'root-edition'))
+    from startup_hook import packaged_content
+    files[ap+'startup.sh']=packaged_content(APP)
+    code['system-updater.ipk']=package.ipk(APP,VERSION,files,executable={ap+'startup.sh'})
     code['setup-system-updater.py']=source(ROOT/'system-updater/setup.py')
     output.mkdir(parents=True,exist_ok=False)
     for name,raw in code.items():

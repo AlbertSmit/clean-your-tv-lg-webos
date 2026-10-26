@@ -32,6 +32,8 @@ class DeviceBase(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(os.path.realpath(self.tmp.name));self.store=Store(self.root/'state',uid=os.getuid());(self.root/'state/cache').mkdir();(self.root/'code').mkdir()
         self.store.write('legacy-lockdown',{'schema':1,'files':{}})
         self.device=self.mod.Device(self.store,code=self.root/'code',root_state=self.root/'root',root_updater=self.root/'root-updater',installed=self.root/'installed',uid=os.getuid())
+        for app in ('com.cleanyourtv.system.updater','com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
+            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps({'id':app}))
     def tearDown(self):self.tmp.cleanup()
     def baseline(self,value):
         c=next(c for c in value['components'] if c['name']=='root-infrastructure')
@@ -313,7 +315,7 @@ class OfferUnavailableTests(DeviceBase):
         self.store.write('baseline',self.prior)
         self.device.integrity=lambda:None
         for app in ('com.cleanyourtv.root.preview','com.cleanyourtv.root.updater'):
-            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True)
+            path=self.root/('installed/usr/palm/applications/'+app+'/appinfo.json');path.parent.mkdir(parents=True,exist_ok=True)
             path.write_text(json.dumps({'id':app,'version':'1.0.2'}))
     def failure(self,code):
         return self.mod.subprocess.CalledProcessError(1,['/usr/bin/node','/private/internal/policy.js','offer'],output=json.dumps({'error':code}).encode(),stderr=b'/private/internal details')

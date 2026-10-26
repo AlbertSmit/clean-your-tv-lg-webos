@@ -41,6 +41,14 @@ class BuildTests(unittest.TestCase):
             manifest = verify_bundle(first)
             self.assertIn('runtime/cli.py', manifest['files'])
             self.assertIn('setup.py', manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            self.assertIn('updater/store.py',manifest['files'])
+            import subprocess
+            result = subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import deploy,installation;'
+                'assert installation.Store.__module__ == "updater.store"',str(first)],
+                cwd=Path(tmp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             ipk = next(first.glob('*.ipk'))
             parts = ar_members(ipk.read_bytes())
             self.assertEqual(set(parts), {'debian-binary', 'control.tar.gz', 'data.tar.gz'})
@@ -67,6 +75,40 @@ class BuildTests(unittest.TestCase):
             for name, digest in release['files'].items():
                 self.assertEqual(hashlib.sha256(files[name]).hexdigest(), digest)
             self.assertEqual((first / 'SHA256SUMS').read_text(), hashlib.sha256(ipk.read_bytes()).hexdigest() + '  ' + ipk.name + '\n')
+
+    def test_personalized_bundle_retains_executable_startup_and_passes_staged_ownership(self):
+        import subprocess
+        from cytv import package
+        from deploy import verify_bundle
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();bundle=root/'bundle';self.builder.build(bundle,version='1.2.3')
+            package.personalize_root(bundle,{'apps':[{'id':'org.example.video','title':'Video'}],'inputs':[]})
+            manifest=verify_bundle(bundle);raw=(bundle/manifest['package']).read_bytes()
+            package.verify_root_rollback_format(raw)
+            installed=root/'installed';installed.mkdir()
+            with tarfile.open(fileobj=io.BytesIO(package.read_ar(raw)['data.tar.gz'])) as archive:
+                app='usr/palm/applications/com.cleanyourtv.root.preview/'
+                self.assertEqual(archive.getmember(app+'startup.sh').mode,0o755)
+                self.assertEqual(archive.getmember('usr/palm/services/com.cleanyourtv.root.preview.service/boot-recover.sh').mode,0o755)
+                for member in archive:
+                    target=installed/member.name;target.parent.mkdir(parents=True,exist_ok=True)
+                    target.write_bytes(archive.extractfile(member).read());target.chmod(member.mode)
+            script="""
+import os,sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0,sys.argv[1])
+import deploy,startup_hook as h
+deploy.verify_bundle(sys.argv[1])
+h.INSTALLED=Path(sys.argv[2]);h.EXPECTED_UID=os.getuid()
+# The temporary host ancestors are outside the synthetic TV trust root.
+with patch.object(h,'trusted_directory'):
+    value=h.target_receipt(Path.read_bytes,h.INSTALLED/'hook','com.cleanyourtv.root.preview')
+assert value['version']==2
+assert value['target']==str(h.INSTALLED/'usr/palm/applications/com.cleanyourtv.root.preview/startup.sh')
+"""
+            result=subprocess.run([sys.executable,'-I','-B','-c',script,str(bundle),str(installed)],cwd=root,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
 
     def test_existing_output_is_never_overwritten(self):
         with tempfile.TemporaryDirectory() as tmp:

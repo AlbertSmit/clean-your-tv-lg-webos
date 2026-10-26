@@ -125,3 +125,38 @@ Este comportamento pertence ao próximo candidato, não ao instalador publicado 
 Preparação ainda não publicada: as Ferramentas do Android mantêm a TV, a edição e a porta SSH ao retornar à tela inicial; No-root normalmente usa 9922. Se os ajustes não conseguirem verificar o controle de Home, mostram um estado desconhecido e ocultam Alterar Home até receber uma resposta válida. Isso não significa que o Helper parou e não o reinicia. Essas mudanças não estão nos pacotes publicados da v1.2.0.
 
 Diagnóstico Root do próximo candidato (#55): após uma falha na instalação, salve o relatório dessa tentativa. Ele pode incluir categorias de erros de inicialização do serviço de recuperação; preserve os dados de recuperação e o driver instalado. A correção no OLED Flex ainda não foi confirmada.
+
+## Candidato não publicado: instalar Root pelo Homebrew
+
+Este código adiciona o aplicativo separado **CYTV Installer**, apenas para **Root**.
+Ele ainda não foi publicado no catálogo Homebrew. cytv mantém No-root e Root no
+Windows, macOS, Linux e Android; os links existentes continuam sendo do cytv.
+
+Exige root já disponível, Homebrew Channel com execução como root, Node.js **8+**
+e Python **3.9+** funcional. Há Python privado fixado e offline para ARMv7/`armv8l`
+compatível com ambiente de 32 bits. Abrir e consultar o estado não altera nada:
+prepare explicitamente Python se faltar, verifique novamente e revise a instalação.
+São necessários **320 MiB livres após instalar Installer**; o espaço adicional de
+preparação de pacotes no TV ainda não foi medido. Não há confirmação de compatibilidade
+com novos modelos ou firmware.
+
+São instalados Root Home e Root Updater; preparar System Updater é uma opção
+explícita. Ative Change Home separadamente depois da verificação. Parada de emergência
+e preferência desativada continuam preservadas. Uma instalação atual verificada
+compartilha perfil e recuperação entre cytv e TV sem reinstalar nem redefinir.
+Infraestrutura antiga desconhecida exige diagnóstico; importar preferências
+empacotadas serve para uma instalação nova, não para navegador nem infraestrutura.
+
+Após interrupção, consulte primeiro o estado. Continuar exige a cópia e reserva
+originais com estado final comprovado. Outras etapas exigem estado, restauração
+ou diagnóstico; a CLI do código pode continuar explicitamente outras etapas
+reconhecidas. Finish Root setup do cytv não reinicia um processo incompleto. Não
+apague diários nem repita às cegas. Homebrew atualiza somente Installer; o produto
+usa os Updaters existentes e conjuntos completos assinados. Excluir Installer
+mantém o produto. A remoção completa restaura LG Home e limpa os links de início
+próprios, preservando recuperação independente, arquivos e Python necessário.
+Todos os testes físicos deste caminho estão pendentes; os resultados históricos
+Root 0.2.0 no C3 não o validam.
+
+[Instalação e recuperação (inglês)](../INSTALL.md#candidate-on-tv-root-installation) ·
+[Testes físicos pendentes (inglês)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)

@@ -25,6 +25,8 @@ def release(version):
 class IO:
     def __init__(self):
         self.time=1000; self.calls=[]; self.current=release('1.0.0'); self.candidate=release('1.1.0'); self.outcomes=[]; self.active=True; self.prepare_error=False
+    def require_components(self):pass
+    def components_present(self):return True
     def now(self):return self.time
     def offer(self,edition):return {'candidate':copy.deepcopy(self.candidate),'prior':copy.deepcopy(self.current),'canInstall':True}
     def check_legacy(self):self.calls.append('legacy')

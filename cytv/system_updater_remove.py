@@ -143,7 +143,7 @@ def root_removal_repair(legacy,base):
     python=python_command(state)
     expected_hook=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
     legacy_hook=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
-    if read(saved/'hook') not in ((expected_hook,legacy_hook) if python=='/usr/bin/python3' else (expected_hook,)):raise ValueError('Root updater removal ownership conflict')
+    if hook_read(saved/'hook',state,hook,app,Path('/media/developer/apps/usr/palm'),expected_hook) not in ((expected_hook,legacy_hook) if python=='/usr/bin/python3' else (expected_hook,)):raise ValueError('Root updater removal ownership conflict')
     value=json.loads(read(saved/'manifest'))
     shape={'id':app,'version':value.get('version'),'serviceFiles':[str(paths['service'])],'apiPermissionFiles':[str(api)],'roleFiles':[str(paths['role']),str(base/'roles.d'/(app+'.app.json'))],'clientPermissionFiles':[str(paths['client']),str(base/'client-permissions.d'/(app+'.app.json'))]}
     if value!=shape or not isinstance(value.get('version'),str) or not re.fullmatch(r'\d+\.\d+\.\d+',value['version']):raise ValueError('Root updater removal ownership conflict')
@@ -208,7 +208,7 @@ def operate(action,state=STATE,base=Path('/var/luna-service2-dev'),hook=Path('/v
         expected['hook']=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
         legacy_hook=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-system-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
         retained_hook=hook if os.path.lexists(hook) else state/'removed-registration/hook'
-        if python=='/usr/bin/python3' and read(retained_hook)==legacy_hook:expected['hook']=legacy_hook
+        if python=='/usr/bin/python3' and hook_read(retained_hook,state,hook,APP,installed,expected['hook'])==legacy_hook:expected['hook']=legacy_hook
         if record is not None:
             if destination is not None and destination!=record.get('archive'):raise ValueError('Different supervisor archive already reserved')
             destination=record.get('archive')
@@ -227,8 +227,8 @@ def operate(action,state=STATE,base=Path('/var/luna-service2-dev'),hook=Path('/v
         expected.update(app_role=role,app_client=client)
         for key,path in paths.items():
             if os.path.lexists(path):
-                if read(path)!=expected[key] or (record is not None and os.path.lexists(saved/key)):raise ValueError('Supervisor registration changed: '+key)
-            elif record is None or read(saved/key)!=expected[key]:raise ValueError('Supervisor registration missing without ownership proof: '+key)
+                if (hook_read(path,state,hook,APP,installed,expected['hook']) if key=='hook' else read(path))!=expected[key] or (record is not None and os.path.lexists(saved/key)):raise ValueError('Supervisor registration changed: '+key)
+            elif record is None or (hook_read(saved/key,state,hook,APP,installed,expected['hook']) if key=='hook' else read(saved/key))!=expected[key]:raise ValueError('Supervisor registration missing without ownership proof: '+key)
         repair=root_removal_repair(legacy,base) if record is not None and record.get('phase')=='disabled' else None
         if action=='status' and record is None and any(read(Path(name))!=entry['disabled'].encode() for name,entry in legacy.items()):raise ValueError('Legacy lockdown is not active')
         if action=='status':return {'present':True,'bootstrap_complete':record is None,'edition':setup['edition'],'ownership_verified':True,'disabled':record is not None and record['phase']=='disabled','archive':destination}
@@ -275,6 +275,14 @@ def main():
 
 if __name__=='__main__':main()
 '''
+from .startup_remove import HELPER
+SCRIPT=SCRIPT.replace('\ndef operate(',HELPER+'\ndef operate(',1)
+
 import base64
 import zlib
-COMMAND='import base64,zlib;exec(zlib.decompress(base64.b64decode('+repr(base64.b64encode(zlib.compress(SCRIPT.encode(),9)).decode())+')))'
+import io
+import tokenize
+# Whitespace/comments are transport-only; the readable SCRIPT remains inspectable.
+transport=tokenize.untokenize(t for t in tokenize.generate_tokens(io.StringIO(SCRIPT).readline) if t.type!=tokenize.COMMENT)
+transport='\n'.join(line.rstrip() for line in transport.splitlines() if line.strip())+'\n'
+COMMAND='import base64,zlib;exec(zlib.decompress(base64.b85decode('+repr(base64.b85encode(zlib.compress(transport.encode(),9)).decode())+')))'

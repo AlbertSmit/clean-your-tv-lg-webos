@@ -140,7 +140,7 @@ def apply():
         os.chown(path,saved['files'][str(path)]['uid'],saved['files'][str(path)]['gid'])
     return {'returnValue':True,'next':'Refresh LS2 registration, then finalize. Trials remain disabled.'}
 
-def repair_pending():
+def repair_pending(allow_original=False):
     """Upgrade only incomplete recovery provisioning, never an active trial."""
     if os.path.lexists(STATE/'recovery-provision.json') or os.path.lexists(STATE/'profile-trial.json'):
         raise ValueError('Only never-activated provisioning may be repaired')
@@ -152,7 +152,7 @@ def repair_pending():
     updated=plan(original)
     for key,file in FILES.items():
         entry=saved['files'][str(file)]
-        if sha(entry['original'].encode())!=entry['original_sha256'] or sha(secure(file)) not in (entry['installed_sha256'],entry.get('previous_installed_sha256')):
+        if sha(entry['original'].encode())!=entry['original_sha256'] or sha(secure(file)) not in (entry['installed_sha256'],entry.get('previous_installed_sha256'),entry['original_sha256'] if allow_original else None):
             raise ValueError('Pending provision drift')
         newhash=sha(updated[key])
         if newhash!=entry['installed_sha256']:
@@ -160,10 +160,15 @@ def repair_pending():
             entry['previous_installed_sha256']=entry['installed_sha256']
             entry['installed_sha256']=newhash
     write(path,encoded(saved))
+    if allow_original:write(STATE/'recovery-provision.pending.json',encoded(manifest()))
     for key,file in FILES.items():
         entry=saved['files'][str(file)]
         write(file,updated[key],entry['mode']);os.chown(file,entry['uid'],entry['gid'])
     return {'returnValue':True,'repaired_pending':True}
+
+
+def resume_pending():
+    return repair_pending(allow_original=True)
 
 
 class RecoveryRPCError(ValueError):
@@ -363,7 +368,7 @@ def rollback():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback','repair_pending'])
+    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback','repair_pending','resume_pending'])
     command = parser.parse_args().command
     if os.geteuid() != 0 and command != 'plan': raise ValueError('Root required')
     if command == 'plan':

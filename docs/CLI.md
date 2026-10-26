@@ -224,6 +224,30 @@ profile/packaged inventory instead of reading a fresh SSAP inventory:
 Before daily use check arrows/OK, short Home, in-app Back and exit confirmation,
 volume/pointer, standby/wake and cold boot. Both editions use three short Home presses within two seconds for emergency exit.
 
+## Candidate: shared Root operations
+
+**Unreleased source behavior:** Root installation and complete removal share the
+on-TV coordinator with CYTV Installer. The normal cytv platform/edition choices,
+SSH trust and No-root flow remain. A current verified product can be inspected,
+restored and removed across either client without reinstalling or resetting its
+profile. Older or uncertain infrastructure is not silently migrated.
+
+Run `cytv status` first after interruption, then use restore/diagnostics as needed.
+The offered **Finish Root setup** action verifies completed package/recovery
+setup and then performs explicit activation; it does **not** restart an incomplete
+worker. The on-TV UI's Continue action is limited to proven final readback. For
+other recognized interrupted stages, the source setup CLI provides
+[`--operation` plus `--resume`](MANUAL_INSTALL.md#candidate-shared-product-continuation)
+using the original stored snapshot and lease. No generic clear-lock, reset or
+blind retry is supported. Keep journals and private recovery material.
+
+Homebrew upgrades the separate Installer, not the installed product. System
+Updater preparation remains an explicit optional action; complete signed product
+updates keep their existing updater. Installer-only deletion leaves the product
+installed; use complete-product removal to restore LG routing and clean owned
+packages/startup links while retaining recovery evidence and referenced runtime
+slots. See [candidate requirements](INSTALL.md#candidate-on-tv-root-installation).
+
 ## Maintenance
 
 ```sh

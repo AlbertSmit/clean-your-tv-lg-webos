@@ -67,6 +67,8 @@ def build(output, version='0.0.1'):
         if SERVICE_SOURCE.is_symlink() or path.is_symlink() or not path.is_file():
             raise ValueError('Missing or indirect service source: ' + service_file)
         payload[service_prefix + service_file] = path.read_bytes()
+    from startup_hook import packaged_content
+    payload['usr/palm/applications/'+app_id+'/startup.sh']=packaged_content(app_id)
     service_info = json.loads(payload[service_prefix + 'services.json'])
     service_package = json.loads(payload[service_prefix + 'package.json'])
     if (service_info.get('id') != SERVICE_ID
@@ -81,7 +83,7 @@ def build(output, version='0.0.1'):
                'Architecture: all\nMaintainer: Clean Your TV\n'
                'Description: Isolated Root Edition hardware-test candidate\n').encode()
     package = ar({'debian-binary': b'2.0\n', 'control.tar.gz': tgz({'control': control}),
-                  'data.tar.gz': tgz(payload, {service_prefix + 'boot-recover.sh'})})
+                  'data.tar.gz': tgz(payload, {service_prefix + 'boot-recover.sh', 'usr/palm/applications/'+app_id+'/startup.sh'})})
     name = app_id + '_' + version + '_all.ipk'
     release = {
         'application_id': app_id, 'version': version,

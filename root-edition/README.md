@@ -3,7 +3,7 @@
 **Native Home and Back routing, with an on-TV emergency exit.** Root Edition
 uses the same launcher interface as No-root Edition, but registers a separate
 application as the system Home. No router script, USB drive or always-on computer
-is needed after setup. A computer is needed for installation and recovery tools.
+is needed after setup. Published setup uses a computer for installation and recovery tools.
 
 [v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) includes **Root Edition 0.3.0**, **Root Updater 0.2.1** and **System Updater supervisor 1.0.0**. Latest-download links follow the published release.
 
@@ -19,6 +19,31 @@ Channel's existing firmware-blocking preference. Changes need a real TV restart;
 the saved switch is not proof of active blocking. This also blocks firmware
 security updates, and Homebrew retains the preference after CYTV removal.
 See [operation, limitations and TV acceptance scope](../docs/LG-FIRMWARE-UPDATES.md).
+
+## Candidate: two setup clients, one installation
+
+**Unreleased source candidate:** CYTV Installer is a separate Root-only on-TV
+application alongside cytv. It has no published Homebrew catalog listing yet.
+cytv retains No-root and Root on all existing platforms. Root setup requires
+existing root, Homebrew exec, Node.js 8+ and working Python 3.9+; supported ARMv7
+or `armv8l` 32-bit userspace may explicitly prepare the bundled pinned offline
+private runtime before reinspection/final review. No new hardware compatibility
+is implied by packaging or the historical Root 0.2.0 checks above.
+
+The shared coordinator installs Root Home and Root Updater, with explicit optional
+System Updater preparation. Home activation is separate and off/emergency state
+stays off. Verified installations share profiles and recovery across clients;
+unknown older infrastructure is not migrated automatically. Fresh
+`--migrate-packaged-home` imports packaged preferences only, never browser storage.
+
+Homebrew updates Installer only; product updates remain with existing updaters.
+Deleting Installer leaves Root and recovery installed. Complete removal restores
+LG Home and removes owned packages, registrations and startup links, retaining
+required recovery archives and Python slots. The UI offers continuation only for
+proven final readback; other interrupted stages need status/recovery or the
+[explicit source CLI](../docs/MANUAL_INSTALL.md#candidate-shared-product-continuation).
+See [setup](../docs/INSTALL.md#candidate-on-tv-root-installation) and the
+[pending hardware matrix/state inventory](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md).
 
 ## What works on the tested setup
 

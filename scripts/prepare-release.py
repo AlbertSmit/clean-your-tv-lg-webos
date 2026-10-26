@@ -6,6 +6,7 @@ import hashlib
 import gzip
 import io
 import json
+import runpy
 import os
 from pathlib import Path
 import re
@@ -222,6 +223,17 @@ def download(meta, name, folder):
     return raw
 
 
+def verify_homebrew_approval(build, committed):
+    if build.get('homebrew') is not None and build['homebrew'] != committed:
+        raise ValueError('Homebrew approval differs from committed source')
+
+
+def verify_homebrew_source(build, commit):
+    # GitHub reads the immutable source blob, including on shallow workflow checkouts.
+    content=json.loads(gh('api', 'repos/' + REPO + '/contents/homebrew/release.json?ref=' + commit))
+    verify_homebrew_approval(build, json.loads(base64.b64decode(content['content'])))
+
+
 def bundles(meta, folder):
     folder.mkdir()
     build = json.loads(download(meta, 'BUILD-INFO.json', folder))
@@ -233,6 +245,8 @@ def bundles(meta, folder):
     content = json.loads(gh('api', 'repos/' + REPO + '/contents/release-versions.json?ref=' + commit))
     if json.loads(base64.b64decode(content['content'])) != build['versions']:
         raise ValueError('Release versions differ from committed source')
+    if build.get('homebrew') is not None:
+        verify_homebrew_source(build, commit)
     versions = build['versions']
     validate_versions(versions)
     home_name = 'clean-your-tv-no-root-' + versions['home'] + '.zip'
@@ -248,6 +262,26 @@ def bundles(meta, folder):
         if len(members) != 1: raise ValueError('Missing or ambiguous Root package')
         root = archive.extractfile(members[0]).read()
     return build, {'home': home, 'helper': helper, 'root': root}
+
+
+def prepare_homebrew(build, prior_build, current_download, prior_download):
+    """Keep latest/download stable, preserving the accepted original immutable URL."""
+    gate=runpy.run_path(str(ROOT/'scripts/homebrew-manifest.py'))
+    current=build.get('homebrew'); prior=prior_build.get('homebrew')
+    if current is None and prior is None: return {}
+    approval=current if current is not None else prior
+    fetch=current_download if current is not None else prior_download
+    metadata=fetch(gate['MANIFEST_NAME'])
+    value=json.loads(metadata);name=value['ipkUrl'].rsplit('/',1)[1]
+    safe_name(name)
+    raw=fetch(name)
+    gate['verify_accepted'](raw,metadata,approval)
+    if current is not None and prior is not None:
+        new=version(current['version']);old=version(prior['version'])
+        if new<old or (new==old and current!=prior):raise ValueError('Homebrew version regression or unversioned change')
+    build['homebrew']=approval
+    # Carried installer payload versions remain independent of this product release.
+    return {gate['MANIFEST_NAME']:metadata,name:raw}
 
 
 def main():
@@ -296,6 +330,9 @@ def main():
                     system_files[name] = download(meta, name, tmp / 'system-assets')
         manifests['system'] = verify_system_assets(system, build, system_files)
         files.update(system_files)
+        files.update(prepare_homebrew(build, prior_build,
+            lambda name: download(meta, name, tmp/'current'),
+            lambda name: download(prior_meta, name, tmp/'previous')))
         manifest_file = tmp / 'manifests.json'; manifest_file.write_text(json.dumps(manifests))
         for name, raw in files.items(): (output / name).write_bytes(raw)
         subprocess.run(['node', str(ROOT / 'scripts/sign-release-feeds.cjs'), str(manifest_file), str(output)], check=True)

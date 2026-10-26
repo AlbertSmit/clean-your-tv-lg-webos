@@ -252,6 +252,18 @@ class Manager:
                 if durable['phase']=='rolling-back':return self._save(durable,'recovery-required',error)
                 return self._save(durable,'recovery-required' if durable['rollbackAttempted'] else 'rolling-back',error)
 
+    def component_removed(self):
+        """Stop at a phase boundary; never reinstall an externally removed package."""
+        with self.store.lock():
+            tx=self._load()
+            if tx is None or tx['phase'] in FINISHED:return tx
+            error='CYTV component removed; recovery evidence retained'
+            try:
+                self.io.suspend(tx)
+            except Exception as exc:
+                return self._save(tx,'recovery-required',error+': '+str(exc))
+            return self._save(tx,'aborted' if not any(c['installEvidence']['intent'] for c in tx['components']) else 'recovery-required',error)
+
     def reconcile(self):return self.run()
 
     def rollback(self):

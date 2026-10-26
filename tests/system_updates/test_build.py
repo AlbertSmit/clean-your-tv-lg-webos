@@ -43,6 +43,13 @@ class BuildTests(unittest.TestCase):
             manifest=setup.verify_bundle(a)
             self.assertIn('system_updater/support/store.py',manifest['files'])
             self.assertIn('observed_install.py',manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            import subprocess,sys
+            result=subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation;'
+                'assert installation.Store.__module__ == "system_updater.support.store"',str(a)],
+                cwd=Path(tmp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('python_binding.py',manifest['files'])
             self.assertIn('python_boot.js',manifest['files'])
             inventory=json.loads((a/'infrastructure-paths.json').read_text())
@@ -87,20 +94,62 @@ class BuildTests(unittest.TestCase):
                 on_ready();on_accepted({'confirmed':True})
                 for name,data in package.data_files(Path(filename).read_bytes()).items():
                     target=installed/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+                    if name.endswith('/startup.sh'):target.chmod(0o755)
                 service=setup.SERVICE
                 (base/'services.d'/(service+'.service')).write_text('[Luna Service]\nName='+service+'\nExec=/usr/bin/run-js-service -n '+str(installed/'usr/palm/services'/service)+'\n')
                 (base/'roles.d'/(service+'.service.json')).write_text(json.dumps({'appId':service,'type':'regular'}))
                 (base/'client-permissions.d'/(service+'.service.json')).write_text('{}')
                 (base/'api-permissions.d'/(service+'.api.json')).write_text('{}')
+                return {'completed':True,'event':{'id':app,'statusValue':30,'returnValue':True,'details':{'packageId':app,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}
             state=path/'state';hook=hooks/'52-system'
-            result=setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=lambda:None)
+            import startup_hook,os
+            from unittest.mock import patch
+            def trusted(path):
+                for parent in (path,*path.parents):
+                    if parent==path_root.parent:break
+                    info=parent.lstat()
+                    if not __import__('stat').S_ISDIR(info.st_mode) or info.st_mode&0o022:raise ValueError('Unsafe fixture path')
+            path_root=path
+            with patch.object(startup_hook,'EXPECTED_UID',os.getuid()),patch.object(startup_hook,'INSTALLED',installed),patch.object(startup_hook,'trusted_directory',side_effect=trusted):
+                from installation import Ownership,device_operation,Busy
+                from updater.store import Store
+                owner=Ownership(Store(path/'global',uid=os.getuid()))
+                read=lambda p: json.loads((state/'bootstrap.json').read_text()) if p.name=='bootstrap.json' and 'system-updater' in str(p) and (state/'bootstrap.json').exists() else None
+                def eligible():setup.preflight(bundle,baseline,state,installed,base,hook)
+                def interrupted():raise RuntimeError('scanner interrupted after terminal')
+                with self.assertRaisesRegex(RuntimeError,'scanner interrupted'):
+                    with device_operation('system-bootstrap',ownership=owner,read=read,check=eligible):
+                        setup.provision(bundle,baseline,state=state,installed=installed,base=base,hook=hook,install=install,refresh=interrupted)
+                pending=owner.status()['id']
+                self.assertFalse(owner.status()['terminal'])
+                with self.assertRaises(Busy):
+                    with owner.operation('deploy','deploy.json'):pass
+                with patch('observed_install.install',side_effect=AssertionError('known terminal resubmitted')):
+                    with device_operation('system-bootstrap',recovery=True,ownership=owner,read=read) as lease:
+                        self.assertEqual(lease['id'],pending)
+                        result=setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
+                self.assertTrue(owner.status()['terminal'])
+                completed=owner.status()
+                with self.assertRaises(FileExistsError):
+                    with device_operation('system-bootstrap',ownership=owner,read=read,check=eligible):pass
+                self.assertEqual(owner.status(),completed)
+                # An accepted package without its exact terminal remains blocked.
+                (state/'installed-terminal.json').unlink()
+                (state/'bootstrap.json').write_text('{"phase":"accepted-supervisor"}')
+                with patch('observed_install.install',side_effect=AssertionError('unknown submission replayed')):
+                    with self.assertRaisesRegex(ValueError,'outcome unknown'):
+                        with device_operation('system-bootstrap',recovery=True,ownership=owner,read=read):
+                            setup.resume(bundle,state,installed,base,hook,refresh=lambda:None)
+                self.assertFalse(owner.status()['terminal'])
+                (state/'bootstrap.json').write_text('{"phase":"complete"}')
+            self.assertTrue(hook.is_symlink())
             self.assertTrue(result['installed'])
             self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
             self.assertEqual(json.loads((state/'current-no-root.json').read_text()),manifest)
             self.assertEqual((state/'code/system_updater/core.py').stat().st_mode&0o777,0o600)
-            self.assertEqual(hook.stat().st_mode&0o777,0o700)
+            self.assertTrue(hook.is_symlink())
             self.assertIn(str(state/'run-service'),(base/'services.d'/(setup.SERVICE+'.service')).read_text())
-            self.assertNotIn('/media/developer/apps',hook.read_text())
+            self.assertEqual(hook.read_text(),startup_hook.packaged_content(setup.APP).decode())
             self.assertEqual(mutable.read_text(),'private preferences')
             with self.assertRaises(FileExistsError):setup.provision(bundle,baseline,state=state)
 
@@ -195,10 +244,18 @@ class BuildTests(unittest.TestCase):
             for kind,app in (('root','com.cleanyourtv.root.preview'),('root-updater','com.cleanyourtv.root.updater')):
                 appdir=installed/'usr/palm/applications'/app;appdir.mkdir(parents=True)
                 (appdir/'appinfo.json').write_text(json.dumps({'id':app,'version':'1.0.0','systemUpdateProtocol':1,'main':'index.html'}));(appdir/'index.html').write_text('Home')
+                (appdir/'startup.sh').write_text('#!/bin/sh\nexit 0\n');(appdir/'startup.sh').chmod(0o755)
                 package_dir=installed/'usr/palm/packages'/app;package_dir.mkdir(parents=True);(package_dir/'packageinfo.json').write_text(json.dumps({'id':app,'app':app,'version':'1.0.0','services':[app+'.service']}))
                 service_dir=installed/'usr/palm/services'/(app+'.service');service_dir.mkdir(parents=True);(service_dir/'service.js').write_text('service')
             baseline=setup.snapshot(bundle,'root',root/'baseline',installed=installed,**roots)
             manifest=setup.verify_baseline(baseline,bundle)
+            import io,tarfile
+            from cytv.package import read_ar
+            for item in manifest['components']:
+                if item['kind']!='ipk':continue
+                raw=(baseline/'cache'/item['sha256']).read_bytes()
+                with tarfile.open(fileobj=io.BytesIO(read_ar(raw)['data.tar.gz']),mode='r:gz') as archive:
+                    self.assertEqual(archive.getmember('usr/palm/applications/'+item['application']+'/startup.sh').mode,0o755)
             captured=next(c for c in manifest['components'] if c['name']=='root-infrastructure')
             self.assertEqual(set(captured['absent']),missing)
             self.assertEqual(set(captured['files']),set(names)-missing)
@@ -212,3 +269,74 @@ class BuildTests(unittest.TestCase):
                 setup.verify_infrastructure_inventory({**descriptor,'absent':absent+absent},files,names)
             target=roots['updater']/'updater/ca-bundle.crt';target.symlink_to(root/'nonexistent')
             with self.assertRaisesRegex(ValueError,'Indirect'):setup.capture_infrastructure(names,**roots)
+
+    def test_root_supervisor_resume_uses_exact_terminal_and_owned_registration_after_scanner_loss(self):
+        import sys,shutil,functools
+        from unittest.mock import patch
+        sys.path.insert(0,str(ROOT/'root-edition/tests'));sys.path.insert(0,str(ROOT/'root-edition'))
+        from install_fixture import CurrentInstallation,altered_bootstrap_bundle
+        from installation import terminal_install
+        build=load('build');setup=load('setup')
+        with CurrentInstallation() as fixture:
+            bundle=fixture.base/'supervisor-bundle';build.build(bundle)
+            roots={'runtime':fixture.root/'runtime','updater':fixture.updater/'code','service':fixture.root/'service'}
+            baseline=setup.snapshot(bundle,'root',fixture.base/'super-baseline',installed=fixture.installed,**roots)
+            state=fixture.base/'super-state';shutil.copytree(baseline,state);(state/'code').mkdir()
+            manifest=setup.verify_bundle(bundle)
+            for name in setup.CODE:
+                target=state/'code'/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes((bundle/name).read_bytes())
+            def record(name,value):(state/(name+'.json')).write_text(json.dumps(value))
+            record('infrastructure',{'schema':1,'code':{name:manifest['files'][name] for name in sorted(setup.CODE)}})
+            binding={'schema':1,'bundle':manifest,'package':{'sha256':manifest['files']['system-updater.ipk'],'size':(bundle/'system-updater.ipk').stat().st_size}}
+            record('bootstrap-bundle',binding)
+            record('bootstrap',{'phase':'accepted-supervisor','edition':'root'})
+            base=fixture.base/'super-ls2';hook=fixture.base/'hooks/52';hook.parent.mkdir()
+            with patch.object(setup,'ROOT_UPDATER_TRANSACTION',fixture.updater/'transaction.json'),patch.object(setup,'INSTALLED',fixture.installed),patch.object(setup,'finish_registration',wraps=setup.finish_registration) as finish:
+                with self.assertRaisesRegex(ValueError,'outcome unknown'):setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook)
+                finish.assert_not_called()
+            record('bootstrap',{'phase':'installing-supervisor','edition':'root'})
+            with patch('observed_install.install',return_value={'completed':True,'event':{'id':setup.APP,'statusValue':30,'details':{'packageId':setup.APP,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}) as install,patch.object(setup,'finish_registration',return_value={'installed':True}) as finish:
+                for code in (False,True):
+                    alternate=altered_bootstrap_bundle(bundle,fixture.base/('alternate-super-'+str(code)),'system-updater.ipk',code=code)
+                    setup.verify_bundle(alternate)
+                    with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):setup.resume(alternate,state,fixture.installed,base,hook)
+                    install.assert_not_called();finish.assert_not_called()
+                    self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'installing-supervisor')
+                (state/'bootstrap-bundle.json').unlink()
+                with self.assertRaisesRegex(ValueError,'original bootstrap bundle'):setup.resume(bundle,state,fixture.installed,base,hook)
+                install.assert_not_called();finish.assert_not_called()
+                record('bootstrap-bundle',binding)
+                self.assertTrue(setup.resume(bundle,state,fixture.installed,base,hook)['installed'])
+                self.assertEqual(Path(install.call_args.args[1]).read_bytes(),(bundle/'system-updater.ipk').read_bytes())
+                self.assertEqual(json.loads((state/'bootstrap-bundle.json').read_text()),binding)
+            terminal={'completed':True,'event':{'id':setup.APP,'statusValue':30,'details':{'packageId':setup.APP,'client':'com.webos.lunasend-99','ipkFile':'/var/lib/clean-your-tv-installer/cytv-root-install-fixture/package.ipk'}}}
+            self.assertTrue(terminal_install(terminal,setup.APP));record('installed-terminal',terminal);record('bootstrap',{'phase':'provisioning','edition':'root'})
+            for name,raw in setup.package_files((bundle/'system-updater.ipk').read_bytes()).items():
+                target=fixture.installed/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(raw);target.chmod(0o755 if name.endswith('/startup.sh') else 0o644)
+            original={'service':('[D-BUS Service]\nName='+setup.SERVICE+'\nExec=/usr/bin/run-js-service -n '+str(fixture.installed/'usr/palm/services'/setup.SERVICE)+'\n').encode(),'role':json.dumps({'appId':setup.SERVICE}).encode(),'client':b'{}','api':b'{}'}
+            for key,folder,suffix in (('service','services.d','.service'),('role','roles.d','.service.json'),('client','client-permissions.d','.service.json'),('api','api-permissions.d','.api.json')):
+                target=base/folder/(setup.SERVICE+suffix);target.parent.mkdir(parents=True);target.write_bytes(original[key])
+            def atomic(path,raw,mode=0o600):
+                if isinstance(raw,str):raw=raw.encode()
+                path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(raw);path.chmod(mode)
+            destination=functools.partial(setup.infrastructure_destination,**roots)
+            lockdown=functools.partial(setup.apply_legacy_lockdown,bases=[base,fixture.base/'unused-ls2'],root_updater=fixture.updater)
+            scans=[0]
+            def refresh():
+                scans[0]+=1
+                if scans[0]==1:raise RuntimeError('scanner disconnected after terminal')
+            with patch.object(setup,'ROOT_UPDATER_TRANSACTION',fixture.updater/'transaction.json'),patch.object(setup,'INSTALLED',fixture.installed),patch.object(setup,'BASE',base),patch.object(setup,'atomic',atomic),patch.object(setup,'infrastructure_destination',destination),patch.object(setup,'apply_legacy_lockdown',lockdown),patch('startup_hook.install_link'):
+                from installation import device_operation
+                read=lambda path: json.loads((state/'bootstrap.json').read_text()) if path.name=='bootstrap.json' and 'system-updater' in str(path) else None
+                with self.assertRaisesRegex(RuntimeError,'scanner'):
+                    with device_operation('system-bootstrap',ownership=fixture.owner,read=read):setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)
+                original=fixture.owner.status()['id']
+                self.assertFalse(fixture.owner.status()['terminal'])
+                saved=(state/'registration.json').read_bytes()
+                with device_operation('system-bootstrap',recovery=True,ownership=fixture.owner,read=read) as lease:
+                    self.assertEqual(lease['id'],original)
+                    self.assertTrue(setup.resume(bundle,state=state,installed=fixture.installed,base=base,hook=hook,refresh=refresh)['installed'])
+                self.assertTrue(fixture.owner.status()['terminal'])
+                self.assertEqual((state/'registration.json').read_bytes(),saved)
+                self.assertEqual(json.loads((state/'bootstrap.json').read_text())['phase'],'complete')
+            fixture.assert_preserved(self)

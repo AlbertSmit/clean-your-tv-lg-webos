@@ -85,7 +85,7 @@ def boot():
 def _boot():
     c = coordinator()
     if c is None or later_legacy_trial(c): return None
-    intent = c.store.read(); identity = boot_identity(); failsafe = d.FAILSAFE.exists()
+    intent = c.store.read(); identity = boot_identity(); failsafe = d.FAILSAFE.exists() or not d.home_present()
     if not failsafe and identity == intent['boot']:
         if intent['phase'] == 'stopping':
             c.shutdown(intent)

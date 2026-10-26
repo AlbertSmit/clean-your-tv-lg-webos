@@ -70,6 +70,20 @@ def github(path):
     return json.loads(subprocess.check_output(['gh', 'api', 'repos/Razdva122/clean-your-tv-lg-webos/' + path]))
 
 
+def selected_homebrew_approval(root=ROOT):
+    path=root/'homebrew/release.json'
+    if not path.exists(): return None
+    approval=json.loads(path.read_text())
+    tag='v'+json.loads((root/'release-versions.json').read_text())['release']
+    if approval.get('release') != tag: return None
+    return approval
+
+
+def validate_homebrew_job(jobs, accepted):
+    if accepted and not any(job['name']=='homebrew' and job['conclusion']=='success' for job in jobs):
+        raise ValueError('Accepted Homebrew installer requires a successful exact candidate build')
+
+
 def resolve_build_source(commit, build_run=None):
     if build_run:
         run = github('actions/runs/' + str(build_run))
@@ -81,7 +95,9 @@ def resolve_build_source(commit, build_run=None):
         run = max(runs, key=lambda item: item['id'])
     validate_build_run(run, commit)
     flow = runpy.run_path(str(Path(__file__).with_name('release-flow.py')))
-    flow['validate_build_jobs'](github('actions/runs/' + str(run['id']) + '/jobs?filter=latest&per_page=100')['jobs'])
+    jobs=github('actions/runs/' + str(run['id']) + '/jobs?filter=latest&per_page=100')['jobs']
+    flow['validate_build_jobs'](jobs)
+    validate_homebrew_job(jobs, selected_homebrew_approval() is not None)
     return run
 
 
@@ -146,6 +162,22 @@ def verify_android_package(path, report, versions, commit):
         if json.loads(archive.read('assets/cytv-build.json')) != {'schema': 1, 'source_commit': commit, 'versions': versions}:
             raise ValueError('Android embedded source provenance mismatch')
         return verify_embedded(lambda name: archive.read('assets/payload/' + name), versions)
+
+
+def assemble_homebrew(artifacts, output, approval):
+    """Unaccepted CI artifacts never enter the public release asset directory."""
+    if approval is None: return None
+    gate=runpy.run_path(str(ROOT / 'scripts/homebrew-manifest.py'))
+    folder=artifacts/'homebrew-candidate'
+    metadata=(folder/gate['MANIFEST_NAME']).read_bytes()
+    value=json.loads(metadata)
+    name=value['ipkUrl'].rsplit('/',1)[1]
+    package.safe_name(name)
+    raw=(folder/name).read_bytes()
+    gate['verify_accepted'](raw,metadata,approval)
+    (output/name).write_bytes(raw)
+    (output/gate['MANIFEST_NAME']).write_bytes(metadata)
+    return approval
 
 
 def assemble(artifacts, output, versions, commit, build_commit=None):
@@ -232,6 +264,8 @@ def assemble(artifacts, output, versions, commit, build_commit=None):
             'ci_test_run': {'id': os.environ.get('GITHUB_RUN_ID'), 'conclusion': 'success'},
             'embedded_payload_verification': checks,
             'hardware_evidence': 'Automated tests and package verification; this exact release still requires TV acceptance testing.'}
+    approval = assemble_homebrew(artifacts, output, selected_homebrew_approval())
+    if approval is not None: info['homebrew'] = approval
     (output / 'BUILD-INFO.json').write_text(json.dumps(info, indent=2) + '\n')
     (output / 'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n' for p in sorted(output.iterdir())))
     print('Prepared', len(list(output.iterdir())), 'unsigned release assets from', commit)

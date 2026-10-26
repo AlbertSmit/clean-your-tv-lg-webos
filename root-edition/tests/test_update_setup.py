@@ -26,6 +26,12 @@ class SetupTests(unittest.TestCase):
             out=Path(temp).resolve()/'bundle';module.build(out)
             manifest=verify_bundle(out)
             self.assertIn('updater/core.py',manifest['files'])
+            self.assertIn('installation.py',manifest['files'])
+            result=subprocess.run([sys.executable,'-I','-B','-c',
+                'import sys;sys.path.insert(0,sys.argv[1]);import installation,install_driver,install_device,system_setup,root_package;'
+                'assert installation.Store.__module__ == "updater.store"',str(out)],
+                cwd=Path(temp),capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('root-updater.ipk',manifest['files'])
             self.assertIn('updater/ca-bundle.crt',manifest['files'])
             self.assertIn('updater/ca-LICENSE.txt',manifest['files'])
@@ -38,6 +44,9 @@ class SetupTests(unittest.TestCase):
             with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
                 prefix = 'usr/palm/applications/com.cleanyourtv.root.updater/'
                 version = json.loads((ROOT.parent/'release-versions.json').read_text())['updater']
+                import startup_hook
+                self.assertEqual(archive.extractfile(prefix+'startup.sh').read(),startup_hook.packaged_content('com.cleanyourtv.root.updater'))
+                self.assertEqual(archive.getmember(prefix+'startup.sh').mode,0o755)
                 self.assertEqual(json.loads(archive.extractfile(prefix+'appinfo.json').read())['version'], version)
                 self.assertEqual(json.loads(archive.extractfile('usr/palm/packages/com.cleanyourtv.root.updater/packageinfo.json').read())['version'], version)
                 self.assertEqual(json.loads(archive.extractfile('usr/palm/services/com.cleanyourtv.root.updater.service/package.json').read())['version'], version)
@@ -73,3 +82,45 @@ class SetupTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class HostBoundaryTests(unittest.TestCase):
+    def test_distributed_host_product_entrypoints_verify_without_posix_device_modules(self):
+        def source(name):
+            spec=importlib.util.spec_from_file_location('host_boundary_'+name,ROOT/(name+'.py'))
+            module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();updater=root/'updater';baseline=root/'root'
+            source('build').build(baseline);source('build_updater').build(updater)
+            code='''import sys,builtins,subprocess,runpy
+sys.path.insert(0,sys.argv[1])
+original=builtins.__import__
+def importing(name,*args,**kwargs):
+ if name in ('fcntl','termios'):raise ImportError('device-only POSIX module on Windows-like host')
+ return original(name,*args,**kwargs)
+builtins.__import__=importing
+calls=[]
+def transport(args,**kwargs):calls.append(args)
+subprocess.run=transport
+from updater.bootstrap import verify_bundle
+import setup
+import updater.package as device_package
+real_os=device_package.os
+class NoDeviceFlags:
+ def __getattr__(self,name):
+  if name in ('O_NOFOLLOW','O_NONBLOCK'):raise AttributeError(name)
+  return getattr(real_os,name)
+device_package.os=NoDeviceFlags()
+verify_bundle(sys.argv[1],reader=setup.bundle_bytes)
+setup.execute('install','living-room',sys.argv[2],updater_bundle=sys.argv[1],operation='a'*32,run=transport)
+assert 'install_driver.py install' in calls[-1][-1]
+assert not any('deploy.py install' in str(call) for call in calls)
+updater=sys.argv[1];baseline=sys.argv[2]
+controller=runpy.run_path(updater+'/setup-updater.py')
+sys.argv=['setup-updater','--bundle',updater,'--baseline',baseline,'--ssh','living-room','--apply','--operation','b'*32]
+controller['main']()
+assert '--operation '+('b'*32) in calls[-1][-1]
+print('host setup product verification without fcntl/termios: OK')
+'''
+            result=subprocess.run([sys.executable,'-I','-B','-c',code,str(updater),str(baseline)],cwd=root,capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('without fcntl/termios: OK',result.stdout)

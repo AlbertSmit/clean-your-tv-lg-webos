@@ -223,6 +223,11 @@ def download(meta, name, folder):
     return raw
 
 
+def verify_homebrew_approval(build, committed):
+    if build.get('homebrew') is not None and build['homebrew'] != committed:
+        raise ValueError('Homebrew approval differs from committed source')
+
+
 def bundles(meta, folder):
     folder.mkdir()
     build = json.loads(download(meta, 'BUILD-INFO.json', folder))
@@ -234,6 +239,9 @@ def bundles(meta, folder):
     content = json.loads(gh('api', 'repos/' + REPO + '/contents/release-versions.json?ref=' + commit))
     if json.loads(base64.b64decode(content['content'])) != build['versions']:
         raise ValueError('Release versions differ from committed source')
+    if build.get('homebrew') is not None:
+        content = json.loads(gh('api', 'repos/' + REPO + '/contents/homebrew/release.json?ref=' + commit))
+        verify_homebrew_approval(build, json.loads(base64.b64decode(content['content'])))
     versions = build['versions']
     validate_versions(versions)
     home_name = 'clean-your-tv-no-root-' + versions['home'] + '.zip'

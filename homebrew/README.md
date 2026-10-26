@@ -90,7 +90,11 @@ version, originating release and exact acceptance record. No independent publish
 
 `assemble-release.py` verifies accepted bytes before copying them; existing
 SHA256SUMS generation includes both manifest and IPK. `prepare-release.py` verifies
-accepted Homebrew artifacts again before existing signed-feed preparation. On a
+accepted Homebrew artifacts again before existing signed-feed preparation.
+Signing and publication also require the approval in BUILD-INFO to equal
+`homebrew/release.json` at its verified source commit; mutable release metadata
+cannot independently grant acceptance. Keep the originating acceptance record
+unchanged while carrying that installer across unrelated releases. On a
 later unrelated release, it carries the previously verified acceptance record,
 manifest and IPK forward unchanged if no new installer is selected. Embedded
 product versions remain those of the accepted installer, not the newer project

@@ -32,6 +32,9 @@ function verifySystemRelease(feed,build,assets,key=fs.readFileSync(path.join(__d
  }
  return manifest;
 }
+function verifyHomebrewApproval(build,committed){
+ if(!require('node:util').isDeepStrictEqual(build.homebrew,committed))throw Error('homebrew-source-approval-mismatch');
+}
 function verifyHomebrewRelease(folder,build){
  const file=path.join(folder,'homebrew-manifest.json');
  if(!build.homebrew){if(fs.existsSync(file))throw Error('unaccepted-homebrew-asset');return null;}
@@ -67,6 +70,9 @@ function main(args){
   const homebrewAssets=releaseAssets.filter(a=>a.name==='homebrew-manifest.json'||a.name.startsWith('com.cleanyourtv.installer_'));
   if(!build.homebrew&&homebrewAssets.length)throw Error('unaccepted-homebrew-asset');
   if(build.homebrew){
+   if(!/^[a-f0-9]{40}$/.test(build.source_commit||''))throw Error('homebrew-source-commit-missing');
+   const sourceApproval=JSON.parse(gh(['api','repos/Razdva122/clean-your-tv-lg-webos/contents/homebrew/release.json?ref='+build.source_commit]));
+   verifyHomebrewApproval(build,JSON.parse(Buffer.from(sourceApproval.content,'base64').toString('utf8')));
    gh(['release','download',tag,'--pattern','homebrew-manifest.json','--pattern','com.cleanyourtv.installer_*.ipk','--dir',folder]);
    const installer=verifyHomebrewRelease(folder,build);
    if(homebrewAssets.length!==2||!homebrewAssets.some(a=>a.name===installer.filename))throw Error('unexpected-homebrew-assets');
@@ -105,5 +111,5 @@ function main(args){
   if(option!=='--check-only')process.stdout.write(gh(['release','edit',tag,'--draft=false','--latest']));
  }finally{fs.rmSync(folder,{recursive:true,force:true});}
 }
-module.exports={verifyRootRelease,verifyHomeRelease,verifySystemRelease,verifyHomebrewRelease,verifyHomebrewOrigin};
+module.exports={verifyRootRelease,verifyHomeRelease,verifySystemRelease,verifyHomebrewRelease,verifyHomebrewOrigin,verifyHomebrewApproval};
 if(require.main===module){try{main(process.argv.slice(2));}catch(error){process.stderr.write(String(error.message)+'\n');process.exitCode=1;}}

@@ -183,3 +183,18 @@ assert.equal(calls,2);
 """
             result=subprocess.run(['node','-e',code,directory],cwd=ROOT,capture_output=True,text=True)
             self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_release_approval_must_equal_the_committed_source_record(self):
+        import subprocess
+        approval=self.accepted(self.manifest())
+        self.prepare['verify_homebrew_approval']({'homebrew':approval},approval)
+        with self.assertRaises(ValueError):self.prepare['verify_homebrew_approval']({'homebrew':approval},{**approval,'ipk_sha256':'0'*64})
+        code="""
+const assert=require('assert/strict'),verify=require('./scripts/publish-release.cjs').verifyHomebrewApproval;
+const approval={schema:1,release:'v9.8.7',version:'1.2.3',ipk_sha256:'exact',manifest_sha256:'exact',hardware_acceptance:'record',human_review:'record'};
+verify({homebrew:approval},approval);
+assert.throws(()=>verify({homebrew:approval},{...approval,ipk_sha256:'forged'}),/homebrew-source-approval-mismatch/);
+assert.throws(()=>verify({homebrew:approval},null),/homebrew-source-approval-mismatch/);
+"""
+        result=subprocess.run(['node','-e',code],cwd=ROOT,capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)

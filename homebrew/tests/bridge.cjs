@@ -16,6 +16,22 @@ async function rejects(fn){var failed=false;try{await fn();}catch(e){failed=true
  assert.equal(calls[0].body.command,'/usr/bin/node /media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/bootstrap.js install --operation '+ID+' --candidate '+SHA+' --prepare-supervisor');
  await bridge.status(ID);assert(calls[1].body.command.endsWith('status --operation '+ID+' --verify-current'));
  await bridge.resume(ID,'remove');assert(calls[2].body.command.endsWith('remove --operation '+ID+' --resume'));
+ var candidateReads=0,operationReads=0,supervisorReads=0,migrateReads=0;
+ var accessor={};
+ Object.defineProperties(accessor,{
+  operation:{enumerable:true,get:function(){operationReads++;return operationReads===1?ID:'; printf OPERATION_INJECTION';}},
+  candidate:{enumerable:true,get:function(){candidateReads++;return candidateReads<=2?SHA:'; printf BRIDGE_INJECTION';}}
+ });
+ var beforeAccessor=calls.length;await bridge.start(accessor);
+ assert.equal(candidateReads,1,'candidate getter is read once before validation and construction');
+ assert.equal(operationReads,1);
+ assert.equal(calls.length,beforeAccessor+1);
+ assert.equal(calls[calls.length-1].body.command,'/usr/bin/node /media/developer/apps/usr/palm/applications/com.cleanyourtv.installer/bootstrap.js install --operation '+ID+' --candidate '+SHA);
+ await bridge.start({operation:ID,candidate:SHA,get prepareSupervisor(){supervisorReads++;return supervisorReads===1?false:'; printf FLAG_INJECTION';},get migrate(){migrateReads++;return migrateReads===1?false:true;}});assert.equal(supervisorReads,1);assert.equal(migrateReads,1);assert(calls[calls.length-1].body.command.endsWith('--candidate '+SHA));
+ var inspectReads=0;await bridge.inspect({get prepareSupervisor(){inspectReads++;return inspectReads===1?false:true;}});assert.equal(inspectReads,1);assert(calls[calls.length-1].body.command.endsWith(' inspect'));
+ var beforeCoercion=calls.length,coercions=0,coercible={toString:function(){coercions++;return SHA+'; printf COERCION_INJECTION';}};
+ for(var objectOptions of [{operation:ID,candidate:coercible},{operation:coercible,candidate:SHA},{operation:ID,candidate:SHA,prepareSupervisor:coercible},{operation:ID,candidate:SHA,migrate:coercible}])await rejects(function(){return bridge.start(objectOptions);});
+ assert.equal(calls.length,beforeCoercion,'coercible objects never reach HBC');assert.equal(coercions,0,'tokens must remain validated primitives');
  bridge=loadBridge({returnValue:true,stdout:'{}'});await rejects(function(){return bridge.inspect();});
  bridge=loadBridge({returnValue:false,errorText:'Unknown method'});await rejects(function(){return bridge.inspect();});
  bridge=loadBridge({returnValue:true,stdoutString:'private diagnostics'});await rejects(function(){return bridge.inspect();});

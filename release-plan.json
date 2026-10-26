@@ -22,7 +22,7 @@
         12,
         68
       ],
-      "summary": "Parse source-installer TV Node output without CLI banners and preserve failed probes; partial #12/#68, with fonts and underlying Helper-status transport unresolved"
+      "summary": "Parse source-installer TV Node output without CLI banners and preserve failed probes; partial #12/#68, with fonts handled separately by #72 and underlying Helper-status transport unresolved"
     },
     {
       "pr": 71,
@@ -30,6 +30,13 @@
         12
       ],
       "summary": "Preserve Android maintenance SSH ports and show unknown Home status with visible focus; underlying C5 status transport and device acceptance remain pending"
+    },
+    {
+      "pr": 72,
+      "issues": [
+        68
+      ],
+      "summary": "Ship static Outfit weights for legacy webOS in Home and Root Home; partial #68, awaiting LM6370PSB visual acceptance and Helper-unavailable diagnostics"
     }
   ],
   "excluded": [],

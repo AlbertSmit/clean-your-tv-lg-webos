@@ -18,8 +18,8 @@ PR #74 implementation source7b8738bc passed full local automated checks
 actual Helper Node0.12.2 and bootstrap Node8, reproducible IPK and scoped review.
 A subsequent test-only portability correction28d1aeb5 replaces macOS-only
 /private/tmp with tempfile.gettempdir(); nine targeted regressions passed and
-Linux/macOS CI passed. The separate ARM job and combined versioned candidate
-verification must be recorded independently. These earlier checks do not approve
+Linux/macOS CI passed. Implementation Linux/macOS/ARM CI subsequently passed at28d1aeb5. Combined
+versioned candidate verification must be recorded independently. These earlier checks do not approve
 new versioned artifacts or certify a TV.
 
 ## Required supervised record

@@ -44,6 +44,10 @@ or Homebrew catalog availability is claimed.
   Installer separately from product updates; removing Installer leaves the
   installed product. Publication and catalog acceptance remain gated below.
 
+- #75: synchronized component/service versions and explicit pending acceptance;
+  isolate the legacy CLI test from local build outputs. The inventory includes
+  this metadata PR when it merges into the candidate.
+
 No telemetry blocking, rotating wallpaper or unrelated device issue is claimed
 fixed by this candidate. Included issues remain open where their original report
 or requested device confirmation remains unresolved.

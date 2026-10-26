@@ -15,6 +15,14 @@
         24
       ],
       "summary": "Prepare non-debuggable Android builds and preserve pending prompts"
+    },
+    {
+      "pr": 70,
+      "issues": [
+        12,
+        68
+      ],
+      "summary": "Parse source-installer TV Node output without CLI banners and preserve failed probes; Android diagnostics, fonts and Helper availability in #12/#68 remain unresolved"
     }
   ],
   "excluded": [],

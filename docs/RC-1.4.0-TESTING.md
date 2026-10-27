@@ -66,6 +66,31 @@ expected/actual behavior and reviewed redacted evidence. A package install, RPC
 success or settings restoration does not establish input compatibility or sound.
 Do not transplant old acceptance into this candidate's `acceptance` field.
 
+## Root 0.4.0 transition regression (#111)
+
+Supervised C3 preparation on source `3eef546b` stopped before Root removal:
+the coordinator required the new `audio_recovery.py` in the complete published
+0.4.0 runtime. System/Root Updaters had already been disabled. The original
+request and private off-TV backup remain intact; supported restore returned LG
+Home, confirmed by the owner with arrows/OK/volume. Root intent is disabled,
+recovery integrity verifies, and all application versions remain unchanged.
+This is a preparation failure, not new-runtime acceptance. Do not use that older
+candidate to replace Root 0.4.0.
+
+The corrected coordinator must bind the installed release metadata and verify
+its exact version-specific runtime inventory against both bundle and recovery
+proof, before disabling updaters and again before invoking the old driver. A
+current-version missing file, altered digest, foreign app/package or unsupported
+historical closure must fail closed.
+
+An already retained original request requires reviewed continuation with the
+same operation/lease and immutable request payload. Prove there is no live
+worker, no uncertain package submission and no Root removal submission. Use the
+complete separately verified trusted coordinator closure; never patch installed
+runtime, the old worker snapshot or completion receipts. Record old request and
+new recovery-code identities separately. Fresh exact-source installers and all
+remaining hardware checks are still required before publication.
+
 ## Existing Root installations and rollback
 
 Read [Root Home initialization](development/ROOT-HOME-READBACK.md) and

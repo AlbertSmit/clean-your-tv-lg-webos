@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -375,15 +376,36 @@ class LocalDevice:
         for name in support:
             if files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)):
                 raise ValueError('root_recovery_support_mismatch')
+        release_raw=safe_bytes(ROOT/'release.json',limit=65536,uid=0)
+        if files.get('release.json')!=sha(release_raw):
+            raise ValueError('root_recovery_release_mismatch')
+        release=json.loads(release_raw)
+        version=release.get('version') if isinstance(release,dict) else None
+        if (not isinstance(version,str) or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}',version)
+                or release.get('application_id')!=APP
+                or bundle.get('package')!=APP+'_'+version+'_all.ipk'
+                or bundle['package'] not in files):
+            raise ValueError('root_recovery_release_identity_mismatch')
+        expected=set(deploy.RUNTIME_FILES)
+        # Published Root 0.4.0 predates the optional audio recovery module.
+        # Do not derive executable requirements from a newer candidate alone.
+        if version=='0.4.0':
+            expected.remove('audio_recovery.py')
+        runtime_names={name[len('runtime/'):] for name in files if name.startswith('runtime/')}
+        if runtime_names!=expected:
+            raise ValueError('root_recovery_runtime_inventory_mismatch')
         proof=read_journal(ROOT/'recovery-provision.json')
         if proof is not None:
             if proof.get('version')!=1 or proof.get('mode')!='recovery-only' or not isinstance(proof.get('files'),dict):
                 raise ValueError('root_recovery_protocol_unknown')
-            runtime={name:proof['files'].get(str(ROOT/'runtime'/name)) for name in deploy.RUNTIME_FILES}
+            prefix=str(ROOT/'runtime')+'/'
+            if {name[len(prefix):] for name in proof['files'] if name.startswith(prefix)}!=expected:
+                raise ValueError('root_recovery_runtime_inventory_mismatch')
+            runtime={name:proof['files'].get(str(ROOT/'runtime'/name)) for name in expected}
         else:
-            runtime={name:files.get('runtime/'+name) for name in deploy.RUNTIME_FILES}
+            runtime={name:files.get('runtime/'+name) for name in expected}
         for name,digest in runtime.items():
-            if digest!=sha(safe_bytes(ROOT/'runtime'/name,uid=0)):
+            if digest!=files.get('runtime/'+name) or digest!=sha(safe_bytes(ROOT/'runtime'/name,uid=0)):
                 raise ValueError('root_recovery_runtime_mismatch')
         Device.require_home_resume_runtime(ROOT)
 
@@ -472,6 +494,9 @@ class LocalDevice:
         if 'initial_apps' not in record:
             record['initial_apps']=sorted(current);record['system_needed']=supervisor in current or os.path.lexists(SUPERVISOR);journal.write(name,record)
         apps=set(record['initial_apps'])
+        # Authenticate the retained executable closure before disabling updaters.
+        # root_remove validates it again immediately before invocation.
+        if APP in current:self.validate_root_driver()
         if legacy in current:
             status=self.legacy_status().get('result')
             if not isinstance(status,dict) or 'transaction' not in status:raise ValueError('legacy_updater_unknown')

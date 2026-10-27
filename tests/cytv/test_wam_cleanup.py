@@ -1,4 +1,5 @@
 import inspect
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -43,6 +44,7 @@ class CleanupTests(unittest.TestCase):
             with self.subTest(reply=reply), patch.object(wam, '_run', return_value=reply):
                 with self.assertRaises(UserError): wam.inspect(remote)
 
+    @unittest.skipUnless(os.name == 'posix', 'Requires POSIX shell fixture')
     def test_real_inspection_is_read_only_and_missing_caches_are_zero(self):
         self.assertTrue(hasattr(wam, 'INSPECT'), 'Native cache inspection is missing')
         with tempfile.TemporaryDirectory() as directory:

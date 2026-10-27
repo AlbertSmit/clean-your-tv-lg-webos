@@ -226,3 +226,7 @@ In the unpublished 1.4.0 candidate, an interrupted No-root installation also off
 **Unreleased — WAM:** `cytv clean-wam-cache --edition root`. Only cache and codecache are requested. Session Storage, cookies, Local Storage, Service Worker and databases are excluded. Close TV apps first. Cached data will be downloaded or rebuilt; the next app launch may be slower. [WAM](../WAM-CLEANUP.md).
 
 You can cancel and free space yourself. Use the manual cleanup guide and recheck /var/lib; removing apps may free a different partition. **Session Storage (SSH):** Close TV apps first. This deletes app session state and may sign you out or lose unsaved work. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+Unreleased Root cold-start correction: with Home control enabled and LG Power On Screen set to Home, a healthy startup can request Clean once if Live TV or LG Home is still visible. An already visible app is preserved at the final screen check; automatic presentation is not retried. Explicit off and triple-Home stay off. The corrected retained runtime needs checked setup/update; an app-only update is insufficient. Device acceptance remains pending.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

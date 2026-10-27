@@ -201,3 +201,7 @@ Home 設定 → HDMI 聲音提供 eARC 重新連接和已確認的 HDMI 輸出�
 **尚未發佈 — WAM:** `cytv clean-wam-cache --edition root`. 只請求 cache 和 codecache。不會清理 Session Storage、cookies、Local Storage、Service Worker 和 databases。 請先關閉電視應用程式。快取會重新下載或建立；下次啟動可能需要更多時間。 [WAM](../WAM-CLEANUP.md).
 
 可以取消並自行清理空間。請按手動指南操作並再次檢查 /var/lib；刪除應用程式可能只清理其他分區。 **Session Storage (SSH):** 請先關閉電視應用程式。這會刪除工作階段狀態，可能登出帳號或遺失未儲存的資料。 [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+尚未發布的 Root 冷啟動修正：啟用 Home 控制且 LG 開機畫面設為 Home 時，保護檢查成功後，若仍顯示電視直播或 LG Home，可請求開啟 Clean 一次。最後一次畫面檢查時已顯示的其他應用程式會保留，不會重試。手動關閉及連按三次 Home 的緊急關閉狀態保持不變。需要透過已驗證的安裝或更新替換私有執行環境，僅更新應用程式並不足夠。修正版的電視驗證仍待完成。
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

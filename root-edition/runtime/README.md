@@ -39,10 +39,27 @@ state instead of using this Root runtime.
 
 A confirmed normal shutdown retains the Home override, generated profile and transaction binding so bootd can select Clean Your TV as its first app. Startup recovery still restores the old transaction before arming fresh health protection. Explicit exit, input failure without a shutdown signal, and failsafe recovery restore LG Home.
 
-Boot recovery rearms protection without issuing a second Home launch after
-readiness. Native boot presentation uses the retained profile; reopening Home
-late would interrupt an app the user already selected during startup. Manual
-enable and ordinary Home routing retain their explicit user-requested behavior.
+Unreleased cold-start correction: startup identity combines the kernel UUID with
+one private volatile session nonce, rather than clock-dependent `btime`. The
+nonce and its lock live beside the normal-start marker in
+`/tmp/clean-your-tv-root-boot`; creation is serialized, records are ownership/type
+checked and atomically published, and duplicate callbacks reuse the identity.
+The supervised C3 AC-off/snapshot test cleared an inert `/tmp` probe. This
+lifetime assumption requires verification on other snapshot firmware; kernel UUID
+reuse alone does not establish a new session. Corrupt/indirect session records
+are rejected, not silently reset.
+
+After a healthy guarded restart, the dispatcher makes one optional foreground
+request only for normal active hardware startup, LG `homeAutoLaunch=on`, and a
+final foreground read showing stock Home or Live TV. An already visible user app
+or Clean is left alone. Missing/slow optional APIs do not disable healthy Root.
+These calls use a 0.5-second reply deadline (up to another 0.5 second for child
+termination cleanup); no operation lock is held over launch, so an explicit off
+can complete during an in-flight request. There is no retry after an unknown
+launch outcome or duplicate boot callback. Foreground read and launch are separate
+platform calls, so a user app switch after that last read can race the one request.
+Manual enable and short Home retain their existing behavior. See
+[cold-start investigation and acceptance](../../docs/development/ROOT-COLD-BOOT.md).
 
 Runtime state is `/var/lib/clean-your-tv-root`; owned profile is `/var/webos-profile/override/clean-your-tv-root.json`. Both directories must be root-owned and not group/world writable, and must reside on the same filesystem for crash-safe hard-link publication. Runtime never edits app files, stock libraries, zoom behavior, or the existing no-root launcher.
 

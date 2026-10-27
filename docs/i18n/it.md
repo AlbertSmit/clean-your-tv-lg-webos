@@ -221,3 +221,7 @@ Nel candidato 1.4.0 non ancora pubblicato, anche un’installazione No-root inte
 **Non pubblicato — WAM:** `cytv clean-wam-cache --edition root`. Sono richiesti solo cache e codecache. Session Storage, cookie, Local Storage, Service Worker e database sono esclusi. Chiudi le app TV. La cache sarà scaricata o ricreata; il prossimo avvio può essere più lento. [WAM](../WAM-CLEANUP.md).
 
 Puoi annullare e liberare spazio da solo. Segui la guida e ricontrolla /var/lib; rimuovere app può liberare un'altra partizione. **Session Storage (SSH):** Chiudi prima le app del TV. Lo stato delle sessioni sarà eliminato; potresti perdere accessi o lavoro non salvato. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+Correzione Root dell’avvio a freddo non ancora pubblicata: con il controllo Home attivo e LG impostato sulla schermata Home all’accensione, un avvio protetto può aprire Clean una volta se sono ancora visibili TV in diretta o LG Home. Un’app visibile all’ultimo controllo viene mantenuta; nessun nuovo tentativo. La disattivazione esplicita e tre pressioni Home restano disattivate. Serve un’installazione/aggiornamento verificato del runtime privato; aggiornare solo l’app non basta. La verifica sul televisore resta da completare.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

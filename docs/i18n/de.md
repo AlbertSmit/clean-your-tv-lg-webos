@@ -232,3 +232,7 @@ Im unveröffentlichten Kandidaten 1.4.0 bietet auch eine unterbrochene No-root-I
 **Noch nicht veröffentlicht — WAM:** `cytv clean-wam-cache --edition root`. Nur cache und codecache werden angefordert. Session Storage, Cookies, Local Storage, Service Worker und Datenbanken sind ausgeschlossen. Zuerst TV-Apps schließen. Cache-Daten werden neu geladen oder erstellt; der nächste App-Start kann länger dauern. [WAM](../WAM-CLEANUP.md).
 
 Sie können abbrechen und selbst Platz freigeben. Anleitung beachten und /var/lib erneut prüfen; Apps können auf einer anderen Partition liegen. **Session Storage (SSH):** Zuerst TV-Apps schließen. App-Sitzungszustand wird gelöscht; Abmeldung oder Verlust ungespeicherter Arbeit ist möglich. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+Noch unveröffentlichte Root-Kaltstartkorrektur: Wenn die Home-Steuerung aktiv und bei LG der Home-Startbildschirm gewählt ist, kann Clean nach erfolgreicher Schutzprüfung einmal geöffnet werden, falls noch Live-TV oder LG Home sichtbar ist. Eine bei der letzten Bildschirmprüfung sichtbare App bleibt erhalten; es gibt keine Wiederholung. Ausgeschaltete Steuerung und der Notausstieg mit dreimal Home bleiben aus. Die private Laufzeit muss über eine geprüfte Einrichtung/Aktualisierung ersetzt werden; ein reines App-Update reicht nicht. Die Geräteprüfung steht noch aus.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

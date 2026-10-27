@@ -96,6 +96,7 @@ jobs:
           python scripts/tv_web_build.py --input launcher --output build/legacy-ui
           BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:legacy-ui
           BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:inventory-ui
+          BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:startup-ui
           BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:home-ui
           BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:widgets
       - name: Verify real webOS-style file ownership

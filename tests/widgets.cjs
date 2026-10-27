@@ -30,7 +30,24 @@ function intersects(a, b) {
     await page.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
     await page.locator('.w-np-title').filter({hasText: 'Midnight City'}).waitFor();
     await page.evaluate(() => document.fonts.ready);
-    await page.waitForTimeout(300);
+    async function waitForWidgetGeometry() {
+      await page.waitForFunction(() => {
+        const widgets = document.querySelector('.widgets');
+        const music = document.querySelector('.w-np');
+        const avatar = document.querySelector('.status-avatar img');
+        const style = widgets && getComputedStyle(widgets);
+        const musicStyle = music && getComputedStyle(music);
+        const artwork = document.querySelector('.w-np-art.has-thumb img');
+        return style && style.visibility === 'visible' && style.opacity === '1' &&
+          (style.transform === 'none' || style.transform === 'matrix(1, 0, 0, 1, 0, 0)') &&
+          music && !music.classList.contains('entering') &&
+          (musicStyle.visibility === 'hidden' || musicStyle.opacity === '1' &&
+            (musicStyle.transform === 'none' || musicStyle.transform === 'matrix(1, 0, 0, 1, 0, 0)')) &&
+          (!artwork || artwork.complete && artwork.naturalWidth > 0) &&
+          avatar && avatar.complete && avatar.naturalWidth > 0;
+      });
+    }
+    await waitForWidgetGeometry();
     const bounds = {};
     for (const [name, selector, expected] of [
       ['clock', '.w-clock', {x: 90, y: 468, width: 250, height: 250}],
@@ -82,7 +99,7 @@ function intersects(a, b) {
     assert.equal(await page.locator('.widgets').evaluate(el => getComputedStyle(el).visibility), 'hidden');
     await page.keyboard.press('ArrowUp');
     await page.waitForFunction(() => !document.body.classList.contains('app-grid'));
-    await page.waitForTimeout(250);
+    await waitForWidgetGeometry();
 
     const perWidgetConfig = await page.evaluate(() => localStorage.getItem('cytv-widgets'));
     const focusBeforeToggle = await page.locator('#tiles .focused').getAttribute('data-app-id');
@@ -91,7 +108,7 @@ function intersects(a, b) {
     assert.equal(await page.locator('#btnWidgets').evaluate(el => el.classList.contains('focused')), true);
     assert.equal(await page.locator('#btnWidgets').getAttribute('aria-checked'), 'true');
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(250);
+    await page.locator('.widgets').waitFor({state: 'hidden'});
     assert.equal(await page.locator('#btnWidgets').getAttribute('aria-checked'), 'false');
     assert.equal(await page.locator('.widgets').isVisible(), false);
     assert.equal(await page.locator('#tiles .focused').getAttribute('data-app-id'), focusBeforeToggle);
@@ -123,12 +140,14 @@ function intersects(a, b) {
         return function () { window.widgetWatchStops++; };
       };
       document.dispatchEvent(new Event('visibilitychange'));
-      pushWidgetState({nowPlaying: {playing: true, title: 'Streamed music'}});
     });
+    await page.waitForFunction(() => typeof window.pushWidgetState === 'function');
+    await page.evaluate(() => { pushWidgetState({nowPlaying: {playing: true, title: 'Streamed music'}}); });
     await page.locator('.w-np').waitFor({state: 'visible'});
     await page.evaluate(() => pushWidgetState(null));
     // Stream callbacks must update the UI without polling or visibility events.
     await page.locator('.w-np').waitFor({state: 'hidden'});
+    await waitForWidgetGeometry();
     for (const [name, selector] of [['clock', '.w-clock'], ['weather', '.w-wx']]) {
       assert.deepEqual(await page.locator(selector).boundingBox(), bounds[name], 'missing data must preserve ' + name + ' geometry');
     }
@@ -136,10 +155,12 @@ function intersects(a, b) {
       pushWidgetState({nowPlaying: {playing: true, title: 'Kitchen music'}});
     });
     await page.locator('.w-np').waitFor({state: 'visible'});
+    await waitForWidgetGeometry();
     assert.deepEqual(await page.locator('.w-np').boundingBox(), bounds.music, 'music must return to its assigned region');
     await page.evaluate(() => {
       pushWidgetState({nowPlaying: {playing: false, title: 'Paused music'}});
     });
+    await page.locator('.w-np').waitFor({state: 'hidden'});
     assert.equal(await page.locator('.w-np').isVisible(), false, 'paused music must hide the card');
     await page.evaluate(() => {
       localStorage.setItem('cytv-widgets', JSON.stringify({enabled: {clock: false, weather: false, nowPlaying: false}}));

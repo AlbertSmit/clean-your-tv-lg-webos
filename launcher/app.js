@@ -3,6 +3,14 @@
 
   function startupMark(name) { if (window.HomeStartup) window.HomeStartup.mark(name); }
   startupMark('appStart');
+  // Leave a rendering and input opportunity before background service work.
+  function afterRender(callback) {
+    function frame(next) {
+      if (window.requestAnimationFrame) window.requestAnimationFrame(next);
+      else setTimeout(next, 16);
+    }
+    frame(function () { frame(function () { setTimeout(callback, 0); }); });
+  }
 
   function tr(text, params) {
     return window.HomeI18n ? HomeI18n.t(text, params) : text.replace(/\{(\w+)\}/g, function (m, k) {
@@ -574,6 +582,8 @@
       }
     }, true);
     rebuild();
+  }
+  function refreshInventory() {
     startupMark('inventoryRefreshStart');
     AppLibrary.installed(function (apps) {
       if (apps !== null) {
@@ -803,14 +813,6 @@
     topButtonRects = null;
     loadVisibleIcons();
   }
-  function animateTiles() {
-    tiles.forEach(function (e, t) {
-      e.el.classList.remove("shown");
-      setTimeout(function () {
-        e.el.classList.add("shown");
-      }, 60 + 40 * Math.min(t, 16));
-    });
-  }
   // Widgets are decorative tvOS-style surfaces fed by WidgetData (Home Assistant
   // in production, a fake provider in the browser preview). They are not part
   // of the remote-focus grid and never intercept input.
@@ -818,7 +820,7 @@
   var stopWidgetWatch = null;
   var widgetRefreshGeneration = 0;
   function ensureWidgets() {
-    if (typeof window.WidgetData === 'undefined' || !HomeUI.createWidgets || widgets) return;
+    if (HomeUI.preferences().appearance !== 'tvos' || typeof window.WidgetData === 'undefined' || !HomeUI.createWidgets || widgets) return;
     widgets = HomeUI.createWidgets(window.WidgetData);
     startupMark('widgetsCreated');
     window.WidgetData.subscribe(refreshWidgets);
@@ -832,10 +834,13 @@
     widgets.show(preferences.appearance === 'tvos' && preferences.widgetsVisible);
     widgets.update(null);
     if (document.hidden || preferences.appearance !== 'tvos' || !preferences.widgetsVisible) return;
-    stopWidgetWatch = window.WidgetData.watch(function (snap) {
+    afterRender(function () {
       if (generation !== widgetRefreshGeneration) return;
-      widgets.update(snap);
-      startupMark('widgetDataFirst');
+      stopWidgetWatch = window.WidgetData.watch(function (snap) {
+        if (generation !== widgetRefreshGeneration) return;
+        widgets.update(snap);
+        startupMark('widgetDataFirst');
+      });
     });
   }
   function tileBackground(hex) {
@@ -1054,6 +1059,7 @@
   var okPressed = false,
     okHoldTimer = null;
   function restoreFocus() {
+    if (window.HomeHelper && window.HomeHelper.isOpen && window.HomeHelper.isOpen()) return;
     cancelHold();
     closePicker();
     dismissUndo();
@@ -1197,11 +1203,14 @@
   });
   var previousPreferences = HomeUI.preferences();
   HomeUI.subscribe(function (preferences) {
+    ensureWidgets();
+    var widgetPreferencesChanged = preferences.appearance !== previousPreferences.appearance ||
+      preferences.widgetsVisible !== previousPreferences.widgetsVisible;
     var layoutUnchanged = preferences.appearance === previousPreferences.appearance &&
       preferences.reducedEffects === previousPreferences.reducedEffects;
     previousPreferences = preferences;
     if (layoutUnchanged) {
-      refreshWidgets();
+      if (widgetPreferencesChanged) refreshWidgets();
       return;
     }
     topButtonRects = null;
@@ -1224,7 +1233,7 @@
     focusTile(focusedTile);
     if (previousZone === "top") focusTopButton(focusedTopButton);
     if (widgets) widgets.show(preferences.appearance === 'tvos' && preferences.widgetsVisible);
-    refreshWidgets();
+    if (widgetPreferencesChanged) refreshWidgets();
   });
   initializeApps();
   updateClock();
@@ -1238,21 +1247,29 @@
       clearInterval(clockTimer);
     } else {
       updateClock();
+      clearInterval(clockTimer);
       clockTimer = setInterval(updateClock, 1e4);
     }
   });
-  callLuna("luna://com.palm.connectionmanager/getStatus", {
-    subscribe: true
-  }, function (e) {
-    if (false !== e.returnValue || e.wifi || e.wired) {
-      var t = "Wi-Fi";
-      e.wired && "connected" === e.wired.state ? t = tr("Ethernet") : e.wifi && "connected" === e.wifi.state ? t = e.wifi.ssid || "Wi-Fi" : false === e.isInternetConnectionAvailable && (t = tr("Offline"));
-      getElement("wifiLabel").textContent = t;
-    }
+  afterRender(function () {
+    refreshInventory();
+    callLuna("luna://com.palm.connectionmanager/getStatus", {
+      subscribe: true
+    }, function (e) {
+      if (false !== e.returnValue || e.wifi || e.wired) {
+        var t = "Wi-Fi";
+        e.wired && "connected" === e.wired.state ? t = tr("Ethernet") : e.wifi && "connected" === e.wifi.state ? t = e.wifi.ssid || "Wi-Fi" : false === e.isInternetConnectionAvailable && (t = tr("Offline"));
+        getElement("wifiLabel").textContent = t;
+      }
+    });
   });
-  animateTiles();
   focusZone = "none";
   focusTile(0);
+  if (layout.tvos) {
+    tiles.forEach(function (tile, index) { if (index) tile.el.classList.add('tile-entering'); });
+    setTimeout(function () { tiles.forEach(function (tile) { tile.el.classList.remove('tile-entering'); }); }, 180);
+  }
   window.RootLauncherRendered = true;
+  if (window.HomeStartupReady) window.HomeStartupReady();
   if (window.HomeStartup) window.HomeStartup.paintProxy();
 }();

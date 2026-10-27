@@ -44,9 +44,9 @@
     var script = document.createElement('script'); script.src = 'app.js';
     script.onerror = function () { recovery(Error('Launcher could not start')); };
     script.onload = function () {
+      if (window.RootLauncherRendered !== true) { recovery(Error('Launcher did not finish rendering')); return; }
       if (!restored || ['verifying', 'verifying-rollback'].indexOf(restored.phase) < 0) return;
       try {
-        if (window.RootLauncherRendered !== true) throw Error('Launcher did not finish rendering');
         var expected = window.AppLibrary.create(localStorage, window.TV_APPS.apps, window.CONFIG).visible().map(function (a) { return a.id; }).sort();
         var actual = Array.prototype.map.call(document.querySelectorAll('#tiles .item[data-app-id]'), function (el) { return el.getAttribute('data-app-id'); }).sort();
         if (JSON.stringify(expected) !== JSON.stringify(actual)) throw Error('Restored launcher tiles do not match the saved profile');

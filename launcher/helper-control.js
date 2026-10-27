@@ -39,9 +39,9 @@
   document.body.appendChild(panel);
   document.addEventListener('keydown',function(e){if(panel.hidden||[9,13,27,37,38,39,40,461].indexOf(e.keyCode)<0)return;e.preventDefault();e.stopImmediatePropagation();if(e.keyCode===27||e.keyCode===461)return close();if(e.keyCode===13){if(!e.repeat&&!buttons[index].hidden&&!buttons[index].disabled)buttons[index].click();return;}var step=e.keyCode===37||e.keyCode===38||(e.keyCode===9&&e.shiftKey)?-1:1;for(var n=1;n<=buttons.length;n++){var next=(index+step*n+buttons.length)%buttons.length;if(!buttons[next].hidden&&!buttons[next].disabled){focus(next);break;}}},true);
  }
- function open(){if(!panel)build();if(panel.hidden)previous=document.activeElement;panel.hidden=false;focus(0);refresh();}
+ function open(){if(window.HomeStartupReady)window.HomeStartupReady();if(!panel)build();if(panel.hidden)previous=document.activeElement;panel.hidden=false;focus(0);refresh();}
  function launchParams(event){try{var raw=event&&event.detail;if(raw&&raw.params)raw=raw.params;var params=typeof raw==='string'?JSON.parse(raw):raw;if(params&&typeof params.showHelper==='boolean')return params.showHelper;raw=window.PalmSystem&&window.PalmSystem.launchParams;params=typeof raw==='string'?JSON.parse(raw):raw;return params&&params.showHelper===true;}catch(_){return false;}}
  document.addEventListener('webOSRelaunch',function(e){if(launchParams(e))open();});
- window.HomeHelper={open:open};if(launchParams())open();
+ window.HomeHelper={open:open,isOpen:function(){return !!panel&&!panel.hidden;}};if(launchParams())open();
 }());
 });

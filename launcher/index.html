@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="i18n.css">
   <link rel="stylesheet" href="appearance.css">
 </head>
-<body>
+<body class="startup-active">
+  <div id="homeStartup" role="status"><h1 data-i18n="Home">Home</h1></div>
   <!-- Ambient glow in the colour of the focused dock app; two layers so colours crossfade. -->
   <div id="ambientA" class="ambient"></div>
   <div id="ambientB" class="ambient"></div>
@@ -54,6 +55,13 @@
   <div id="toast"></div>
 
   <script src="startup-metrics.js"></script>
+  <script>
+    window.HomeStartupReady = function () {
+      var surface = document.getElementById('homeStartup');
+      if (surface) surface.hidden = true;
+      document.body.classList.remove('startup-active');
+    };
+  </script>
   <script src="config.js"></script>
   <script src="i18n.js"></script>
   <script src="catalogs.js"></script>

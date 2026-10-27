@@ -7,7 +7,8 @@
   function finish(r,ok){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r,ok===true);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?(r.result===undefined?r.state:r.result):null,r.returnValue===true);}catch(_){finish(null);}};b.call((service||'luna://com.cleanyourtv.updater.service/')+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
  }
- function boot(){if(booted)return;booted=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateComplete');var s=document.createElement('script');s.src='app.js';s.onload=function(){
+ function boot(){if(booted)return;booted=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateComplete');window.RootLauncherRendered=false;var s=document.createElement('script');s.src='app.js';s.onerror=function(){systemError(Error('Launcher could not start'));};s.onload=function(){
+  if(window.RootLauncherRendered!==true){systemError(Error('Launcher did not finish rendering'));return;}
   if(systemRestore&&['verifying','verifying-rollback'].indexOf(systemRestore.phase)<0)return;
   // A populated rendered grid is a startup signal, not proof of every TV feature.
   if(!systemRestore&&!document.querySelector('#tiles .item[data-app-id]'))return;
@@ -68,7 +69,7 @@
   finish(!saved);
  });
  }
- function systemError(error){profileError=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateBlocked');window.SystemUpdates.open({edition:'no-root',recovery:true,error:error.message});}
+ function systemError(error){profileError=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateBlocked');if(window.HomeStartupReady)window.HomeStartupReady();var updates=window.SystemUpdates||window.HomeUpdates;if(updates)updates.open({edition:'no-root',recovery:true,error:error.message});}
  if(window.SystemUpdates){
   window.SystemUpdates.rpc('restoreProfile',{edition:'no-root'}).then(function(restored){
    if(!restored){legacy();return;}

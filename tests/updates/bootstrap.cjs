@@ -35,7 +35,7 @@ for(const {version,id='com.gathin.tvhome',status=200,invalid=false,healthy} of [
   document:{...context.document,querySelector:()=>({}),body:{appendChild:s=>{script=s;}}},
   XMLHttpRequest:class{open(method,url){assert.equal(method,'GET');assert.equal(url,'appinfo.json');}send(){this.status=status;this.responseText=invalid?'{broken':JSON.stringify({id,version});this.onload();}},
   PalmServiceBridge:function(){this.cancel=()=>{};this.call=(uri,raw)=>{calls.push([uri,JSON.parse(raw)]);this.onservicecallback(JSON.stringify({returnValue:true,result:{}}));};}};
- run.window=run;vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),run);script.onload();
+ run.window=run;vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),run);run.RootLauncherRendered=true;script.onload();
  assert.deepEqual(calls.filter(c=>c[0].endsWith('/healthy')).map(c=>c[1]),healthy?[{version}]:[]);
 }
 console.log('PASS No-root startup reports the installed app manifest version across releases');
@@ -55,3 +55,14 @@ let rollback=rollbackBoot();assert.equal(rollback.CONFIG.columns,5);assert.equal
 rollbackMemory.set('tvhome.order','edited-after-rollback');rollback=rollbackBoot();assert.equal(rollbackMemory.get('tvhome.order'),'edited-after-rollback');
 rollback=rollbackBoot('1.3.0','stale-rollback');assert.equal(rollbackMemory.get('tvhome.order'),'edited-after-rollback');
 console.log('PASS rollback restores retained local settings once and rejects stale package versions');
+
+// Script failure must expose recovery even on legacy-only installations.
+for (const event of ['onerror','onload']) {
+ let script, cleared=false;const opened=[];
+ const run={...context,HomeI18n:null,SystemUpdates:null,TV_APPS:{apps:[{id:'app'}]},
+  localStorage:{getItem:()=>null},HomeUpdates:{open:options=>opened.push(options)},
+  HomeStartupReady:()=>{cleared=true;},document:{...context.document,body:{appendChild:value=>{script=value;}}}};
+ run.window=run;vm.runInNewContext(fs.readFileSync('launcher/profile-bootstrap.js','utf8'),run);
+ script[event]();assert(cleared);assert.equal(opened.length,1);assert.equal(opened[0].recovery,true);
+}
+console.log('PASS failed or incomplete launcher script exposes legacy recovery');

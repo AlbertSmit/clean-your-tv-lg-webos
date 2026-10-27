@@ -150,6 +150,23 @@ is asserted. See [third-party notices](../THIRD_PARTY_NOTICES.md).
 Browser/build verification does not establish performance or visual fidelity on
 LG 50UP77006LB; physical-TV acceptance remains pending.
 
+The initial HTML shows the existing localized Home heading in a plain system font
+while language and profile checks complete. Settings and the legacy No-root
+updater build their markup on first open; updater RPC entry points and early
+Helper/Root exit handling remain separate classic scripts. Recovery and direct
+Helper entry dismiss the startup surface independently of optional timing metrics.
+The local clock renders immediately. Initial installed-app and connection requests,
+and each widget watch start, wait for two animation frames followed by a timer
+(with timer-only fallbacks). Changed preferences/configuration or visibility
+invalidate pending widget work before it starts. Existing appearance skips unused
+widget markup until tvOS is selected. New tvOS tiles enter together for 160ms;
+the selected tile is visible immediately and inventory refresh reuses tile nodes.
+The `widgetsCreated` milestone is therefore absent during Existing startup.
+Initial `inventoryRefreshStart` now follows the first rendering proxy opportunity.
+These scheduling checks provide rendering/input opportunities, not measured speed
+gains. Cold boot, standby return, first remote input, direct Helper entry and
+recovery still require physical-TV acceptance on LG 50UP77006LB.
+
 ## Regression checks
 
 `npm run test:compat` verifies the ESLint configuration (including rejected browser
@@ -163,6 +180,7 @@ regression on the compiled Home frontend:
 python3 scripts/tv_web_build.py --input launcher --output build/legacy-ui
 npx playwright install chromium
 BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:legacy-ui
+BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:startup-ui
 ```
 
 The browser test disables `inset` and selected JS APIs to reproduce issue #20.
@@ -170,6 +188,9 @@ It checks actual card hit-testing, dimensions, icon fallback, scrolling,
 launch/navigation and full-screen dialogs. This models the reported engine
 limitations in a current browser; it is not an emulator of an entire old TV.
 Hardware confirmation is still required on the original webOS 3.5 device.
+`test:startup-ui` holds profile replies and frame callbacks to verify the startup
+surface, deferred services, stale widget work, lazy panel mounts, recovery before
+status replies, script-load failure and direct Helper input isolation.
 
 ## Helper Node compatibility
 

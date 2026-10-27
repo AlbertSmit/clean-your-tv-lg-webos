@@ -9,6 +9,7 @@
     "test:compat": "node tests/eslint-compat.cjs && node tests/web-build.cjs",
     "test:legacy-ui": "node tests/legacy-launcher.cjs",
     "test:inventory-ui": "node tests/inventory-refresh.cjs",
+    "test:startup-ui": "node tests/startup-flow.cjs",
     "test:home-ui": "node tests/home-appearance.cjs",
     "test:widgets": "node tests/widget-data.cjs && node tests/widgets.cjs"
   },

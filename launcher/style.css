@@ -580,3 +580,8 @@ body.editing .item.moving .name { display:block; opacity:1; transform:none; }
   background: var(--pill-bg);
   border: 2px solid var(--pill-border);
 }
+/* Available before locale/profile requests and independent of optional fonts. */
+#homeStartup { position:fixed; top:0; right:0; bottom:0; left:0; z-index:20; background:#101114; color:#fff; font:32px Arial,sans-serif; display:flex; align-items:center; justify-content:center; }
+#homeStartup h1 { font:inherit; margin:0; }
+#homeStartup[hidden] { display:none; }
+body.startup-active > header, body.startup-active > #viewport, body.startup-active > #hero, body.startup-active > .ambient, body.startup-active > #homeShelf, body.startup-active > #homeStatus, body.startup-active > .widgets { visibility:hidden; }

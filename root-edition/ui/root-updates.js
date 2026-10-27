@@ -211,6 +211,7 @@
     }, true);
   }
   function legacyOpen(options) {
+    if (window.HomeStartupReady) window.HomeStartupReady();
     options = options || {}; if (!panel) build();
     if (panel.hidden) previous = document.activeElement;
     onClose = options.onClose || null;

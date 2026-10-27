@@ -89,6 +89,12 @@ html.home-tvos .item.moving .card { animation: tvos-wiggle 240ms ease-in-out inf
 .appearance-options button[aria-pressed='true'], .appearance-options button[aria-checked='true'] { border-color: #b8d3ff; }
 .appearance-error, .widget-error { color: #ffd1bd; }
 .appearance-error:empty, .widget-error:empty { display: none; }
+
+/* All new tiles enter together; the selected dock tile is ready immediately. */
+@keyframes tvos-tile-enter { from { opacity:.65; } to { opacity:1; } }
+html.home-tvos .item.tile-entering { animation:tvos-tile-enter 160ms ease; }
+html.home-tvos .item.focused { opacity:1 !important; }
+
 html.reduced-effects #stage, html.reduced-effects .item, html.reduced-effects .card,
 html.reduced-effects .name, html.reduced-effects #glass, html.reduced-effects #hero,
 html.reduced-effects header, html.reduced-effects .ambient, html.reduced-effects #homeShelf,

@@ -182,6 +182,8 @@
   function open(value) {
     var request = ++generation, supervisorSeen = false; clearTimeout(timer); options = value || {}; options.edition = options.edition === 'root' ? 'root' : 'no-root';
     if (!panel) build(); if (panel.hidden) previous = document.activeElement; busy = true; polling = false; transaction = offer = null; stickyError = options.error || ''; errorText = checkError = ''; recovery = options.recovery === true; selected = 0;
+    panel.hidden = false; render();
+    if (window.HomeStartupReady) window.HomeStartupReady();
     return rpc('status', {}).then(function (state) {
       if (request !== generation) return;
       supervisorSeen = true; transaction = state; panel.hidden = false; render();

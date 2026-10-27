@@ -96,7 +96,7 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
         }), 'a populated DOM is insufficient: the viewport must not clip the cards');
         const startup = await page.evaluate(() => HomeStartup.snapshot());
         for (const name of ['firstJS', 'languageReply', 'languageReady', 'profileGateStart',
-          'profileGateComplete', 'appStart', 'gridCreated', 'inventoryRefreshStart', 'firstPaintProxy', 'widgetsCreated']) {
+          'profileGateComplete', 'appStart', 'gridCreated', 'inventoryRefreshStart', 'firstPaintProxy']) {
           assert.equal(typeof startup[name], 'number', 'startup milestone: ' + name);
         }
         assert.equal(startup.firstHandledKey, undefined);

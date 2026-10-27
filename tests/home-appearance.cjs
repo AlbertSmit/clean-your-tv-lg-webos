@@ -39,7 +39,7 @@ const artifacts = path.resolve(__dirname, '../build/tests/appearance');
     }) + ';'}));
     await page.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
     await page.waitForFunction(() => document.querySelectorAll('#tiles .item').length === 14);
-    await page.locator('[data-appearance="tvos"]').waitFor({state: 'attached'});
+    assert.equal(await page.locator('[data-appearance]').count(), 0, 'appearance settings mount on first open');
     await page.evaluate(() => { window.originalTiles = Array.from(document.querySelectorAll('#tiles .item')); });
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');

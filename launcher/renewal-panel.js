@@ -2,6 +2,7 @@
 (function(){
  'use strict';
  function tr(s,p){return window.HomeI18n?HomeI18n.t(s,p):s.replace(/\{(\w+)\}/g,function(m,k){return p&&p[k]!==undefined?p[k]:m;});}function ht(s){return window.HomeI18n?HomeI18n.html(s):s;}
+ function build(){
  var panel=document.createElement('section');panel.id='renewalPanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Home settings'));
  panel.setAttribute('aria-modal','true');
  panel.innerHTML=ht([
@@ -126,7 +127,7 @@
  },true);
  window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
  // Mount theme panel after panel is in DOM, then rebuild buttons array
- setTimeout(function(){
+ (function(){
   var container=document.getElementById('themeSection');
   if(container && window.HomeUI)window.HomeUI.mountAppearance(container);
   if(container && window.ThemePanel && window.ThemePanel.mount){
@@ -141,8 +142,10 @@
    buttons=Array.prototype.slice.call(panel.querySelectorAll('button'));
    bindButtons();
   }
- }, 0);
- // No session request, token access or scheduler setup happens on launcher startup.
+ }());
+ }
+ window.RenewalPanel={isOpen:function(){return false;},open:function(){build();window.RenewalPanel.open();}};
+ // Settings markup, cosmetic controls and service requests wait for first open.
 }());
 
 });

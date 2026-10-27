@@ -51,6 +51,27 @@ class HealthTests(IntegrationTests):
    with patch.object(h.time,'monotonic',return_value=issued+2):
     with self.assertRaises(ValueError):h.require_fresh('route-a')
 
+ def test_clock_correction_preserves_health_shutdown_and_normal_gate(self):
+  import shutil
+  import intent_runtime as runtime,boot_gate,shutdown_state
+  self.bp.stop()
+  proc=self.root/'proc';(proc/'sys/kernel/random').mkdir(parents=True)
+  (proc/'sys/kernel/random/boot_id').write_text('snapshot-kernel\n')
+  (proc/'stat').write_text('btime 100\n')
+  session=self.root/'boot';identity=runtime.boot_identity
+  self.intent=dict(self.intent,boot=identity(proc,session))
+  self.store.path.write_text(json.dumps(self.intent))
+  with patch.object(runtime,'boot_identity',side_effect=lambda:identity(proc,session)),patch.object(boot_gate,'ROOT',session),patch.object(shutdown_state,'query',return_value=False):
+   h.publish('route-a',1);shutdown_state.record('route-a');boot_gate.mark()
+   (proc/'stat').write_text('btime 526\n')
+   self.assertEqual(h.require_fresh('route-a')['sequence'],1)
+   self.assertTrue(shutdown_state.stopping('route-a'))
+   self.assertEqual(boot_gate.observation(),(True,False))
+   shutil.rmtree(session)
+   with self.assertRaises(ValueError):h.require_fresh('route-a')
+   self.assertFalse(shutdown_state.stopping('route-a'))
+   self.assertEqual(boot_gate.observation(),(False,False))
+
 if __name__=='__main__':unittest.main()
 
 class GuardianPulseTests(unittest.TestCase):

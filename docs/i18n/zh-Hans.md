@@ -195,3 +195,7 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 尚未发布：专用 Python 检查分别报告 ABI、目录安全和空间不足。首次安装需要 /var/lib 有 320 MiB 可用空间。较大的 WAM Session Storage 可能是原因；清除可能丢失应用会话状态。请参阅[恢复指南](../RECOVERY.md#private-python-and-low-var-space)。
 
 在尚未发布的 1.4.0 候选版中，中断的 No-root 安装也可在**检查电视状态**后使用**恢复并重新安装**。只有确定要移除 Clean Your TV 应用时才确认移除，然后在重新安装前检查版本。如果恢复失败，请保存该次诊断报告并停止操作。电视最初拒绝安装包的原因仍未确定，也尚未确认已修复（#21）。
+
+尚未发布的 Root 冷启动修正：启用 Home 控制且 LG 开机画面设为 Home 时，保护检查成功后，若仍显示电视直播或 LG Home，可请求打开 Clean 一次。最后一次画面检查时已显示的其他应用会保留，不会重试。手动关闭和连按三次 Home 的紧急关闭状态保持不变。需要通过已验证的安装或更新替换私有运行时，仅更新应用不够。修正版的电视验证仍待完成。
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

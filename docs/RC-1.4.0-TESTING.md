@@ -72,3 +72,33 @@ acceptance empty while collecting feedback. After any source change, use fresh
 artifacts and repeat affected device checks. Before making #98 ready, complete the
 documentation pass, hardware/rollback record and exact final-head Linux/macOS,
 Android and all four desktop builds. Then follow [release flow](RELEASE-FLOW.md).
+
+## Required before publication: Root cold boot and first screen (#104)
+
+Source fixes and observer diagnostics are being integrated separately. Existing
+Root 0.4.0 observations do not accept the corrected candidate. Use the exact
+candidate's coherent retained runtime through supported checked setup/update;
+record source/bundle hashes and the TV model/firmware. Keep raw records private.
+
+- [ ] Verify active intent, independent guardian and recovery before power-off.
+- [ ] With LG Power On Screen set to Home, remote off, wait ten seconds, remove AC
+  for thirty seconds, reconnect and turn on. Do not press Home or open an app
+  until recording the first screen. **Expected: Clean appears automatically**;
+  unconfigured channels/Live TV remaining foreground is a failure even if Home works.
+- [ ] After the first-screen observation, open Emby and press short Home.
+  **Expected: Clean**, with active intent, fresh guardian and verified recovery.
+- [ ] Repeat at least three AC-off cycles; retain every failure. Verify a new
+  session identity per cycle and stable identity through early clock correction.
+  Record standby/wake separately; issue #90 remains unresolved by diagnostics alone.
+- [ ] Open Emby as soon as startup permits and leave it visible through the first
+  minute. No delayed Clean relaunch should replace that app. Foreground read and
+  optional launch are separate platform calls; record any concurrent-switch race.
+- [ ] Triple-Home, then cold boot: Root stays off, short Home uses LG routing and
+  Clean does not automatically reactivate. Repeat after explicit settings off.
+- [ ] Confirm arrows/key-up, OK, Back, volume and unrelated controls; no repeated
+  launch loop or late retry after an unavailable/uncertain optional API result.
+
+All boxes remain pending for the new candidate. Keep release acceptance empty
+until genuine results are recorded; do not copy successful stable standby or
+old-source cold-boot results into this matrix. See
+[cold-start evidence and source policy](development/ROOT-COLD-BOOT.md).

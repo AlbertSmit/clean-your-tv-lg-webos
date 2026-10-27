@@ -82,3 +82,19 @@ No main merge, tag, signed feed change or publication is part of preparation.
 After hardware feedback, refresh documentation, commit acceptance honestly,
 rebuild the exact final head on all platforms and finish the normal release gates.
 Public rollback and signed feed verification remain required before shipping.
+
+## Root cold-start correction (unpublished, #104)
+
+The source correction replaces clock-dependent startup identity with a private
+volatile session nonce and makes one optional Clean presentation request after
+healthy hardware startup when native Home auto-launch is on and Live TV/LG Home
+still occupies the foreground. Other visible apps are preserved at the final
+check. Explicit/emergency off is not reset. Separate observer diagnostics retain
+issue #90 as unresolved.
+
+This requires rebuilding and deploying the coherent private runtime; an app-only
+update is insufficient. Physical acceptance of the changed runtime is pending.
+The [mandatory cold-boot matrix](RC-1.4.0-TESTING.md#required-before-publication-root-cold-boot-and-first-screen-104)
+must pass before publication, including first screen without Home, Emby-to-Home,
+repeated AC-off cycles and off/emergency preservation. Existing candidate artifacts
+predate this source and cannot validate or deliver it.

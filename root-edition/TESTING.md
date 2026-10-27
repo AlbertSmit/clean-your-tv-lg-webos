@@ -109,6 +109,12 @@ Permanent-mode supervision is a separate path; test it through `enable` or
 turning **Change Home** on, using the same emergency and fault matrix. No Keep
 confirmation is required by the current normal activation flow.
 
+## Unreleased cold-start correction (#104)
+
+Test initial foreground separately from short Home routing. See the
+[cold-start investigation, source policy and remaining device matrix](../docs/development/ROOT-COLD-BOOT.md).
+The two existing-source AC-off results do not validate the new nonce or optional
+foreground request. Preserve the standby issue #90 limitation and explicit off.
 ## Issue 90: intermittent wake input startup (diagnostic source)
 
 The first failed standby on Root 0.4.0 remains unresolved. Its `input_lost`

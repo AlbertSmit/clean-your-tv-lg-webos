@@ -2,11 +2,11 @@
 import json, os, select, subprocess, time
 from profile_plan import CANDIDATE, STOCK
 
-def call(uri,payload):
+def call(uri,payload,timeout=5):
  # Keep stdin open until a reply. Closing it makes this TV's luna-send exit early.
  p=subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,json.dumps(payload)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
  try:
-  end=time.monotonic()+5; data=b''
+  end=time.monotonic()+timeout; data=b''
   while time.monotonic()<end:
    if not select.select([p.stdout],[],[],max(0,end-time.monotonic()))[0]:break
    chunk=os.read(p.stdout.fileno(),4096)
@@ -20,7 +20,7 @@ def call(uri,payload):
   raise TimeoutError(uri)
  finally:
   if p.poll() is None:p.terminate()
-  try:p.communicate(timeout=1)
+  try:p.communicate(timeout=min(1,timeout))
   except subprocess.TimeoutExpired:p.kill();p.communicate()
 
 def read():

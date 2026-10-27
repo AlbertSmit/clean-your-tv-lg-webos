@@ -213,8 +213,8 @@ class Coordinator:
                     except (OSError,ValueError): time.sleep(.1)
                 self._healthy(expected)
                 intent, effect = self.event(expected,'ready')
-                # bootd presents the retained Home before protection is ready.
-                # Reopening it now would steal focus from an app the user chose.
+                # Rearm protection without a foreground side effect here.
+                # The boot dispatcher separately checks startup and foreground.
                 return dict(intent=intent,effect=effect,trial=result,persistent=True)
             except Exception:
                 current = self.store.read()

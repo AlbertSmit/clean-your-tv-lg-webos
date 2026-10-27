@@ -344,6 +344,7 @@ class LocalDevice:
         tx=Manager(store,device)._load()
         if tx is not None and (tx['phase'] not in ('complete','rolled-back','aborted') or tx.get('homeResumePhase')!=tx['phase']):
             raise ValueError('system_update_requires_recovery')
+        self.supervisor_transaction=tx
         baseline=device._baseline('root')
         # Standalone Root publication is separately proved by current_root(); a
         # historical System Root component cannot override that current writer.
@@ -415,16 +416,20 @@ class LocalDevice:
             if proof is None or not os.path.lexists(SUPERVISOR):
                 raise ValueError('root_recovery_current_provenance_required')
             baseline=self.verify_supervisor()
-            # Only a verified signed publication may replace original bootstrap
-            # executable hashes. A locally captured baseline is not an OTA proof.
-            if 'proof' not in baseline:
+            # Signed bytes alone do not establish a completed writer. The
+            # resumed terminal journal must select this exact verified release.
+            tx=self.supervisor_transaction
+            selected=tx['candidate' if tx['phase']=='complete' else 'prior'] if tx else None
+            if 'proof' not in baseline or selected!=baseline:
                 raise ValueError('root_recovery_current_provenance_required')
             current_root(ROOT,UPDATER,INSTALLED)
             infrastructure=self.supervisor_infrastructure
             if {name[len('runtime/'):] for name in infrastructure if name.startswith('runtime/')}!=expected:
                 raise ValueError('root_recovery_runtime_inventory_mismatch')
             from system_updater.device import Device as SystemDevice
-            SystemDevice(checked_store(SUPERVISOR),code=SUPERVISOR/'code',root_state=ROOT,root_updater=UPDATER,installed=INSTALLED)._root_integrity()
+            device=SystemDevice(checked_store(SUPERVISOR),code=SUPERVISOR/'code',root_state=ROOT,root_updater=UPDATER,installed=INSTALLED)
+            device.require_components()
+            device._root_integrity()
         for name in support:
             original=files.get(name)
             current=sha(safe_bytes(ROOT/name,uid=0))

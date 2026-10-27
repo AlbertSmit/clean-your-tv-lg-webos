@@ -172,7 +172,24 @@ class RetainedRuntimeTests(unittest.TestCase):
         for c in baseline['components']:
             c.pop('url');c['local']=True
             if c['kind']=='infrastructure':c.update(files={n:hashlib.sha256(b).hexdigest() for n,b in infra.items()},absent=[])
+        baseline['release']='v1.4.0'
         store.write('baseline',baseline);store.write('current-root',release)
+        # Match the durable journal and publication written by Manager + finish.
+        identifier='c'*32
+        profile=fixture.up_store.read('profile-'+'f'*32)
+        store.write('profile-'+identifier,profile)
+        from updater.store import encode
+        profile_digest=hashlib.sha256(encode(profile)).hexdigest()
+        done={'intent':True,'submitted':{'accepted':True},'terminal':{'success':True}}
+        untouched={'intent':False,'submitted':None,'terminal':None}
+        store.write('transaction',{'schema':1,'id':identifier,'edition':'root','release':release['release'],
+            'phase':'complete','homeResumePhase':'complete','homeResume':{'status':'skipped'},
+            'prior':baseline,'candidate':release,'created':1,'updated':2,'rollbackAttempted':False,
+            'profile':'profile-'+identifier,'profileDigest':profile_digest,'launched':1,'deadline':121,
+            'components':[{'name':c['name'],'version':c['version'],
+                'installEvidence':done,'rollbackEvidence':untouched} for c in release['components']]})
+        current=fixture.up_store.read('current');current['writer']={'owner':'system-update','id':identifier}
+        fixture.up_store.write('current',current)
         return store,system
 
     def test_signed_system_runtime_replaces_original_bootstrap_hashes(self):
@@ -198,4 +215,32 @@ class RetainedRuntimeTests(unittest.TestCase):
                     release=store.read('current-root');release['proof']['signature']='AAAA';store.write('current-root',release)
                 else:store.write('transaction',{'phase':'installing'})
                 with self.assertRaises((ValueError,OSError,subprocess.CalledProcessError)):
+                    fixture.device_module.LocalDevice().validate_root_driver()
+
+    def test_changed_runtime_requires_completed_selected_system_publication(self):
+        for change in ('missing-transaction','different-selected-release'):
+            with self.subTest(change=change),CurrentInstallation() as fixture:
+                store,system=self.system_publication(fixture)
+                if change=='missing-transaction':
+                    (fixture.lib/'clean-your-tv-system-updater/transaction.json').unlink()
+                else:
+                    tx=store.read('transaction')
+                    tx['candidate']['release']='v1.4.9';tx['release']='v1.4.9'
+                    store.write('transaction',tx)
+                with self.assertRaisesRegex(ValueError,'root_recovery_current_provenance_required'):
+                    fixture.device_module.LocalDevice().validate_root_driver()
+
+    def test_matching_bytes_do_not_replace_terminal_resume_or_current_writer_evidence(self):
+        for change in ('missing-terminal','missing-resume','different-current-writer'):
+            with self.subTest(change=change),CurrentInstallation() as fixture:
+                store,system=self.system_publication(fixture)
+                if change=='different-current-writer':
+                    current=fixture.up_store.read('current');current['writer']['id']='a'*32
+                    fixture.up_store.write('current',current)
+                else:
+                    tx=store.read('transaction')
+                    if change=='missing-terminal':tx['components'][0]['installEvidence']['terminal']=None
+                    else:tx.pop('homeResumePhase')
+                    store.write('transaction',tx)
+                with self.assertRaises(ValueError):
                     fixture.device_module.LocalDevice().validate_root_driver()

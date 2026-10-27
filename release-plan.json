@@ -72,8 +72,10 @@
     },
     {
       "pr": 112,
-      "issues": [],
-      "summary": "Fix Root 0.4 runtime validation before updater teardown"
+      "issues": [
+        111
+      ],
+      "summary": "Validate the exact release-bound Root 0.4 runtime before disabling updaters; C3 original-request removal continuation verified, new-runtime acceptance remains pending"
     }
   ],
   "excluded": [],

@@ -28,9 +28,10 @@ See [Android acceptance and limits](../android/STABLE-READINESS.md).
 
 Candidate acceptance also found #111: replacing published Root 0.4.0 stopped at
 runtime validation before Root removal, after updater preparation. The owner
-confirmed the supported return to LG Home and working controls. The follow-up
-verifies a release-bound historical runtime inventory before updater effects;
-checked original-request recovery and new-runtime acceptance remain pending.
+confirmed the supported return to LG Home and working controls. PR #112
+verifies a release-bound historical runtime inventory before updater effects.
+Checked continuation of the original C3 request completed and independent status
+verified removal; fresh setup and new-runtime hardware acceptance remain pending.
 See the [transition record](RC-1.4.0-TESTING.md#root-040-transition-regression-111).
 
 

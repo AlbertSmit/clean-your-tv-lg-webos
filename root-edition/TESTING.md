@@ -183,6 +183,8 @@ immediately before the old driver invocation. Regression checks live in
 `tests/test_root_driver_compatibility.py` and the removal effect-order fixture.
 
 Source `3eef546b` failed supervised C3 preparation at this boundary; supported
-restore returned LG Home and package versions were unchanged. An immutable
-original request remains for checked continuation; no new-runtime cold-boot
+restore returned LG Home and package versions were unchanged. The original immutable
+request was subsequently continued using the complete separately verified fixed
+coordinator; independent status confirmed complete/current removal. Original
+Root state is retained and updater states archived. No new-runtime cold-boot
 acceptance is established. See the [candidate transition record](../docs/RC-1.4.0-TESTING.md#root-040-transition-regression-111).

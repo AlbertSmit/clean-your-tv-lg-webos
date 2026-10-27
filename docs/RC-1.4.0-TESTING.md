@@ -71,13 +71,19 @@ Do not transplant old acceptance into this candidate's `acceptance` field.
 Supervised C3 preparation on source `3eef546b` stopped before Root removal:
 the coordinator required the new `audio_recovery.py` in the complete published
 0.4.0 runtime. System/Root Updaters had already been disabled. The original
-request and private off-TV backup remain intact; supported restore returned LG
-Home, confirmed by the owner with arrows/OK/volume. Root intent is disabled,
-recovery integrity verifies, and all application versions remain unchanged.
-This is a preparation failure, not new-runtime acceptance. Do not use that older
+request and private off-TV backup were retained; supported restore returned LG
+Home, confirmed by the owner with arrows/OK/volume. At the restored pre-removal checkpoint, Root intent was disabled, recovery
+integrity verified, and all application versions were unchanged.
+A complete separately verified coordinator from `cc7051aa` subsequently continued
+the same original operation/lease with its immutable snapshot. All 51 new code
+files, original request identity, completed disable receipts and absence of
+uncertain submissions/live workers were checked before continuation. Removal
+completed; independent installer status confirmed `current: true` and reconciled
+the local receipt. Old Root state remains retained and updater states are archived.
+This proves the checked transition recovery, not new-runtime acceptance. Do not use that older
 candidate to replace Root 0.4.0.
 
-The corrected coordinator must bind the installed release metadata and verify
+PR #112 integrates the corrected coordinator. It must bind the installed release metadata and verify
 its exact version-specific runtime inventory against both bundle and recovery
 proof, before disabling updaters and again before invoking the old driver. A
 current-version missing file, altered digest, foreign app/package or unsupported

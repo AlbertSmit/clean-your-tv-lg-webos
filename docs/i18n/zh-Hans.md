@@ -209,3 +209,5 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 尚未发布的 Root 冷启动修正：启用 Home 控制且 LG 开机画面设为 Home 时，保护检查成功后，若仍显示电视直播或 LG Home，可请求打开 Clean 一次。最后一次画面检查时已显示的其他应用会保留，不会重试。手动关闭和连按三次 Home 的紧急关闭状态保持不变。需要通过已验证的安装或更新替换私有运行时，仅更新应用不够。修正版的电视验证仍待完成。
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+尚未发布的修正（#108/#109）：准备好 System Updater 后，更新指示点与“全部更新”使用同一版本类别检查。若只有整体发布版本变更、所有组件版本均相同，则不会建议重新安装。检查期间无法安装。仅在 System Updater 不存在时使用旧版检查。仍待实际电视确认。

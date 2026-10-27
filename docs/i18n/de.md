@@ -240,3 +240,5 @@ Sie können abbrechen und selbst Platz freigeben. Anleitung beachten und /var/li
 Noch unveröffentlichte Root-Kaltstartkorrektur: Wenn die Home-Steuerung aktiv und bei LG der Home-Startbildschirm gewählt ist, kann Clean nach erfolgreicher Schutzprüfung einmal geöffnet werden, falls noch Live-TV oder LG Home sichtbar ist. Eine bei der letzten Bildschirmprüfung sichtbare App bleibt erhalten; es gibt keine Wiederholung. Ausgeschaltete Steuerung und der Notausstieg mit dreimal Home bleiben aus. Die private Laufzeit muss über eine geprüfte Einrichtung/Aktualisierung ersetzt werden; ein reines App-Update reicht nicht. Die Geräteprüfung steht noch aus.
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Noch unveröffentlichte Korrektur (#108/#109): Bei eingerichtetem System Updater verwenden der Update-Punkt und „Alle aktualisieren“ dieselbe Prüfung der Edition. Eine neuere Gesamtversion ohne geänderte Komponentenversionen bietet keine Neuinstallation an. Während der Prüfung bleibt die Installation deaktiviert. Die alte Prüfung wird nur bei fehlendem System Updater verwendet. Die Bestätigung am Fernseher steht aus.

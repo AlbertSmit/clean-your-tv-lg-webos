@@ -144,7 +144,7 @@ class Device:
         except (ValueError,KeyError,TypeError):raise ValueError(VERIFICATION_ERROR) from None
         prior=self._baseline(edition);reason='available'
         if any(version(c['version'])<version(p['version']) for c,p in zip(candidate['components'],prior['components'])):reason='component-downgrade'
-        elif version(candidate['release'][1:])<=version(prior['release'][1:]):reason='current'
+        elif version(candidate['release'][1:])<=version(prior['release'][1:]) or all(c['version']==p['version'] for c,p in zip(candidate['components'],prior['components'])):reason='current'
         else:
             try:
                 self.check_legacy()

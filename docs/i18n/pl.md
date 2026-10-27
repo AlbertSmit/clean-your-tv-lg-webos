@@ -1,5 +1,6 @@
 # Clean Your TV — instrukcja użytkownika
 
+
 No-root i Root to równorzędne opcje dla różnych konfiguracji telewizora. Wybierz No-root dla LG Developer Mode lub Root, jeśli masz już dostęp root przez SSH. Zgodność i zakres wykonanych testów są określane osobno dla każdej wersji.
 
 ## Wymagania
@@ -214,6 +215,11 @@ opóźnienie niepotwierdzone.
 Jeszcze niewydane: kontrola prywatnego Pythona rozróżnia błędy ABI, bezpieczeństwa katalogów i miejsca. Pierwsza instalacja wymaga 320 MiB wolnego w /var/lib. Duży WAM Session Storage może wyjaśniać brak miejsca; usunięcie może utracić stan sesji aplikacji. Zobacz [odzyskiwanie](../RECOVERY.md#private-python-and-low-var-space).
 
 W nieopublikowanym kandydacie 1.4.0 przerwana instalacja No-root również oferuje **Odzyskaj i zainstaluj ponownie** po **Sprawdź stan telewizora**. Potwierdź usunięcie tylko wtedy, gdy chcesz usunąć aplikacje Clean Your TV, a następnie sprawdź wersje przed ponowną instalacją. Jeśli odzyskiwanie się nie powiedzie, zapisz raport diagnostyczny i zatrzymaj się. Przyczyna pierwotnego odrzucenia pakietu przez TV nadal nie jest ustalona ani potwierdzona jako naprawiona (#21).
+
+
+**Niewydane — WAM:** `cytv clean-wam-cache --edition root`. Żądanie obejmuje tylko cache i codecache. Session Storage, ciasteczka, Local Storage, Service Worker i bazy danych są wyłączone. Najpierw zamknij aplikacje TV. Pamięć podręczna zostanie pobrana lub utworzona ponownie; kolejny start może być wolniejszy. [WAM](../WAM-CLEANUP.md).
+
+Możesz anulować i samodzielnie zwolnić miejsce. Sprawdź instrukcję i ponownie /var/lib; usunięcie aplikacji może zwolnić inną partycję. **Session Storage (SSH):** Najpierw zamknij aplikacje TV. Stan sesji zostanie usunięty; możesz utracić logowanie lub niezapisane dane. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
 
 Nieopublikowana poprawka zimnego startu Root: przy włączonej obsłudze Home i ekranie startowym LG ustawionym na Home, po sprawdzeniu zabezpieczeń Clean może otworzyć się raz, jeśli nadal widać telewizję lub LG Home. Aplikacja widoczna podczas ostatniego sprawdzenia zostaje zachowana; brak ponawiania. Jawne wyłączenie i trzy naciśnięcia Home pozostają wyłączone. Potrzebna jest sprawdzona instalacja/aktualizacja prywatnego środowiska; sama aktualizacja aplikacji nie wystarczy. Testy na telewizorze są nadal wymagane.
 

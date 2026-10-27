@@ -1,5 +1,6 @@
 # Clean Your TV — 用户指南
 
+
 No-root 和 Root 是适用于不同电视配置的同等选项。使用 LG 开发者模式请选择 No-root；已有 root SSH 访问请选择 Root。两种版本的兼容性与测试范围分别记录。
 
 ## 安装之前
@@ -195,6 +196,11 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 尚未发布：专用 Python 检查分别报告 ABI、目录安全和空间不足。首次安装需要 /var/lib 有 320 MiB 可用空间。较大的 WAM Session Storage 可能是原因；清除可能丢失应用会话状态。请参阅[恢复指南](../RECOVERY.md#private-python-and-low-var-space)。
 
 在尚未发布的 1.4.0 候选版中，中断的 No-root 安装也可在**检查电视状态**后使用**恢复并重新安装**。只有确定要移除 Clean Your TV 应用时才确认移除，然后在重新安装前检查版本。如果恢复失败，请保存该次诊断报告并停止操作。电视最初拒绝安装包的原因仍未确定，也尚未确认已修复（#21）。
+
+
+**尚未发布 — WAM:** `cytv clean-wam-cache --edition root`. 只请求 cache 和 codecache。不会清理 Session Storage、cookies、Local Storage、Service Worker 和 databases。 请先关闭电视应用。缓存会重新下载或生成；下次启动应用可能需要更多时间。 [WAM](../WAM-CLEANUP.md).
+
+可以取消并自行清理空间。请按手动指南操作并再次检查 /var/lib；删除应用可能只清理其他分区。 **Session Storage (SSH):** 请先关闭电视应用。这会删除应用会话状态，可能使您退出登录或丢失未保存的数据。 [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
 
 尚未发布的 Root 冷启动修正：启用 Home 控制且 LG 开机画面设为 Home 时，保护检查成功后，若仍显示电视直播或 LG Home，可请求打开 Clean 一次。最后一次画面检查时已显示的其他应用会保留，不会重试。手动关闭和连按三次 Home 的紧急关闭状态保持不变。需要通过已验证的安装或更新替换私有运行时，仅更新应用不够。修正版的电视验证仍待完成。
 

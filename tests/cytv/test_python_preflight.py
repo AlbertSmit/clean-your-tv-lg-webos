@@ -24,6 +24,9 @@ class PreflightTests(unittest.TestCase):
             self.assertIn('27 MiB', str(error))
             self.assertIn('320 MiB', str(error))
             self.assertIn('Session Storage', str(error))
+            self.assertIn('free space yourself', str(error))
+            self.assertIn('may sign you out or lose unsaved work', str(error))
+            self.assertIn('docs/WAM-CLEANUP.md', str(error))
             report = json.loads(diagnostics.create_report(state.Store(directory), 'install', None, 'preflight', error).read_text())
             self.assertEqual(report['python_runtime'], {'reason': 'space', 'available_kib': 27648,
                 'required_kib': 327680, 'wam_session_kib': 424296})

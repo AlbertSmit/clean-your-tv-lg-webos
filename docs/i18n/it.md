@@ -1,5 +1,6 @@
 # Clean Your TV — guida all’uso
 
+
 No-root e Root sono opzioni equivalenti per diverse configurazioni della TV. Scegli No-root per LG Developer Mode oppure Root se disponi già di accesso root tramite SSH. Compatibilità e verifiche eseguite sono specifiche di ogni edizione.
 
 ## Requisiti
@@ -215,6 +216,11 @@ verificata. Compatibilità e minore ritardo non confermati.
 Non ancora pubblicato: il controllo di Python privato distingue errori ABI, sicurezza delle directory e spazio. La prima installazione richiede 320 MiB liberi in /var/lib. WAM Session Storage può spiegare la mancanza di spazio; cancellarlo può perdere lo stato delle sessioni. Vedi il [ripristino](../RECOVERY.md#private-python-and-low-var-space).
 
 Nel candidato 1.4.0 non ancora pubblicato, anche un’installazione No-root interrotta offre **Ripristina e reinstalla** dopo **Controlla lo stato della TV**. Conferma la rimozione solo se vuoi eliminare le app Clean Your TV, poi controlla le versioni prima di reinstallare. Se il ripristino fallisce, salva il relativo rapporto diagnostico e fermati. Il rifiuto iniziale del pacchetto da parte della TV non è ancora spiegato né confermato come risolto (#21).
+
+
+**Non pubblicato — WAM:** `cytv clean-wam-cache --edition root`. Sono richiesti solo cache e codecache. Session Storage, cookie, Local Storage, Service Worker e database sono esclusi. Chiudi le app TV. La cache sarà scaricata o ricreata; il prossimo avvio può essere più lento. [WAM](../WAM-CLEANUP.md).
+
+Puoi annullare e liberare spazio da solo. Segui la guida e ricontrolla /var/lib; rimuovere app può liberare un'altra partizione. **Session Storage (SSH):** Chiudi prima le app del TV. Lo stato delle sessioni sarà eliminato; potresti perdere accessi o lavoro non salvato. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
 
 Correzione Root dell’avvio a freddo non ancora pubblicata: con il controllo Home attivo e LG impostato sulla schermata Home all’accensione, un avvio protetto può aprire Clean una volta se sono ancora visibili TV in diretta o LG Home. Un’app visibile all’ultimo controllo viene mantenuta; nessun nuovo tentativo. La disattivazione esplicita e tre pressioni Home restano disattivate. Serve un’installazione/aggiornamento verificato del runtime privato; aggiornare solo l’app non basta. La verifica sul televisore resta da completare.
 

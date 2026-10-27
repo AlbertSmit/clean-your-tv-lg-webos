@@ -464,3 +464,14 @@ Next-candidate Home settings (not published v1.2.0): a failed status read is sho
 as unknown, with Change Home hidden until a valid response. This avoids showing
 an unconfirmed off switch. It does not repair a firmware denial or unavailable
 request-file transport, prove that Helper stopped, or automatically start it.
+
+## Unreleased: optional WAM cache cleanup
+
+`cytv clean-wam-cache --edition root` estimates Cache/Code Cache usage and available
+`/var/lib` space, offers manual guidance and requires default-No confirmation.
+It requests only `cache` and `codecache` through the TV's native WAM API; it does
+not delete files itself. Session Storage and other app state are excluded.
+`--yes` does not authorize cleanup; noninteractive mode and pending local operations
+are refused. Cache rebuilding may slow the next app launch. No reboot, automatic
+retry or setup resume occurs. See [scope, manual maintenance and evidence](WAM-CLEANUP.md).
+Published installers do not include this action yet.

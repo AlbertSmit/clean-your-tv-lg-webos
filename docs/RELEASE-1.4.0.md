@@ -40,8 +40,12 @@ Published downloads remain v1.3.0. No new TV compatibility is established.
   console artifacts must pass `--check-runtime`; target-device result is pending.
 - #99 / issue #95: private-Python preflight identifies ABI, ownership and storage
   checks, reports available/required space and advisory WAM size with bounded
-  diagnostics. No app storage is deleted. Optional WAM cleanup and the separate
-  architecture report are not delivered by this candidate. The reporter has since
+  diagnostics. Diagnostics delete no app storage. Separate opt-in WAM cache cleanup
+  (#100) requests only `cache` and `codecache` through the native WAM API, with
+  default-No consent, a cache-rebuilding warning and manual Session Storage guidance.
+  No root file deletion, reboot, automatic retry or setup resume occurs. A direct
+  C3 API test recovered about 98.4 MiB with unchanged protected-data fingerprints;
+  exact installer and C2 acceptance remain pending. The reporter has since
   confirmed #94 passes in published cytv 0.4.0; the later Root deployment fails in #101.
 
 - Issues #101 and #21: accept observed C2 UID 1001 only for independently pinned

@@ -26,10 +26,19 @@ one reporter observation, not acceptance of installation or other TV models.
 Session Storage contains app session state; it is not guaranteed disposable
 cache. Clearing it can lose sessions or unsaved state, even though this reporter
 was not logged out. Leave Local Storage, Service Worker, databases, managed
-Python slots and recovery records alone. Review the exact folders and close TV
-apps before any deliberate cleanup. Reboot afterwards: open deleted files may
-retain space until WAM exits. Recheck `df -Pk /var/lib` and retry setup explicitly;
+Python slots and recovery records alone. For manual Session Storage deletion,
+review the exact path and establish a device-specific procedure that prevents WAM writers and respawns; closing visible
+apps alone is insufficient. A real restart may be needed afterwards because open
+deleted files can retain space until WAM exits. Recheck `df -Pk /var/lib` and
+retry setup explicitly;
 neither cleanup nor reboot proves Python or Root installation succeeded.
+
+The **unreleased 1.4.0 candidate** offers a separate console/desktop Root action
+for native WAM `cache` and `codecache` cleanup only, with default-No consent and
+manual guidance. It does not clear Session Storage, stop services, reboot or resume
+setup, and never falls back to root filesystem deletion. Cache rebuilding may slow
+the next app launch. Removing apps can free a different partition; always recheck
+`/var/lib`. See [WAM cache cleanup and manual Session Storage limits](WAM-CLEANUP.md).
 
 If the ABI or ownership check fails, freeing space cannot resolve that failure.
 Do not disable those guards, change ownership broadly or lower the space threshold.

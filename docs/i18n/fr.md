@@ -1,5 +1,6 @@
 # Clean Your TV — guide d’utilisation
 
+
 No-root et Root sont des options équivalentes pour différentes configurations du téléviseur. Choisissez No-root pour LG Developer Mode ou Root si vous disposez déjà d’un accès root par SSH. La compatibilité et les essais réalisés sont propres à chaque édition.
 
 ## Prérequis
@@ -226,6 +227,11 @@ nouvelle configuration vérifiée nécessaire. Compatibilité et délai réduit 
 Non publié : la vérification de Python privé distingue les erreurs ABI, de sécurité des répertoires et d’espace. La première installation exige 320 MiB libres dans /var/lib. WAM Session Storage peut expliquer le manque de place ; son effacement peut supprimer l’état des sessions. Voir la [récupération](../RECOVERY.md#private-python-and-low-var-space).
 
 Dans le candidat 1.4.0 non publié, une installation No-root interrompue propose aussi **Récupérer et réinstaller** après **Vérifier l’état du téléviseur**. Confirmez la suppression uniquement si vous souhaitez retirer les applications Clean Your TV, puis vérifiez les versions avant de réinstaller. Si la récupération échoue, enregistrez son rapport de diagnostic et arrêtez-vous. Le refus initial du paquet par le téléviseur reste inexpliqué et non confirmé comme résolu (#21).
+
+
+**Non publié — WAM:** `cytv clean-wam-cache --edition root`. Seuls cache et codecache sont demandés. Session Storage, cookies, Local Storage, Service Worker et bases de données sont exclus. Fermez les applications du TV. Le cache sera téléchargé ou recréé ; le prochain lancement peut être plus lent. [WAM](../WAM-CLEANUP.md).
+
+Vous pouvez annuler et libérer vous-même de la place. Suivez le guide et vérifiez /var/lib ; supprimer des apps peut libérer une autre partition. **Session Storage (SSH):** Fermez d’abord les applications TV. L’état des sessions sera supprimé ; vous pouvez être déconnecté ou perdre du travail non enregistré. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
 
 Correction Root du démarrage à froid non publiée : si le contrôle Home est activé et si LG est réglé pour démarrer sur Home, un démarrage protégé peut ouvrir Clean une fois si la télévision en direct ou LG Home reste visible. Une application visible lors de la dernière vérification est conservée ; aucune nouvelle tentative. La désactivation explicite et les trois pressions Home restent effectives. Le runtime privé doit être remplacé par une installation/mise à jour vérifiée ; une simple mise à jour de l’application ne suffit pas. La validation sur téléviseur reste à faire.
 

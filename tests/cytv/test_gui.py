@@ -83,7 +83,8 @@ class GuiTests(unittest.TestCase):
                 ('restore', 'Return to LG Home'),
                 ('uninstall', 'Uninstall Clean Your TV'),
                 ('home-diagnostics', 'Home button diagnostics'),
-                ('enable-system-updates', 'Enable updates for all TV components (root required)')]):
+                ('enable-system-updates', 'Enable updates for all TV components (root required)'),
+                ('clean-wam-cache', 'Clear WAM caches (root required)')]):
             with self.subTest(command=command):
                 calls = []
                 def runner(argv, **kwargs):

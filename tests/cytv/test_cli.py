@@ -9,6 +9,63 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_wam_cache_cleanup_has_default_no_consent_even_with_yes(self):
+        from unittest.mock import MagicMock
+        for choice, cleared in [('n', False), ('', False), ('y', True)]:
+            with self.subTest(choice=choice), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.wam_cleanup.inspect', return_value={'bytes': 1024, 'available_kib': 511948}), \
+                 patch('cytv.wam_cleanup.clean') as clean, patch('cytv.cli.Installer') as installer, \
+                 patch('cytv.cli.package.verify_payload') as payload:
+                prompts, output = [], []
+                remote = MagicMock()
+                code = cli.main(['clean-wam-cache', '--host', '192.0.2.10', '--edition', 'root',
+                    '--data-dir', tmp, '--yes'], ask=lambda label: (prompts.append(label), choice)[1],
+                    write=output.append, connect=lambda *args: remote)
+                self.assertEqual(code, 0)
+                text = ' '.join(' '.join(output).split())
+                self.assertIn('free space yourself', text)
+                self.assertIn('next app launch may be slower', text)
+                self.assertIn('Session Storage, cookies, Local Storage, Service Worker and databases are excluded', text)
+                self.assertIn('docs/WAM-CLEANUP.md', text)
+                self.assertEqual(len(prompts), 1)
+                self.assertIn('[y/N]', prompts[0])
+                self.assertEqual(clean.call_count, int(cleared))
+                if cleared: clean.assert_called_once_with(remote)
+                installer.return_value.install.assert_not_called()
+                payload.assert_not_called()
+
+    def test_wam_cleanup_rechecks_pending_receipt_after_acquiring_lock(self):
+        from contextlib import contextmanager
+        from unittest.mock import MagicMock
+        original = state.Store.lock
+        @contextmanager
+        def lock(store, profile):
+            with original(store, profile):
+                store.begin(profile, 'install')
+                yield
+        with tempfile.TemporaryDirectory() as tmp, patch.object(state.Store, 'lock', lock), \
+             patch('cytv.wam_cleanup.inspect') as inspect:
+            code, output, calls = self.run_cli(['clean-wam-cache', '--host', '192.0.2.10',
+                '--edition', 'root', '--data-dir', tmp, '--yes'], ['y'], remote=MagicMock())
+            self.assertEqual(code, 2, output)
+            inspect.assert_not_called()
+            self.assertFalse(calls)
+
+    def test_wam_cleanup_refuses_noninteractive_no_root_and_pending_operations(self):
+        from unittest.mock import MagicMock
+        for mode in ('noninteractive', 'no-root', 'pending'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.wam_cleanup.inspect') as inspect, patch('cytv.wam_cleanup.clean') as clean:
+                edition = 'no-root' if mode == 'no-root' else 'root'
+                if mode == 'pending':
+                    state.Store(tmp).begin(state.target('192.0.2.10', edition), 'install')
+                flags = ['--non-interactive'] if mode == 'noninteractive' else []
+                code, output, _ = self.run_cli(['clean-wam-cache', '--host', '192.0.2.10',
+                    '--edition', edition, '--data-dir', tmp, '--yes'] + flags, remote=MagicMock())
+                self.assertEqual(code, 2, output)
+                inspect.assert_not_called()
+                clean.assert_not_called()
+
     def test_system_update_bootstrap_is_a_separate_maintenance_action(self):
         from unittest.mock import MagicMock
         with tempfile.TemporaryDirectory() as tmp, \

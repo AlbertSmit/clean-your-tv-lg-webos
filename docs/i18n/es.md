@@ -1,5 +1,6 @@
 # Clean Your TV — guía de uso
 
+
 No-root y Root son opciones equivalentes para distintas configuraciones del televisor. Elige No-root para LG Developer Mode o Root si ya tienes acceso root por SSH. La compatibilidad y las pruebas realizadas son específicas de cada edición.
 
 ## Requisitos
@@ -225,6 +226,11 @@ nueva configuración verificada. Compatibilidad y menor demora sin confirmar.
 Sin publicar: la comprobación de Python privado distingue errores de ABI, seguridad de directorios y espacio. La instalación inicial necesita 320 MiB libres en /var/lib. WAM Session Storage puede explicar la falta de espacio; borrarlo puede perder el estado de sesiones. Consulta la [recuperación](../RECOVERY.md#private-python-and-low-var-space).
 
 En el candidato 1.4.0 aún no publicado, una instalación No-root interrumpida también ofrece **Recuperar y reinstalar** después de **Ver estado del televisor**. Confirma la eliminación solo si quieres quitar las apps de Clean Your TV y luego revisa las versiones antes de reinstalar. Si falla la recuperación, guarda su informe de diagnóstico y detente. Esto aún no identifica ni soluciona el rechazo original del paquete por el televisor (#21).
+
+
+**Sin publicar — WAM:** `cytv clean-wam-cache --edition root`. Solo se solicitan cache y codecache. Se excluyen Session Storage, cookies, Local Storage, Service Worker y bases de datos. Cierra las apps del TV. La caché se descargará o creará de nuevo; el próximo inicio puede ser más lento. [WAM](../WAM-CLEANUP.md).
+
+Puedes cancelar y liberar espacio tú mismo. Consulta la guía y revisa /var/lib; borrar apps puede liberar otra partición. **Session Storage (SSH):** Cierra primero las apps del TV. Se elimina el estado de sesión y puedes perder la sesión o trabajo sin guardar. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
 
 Corrección de arranque en frío de Root aún no publicada: con el control de Home activado y la pantalla de inicio de LG configurada en Home, un inicio protegido puede abrir Clean una vez si todavía aparece TV en directo o LG Home. Se conserva la aplicación visible en la última comprobación; no se reintenta. La desactivación explícita y tres pulsaciones de Home permanecen desactivadas. Se requiere instalar o actualizar de forma verificada el entorno privado; actualizar solo la aplicación no basta. La validación en el televisor sigue pendiente.
 

@@ -99,8 +99,9 @@ This was a direct API experiment, not acceptance of an exact frozen installer.
 The C3 had about 500 MiB free before testing, so it did not reproduce the reporter's
 low-space installation failure. On 2026-10-27 the owner also confirmed normal app
 launch/playback and retained sign-ins. The starting page was Clean; this is
-consistent with the configured Home choice, but does not verify returning to LG
-Home or an additional reboot/cold boot. Exact candidate installer checks, LG Home
-return and other models/firmware remain acceptance work. The reported C2's large
+consistent with the configured Home choice. The owner subsequently confirmed
+that returning to LG Home also works. No additional reboot/cold boot or new
+Root-runtime deployment was reported. Exact candidate installer checks and other
+models/firmware remain acceptance work. The reported C2's large
 Session Storage is not automatically cleared; issue #95 remains partially addressed
 and open. See the [source review and measurements](research/2026-10-27-wam-storage-cleanup.md).

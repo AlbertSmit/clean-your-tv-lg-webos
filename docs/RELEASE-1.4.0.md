@@ -1,4 +1,4 @@
-# v1.4.0 candidate — guided setup, safe diagnostics and opt-in eARC recovery
+# v1.4.0 candidate — guided setup, diagnostics, native cache cleanup and Root startup
 
 **Unpublished testing candidate.** PR #98 remains draft. These versions are
 committed for artifact testing, not hardware acceptance or public delivery.
@@ -15,6 +15,12 @@ Published downloads remain v1.3.0. No new TV compatibility is established.
 | Android installer | 0.3.0-preview / code 11 | 0.4.0-preview / code 12 |
 | System Updater supervisor | 1.1.0 / protocol 1 | 1.1.0 / protocol 1; enclosing infrastructure rebuilt |
 | Homebrew Installer | Not published | Development only; no promotion record |
+
+Android remains a preview component inside the candidate: its APK uses a release
+build and the existing public signing identity, but the physical-phone upgrade,
+background/process-death and recovery matrix has not been completed. See
+[Android stable readiness](../android/STABLE-READINESS.md). Desktop/TV evidence
+cannot replace that phone acceptance.
 
 ## Included scope
 
@@ -45,7 +51,8 @@ Published downloads remain v1.3.0. No new TV compatibility is established.
   default-No consent, a cache-rebuilding warning and manual Session Storage guidance.
   No root file deletion, reboot, automatic retry or setup resume occurs. A direct
   C3 API test recovered about 98.4 MiB with unchanged protected-data fingerprints;
-  exact installer and C2 acceptance remain pending. The reporter has since
+  the C3 owner confirmed app launch/playback, retained sign-ins and LG Home return.
+  Exact installer, changed Root runtime and C2 acceptance remain pending. The reporter has since
   confirmed #94 passes in published cytv 0.4.0; the later Root deployment fails in #101.
 
 - Issues #101 and #21: accept observed C2 UID 1001 only for independently pinned
@@ -100,5 +107,6 @@ This requires rebuilding and deploying the coherent private runtime; an app-only
 update is insufficient. Physical acceptance of the changed runtime is pending.
 The [mandatory cold-boot matrix](RC-1.4.0-TESTING.md#required-before-publication-root-cold-boot-and-first-screen-104)
 must pass before publication, including first screen without Home, Emby-to-Home,
-repeated AC-off cycles and off/emergency preservation. Existing candidate artifacts
-predate this source and cannot validate or deliver it.
+repeated AC-off cycles and off/emergency preservation. Use fresh artifacts whose source SHA includes #103/#105 and #100; older
+pre-integration installers cannot validate or deliver these changes. A successful
+build does not satisfy the physical startup/rollback gates.

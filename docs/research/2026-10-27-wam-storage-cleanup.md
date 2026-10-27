@@ -67,8 +67,8 @@ The Session Storage directory was only 32 KiB, unlike the C2 report's large buil
 On 2026-10-27 the C3 owner subsequently confirmed normal app launch/playback and
 retained application sign-ins after the cleanup. The observed starting page was
 Clean rather than LG Home. That is consistent with Clean being the selected Home;
-it is not evidence of an additional reboot/cold-boot test or a verified return to
-LG Home. No reboot was performed for the cache experiment. This confirmation
+the owner subsequently confirmed that returning to LG Home also works. This is
+not evidence of an additional reboot/cold-boot test or a new Root-runtime deployment. No reboot was performed for the cache experiment. This confirmation
 applies to this C3 and the direct API experiment, not the C2 report or an exact
 frozen installer.
 

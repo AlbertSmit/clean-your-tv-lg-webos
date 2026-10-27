@@ -10,6 +10,10 @@ Expected versions: cytv 0.5.0; Home 1.5.0; Helper 0.6.19; Root 0.5.0;
 both independent Updaters 0.3.1; Android 0.4.0-preview / code 12.
 System supervisor wrapper remains 1.1.0 / protocol 1; Root/System private inventories
 must come from this candidate. Homebrew public promotion remains disabled.
+Android stays `0.4.0-preview` because physical-phone upgrade, lifecycle and recovery
+acceptance is incomplete. Its CI APK is release-mode, non-debuggable and signed
+with the existing update identity; preview is a readiness label, not a debug flag.
+See [Android physical acceptance](../android/STABLE-READINESS.md#physical-acceptance-before-removing-preview).
 
 ## Host checks before contacting a TV
 
@@ -27,7 +31,21 @@ must come from this candidate. Homebrew public promotion remains disabled.
    receipts survive; check small portrait/landscape setup and pending prompts.
    Run Done → Tools → Home button diagnostics for No-root and verify port 9922.
 
-## Device matrix — all new results pending
+## Recorded C3 cache experiment and owner checks
+
+On OLED55C3RLA / firmware 43.21.71 / SDK 11.2.0, the separately authorized native
+WAM cache/codecache request recovered about 98.4 MiB with unchanged protected-data
+fingerprints and WAM remaining active. The owner confirmed normal app launch,
+playback, retained sign-ins and return to LG Home. Clean was the initial page,
+consistent with the configured Home choice. The source CLI inspection and default-No
+cancel with --yes also passed without sending a cleanup request.
+
+These results apply to the direct cache API experiment on the existing C3 setup.
+They do not accept a newly built installer, the changed Root startup runtime,
+AC-off cold boot, emergency-off persistence, rollback, or the reporter's C2.
+See [recorded measurements and limits](research/2026-10-27-wam-storage-cleanup.md).
+
+## Device matrix — exact-candidate acceptance pending
 
 | Path / target | Required result and evidence |
 | --- | --- |

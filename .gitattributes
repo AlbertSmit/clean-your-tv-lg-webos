@@ -1,0 +1,12 @@
+# TV payload sources must retain POSIX line endings on Windows checkouts.
+* text=auto eol=lf
+
+# Preserve published packages and media byte-for-byte.
+*.ipk -text
+*.gz -text
+*.zip -text
+*.png -text
+*.jpg -text
+*.webp -text
+*.ttf -text
+*.woff* -text

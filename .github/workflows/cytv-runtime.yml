@@ -1,4 +1,4 @@
-name: Frozen Intel macOS installer runtime
+name: Frozen desktop installer runtime
 on:
   pull_request:
     paths:
@@ -11,7 +11,11 @@ permissions:
   contents: read
 jobs:
   runtime:
-    runs-on: macos-15-intel
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15-intel, windows-2022]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +24,8 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r cytv/build-requirements.txt
       - name: Freeze and exercise both actual entrypoints without a TV payload
+        shell: python
         run: |
-          python - <<'PY'
           from pathlib import Path
           import subprocess
           import sys
@@ -36,7 +40,14 @@ jobs:
                   *flags, '--name', name, '--paths', str(root), '--distpath', str(output),
                   '--workpath', str(root / 'build' / kind), '--specpath', str(root / 'build' / kind),
                   str(root / 'cytv' / entry)], check=True)
-              executable = (output / name if kind == 'console' else
-                            output / (name + '.app') / 'Contents/MacOS' / name)
+              if sys.platform == 'win32':
+                  executable = output / (name + '.exe') if kind == 'console' else output / name / (name + '.exe')
+              else:
+                  executable = (output / name if kind == 'console' else
+                                output / (name + '.app') / 'Contents/MacOS' / name)
               subprocess.run([str(executable), '--check-runtime'], check=True)
-          PY
+              if kind == 'console':
+                  import os
+                  subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests/cytv',
+                      '-p', 'test_console_encoding.py', '-v'], check=True,
+                      env=dict(os.environ, CYTV_CONSOLE_EXECUTABLE=str(executable)))

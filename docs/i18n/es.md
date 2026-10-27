@@ -243,3 +243,5 @@ Corrección de arranque en frío de Root aún no publicada: con el control de Ho
 Corrección OTA candidata (#115): el System Updater original de 1.3.0 no puede instalar 1.4.0 por cambios en los archivos permitidos. Un aborto previo al reemplazo no es una instalación parcial. Conserva el registro; no reintentes, borres el estado ni cambies las rutas. El siguiente candidato conserva los contratos de rutas y permisos de 1.3.0; la actualización y reversión en TV aún requieren pruebas coordinadas.
 
 Corrección aún no publicada (#108/#109): con System Updater preparado, el indicador y «Actualizar todo» usan la misma comprobación de la edición. Una versión general nueva sin cambios en las versiones de los componentes no ofrece reinstalación. La instalación permanece desactivada durante la comprobación. La comprobación antigua solo se usa si falta System Updater. Falta confirmar el resultado en el televisor.
+
+CLI candidata: al redirigir la salida en Windows, los caracteres que no admite la codificación elegida se muestran como secuencias de escape sin provocar un fallo. UTF-8 conserva el texto localizado. Esto no confirma compatibilidad Root con BX/webOS 5.

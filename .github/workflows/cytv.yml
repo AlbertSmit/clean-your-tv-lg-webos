@@ -145,6 +145,13 @@ jobs:
           sudo apt-get install -y ./dist/cytv-linux-x64.deb
           /opt/clean-your-tv/cytv-desktop --check-runtime
           xvfb-run -a env QT_QPA_PLATFORM=xcb /opt/clean-your-tv/cytv-desktop --smoke-test
+      - name: Verify redirected Windows console output
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:CYTV_CONSOLE_EXECUTABLE = (Resolve-Path dist/cytv.exe).Path
+          python -m unittest discover -s tests/cytv -p test_console_encoding.py -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify extracted Windows desktop package
         if: runner.os == 'Windows'
         shell: pwsh

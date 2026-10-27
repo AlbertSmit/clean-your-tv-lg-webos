@@ -22,7 +22,7 @@ def tracked_files(prefix):
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
     required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js', 'native/app/websocket.js'],
-                'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
+                'renewal-service': ['renewal-service/home-control.js', 'renewal-service/diagnostics.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
                 'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
                 'launcher': ['launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/fonts/outfit-300.ttf', 'launcher/fonts/outfit-400.ttf',
@@ -96,6 +96,13 @@ def stage_brand_assets(payload):
         (payload / packaged).write_bytes((ROOT / 'assets/brand' / master).read_bytes())
 
 
+def stage_guide_assets(payload):
+    target = payload / 'setup-guide'
+    target.mkdir(exist_ok=True)
+    for name in ('sign-in.png', 'dev-mode.png', 'key-server.png', 'README.md'):
+        shutil.copy2(ROOT / 'android/app/src/main/assets/ui/guide' / name, target / name)
+
+
 # Preserve exact published Helper packages while their versions remain selected.
 HELPER_0_6_16_SHA256 = 'ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1'
 HELPER_0_6_17_SHA256 = '165d933c17f1ed24f0ab65986293c7488b0b5d875db5f7b1215e46f24d422f92'
@@ -166,6 +173,7 @@ def build_payload():
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
     (payload / 'installer.png').write_bytes((ROOT / 'assets/icons/installer.png').read_bytes())
     stage_brand_assets(payload)
+    stage_guide_assets(payload)
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     stage_updater(payload)
@@ -218,6 +226,7 @@ def main():
     executable = ROOT / 'dist' / ('cytv.exe' if os.name == 'nt' else 'cytv')
     subprocess.run([str(executable), '--version'], check=True)
     subprocess.run([str(executable), '--check-payload'], check=True)
+    subprocess.run([str(executable), '--check-runtime'], check=True)
     print('Built:', executable)
     if args.desktop:
         from desktop_packaging import build_desktop

@@ -104,7 +104,7 @@ def choose_profile(args, store, ask, write, search, inspect):
                          'For an already rooted TV with existing SSH access.')
             write('')
             if args.command == 'install':
-                write('No-root and Root are equal options for different TV setups.')
+                write("No-root uses LG's Developer Mode app. Root requires administrator access already set up on the TV.")
                 write('This installer does not obtain root.')
             write('Enter = current choice   |   q = quit')
             choice = prompts.number(ask, write, f'Edition [{default_choice}]: ', 1, 2, default=default_choice)
@@ -127,6 +127,11 @@ def choose_profile(args, store, ask, write, search, inspect):
 
 def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None, payload_root=None):
     raw_args = list(sys.argv[1:] if argv is None else argv)
+    if raw_args == ['--check-runtime']:
+        from .runtime_check import check_runtime
+        check_runtime()
+        (write if isinstance(write, Console) else Console(write)).raw('Installer runtime verified; no TV contacted.')
+        return 0
     requested = next((arg.split('=', 1)[1] for arg in raw_args if arg.startswith('--language=')), None)
     if '--language' in raw_args and raw_args.index('--language') + 1 < len(raw_args):
         requested = raw_args[raw_args.index('--language') + 1]
@@ -198,11 +203,16 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('Root requires existing root and SSH access.')
                 write('Hardware validation: LG C3; other models are unverified.')
             else:
-                write('On the TV: LG Apps > Developer Mode. Sign in, then enable:')
-                write('  1. Dev Mode Status')
-                write('  2. Key Server')
-                write('Keep this screen open for the passphrase.')
-                write('Developer Mode must stay active after installation.')
+                write('Developer Mode lets CYTV install apps on a TV without root.')
+                write('Home is your app screen. Home Helper makes the Home button open it.')
+                write.heading('1. Developer Mode')
+                write('On the TV, open LG Apps, search for Developer Mode and install it.')
+                write('Open Developer Mode and sign in with your LG Developer account. Create an account at webostv.developer.lge.com if needed.')
+                write.heading('2. Dev Mode Status')
+                write('Turn on Dev Mode Status. The TV restarts. Open Developer Mode again.')
+                write.heading('3. Key Server')
+                write('Turn on Key Server and leave Developer Mode open. Its IP Address is the TV address to enter in CYTV.')
+                write('Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.')
             write.step(4, 'Review and install', clear=profile['edition'] == 'root')
             write('TV: ' + profile['host'])
             write('Edition: ' + ('Root' if profile['edition'] == 'root' else 'No-root'))
@@ -211,6 +221,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('Hardware validation: LG C3; other models are unverified.')
                 write('Automatic SSH sign-in first; credentials only if needed.')
             write('Next: verify SSH, read your apps, then install.')
+            write('Pairing is a separate step: when the TV asks, approve CYTV with your remote.')
             if profile['edition'] == 'root':
                 write('Root will stop the old Home Helper, turn on Home control and open Clean Your TV Home.')
             write('Check controls on the TV after installation.')
@@ -244,12 +255,15 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
 
         def secret_with_help(prompt):
             if not args.non_interactive:
-                write.heading('Connection password')
                 if prompt.startswith('Developer Mode'):
-                    write('Use the passphrase shown in Developer Mode > Key Server.')
+                    write.heading('Developer Mode code (Passphrase)')
+                    write('Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.')
+                    write('Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.')
                 elif prompt.startswith('SSH key'):
+                    write.heading('SSH key passphrase')
                     write('Enter the passphrase that unlocks your private SSH key file.')
                 else:
+                    write.heading('Root SSH password (hidden):')
                     write('Enter your existing TV root SSH password. This was set when SSH access was configured.')
                 write('Typing is hidden: no characters or dots appear.')
                 write('Enter = submit   |   Ctrl+C = cancel')
@@ -276,8 +290,12 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write('Checking the previous installation on the TV…')
                     existing = installer.status()
                     pending = store.pending(profile)
-                    if profile['edition'] == 'no-root' and pending and pending.get('action') == 'uninstall':
-                        write.heading('Unfinished removal')
+                    if (profile['edition'] == 'no-root' and pending and
+                            (pending.get('action') == 'uninstall' or
+                             (pending.get('action') == 'install' and pending.get('stage') == 'pending'))):
+                        write.heading('Recover and reinstall' if pending['action'] == 'install' else 'Unfinished removal')
+                        if pending['action'] == 'install':
+                            write('The previous installation did not finish. Remove its packages before installing again.')
                         write('Finish removing Clean Your TV before installing again. LG Home will be restored and remaining Clean Your TV packages removed.')
                         write('After removal is verified, setup continues with the bundled versions.')
                         if args.non_interactive:
@@ -390,8 +408,11 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write('To restore LG Home, use Return to LG Home in settings or run cytv restore.')
                     write('Root emergency exit: three short Home presses within two seconds.')
                 else:
+                    write("After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps.")
+                    write('Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.')
                     write('Packages installed; Home Helper launch requested. Check short Home, arrows/OK, Back, volume, standby and cold boot.')
                     write('Emergency exit: three short Home presses within two seconds. Keep Developer Mode active. The computer can now be switched off.')
+                    write('Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.')
             elif args.command == 'enable-system-updates':
                 phase = 'enable-system-updates'
                 result = installer.enable_system_updates()
@@ -409,6 +430,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             elif args.command == 'clean-wam-cache':
                 from . import wam_cleanup
                 phase = 'clean-wam-cache'
+                write('You can cancel and free space yourself by removing unused apps in LG settings or following the manual cleanup guide.')
+                write.raw('https://github.com/Razdva122/clean-your-tv-lg-webos/blob/release/next/docs/WAM-CLEANUP.md')
                 snapshot = wam_cleanup.inspect(remote)
                 write.heading('Clear WAM session data and caches')
                 write.raw('Session Storage, Cache, Code Cache, GPUCache')
@@ -445,7 +468,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write.raw(json.dumps(result, indent=2))
             if args.command in ('status', 'doctor', 'restore') and profile['edition'] == 'no-root':
                 pending = store.pending(profile)
-                if pending and pending.get('action') == 'uninstall':
+                if pending and (pending.get('action') == 'uninstall' or
+                                (pending.get('action') == 'install' and pending.get('stage') == 'pending')):
                     write.recovery(profile)
         return 0
     except (EOFError, KeyboardInterrupt, StopIteration):

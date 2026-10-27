@@ -22,6 +22,31 @@ Der aktualisierte No-root Helper benötigt Node.js 0.12.2 oder neuer auf dem TV.
 
 - **Root:** Bereits vorhandener Root-Zugang über SSH ist nötig. Der Installer richtet keinen Root-Zugang ein. Developer Mode nicht auf einem bereits gerooteten Fernseher aktivieren. Root-Zugang und Wiederherstellungsdienste verfügbar halten.
 
+
+## Developer Mode einrichten (No-root)
+
+Mit Developer Mode kann CYTV Apps auf einem TV ohne Root installieren.
+
+1. Öffnen Sie am TV LG Apps, suchen Sie nach Developer Mode und installieren Sie die App.
+2. Öffnen Sie Developer Mode und melden Sie sich mit Ihrem LG Developer-Konto an. Erstellen Sie bei Bedarf ein Konto unter webostv.developer.lge.com.
+3. Schalten Sie Dev Mode Status ein. Der TV startet neu. Öffnen Sie danach Developer Mode erneut.
+4. Schalten Sie Key Server ein und lassen Sie Developer Mode geöffnet. Tragen Sie die dort angezeigte IP Address als TV-Adresse in CYTV ein.
+5. Geben Sie die Passphrase ein: die sechs Zeichen, die Developer Mode am TV anzeigt. Beachten Sie Groß- und Kleinschreibung.
+
+Verwenden Sie den Code vom TV, nicht das Passwort Ihres LG-Kontos. Wird kein Code angezeigt, schalten Sie Key Server ein.
+
+Die Kopplung ist ein eigener Schritt: Bestätigen Sie CYTV mit der Fernbedienung, wenn der TV danach fragt.
+
+Halten Sie Developer Mode aktiv: Öffnen Sie die App vor Ablauf des Timers und drücken Sie bei bestehender Internetverbindung EXTEND. Nach Ablauf kann LG diese Apps entfernen.
+
+Home ist Ihr App-Bildschirm. Home Helper sorgt dafür, dass die Home-Taste ihn öffnet.
+
+Drücken Sie nach der Installation zum Testen Home. Falls LG Home erscheint, öffnen Sie Home Helper in der App-Liste des TV. Drei kurze Home-Tastendrücke in zwei Sekunden öffnen LG Home. Öffnen Sie zum Neustart der Home-Steuerung Home Helper, wählen Sie Helper starten und bestätigen Sie. Ihre gespeicherte Home-Auswahl bleibt erhalten.
+
+CYTV am Computer zeigt die Vorbereitung Schritt für Schritt. Details öffnet das Vorgangsprotokoll. LG-Beispielbilder lassen sich vergrößern; verwenden Sie den Code Ihres eigenen TV.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
+
 ## Optionales Python für Root in v1.1.0
 
 Root benötigt auf dem TV ein funktionsfähiges Python **3.9+**. Der Installer prüft benötigte Module (darunter `json` und `fcntl`), Sperren, Dateisystemzugriffe und Unterprozesse; die Versionsnummer allein genügt nicht. Ein geeignetes vorhandenes Python vermeidet den Zusatzdownload. Andernfalls lädt die Einrichtung auf dem Computer oder Android-Gerät geprüftes **CPython 3.13.17 für ARMv7 Soft-Float** herunter und überträgt es über vertrauenswürdiges SSH. Der TV benötigt dafür kein Internet. Das optionale Archiv ist nicht im normalen Installer enthalten: etwa **26.3 MB** Download, **51.5 MB** normalisierte SSH-Übertragung und **119.3 MB** installierte Dateien; für die anfängliche Bereitstellung sind **320 MiB** freier Speicher nötig. Die private Laufzeit ersetzt weder System-Python noch libc oder den globalen PATH.
@@ -65,7 +90,7 @@ Pfeile wählen eine Kachel, OK öffnet sie; OK gedrückt halten zum Verschieben.
 
 **Neue Builds: Home innerhalb von zwei Sekunden dreimal kurz drücken**, dazwischen loslassen. Dies stellt LG Home wieder her und stoppt die Steuerung, ohne Einstellungen zurückzusetzen. Beim älteren No-root Helper bis einschließlich 0.6.13 stattdessen Home etwa zwei Sekunden halten. Langes Home ist nicht die Root-Notfallgeste.
 
-No-root: **Home Helper** in der LG-App-Liste öffnen, um fortzufahren; Home allein hebt den Stopp nicht auf. Root: **Home ändern** in den Home-Einstellungen einschalten, um fortzufahren. **LG Home öffnen** öffnet LG Home einmalig, ohne das Home-Ziel zu ändern. Für LG Home als dauerhaftes Ziel **Home ändern** ausschalten oder `cytv restore` ausführen. Beide Steuerungen nie gleichzeitig betreiben. Bei wiederholtem Fehler LG Home aktiv lassen.
+No-root: Drei kurze Home-Tastendrücke in zwei Sekunden öffnen LG Home. Öffnen Sie zum Neustart der Home-Steuerung Home Helper, wählen Sie Helper starten und bestätigen Sie. Ihre gespeicherte Home-Auswahl bleibt erhalten. Root: **Home ändern** in den Home-Einstellungen einschalten, um fortzufahren. **LG Home öffnen** öffnet LG Home einmalig, ohne das Home-Ziel zu ändern. Für LG Home als dauerhaftes Ziel **Home ändern** ausschalten oder `cytv restore` ausführen. Beide Steuerungen nie gleichzeitig betreiben. Bei wiederholtem Fehler LG Home aktiv lassen.
 
 ```sh
 ./cytv --language de status
@@ -179,3 +204,29 @@ Der Start erfolgt über private, durch Eigentumsbelege abgesicherte Startdateien
 
 
 Für diesen Quellcode-Kandidaten benötigt eine vorhandene Root-Installation eine geprüfte Wiederherstellung und eine neue Einrichtung, um die korrigierte private Laufzeit zu erhalten. Ein Installer-Update allein ersetzt sie nicht. Bewahren Sie Wiederherstellungsdaten auf und aktivieren Sie Home nur über die normale Einrichtung oder die Einstellungen.
+
+Nur im nächsten Kandidaten: No-root Einstellungen → Entwicklermodus → Diagnose anzeigen enthält sichere Fehlerkategorien für Speicherung und Home-RPC sowie die tatsächliche Dienstversion. Das Anzeigen aktiviert weder die Verlängerung noch Helper. Ein fehlgeschlagener Statustest beweist keinen gestoppten Helper. Eine C5-Korrektur ist nicht bestätigt; [Details (Englisch)](../SETTINGS-DIAGNOSTICS.md).
+
+Der Bericht erhält den Fernbedienungsfokus. Auf/Ab scrollt; Links/Rechts oder OK führt zu den benachbarten Aktionen, Zurück zu den Home-Einstellungen.
+
+**Noch nicht veröffentlicht, #82:** Fehlt die Home-Einstellung, kann die ausdrücklich gestartete Root-Einrichtung LG Home eintragen und den Wert vor Abschluss der Wiederherstellungseinrichtung zurücklesen. Status/doctor schreibt nichts. Ein Schreibvorgang mit unklarem Ergebnis wird nicht wiederholt; Wiederherstellungsdaten behalten. Die ausdrückliche LG-Home-Einstellung bleibt nach der Deinstallation erhalten. Gerätetests für diese Firmware stehen aus.
+
+## Unveröffentlichter Kandidat: HDMI-Ton wiederherstellen (Root)
+
+Home-Einstellungen → HDMI-Ton bietet eARC-Neuverbindung und bestätigte
+HDMI-Ausgabewiederherstellung. ARC-only, kombinierte/WOW-Orchestra- und unbekannte
+Modi werden übersprungen. Automatik nach Einschalten/Aufwachen ist experimentell,
+standardmäßig aus, benötigt ein Stromstatus-Abonnement und kann funktionierenden
+Ton unterbrechen. Zurück schließt während der Bereinigung. Nach Unterbrechung
+Status prüfen; gespeichertes eARC nur wiederherstellen, wenn es eingeschaltet sein
+soll. Home-Wiederherstellung/Not-Aus deaktiviert die Automatik bis zur ausdrücklichen
+Aktivierung. Alte private Runtimes brauchen geprüfte Neueinrichtung. TV-Kompatibilität
+und schnellerer Ton sind unbestätigt.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-, Verzeichnissicherheits- und Platzfehler. Die Ersteinrichtung braucht 320 MiB frei in /var/lib. Großer WAM Session Storage kann Platzmangel erklären; beim Löschen kann App-Sitzungszustand verloren gehen. Siehe [Wiederherstellung](../RECOVERY.md#private-python-and-low-var-space).
+
+Im unveröffentlichten Kandidaten 1.4.0 bietet auch eine unterbrochene No-root-Installation nach **TV-Status prüfen** die Aktion **Wiederherstellen und neu installieren**. Bestätigen Sie das Entfernen der Clean Your TV-Apps nur, wenn Sie es wünschen; prüfen Sie anschließend die Versionen vor der Neuinstallation. Schlägt die Wiederherstellung fehl, speichern Sie den Diagnosebericht und stoppen Sie. Die ursprüngliche Paketverweigerung des Fernsehers ist damit noch nicht geklärt oder behoben (#21).
+
+Sie können abbrechen und selbst Platz freigeben: ungenutzte Apps in den LG-Einstellungen entfernen oder der Anleitung zur manuellen Bereinigung folgen. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

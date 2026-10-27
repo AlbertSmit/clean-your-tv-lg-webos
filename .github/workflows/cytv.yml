@@ -143,6 +143,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install -y ./dist/cytv-linux-x64.deb
+          /opt/clean-your-tv/cytv-desktop --check-runtime
           xvfb-run -a env QT_QPA_PLATFORM=xcb /opt/clean-your-tv/cytv-desktop --smoke-test
       - name: Verify extracted Windows desktop package
         if: runner.os == 'Windows'
@@ -153,7 +154,7 @@ jobs:
           Expand-Archive -LiteralPath dist/cytv-windows-x64-desktop.zip -DestinationPath $destination
           $exe = Join-Path $destination 'cytv-desktop/cytv-desktop.exe'
           $env:QT_QPA_PLATFORM = 'offscreen'
-          foreach ($argument in @('--check-payload', '--smoke-test')) {
+          foreach ($argument in @('--check-payload', '--check-runtime', '--smoke-test')) {
             $process = Start-Process -FilePath $exe -ArgumentList $argument -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "Windows desktop $argument failed: $($process.ExitCode)" }
           }

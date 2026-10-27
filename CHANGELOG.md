@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased v1.4.0 candidate
+
+- Integrate #80, #81, #87, #89, #97 and #99: safe settings diagnostics, guided
+  setup, verified missing-Home initialization, experimental opt-in eARC recovery,
+  frozen Intel macOS dependency loading and actionable private-Python preflight.
+- See [candidate scope and versions](docs/RELEASE-1.4.0.md) and
+  [testing matrix](docs/RC-1.4.0-TESTING.md). Physical acceptance is pending.
+
+## v1.3.0 — recovery, installer portability and localized Home
+
+- See [release notes](docs/RELEASE-1.3.0.md) and the scoped
+  [acceptance record](docs/RELEASE-1.3.0-ACCEPTANCE.md).
+
 ## v1.2.0 — Helper recovery and Root firmware settings
 
 - Offer confirmed Helper start when firmware denies status (#59, #60).

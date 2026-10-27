@@ -74,6 +74,12 @@ and Node.js 8+ on the TV, Homebrew services and the supported ARM32 Magic Remote
 are required. Installation checks fail closed for unexpected state. A doctor
 report alone does not establish compatibility.
 
+**Unreleased, issue #82:** if Settings Service has no Home override, explicit
+setup can initialize it to verified LG Home and read it back before finalizing
+recovery. Existing values are not replaced. Uncertain writes are not replayed;
+retain recovery data. Status/doctor never writes this setting. The explicit stock
+override remains after removal. See [readback design and acceptance limits](../docs/development/ROOT-HOME-READBACK.md).
+
 The computer/Android installer can provision a private, verified ARMv7 Python
 when system Python is missing or incompatible. Working system installations do
 not download this component. See [automatic Python runtime](../docs/OPTIONAL-PYTHON.md)
@@ -169,3 +175,13 @@ existing recovery archives and unknown-operation records. Updating Installer
 alone does not replace retained private product code. Root remains disabled until
 an explicit activation through the normal setup/settings flow. See the
 [candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).
+
+## Unreleased HDMI sound recovery
+
+Root settings → HDMI sound provides manual eARC restart and confirmed HDMI-route
+fallback recovery. Experimental boot/standby recovery is off by default and may
+interrupt healthy audio. Unsupported/combined modes are skipped. Interrupted
+transactions require explicit setting restoration. Home restoration/emergency
+off inhibits automation until explicit enable. Existing private runtimes need
+checked fresh setup. No physical compatibility or faster acquisition is claimed.
+See [runtime and pending acceptance](../docs/development/ROOT-AUDIO-RECOVERY.md).

@@ -34,6 +34,37 @@ work. The report that a C2 remained signed in is not a guarantee for other apps.
 Local Storage, Service Worker, `databases`, managed Python and recovery records
 are outside the selected trees and are never cleanup targets.
 
+## Free space yourself instead
+
+You can decline automated cleanup and remove unused apps through LG settings.
+Check free space again before attempting setup. Do not delete private Python or
+installation/recovery records to make room. The low-space error and maintenance
+screen both offer this alternative and link to this guide.
+
+Experienced Root operators may instead review these exact WAM folders over their
+existing trusted SSH connection. Close TV apps first. **Deleting session state
+can sign you out and lose unsaved work; it cannot be undone.** Manual commands do
+not provide cytv's ownership, link, mountpoint or snapshot checks. Do not use this
+path to bypass a safety refusal or a pending installation/removal.
+
+Inspect first (these commands do not delete files):
+
+```sh
+df -Pk /var/lib
+du -xsk /var/lib/wam/Default/Session\ Storage /var/lib/wam/Default/Cache /var/lib/wam/Default/Code\ Cache /var/lib/wam/Default/GPUCache
+```
+
+Only if you have reviewed the paths, understand the risks and deliberately choose
+to erase these four folders, run this separate destructive command:
+
+```sh
+rm -rf -- "/var/lib/wam/Default/Session Storage" "/var/lib/wam/Default/Cache" "/var/lib/wam/Default/Code Cache" "/var/lib/wam/Default/GPUCache"
+```
+
+Then, when ready to interrupt TV use, run `reboot` once. After a real restart,
+check `df -Pk /var/lib` again and explicitly retry setup. Standby is not a reboot;
+freed space and successful installation are not guaranteed.
+
 ## Safety checks and failure recovery
 
 The action refuses symlinks, hard-linked files, special files, non-root ownership,

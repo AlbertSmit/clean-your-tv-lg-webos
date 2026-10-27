@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 try:
-    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QRadioButton
+    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QRadioButton, QDialog
     from cytv.gui import Wizard
     from cytv.desktop import Prompt
     HAS_QT = True
@@ -190,6 +190,71 @@ class GuiTests(unittest.TestCase):
         w.show_prompt(Prompt('SSH key passphrase: ', secret=True))
         self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
         w.close()
+
+    def test_secret_prompt_separates_current_guidance_from_collapsed_history(self):
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        w.receive('text', 'Earlier setup instruction')
+        w.show_prompt(Prompt('Developer Mode passphrase: ', secret=True))
+        self.app.processEvents()
+        self.assertNotIn('Earlier setup instruction', w.content.toPlainText())
+        self.assertIn('six characters', w.content.toPlainText())
+        self.assertIn('Key Server', w.content.toPlainText())
+        self.assertIn('Earlier setup instruction', w.details.toPlainText())
+        self.assertTrue(w.details.isHidden())
+        w.details_toggle.click()
+        self.assertFalse(w.details.isHidden())
+        self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
+
+    def test_preparation_pages_do_not_answer_connection_confirmation(self):
+        from cytv.desktop import Channel
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.channel = Channel(lambda *args: None)
+        w.receive('step', (3, 'Prepare the TV connection', True))
+        for heading, text in [('1. Developer Mode', 'Install the app'),
+                              ('2. Dev Mode Status', 'Restart the TV'),
+                              ('3. Key Server', 'Leave the app open')]:
+            w.receive('heading', heading)
+            w.receive('text', text)
+        w.receive('step', (4, 'Review and install', False))
+        w.receive('text', 'TV: 192.0.2.10')
+        prompt = Prompt('Connect to check installed versions? [Y/n]: ')
+        w.show_prompt(prompt)
+        self.assertIn('Install the app', w.content.toPlainText())
+        self.assertNotIn('Restart the TV', w.content.toPlainText())
+        self.assertTrue(w.channel.answers.empty())
+        def click_default():
+            next(b for b in w.form.findChildren(QPushButton) if b.isDefault()).click()
+        click_default()
+        self.assertIn('Restart the TV', w.content.toPlainText())
+        next(b for b in w.form.findChildren(QPushButton) if b.text() == 'Back').click()
+        self.assertIn('Install the app', w.content.toPlainText())
+        for _ in range(3):
+            click_default()
+        self.assertIn('TV: 192.0.2.10', w.content.toPlainText())
+        self.assertTrue(w.channel.answers.empty())
+        self.assertEqual(w.pending, prompt)
+        click_default()
+        self.assertEqual(w.channel.answers.get_nowait(), 'y')
+
+    def test_example_viewer_keeps_dark_theme_and_does_not_answer_password_prompt(self):
+        from cytv.desktop import Channel
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.channel = Channel(lambda *args: None)
+        prompt = Prompt('Developer Mode passphrase: ', secret=True)
+        w.show_prompt(prompt)
+        w.show_reference('key-server')
+        self.app.processEvents()
+        viewer = w.findChild(QDialog)
+        self.assertTrue(viewer.isVisible())
+        self.assertTrue(viewer.isModal())
+        self.assertLess(viewer.grab().toImage().pixelColor(2, 2).lightness(), 80)
+        viewer.reject()
+        self.assertEqual(w.pending, prompt)
+        self.assertTrue(w.channel.answers.empty())
 
     def test_failed_language_save_keeps_visible_and_active_selection(self):
         from cytv import i18n

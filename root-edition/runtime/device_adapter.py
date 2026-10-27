@@ -147,6 +147,10 @@ def remove_candidate(identity):
 
 
 def restore_once(expected_transaction=None):
+    try:
+        from audio_recovery import inhibit
+        inhibit(STATE)
+    except Exception: pass  # Emergency Home recovery has priority over optional audio policy.
     trusted_dir(STATE)
     try: (STATE/'profile-trial.json').lstat()
     except FileNotFoundError: return 'absent'

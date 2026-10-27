@@ -20,6 +20,31 @@ The updated No-root Helper requires TV Node.js 0.12.2 or newer. The installer ch
 
 - **Root:** existing root SSH access is required. The installer does not root the TV. Do not enable Developer Mode on an existing rooted setup. Keep root access and recovery services available.
 
+
+## Developer Mode setup (No-root)
+
+Developer Mode lets CYTV install apps on a TV without root.
+
+1. On the TV, open LG Apps, search for Developer Mode and install it.
+2. Open Developer Mode and sign in with your LG Developer account. Create an account at webostv.developer.lge.com if needed.
+3. Turn on Dev Mode Status. The TV restarts. Open Developer Mode again.
+4. Turn on Key Server and leave Developer Mode open. Its IP Address is the TV address to enter in CYTV.
+5. Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.
+
+Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.
+
+Pairing is a separate step: when the TV asks, approve CYTV with your remote.
+
+Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.
+
+Home is your app screen. Home Helper makes the Home button open it.
+
+After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps. Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.
+
+Desktop CYTV shows preparation one step at a time. Details opens the operation log. LG example images can be enlarged; use the code from your own TV.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
+
 ## Optional Python for Root in v1.1.0
 
 Root needs a working Python **3.9+** on the TV. The installer checks the required modules (including `json` and `fcntl`), locking, filesystem and subprocess operations; the version number alone is insufficient. A suitable existing interpreter avoids the extra download. Otherwise setup downloads verified **CPython 3.13.17 for ARMv7 soft-float** on the computer or Android device, then transfers it over trusted SSH; the TV does not need Internet access. This optional archive is not bundled in ordinary installers: about **26.3 MB** downloaded, **51.5 MB** for normalized SSH transfer and **119.3 MB** installed, with **320 MiB** free required for initial staging. The private runtime does not replace system Python, libc or global PATH.
@@ -63,7 +88,7 @@ Arrows select tiles; OK opens them; hold OK to reorder. Short Back retains the a
 
 **New builds: press Home three times within two seconds**, releasing between presses, to return to LG Home and stop Home control. This preserves preferences. Older No-root Helper versions through 0.6.13 instead use holding Home for about two seconds; holding Home is not the Root emergency gesture.
 
-No-root: open **Home Helper** from LG Apps to resume; opening Home alone does not clear the stop. Root: turn **Change Home** on in Home settings to resume. **Open LG Home** opens LG Home once without changing routing. To restore LG Home as the persistent destination, turn **Change Home** off or run `cytv restore`. Do not run both controllers together. If a failure repeats, leave LG Home active.
+No-root: Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept. Root: turn **Change Home** on in Home settings to resume. **Open LG Home** opens LG Home once without changing routing. To restore LG Home as the persistent destination, turn **Change Home** off or run `cytv restore`. Do not run both controllers together. If a failure repeats, leave LG Home active.
 
 ```sh
 ./cytv --language en status
@@ -174,3 +199,28 @@ Startup uses receipt-owned private wrappers that check installed package identit
 
 
 For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+Next candidate only: No-root Settings → Developer Mode → Show diagnostics includes safe storage/Home RPC failure categories and the actual service version. Viewing diagnostics does not enable renewal or start Helper. A failed status check does not prove Helper stopped. This does not establish a C5 fix; see [diagnostics (English)](../SETTINGS-DIAGNOSTICS.md).
+
+The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.
+
+**Unreleased, #82:** when the Home setting is absent, explicit Root setup can initialize it to LG Home and verify the readback before enabling recovery. Status/doctor never writes it. An uncertain write is not repeated; keep recovery data. The explicit LG Home setting remains after removal. This firmware still needs device testing.
+
+## Unreleased candidate: HDMI sound recovery (Root)
+
+Home settings → HDMI sound offers Reconnect eARC and confirmed HDMI-route fallback
+recovery. ARC-only, combined/WOW Orchestra and unknown modes are skipped.
+Recover after power-on is experimental, off by default; it may interrupt healthy
+audio after power-on/standby and requires a supported power subscription. Back can
+close the panel during cleanup. After interruption, check status; restore the saved
+setting only if you want eARC on. Home restoration/emergency stop disables automation
+until explicit enable. Older private runtimes need checked fresh setup. TV compatibility
+and faster audio acquisition remain unconfirmed.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Unreleased: private Python preflight reports ABI, directory safety and free-space failures separately. Initial setup needs 320 MiB free in /var/lib. A large WAM Session Storage may explain low space; clearing it can lose app session state. See the [recovery guide](../RECOVERY.md#private-python-and-low-var-space).
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21).
+
+You can cancel and free space yourself by removing unused apps in LG settings or following the manual cleanup guide. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

@@ -86,6 +86,7 @@ def build_desktop(root, payload, environment, version):
         subprocess.run(['codesign', '--force', '--deep', '--sign', '-', str(bundle)], check=True)
         executable = bundle / 'Contents/MacOS/cytv'
         subprocess.run([str(executable), '--check-payload'], check=True)
+        subprocess.run([str(executable), '--check-runtime'], check=True)
         subprocess.run([str(executable), '--smoke-test'], env=dict(os.environ, QT_QPA_PLATFORM='offscreen'), check=True)
         archive = root / 'dist' / ('cytv-macos-' + ('arm64' if platform.machine() == 'arm64' else 'x64') + '.zip')
         subprocess.run(['ditto', '-c', '-k', '--sequesterRsrc', '--keepParent', str(bundle), str(archive)], check=True)
@@ -93,6 +94,7 @@ def build_desktop(root, payload, environment, version):
         frozen = output / name
         executable = frozen / (name + '.exe')
         subprocess.run([str(executable), '--check-payload'], check=True)
+        subprocess.run([str(executable), '--check-runtime'], check=True)
         subprocess.run([str(executable), '--smoke-test'], env=dict(os.environ, QT_QPA_PLATFORM='offscreen'), check=True)
         (frozen / 'version.json').write_text(json.dumps({
             'cytv': version, 'platform': 'windows-x64', 'entrypoint': 'cytv-desktop.exe'}), encoding='utf-8')
@@ -103,6 +105,7 @@ def build_desktop(root, payload, environment, version):
             raise RuntimeError('The desktop .deb currently targets x64 only.')
         frozen = output / name
         subprocess.run([str(frozen / name), '--check-payload'], check=True)
+        subprocess.run([str(frozen / name), '--check-runtime'], check=True)
         subprocess.run([str(frozen / name), '--smoke-test'], env=dict(os.environ, QT_QPA_PLATFORM='offscreen'), check=True)
         tree = deb_tree(root, frozen, version, root / 'build/cytv/deb')
         archive = root / 'dist/cytv-linux-x64.deb'

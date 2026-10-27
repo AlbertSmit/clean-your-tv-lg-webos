@@ -1,26 +1,20 @@
-# Candidate Home artwork
+# Home appearance photo assets
 
-These assets are used by the optional No-root tvOS appearance. **Sundown** is a
-fictional series title rendered separately by the UI; the backdrop contains no
-text or interface elements. It is not an Apple or streaming-service image and
-has no dynamic content integration.
+The optional No-root tvOS appearance uses a user-supplied photograph. The
+repository contains its full-size runtime crop, a preblurred source retained for
+the dock texture build script, and a small derivative for the grid backdrop.
 
 | File | Dimensions | Bytes | Provenance |
 | --- | --- | --- | --- |
-| `cinema-backdrop.jpg` | 1672×941 | 197269 | Original artwork generated with the built-in image-generation tool on 2026-10-26 |
-| `cinema-backdrop-soft.jpg` | 480×270 | 5629 | Local derivative, preblurred with radius 14 for the dock/grid treatment |
+| `cinema-backdrop.jpg` | 1920×1080 | 596521 | User-supplied photograph, cropped and resized for the shelf |
+| `cinema-backdrop-soft.jpg` | 1920×1080 | 128475 | Preblurred user-supplied photograph, retained as a dock texture build source; not packaged |
+| `cinema-backdrop-shelf.jpg` | 480×270 | 36765 | Shelf thumbnail resized from the preblurred photo; packaged for the grid |
+| `profile-avatar.jpg` | 96×96 | 6594 | Local thumbnail resized from the unchanged user-supplied portrait |
 
-The static duplicate avoids a live CSS blur filter on the TV. It does not prove
-acceptable memory use, focus cadence or visual performance on physical hardware.
-
-## Generation prompt
-
-> Original fictional cinematic noir-series backdrop. Detective with short dark hair and jacket over light open-collar shirt beside a vintage convertible at a Los Angeles hillside overlook at golden hour. Wide16:9, detective slightly left at x43%, head near upper third, car across lower third. Calm dark upper-left negative space for separately rendered title. Film-still photography, teal shadows left, pale salmon sunlight right, hazy city and palms. No recognizable celebrity, text, logos, watermark, UI or cards.
-
-The artwork depicts a fictional noir detective and vintage convertible at a Los
-Angeles sunset, with teal shadows and warm sunlight. The UI applies its title,
-dock and controls separately. Preserve the original/derivative relationship when
-replacing the asset; do not introduce live filters or network requests implicitly.
+The user-supplied photographs are not covered by the repository MIT license, and
+no redistribution license is asserted. Keep the originals in the repository for
+local provenance and texture regeneration; the public launcher payload includes
+only the derivatives it uses. No names or identifying details are documented.
 
 ## Typeface provenance
 
@@ -38,9 +32,10 @@ license does not cover them. See [third-party notices](../../THIRD_PARTY_NOTICES
 
 ## User-supplied profile and shared glass texture
 
-`profile.jpg` is the unchanged user-supplied portrait used for the local Home
-avatar. It is not covered by the repository MIT license; no redistribution
-license is asserted. No publication is part of this update.
+The unchanged user-supplied portrait is retained as `profile.jpg`; the launcher
+uses its 96×96 derivative, `profile-avatar.jpg`. Neither is covered by the
+repository MIT license; no redistribution license is asserted. The original is
+not included in the public launcher payload.
 
 Now Playing reuses the existing `dock-glass-home.jpg` texture with the dock-style
 fill, radius and shadow. Reduce effects uses an opaque fallback. This reuses a

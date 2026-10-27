@@ -108,9 +108,9 @@ or `tvos`, while `cytv-reduced-effects` stores its boolean effects preference.
 Both are device-local cosmetic settings, separate from the five `cytv-theme`
 palettes and excluded from the strict profile backup envelope. Ordinary
 restarts retain them; reinstall and profile transfer need not. The full-bleed
-static backdrop depicts the fictional series **Sundown**, with a local preblurred
-copy for the dock and grid. There is no dynamic streaming integration or live
-blur filter. Asset provenance and the generation prompt are recorded in
+static backdrop uses a user-supplied photograph, with a local preblurred
+copy for the dock and a small thumbnail for the grid. There is no dynamic
+streaming integration or live blur filter. Asset provenance is recorded in
 [`launcher/assets/README.md`](../launcher/assets/README.md).
 
 The idle header shows a compact clock and an avatar-shaped Settings button at
@@ -143,10 +143,10 @@ The local candidate includes user-supplied SF Pro Display (400/500/600/700) and
 SF Pro Text (300/400/600), with Inter Display and Noto fallbacks. The seven font
 files retain their supplied names under `launcher/fonts/`; obsolete optional
 `SFProDisplay-*.woff2` references are removed. Inter Display 4.1 remains covered
-by its retained SIL Open Font License. The supplied SF fonts and
-`launcher/assets/profile.jpg` portrait are proprietary/user-supplied assets;
-the repository MIT license does not cover them, and no redistribution license
-is asserted. See [third-party notices](../THIRD_PARTY_NOTICES.md).
+by its retained SIL Open Font License. The supplied SF fonts and photographs
+are user-supplied assets; the repository MIT license does not cover them, and
+no redistribution license is asserted. See
+[third-party notices](../THIRD_PARTY_NOTICES.md).
 Browser/build verification does not establish performance or visual fidelity on
 LG 50UP77006LB; physical-TV acceptance remains pending.
 

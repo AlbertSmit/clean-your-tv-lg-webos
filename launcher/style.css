@@ -322,7 +322,6 @@ body.scrolled header {
   position: absolute;
   width: 360px;
   opacity: 0;
-  will-change: transform, opacity;
   transition: opacity 400ms ease, transform 400ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 

@@ -9,7 +9,12 @@ export function createShelf() {
   </section>;
   document.body.insertBefore(element, document.getElementById('viewport'));
   return {
-    update(visible) {
+    update(visible, enabled) {
+      if (enabled) {
+        var backdrop = element.querySelector(visible ? '.shelf-backdrop' : '.shelf-backdrop-soft');
+        var image = visible ? 'cinema-backdrop.jpg' : 'cinema-backdrop-shelf.jpg';
+        if (!backdrop.style.backgroundImage) backdrop.style.backgroundImage = "url('assets/" + image + "')";
+      }
       element.classList.toggle('shelf-visible', visible);
     }
   };

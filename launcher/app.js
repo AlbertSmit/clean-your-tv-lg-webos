@@ -900,7 +900,7 @@
       stage.style.transform = "translate3d(0," + -scrollOffset + "px,0)";
       document.body.classList.toggle("app-grid", layout.tvos && scrollOffset > 0);
       document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < headerBottom + 24);
-      shelf.update(layout.tvos && row === 0);
+      shelf.update(layout.tvos && row === 0, layout.tvos);
       dockGlass.update(layout.tvos, layout.grid, HomeUI.preferences().reducedEffects);
       if (layout.tvos) {
         getElement('dockTexture').style.backgroundPosition = '-40px ' + (-layout.dockTop + scrollOffset) + 'px';

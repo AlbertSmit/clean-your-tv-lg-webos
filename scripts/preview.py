@@ -17,11 +17,11 @@ LAUNCHER_FILES = {
     'user-data.js', 'widget-data.js', 'release-notes.js', 'system-updates.js', 'update-panel.js', 'renewal-panel.js', 'helper-control.js', 'profile-bootstrap.js',
     'native-bootstrap.js', 'i18n.js', 'catalogs.js', 'i18n.css', 'theme-panel.js',
     'appearance.css', 'home-ui.js', 'home-ui-LICENSE.txt',
-    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-shelf.jpg',
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
     'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
-    'assets/profile.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
+    'assets/profile-avatar.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
 }
@@ -43,11 +43,11 @@ ROOT_LAUNCHER_FILES = {
     'i18n.js', 'catalogs.js', 'i18n.css', 'root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css',
     'root-profile-data.js', 'root-profile.js', 'release-notes.js', 'system-updates.js', 'root-updates.js',
     'appearance.css', 'theme-panel.js', 'home-ui.js', 'home-ui-LICENSE.txt',
-    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-soft.jpg',
+    'assets/cinema-backdrop.jpg', 'assets/cinema-backdrop-shelf.jpg',
     'assets/dock-home.jpg', 'assets/dock-grid.jpg', 'assets/dock-displacement.png',
     'assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg',
     'assets/shelf-mark.svg',
-    'assets/profile.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
+    'assets/profile-avatar.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
 }
 ICON_FILES = {app_id + '.svg' for app_id, _, _ in DEMO_APPS}

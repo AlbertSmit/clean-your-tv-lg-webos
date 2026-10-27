@@ -71,11 +71,8 @@ files, retaining their supplied names: `sf-pro-display_regular.woff2`,
 These are not covered by the repository MIT license; no redistribution license
 is asserted. [Apple font information](https://developer.apple.com/fonts/).
 
-`launcher/assets/profile.jpg` is an unchanged user-supplied portrait used by the
-local candidate. It is not covered by the repository MIT license, and no
-redistribution license is asserted. No publication is part of this asset update.
-
-The candidate **Sundown** backdrop is original fictional artwork generated with
-the built-in image-generation tool on 2026-10-26, with a local preblurred derivative.
-It is not Apple artwork or a third-party series still. Files, prompt and processing
-provenance are recorded in [`launcher/assets/README.md`](launcher/assets/README.md).
+The launcher uses a 96×96 derivative of an unchanged user-supplied portrait.
+The shelf uses a crop and a thumbnail derivative of a user-supplied photograph.
+These photographs are not covered by the repository MIT license; no
+redistribution license is asserted. Their sources and processing notes are
+recorded in [`launcher/assets/README.md`](launcher/assets/README.md).

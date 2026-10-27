@@ -28,7 +28,7 @@ def tracked_files(prefix):
                              'launcher/theme-panel.js', 'launcher/appearance.css', 'launcher/ui/index.jsx',
                              'launcher/ui/layouts.js', 'launcher/ui/preferences.js', 'launcher/ui/tile.jsx',
                              'launcher/ui/shelf.jsx', 'launcher/ui/appearance-panel.jsx',
-                             'launcher/ui/status.jsx', 'launcher/assets/cinema-backdrop.jpg', 'launcher/assets/cinema-backdrop-soft.jpg',
+                             'launcher/ui/status.jsx', 'launcher/assets/cinema-backdrop.jpg', 'launcher/assets/cinema-backdrop-shelf.jpg', 'launcher/assets/profile-avatar.jpg',
                              'launcher/ui/dock-glass.js', 'launcher/assets/dock-home.jpg', 'launcher/assets/dock-grid.jpg', 'launcher/assets/dock-displacement.png',
                              'launcher/assets/dock-glass-home.jpg', 'launcher/assets/dock-glass-grid.jpg',
                              'launcher/fonts/InterDisplay-Regular.woff2', 'launcher/fonts/InterDisplay-Medium.woff2',
@@ -39,7 +39,10 @@ def tracked_files(prefix):
                 'native/service': ['native/service/app-inventory.js']}
     if prefix == 'native/app':
         required[prefix] += [p.relative_to(ROOT).as_posix() for p in (ROOT/'native/app/vendor/ws-legacy').rglob('*') if p.is_file()]
-    for name in sorted(set(result.stdout.splitlines()) | set(required.get(prefix, []))):
+    names = set(result.stdout.splitlines()) | set(required.get(prefix, []))
+    if prefix == 'launcher':
+        names.difference_update({'launcher/assets/profile.jpg', 'launcher/assets/cinema-backdrop-soft.jpg'})
+    for name in sorted(names):
         path = ROOT / name
         if path.is_symlink() or not path.is_file():
             raise ValueError('Missing or indirect public source: ' + name)

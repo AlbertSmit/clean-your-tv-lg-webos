@@ -6,7 +6,7 @@ export function createStatus(onOpen, onWidgetsFocus) {
   const time = <span class="status-time" />;
   function open() { if (onOpen() === false) element.blur(); }
   const element = <button type="button" id="homeStatus" aria-label={title} aria-expanded="false" aria-controls="topButtons" onClick={open} onFocus={open}>
-    {time}<span class="status-avatar" aria-hidden="true"><img src="assets/profile.jpg" alt="" draggable="false" /></span>
+    {time}<span class="status-avatar" aria-hidden="true"><img src="assets/profile-avatar.jpg" alt="" draggable="false" /></span>
   </button>;
   const widgetsLabel = window.HomeI18n ? window.HomeI18n.t('Widgets') : 'Widgets';
   const widgetsButton = <button type="button" id="btnWidgets" class="status-widgets" role="switch" aria-label={widgetsLabel} onFocus={() => { if (onWidgetsFocus() === false) widgetsButton.blur(); }}>

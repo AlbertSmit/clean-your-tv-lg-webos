@@ -39,6 +39,24 @@ class BuildAssetsTests(unittest.TestCase):
         self.assertIn('release-notes.js', list(build['tracked_files']('launcher')))
         self.assertIn('app-inventory.js', list(build['tracked_files']('native/service')))
 
+    def test_launcher_packages_only_the_photo_derivatives_it_uses(self):
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        launcher = build['tracked_files']('launcher')
+        self.assertIn('assets/profile-avatar.jpg', launcher)
+        self.assertIn('assets/cinema-backdrop-shelf.jpg', launcher)
+        self.assertNotIn('assets/profile.jpg', launcher)
+        self.assertNotIn('assets/cinema-backdrop-soft.jpg', launcher)
+
+        preview = runpy.run_path(str(root / 'scripts/preview.py'))
+        self.assertNotIn('assets/profile.jpg', preview['LAUNCHER_FILES'])
+        self.assertNotIn('assets/cinema-backdrop-soft.jpg', preview['LAUNCHER_FILES'])
+        self.assertNotIn('assets/profile.jpg', preview['ROOT_LAUNCHER_FILES'])
+        self.assertNotIn('assets/cinema-backdrop-soft.jpg', preview['ROOT_LAUNCHER_FILES'])
+        root_preview = runpy.run_path(str(root / 'root-edition/preview.py'))
+        self.assertNotIn('assets/profile.jpg', root_preview['FILES'])
+        self.assertNotIn('assets/cinema-backdrop-soft.jpg', root_preview['FILES'])
+
     def test_helper_service_bundles_permissions_module_inside_its_sandbox(self):
         import json
         from cytv import package

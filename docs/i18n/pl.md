@@ -120,7 +120,7 @@ Tylko Root: Ustawienia Home → Aktualizacje oprogramowania LG zmienia istnieją
 
 Ten kandydat w kodzie źródłowym dodaje **Ustawienia → Ekran główny → tvOS**. Wybierz **Dotychczasowy**, aby wrócić do obecnego układu i pięciu motywów kolorystycznych. **Ogranicz efekty** ogranicza efekty wizualne. Ta funkcja nie jest częścią opisanego powyżej opublikowanego wydania stabilnego.
 
-Wygląd tvOS wyświetla na całym ekranie statyczne tło fikcyjnego serialu **Sundown**. Dock i siatka aplikacji używają lokalnej, wcześniej rozmytej kopii; nie ma rekomendacji ze streamingu ani filtrów rozmycia na żywo. Przewijaj przyciskiem W dół lub kółkiem myszy. W prawym górnym rogu są niewielki zegar i przycisk Ustawienia w kształcie awatara. Kliknij go lub naciśnij W górę w pierwszym rzędzie aplikacji, aby pokazać wejścia, sieć i ustawienia. Wstecz lub W dół wraca do siatki.
+Wygląd tvOS wyświetla na całym ekranie zdjęcie dostarczone przez użytkownika. Dock używa lokalnej, wcześniej rozmytej kopii, a siatka małej miniatury; nie ma rekomendacji ze streamingu ani filtrów rozmycia na żywo. Przewijaj przyciskiem W dół lub kółkiem myszy. W prawym górnym rogu są niewielki zegar i przycisk Ustawienia w kształcie awatara. Kliknij go lub naciśnij W górę w pierwszym rzędzie aplikacji, aby pokazać wejścia, sieć i ustawienia. Wstecz lub W dół wraca do siatki.
 
 Preferencje wyglądu i efektów są zapisywane tylko na tym telewizorze. Pozostają po zwykłym ponownym uruchomieniu, ale nie są częścią kopii zapasowej profilu i mogą zostać utracone podczas ponownej instalacji lub przenoszenia profilu. Nowe elementy sterowania dotyczą tylko No-root. Czcionki, grafika, ruch i efekty Apple TV nie są odtworzone dokładnie; wydajność na LG 50UP77006LB nie została zweryfikowana.
 

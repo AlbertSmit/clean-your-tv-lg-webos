@@ -154,7 +154,7 @@ Prioritized:
 6. **Unassigned cells** — outlines were removed for the HomeView composition.
    A developer grid overlay is only a verification artifact, not a user setting.
 7. **User-supplied typography and portrait** — seven SF Pro Display/Text font
-   files and `assets/profile.jpg` are present for the local candidate. Inter and
+   files and `assets/profile-avatar.jpg` are present for the local candidate. Inter and
    Noto remain fallbacks. Their presence does not establish redistribution rights;
    they are not covered by the repository MIT license. See `THIRD_PARTY_NOTICES.md`.
 8. **Clock rendering** — live SVG hand transforms replace the old rebuilt digital

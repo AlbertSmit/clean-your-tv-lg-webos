@@ -39,6 +39,12 @@ function harness({restore=null,saved=null,tiles=['app.one'],version='0.0.1',pack
  assert.strictEqual(h.scripts.length,1);assert.deepStrictEqual(h.window.TV_APPS,profile.inventory);assert.strictEqual(h.memory.get('tvhome.order'),profile.settings['tvhome.order']);
  h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert.deepStrictEqual(h.calls.map(x=>x[0]),['restoreProfile','ready','confirm']);assert.strictEqual(h.calls[1][1].transaction,'tx');assert.strictEqual(h.calls[1][1].version,'0.0.1');
  const captured=await h.window.RootProfile.capture();assert.deepStrictEqual(JSON.parse(JSON.stringify(captured)),profile);assert.strictEqual(h.calls.length,3);
+ const colorHarness=harness();await tick();
+ const colorStorage={getItem:k=>colorHarness.memory.get(k)||null,setItem:(k,v)=>colorHarness.memory.set(k,v)};
+ const colorLibrary=colorHarness.window.AppLibrary.create(colorStorage,[{...profile.inventory.apps[0],dominantColor:[10,20,30]}],profile.config);
+ colorLibrary.save(['app.one'],[]);
+ const colorCapture=await colorHarness.window.RootProfile.capture({system:true});
+ assert.strictEqual(JSON.parse(colorCapture.settings['tvhome.layout']).catalog[0].dominantColor,undefined,'runtime colors must not break strict system profile capture or rollback');
  const layoutMemory=new Map([['tvhome.layout',JSON.stringify({version:1,ids:['app.one'],hidden:['app.one'],catalog:profile.inventory.apps})]]);
  h=harness({restore:{profile,transaction:'layout',version:'0.0.1',phase:'verifying'},memory:layoutMemory,tiles:[]});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(h.calls.some(x=>x[0]==='ready'),'saved layout visibility must match the launcher model');
  h=harness({restore:{profile,transaction:'tx',version:'0.0.1',phase:'verifying'},tiles:['wrong']});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));assert(h.errors.length);

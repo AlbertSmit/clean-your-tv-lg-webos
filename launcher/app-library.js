@@ -7,13 +7,20 @@
   var KEY = 'tvhome.layout';
   var internal = ['com.gathin.tvhome','com.local.nativehome','com.cleanyourtv.root.preview','com.cleanyourtv.updater'];
   function unique(ids) { return ids.filter(function(id,i) { return typeof id === 'string' && ids.indexOf(id) === i && internal.indexOf(id) < 0; }); }
+  function validColor(color) {
+    return Array.isArray(color) && color.length === 3 && color.every(function(channel) {
+      return typeof channel === 'number' && isFinite(channel) && channel >= 0 && channel <= 255;
+    });
+  }
   function clean(apps) {
     var seen = Object.create(null);
     return apps.filter(function(a) {
       if (!a || typeof a.id !== 'string' || !a.id || typeof a.title !== 'string' || a.hidden || internal.indexOf(a.id) >= 0 || seen[a.id]) return false;
       seen[a.id] = true; return true;
     }).slice(0,200).map(function(a) {
-      return {id:a.id, title:a.title.slice(0,256), icon:typeof a.icon === 'string' ? a.icon : '', iconColor:a.iconColor || a.bgColor || ''};
+      var app = {id:a.id, title:a.title.slice(0,256), icon:typeof a.icon === 'string' ? a.icon : '', iconColor:a.iconColor || a.bgColor || ''};
+      if (validColor(a.dominantColor)) app.dominantColor = a.dominantColor.slice();
+      return app;
     });
   }
   function create(storage, inventory, config) {
@@ -33,7 +40,10 @@
     function visible() { return ids.map(find).filter(function(a) { return a && hidden.indexOf(a.id) < 0; }); }
     function find(id) { return catalog.filter(function(a) { return a.id === id; })[0]; }
     function save(nextIds, nextHidden) {
-      var state = {version:1, ids:unique(nextIds), hidden:unique(nextHidden), catalog:catalog};
+      var state = {version:1, ids:unique(nextIds), hidden:unique(nextHidden), catalog:catalog.map(function(a) {
+        // Keep the existing backup schema readable by update rollback versions.
+        return {id:a.id, title:a.title, icon:a.icon, iconColor:a.iconColor};
+      })};
       storage.setItem(KEY, JSON.stringify(state)); // Commit memory only after durable storage succeeds.
       ids = state.ids; hidden = state.hidden;
     }
@@ -48,7 +58,18 @@
         // from a response must not erase saved tiles or apps hidden from Home.
         // Preserve packaged icons when the service supplies metadata without an icon.
         var previous = catalog;
-        var updates = clean(apps).map(function(a) { var old = previous.filter(function(b) { return b.id === a.id; })[0]; if (old && old.icon) a.icon = old.icon; return a; });
+        var updates = clean(apps).map(function(a) {
+          var old = previous.filter(function(b) { return b.id === a.id; })[0];
+          if (old) {
+            if (!a.icon) a.icon = old.icon;
+            if (a.icon !== old.icon) {
+              try { storage.removeItem('tvhome.color.' + a.id); } catch (_) {}
+            }
+            if (!a.iconColor && a.icon === old.icon) a.iconColor = old.iconColor;
+            if (!a.dominantColor && (!a.icon || a.icon === old.icon) && old.dominantColor) a.dominantColor = old.dominantColor.slice();
+          }
+          return a;
+        });
         catalog = clean(updates.concat(previous));
       }
     };

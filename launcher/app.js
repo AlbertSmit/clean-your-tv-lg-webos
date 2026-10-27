@@ -150,6 +150,7 @@
   var legacyOrderKey = "tvhome.order";
   // App editing uses the existing grid positions and focus highlight.
   var library, hideButton, editHint, picker, pickerList, pickerStatus, pickerClose;
+  var inventoryPending = false;
   var pickerOpen = false,
     pickerGeneration = 0,
     pickerIndex = 0,
@@ -207,7 +208,7 @@
     focusZone = 'none';
     var nextFocus = 0;
     for (var i = 0; i < tiles.length; i++) {
-      if (tiles[i].app.id === focusId) {
+      if (focusId && tiles[i].app.id === focusId) {
         nextFocus = i;
         break;
       }
@@ -381,7 +382,7 @@
       var id = state.id;
       library.save(state.ids, state.hidden);
       dismissUndo();
-      var app = state.app || { id: id };
+      var app = library.visible().filter(function (candidate) { return candidate.id === id; })[0] || state.app || { id: id };
       var insertIndex = Math.max(0, Math.min(state.ids.indexOf(id), tiles.length - 1));
       var tile = insertTileAt(app, insertIndex);
       focusTile(tiles.indexOf(tile));
@@ -466,6 +467,7 @@
       }
       if (apps !== null) {
         library.refresh(apps);
+        inventoryPending = true;
       }
       var choices = library.available();
       pickerStatus.textContent = apps === null ? tr('Showing the saved list. Could not refresh apps from the TV.') : choices.length ? tr('Choose an app to add to Home.') : tr('All installed apps are already on Home.');
@@ -576,16 +578,27 @@
     AppLibrary.installed(function (apps) {
       if (apps !== null) {
         library.refresh(apps);
-        // Keep inventory updates, but let the next normal rebuild render them
-        // when a menu, edit or button hold already owns the interaction.
-        if (focusZone === 'grid' && !moveState && !pickerOpen && !undoState &&
-            !okHoldTimer && !pointerTimer && !document.hidden &&
-            !(window.RenewalPanel && window.RenewalPanel.isOpen())) {
-          rebuild(tiles[focusedTile] && tiles[focusedTile].app.id);
-        }
+        inventoryPending = true;
+        if (refreshVisibleTiles()) focusTile(focusedTile);
       }
       startupMark('inventoryRefreshComplete');
     });
+  }
+  function refreshVisibleTiles() {
+    if (!inventoryPending || focusZone !== 'grid' || moveState || pickerOpen || undoState ||
+        okHoldTimer || pointerTimer || document.hidden ||
+        (window.RenewalPanel && window.RenewalPanel.isOpen())) return false;
+    inventoryPending = false;
+    var apps = library.visible(), focusedChanged = false;
+    tiles.forEach(function (tile, index) {
+      if (tile.add) return;
+      var app = apps.filter(function (candidate) { return candidate.id === tile.app.id; })[0];
+      if (!app || JSON.stringify(app) === JSON.stringify(tile.app)) return;
+      updateTile(tile, app);
+      if (index === focusedTile) focusedChanged = true;
+    });
+    loadVisibleIcons();
+    return focusedChanged;
   }
   // Tile rendering, icon colors and grid geometry.
   // DOM colors are resolved cheapest-first: dominantColor baked into
@@ -675,6 +688,29 @@
         card: card,
         color: null
       };
+    tile.image = image;
+    updateTile(tile, app);
+    return element.addEventListener("mouseover", function () {
+      "inputs" === focusZone || pickerOpen || undoState || (moveState ? pointerMove(tile) : focusTile(tiles.indexOf(tile)));
+    }), element.addEventListener("click", function () {
+      tileClick(tile);
+    }), bindHold(tile), tilesContainer.appendChild(element), tile;
+  }
+  function updateTile(tile, app) {
+    var image = tile.image, card = tile.card;
+    var iconPath = (window.TV_ICONS && TV_ICONS[app.id]) || app.icon || 'missing-icon';
+    if (tile.iconPath && tile.iconPath !== iconPath) {
+      try { localStorage.removeItem('tvhome.color.' + app.id); } catch (_) {}
+    }
+    tile.app = app;
+    tile.el.setAttribute('aria-label', app.title);
+    tile.el.querySelector('.name').textContent = app.title;
+    image.onload = null;
+    image.style.display = '';
+    card.classList.remove('missing-icon');
+    card.removeAttribute('data-initial');
+    card.removeAttribute('data-bg');
+    card.style.background = '';
     var color = null, cardBackground;
     var bg = APP_BG[app.id];
     if (bg) {
@@ -709,20 +745,34 @@
     image.onerror = function () {
       image.style.display = "none";
       card.classList.add("missing-icon");
-      card.setAttribute("data-initial", app.title.charAt(0));
+      card.setAttribute("data-initial", tile.app.title.charAt(0));
     };
     // Prefer the bundled static icon map (deterministic local assets); fall
     // back to whatever icon the TV inventory supplied.
-    var iconPath = (window.TV_ICONS && TV_ICONS[app.id]) || app.icon;
-    image.src = iconPath || "missing-icon";
+    if (tile.iconPath !== iconPath) {
+      tile.iconPath = iconPath;
+      tile.iconLoaded = false;
+      image.removeAttribute('src');
+    }
+    if (tile.iconLoaded && image.complete) {
+      if (!image.naturalWidth) image.onerror();
+      else if (image.onload) image.onload();
+    }
     if (tiles[focusedTile] === tile) {
       updateAmbient(tile.color);
     }
-    return element.addEventListener("mouseover", function () {
-      "inputs" === focusZone || pickerOpen || undoState || (moveState ? pointerMove(tile) : focusTile(tiles.indexOf(tile)));
-    }), element.addEventListener("click", function () {
-      tileClick(tile);
-    }), bindHold(tile), tilesContainer.appendChild(element), tile;
+  }
+  function loadTileIcon(tile) {
+    if (tile.add || tile.iconLoaded) return;
+    tile.iconLoaded = true;
+    tile.image.src = tile.iconPath;
+  }
+  function loadVisibleIcons() {
+    tiles.forEach(function (tile, index) {
+      var top = tileTop(index) - scrollOffset;
+      if (rowFor(index) === 0 || (!layout.tvos || layout.grid) &&
+          top < 1080 + layout.rowPitch && top + layout.cardHeight > -layout.rowPitch) loadTileIcon(tile);
+    });
   }
   function rowFor(index) {
     return Math.floor(index / columnCount);
@@ -751,6 +801,7 @@
     headerBottom = header.offsetTop + header.offsetHeight;
     // Tile positions changed, so any cached top-button geometry is stale.
     topButtonRects = null;
+    loadVisibleIcons();
   }
   function animateTiles() {
     tiles.forEach(function (e, t) {
@@ -830,6 +881,8 @@
       setFocusZone("grid");
       tiles[focusedTile] && tiles[focusedTile].el.classList.remove("focused");
       focusedTile = index;
+      refreshVisibleTiles();
+      loadTileIcon(tiles[index]);
       tiles[index].el.classList.add("focused");
       var row = rowFor(index);
       if (layout.tvos && layout.grid !== (row > 0)) {
@@ -838,6 +891,7 @@
       }
       var top = tileTop(index);
       scrollOffset = HomeUI.scrollFor(layout, index, scrollOffset, !!moveState);
+      loadVisibleIcons();
       stage.style.transform = "translate3d(0," + -scrollOffset + "px,0)";
       document.body.classList.toggle("app-grid", layout.tvos && scrollOffset > 0);
       document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < headerBottom + 24);
@@ -1173,7 +1227,6 @@
     refreshWidgets();
   });
   initializeApps();
-  layoutTiles();
   updateClock();
   ensureWidgets();
   refreshWidgets();

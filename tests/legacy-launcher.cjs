@@ -210,6 +210,9 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
           } else {
             assert.deepEqual(await page.evaluate(() => launches), ['test.0'], 'releasing OK still launches the selected app');
           }
+          await page.keyboard.press('ArrowRight');
+          assert.equal(await page.locator('[data-app-id="test.0"] .name').textContent(), 'Updated title', 'queued metadata reaches the next safe grid render');
+          assert(await page.evaluate(() => heldTile === document.querySelector('[data-app-id="test.0"]')), 'queued render retains the original tile node');
         }
         assert.deepEqual(errors, [], 'late replies and return events must not raise errors');
         console.log('PASS', profile, 'visible cards, icons, scroll, launch, Inputs and full-screen dialogs');

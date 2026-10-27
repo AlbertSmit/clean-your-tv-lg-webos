@@ -9,3 +9,8 @@ const library=require('../../launcher/app-library').create(storage,[{id:'a',titl
 assert.deepEqual(library.visible().map(a=>a.id),['b']);
 assert.deepEqual(library.available().map(a=>a.id),['a']);
 console.log('PASS layout preserved through profile backup and restore');
+const rootData=require('../../root-edition/ui/root-profile-data');
+const colorLibrary=require('../../launcher/app-library').create(storage,[{id:'b',title:'B',icon:'data:image/png;base64,YWJj',dominantColor:[10,20,30]}],profile.config);
+colorLibrary.save(['b'], []);
+assert.doesNotThrow(()=>rootData.validate({...profile,settings:{'tvhome.layout':storage.getItem('tvhome.layout')}}), 'saving runtime colors must retain the strict backup catalog schema');
+assert.deepEqual(colorLibrary.visible()[0].dominantColor,[10,20,30]);

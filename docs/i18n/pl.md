@@ -212,3 +212,5 @@ opóźnienie niepotwierdzone.
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 Jeszcze niewydane: kontrola prywatnego Pythona rozróżnia błędy ABI, bezpieczeństwa katalogów i miejsca. Pierwsza instalacja wymaga 320 MiB wolnego w /var/lib. Duży WAM Session Storage może wyjaśniać brak miejsca; usunięcie może utracić stan sesji aplikacji. Zobacz [odzyskiwanie](../RECOVERY.md#private-python-and-low-var-space).
+
+W nieopublikowanym kandydacie 1.4.0 przerwana instalacja No-root również oferuje **Odzyskaj i zainstaluj ponownie** po **Sprawdź stan telewizora**. Potwierdź usunięcie tylko wtedy, gdy chcesz usunąć aplikacje Clean Your TV, a następnie sprawdź wersje przed ponowną instalacją. Jeśli odzyskiwanie się nie powiedzie, zapisz raport diagnostyczny i zatrzymaj się. Przyczyna pierwotnego odrzucenia pakietu przez TV nadal nie jest ustalona ani potwierdzona jako naprawiona (#21).

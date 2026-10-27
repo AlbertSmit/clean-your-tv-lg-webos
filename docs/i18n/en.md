@@ -218,3 +218,5 @@ and faster audio acquisition remain unconfirmed.
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 Unreleased: private Python preflight reports ABI, directory safety and free-space failures separately. Initial setup needs 320 MiB free in /var/lib. A large WAM Session Storage may explain low space; clearing it can lose app session state. See the [recovery guide](../RECOVERY.md#private-python-and-low-var-space).
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21).

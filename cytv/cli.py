@@ -281,8 +281,12 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write('Checking the previous installation on the TV…')
                     existing = installer.status()
                     pending = store.pending(profile)
-                    if profile['edition'] == 'no-root' and pending and pending.get('action') == 'uninstall':
-                        write.heading('Unfinished removal')
+                    if (profile['edition'] == 'no-root' and pending and
+                            (pending.get('action') == 'uninstall' or
+                             (pending.get('action') == 'install' and pending.get('stage') == 'pending'))):
+                        write.heading('Recover and reinstall' if pending['action'] == 'install' else 'Unfinished removal')
+                        if pending['action'] == 'install':
+                            write('The previous installation did not finish. Remove its packages before installing again.')
                         write('Finish removing Clean Your TV before installing again. LG Home will be restored and remaining Clean Your TV packages removed.')
                         write('After removal is verified, setup continues with the bundled versions.')
                         if args.non_interactive:
@@ -436,7 +440,8 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                     write.raw(json.dumps(result, indent=2))
             if args.command in ('status', 'doctor', 'restore') and profile['edition'] == 'no-root':
                 pending = store.pending(profile)
-                if pending and pending.get('action') == 'uninstall':
+                if pending and (pending.get('action') == 'uninstall' or
+                                (pending.get('action') == 'install' and pending.get('stage') == 'pending')):
                     write.recovery(profile)
         return 0
     except (EOFError, KeyboardInterrupt, StopIteration):

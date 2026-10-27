@@ -224,3 +224,5 @@ und schnellerer Ton sind unbestätigt.
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-, Verzeichnissicherheits- und Platzfehler. Die Ersteinrichtung braucht 320 MiB frei in /var/lib. Großer WAM Session Storage kann Platzmangel erklären; beim Löschen kann App-Sitzungszustand verloren gehen. Siehe [Wiederherstellung](../RECOVERY.md#private-python-and-low-var-space).
+
+Im unveröffentlichten Kandidaten 1.4.0 bietet auch eine unterbrochene No-root-Installation nach **TV-Status prüfen** die Aktion **Wiederherstellen und neu installieren**. Bestätigen Sie das Entfernen der Clean Your TV-Apps nur, wenn Sie es wünschen; prüfen Sie anschließend die Versionen vor der Neuinstallation. Schlägt die Wiederherstellung fehl, speichern Sie den Diagnosebericht und stoppen Sie. Die ursprüngliche Paketverweigerung des Fernsehers ist damit noch nicht geklärt oder behoben (#21).

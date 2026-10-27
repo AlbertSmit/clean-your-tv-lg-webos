@@ -193,3 +193,5 @@ Home 設定 → HDMI 聲音提供 eARC 重新連接和已確認的 HDMI 輸出�
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 尚未發佈：專用 Python 檢查分別報告 ABI、目錄安全與空間不足。首次安裝需要 /var/lib 有 320 MiB 可用空間。較大的 WAM Session Storage 可能是原因；清除可能遺失應用程式工作階段狀態。請參閱[復原指南](../RECOVERY.md#private-python-and-low-var-space)。
+
+在尚未發布的 1.4.0 候選版中，中斷的 No-root 安裝也可在**檢查電視狀態**後使用**恢復並重新安裝**。只有確定要移除 Clean Your TV 應用程式時才確認移除，然後在重新安裝前檢查版本。如果恢復失敗，請儲存該次診斷報告並停止操作。電視最初拒絕安裝套件的原因仍未確定，也尚未確認已修復（#21）。

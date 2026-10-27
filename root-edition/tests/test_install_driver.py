@@ -113,6 +113,12 @@ class ActivationTests(unittest.TestCase):
                     with ownership.operation('product','product.json'): pass
 
 class LocalRemovalTests(unittest.TestCase):
+    def test_runtime_validation_failure_precedes_updater_disabling(self):
+        result, owner, calls, _, _ = self.run_device(fail='validate-root-driver')
+        self.assertEqual(result['state'], 'recovery_required')
+        self.assertFalse(any(call.startswith('cleanup-') for call in calls), calls)
+        self.assertNotIn('root-remove', calls)
+
     def run_device(self, fail=None, apps=None, busy=None, resume_after=False):
         from unittest.mock import patch
         import install_device

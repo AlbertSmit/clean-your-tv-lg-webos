@@ -172,3 +172,17 @@ normal shutdown and retained intent. The installed observer hash matched source
 `1e6e92ce` from the original report; the diagnostic reader was **not installed**.
 This is another successful repetition of existing code, not validation of a fix
 or a new compatibility claim. Raw logs and connection details remain private.
+
+## Root 0.4.0 retained-runtime transition (#111)
+
+The new coordinator must verify the installed release SHA/app/package identity
+before allowing the exact published 0.4.0 runtime set without `audio_recovery.py`.
+It must still reject altered bytes, incomplete legacy/current inventories and
+foreign version metadata, before disabling either updater. Repeat validation
+immediately before the old driver invocation. Regression checks live in
+`tests/test_root_driver_compatibility.py` and the removal effect-order fixture.
+
+Source `3eef546b` failed supervised C3 preparation at this boundary; supported
+restore returned LG Home and package versions were unchanged. An immutable
+original request remains for checked continuation; no new-runtime cold-boot
+acceptance is established. See the [candidate transition record](../docs/RC-1.4.0-TESTING.md#root-040-transition-regression-111).

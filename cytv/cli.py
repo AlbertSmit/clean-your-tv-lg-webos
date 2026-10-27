@@ -43,7 +43,7 @@ def parser():
     result._positionals.title = i18n.translate('positional arguments')
     result._optionals.title = i18n.translate('options')
     result.add_argument('-h', '--help', action='help', help=i18n.translate('Show this help message and exit'))
-    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall', 'enable-system-updates', 'clean-wam-cache'))
+    result.add_argument('command', nargs='?', default='install', choices=('install', 'status', 'doctor', 'home-diagnostics', 'restore', 'uninstall', 'enable-system-updates', 'enable-firmware-access', 'disable-firmware-access', 'clean-wam-cache'))
     result.add_argument('--language', choices=tuple(i18n.LANGUAGES), help=i18n.translate('Interface language (auto uses the computer language)'))
     result.add_argument('--version', action='store_true', help=i18n.translate('Print installer version'))
     result.add_argument('--host', help=i18n.translate('TV IPv4 address or hostname'))
@@ -197,6 +197,9 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             return info
 
         profile = choose_profile(args, store, ask, write, search or discovery.find_tvs, inspect_connection)
+        if args.command in ('enable-firmware-access','disable-firmware-access'):
+            if profile['edition']!='root':raise UserError('Homebrew API access requires an existing Root installation.')
+            if store.pending(profile):raise UserError('Previous operation is unresolved. Run cytv status or cytv restore; do not retry installation.')
         if args.command == 'clean-wam-cache':
             if profile['edition'] != 'root':
                 raise UserError('WAM cleanup requires an existing Root SSH connection.')
@@ -231,11 +234,11 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             if profile['edition'] == 'root':
                 write('Root will stop the old Home Helper, turn on Home control and open Clean Your TV Home.')
             write('Check controls on the TV after installation.')
-        if args.command in ('install', 'uninstall', 'restore', 'enable-system-updates') and not args.yes:
+        if args.command in ('install', 'uninstall', 'restore', 'enable-system-updates', 'enable-firmware-access', 'disable-firmware-access') and not args.yes:
             if args.command == 'uninstall' and profile['edition'] == 'root':
                 write('This removes Root, Root Updater, their services and startup hooks, plus any installed No-root Home, Helper and Updater.')
                 write('Recovery records are retained for diagnostics. Other TV apps stay installed.')
-            verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home', 'enable-system-updates': 'Prepare updates for all system components on this rooted TV'}[args.command]
+            verb = {'install': 'Connect to check installed versions', 'uninstall': 'Restore LG Home and remove this edition', 'restore': 'Restore LG Home', 'enable-system-updates': 'Prepare updates for all system components on this rooted TV','enable-firmware-access':'Change Root Home access to Homebrew configuration','disable-firmware-access':'Change Root Home access to Homebrew configuration'}[args.command]
             if args.command == 'uninstall' and profile['edition'] == 'root':
                 pending = store.pending(profile)
                 if pending and pending.get('action') == 'uninstall' and pending.get('full_project') is True:
@@ -244,7 +247,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 write('Cancelled. No TV changes were made.')
                 return 0
         payload, manifest = Path(payload_root) if payload_root is not None else payload_dir(), {}
-        if args.command in ('install', 'enable-system-updates'):
+        if args.command in ('install', 'enable-system-updates','enable-firmware-access','disable-firmware-access'):
             try:
                 manifest = package.verify_payload(payload)
             except FileNotFoundError:
@@ -277,6 +280,7 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
 
         from .transport import SSH
         with store.lock(profile):
+            if args.command in ('enable-firmware-access','disable-firmware-access') and store.pending(profile):raise UserError('Previous operation is unresolved. Run cytv status or cytv restore; do not retry installation.')
             if args.command == 'clean-wam-cache' and store.pending(profile):
                 raise UserError('Resolve the pending installation or removal before clearing WAM data. Keep recovery records.')
             phase = 'ssh-connect'
@@ -423,6 +427,10 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
                 phase = 'enable-system-updates'
                 result = installer.enable_system_updates()
                 write('System updates are ready. Open Home Settings → Software updates on the TV.')
+            elif args.command in ('enable-firmware-access','disable-firmware-access'):
+                phase=args.command
+                installer.configure_firmware_access(args.command=='enable-firmware-access')
+                write('Root Home permissions were updated. Reopen Home and check LG firmware updates.')
             elif args.command == 'home-diagnostics':
                 phase = 'home-diagnostics'
                 if args.non_interactive:

@@ -239,4 +239,6 @@ Candidate OTA fix (#115): published 1.3.0 cannot apply 1.4.0 through the origina
 
 Unreleased correction (#108/#109): with System Updater prepared, the update dot and Update all use the same edition check. A newer overall release without changed component versions does not offer reinstallation. During a check, installation stays disabled. Legacy checks are used only when System Updater is absent. Device confirmation is pending.
 
+Candidate #110 access correction: the new installer registers a CYTV-owned grant only for Homebrew configuration APIs. For an existing Root setup, run `cytv enable-firmware-access --edition root`, then reopen Root Home and check LG firmware updates. No Homebrew ACL or blocking preference is changed by this command. Retry the same command after interruption. `cytv disable-firmware-access --edition root` revokes access without changing blocking. New runtime builds maintain registration after complete updates; an older retained runtime may need the command again after an app-only update. See the firmware guide for prerequisites, rollback and acceptance limits.
+
 Candidate CLI: redirected Windows output escapes characters unavailable in the selected encoding instead of failing. UTF-8 keeps the localized text. This does not establish Root support on BX/webOS 5.

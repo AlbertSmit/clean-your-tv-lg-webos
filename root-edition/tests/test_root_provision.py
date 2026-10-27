@@ -12,6 +12,8 @@ spec.loader.exec_module(p)
 class ProvisionTests(unittest.TestCase):
     def setUp(self):
         # Stock-route initialization has its own real journal/readback fixture.
+        self.real_firmware_registration=p.register_firmware_access
+        firmware=patch.object(p,'register_firmware_access',return_value=True);firmware.start();self.addCleanup(firmware.stop)
         context=patch.object(p,'prepare_stock_home')
         context.start();self.addCleanup(context.stop)
 
@@ -48,6 +50,20 @@ class ProvisionTests(unittest.TestCase):
             p.finalize()
             hook.assert_called_once_with(p.secure,p.write)
             self.assertEqual(write.call_args[0][0],p.STATE/'recovery-provision.json')
+            p.register_firmware_access.assert_called_once_with()
+    def test_firmware_registration_reads_runtime_cli_envelope(self):
+        from types import SimpleNamespace
+        for outer,nested,granted,want in [(True,True,True,True),(True,True,False,False),(False,True,True,False),(True,False,True,False)]:
+            with self.subTest(outer=outer,nested=nested,granted=granted),patch('python_binding.command',return_value='/usr/bin/python3'),patch.object(p.subprocess,'run',return_value=SimpleNamespace(stdout=json.dumps({'returnValue':outer,'result':{'returnValue':nested,'permissions_installed':granted}}).encode())):
+                self.assertEqual(self.real_firmware_registration(),want)
+
+    def test_optional_firmware_grant_failure_preserves_core_recovery_readiness(self):
+        data={'version':1}
+        with patch.object(p,'secure',return_value=b'{}'),patch.object(p,'manifest',return_value={}),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write,patch('startup_hook.install'),patch.object(p,'register_firmware_access',side_effect=ValueError('unsupported SDK ownership')):
+            result=p.finalize()
+            self.assertTrue(result['returnValue']);self.assertFalse(result['firmware_permissions_registered'])
+            self.assertEqual(write.call_args[0][0],p.STATE/'recovery-provision.json')
+
     def test_runtime_drift_refuses_registration(self):
         with patch.object(p,'secure',return_value=b'{}'),patch.object(p,'manifest',return_value={'changed':True}),patch.object(p,'rpc') as rpc:
             with self.assertRaises(ValueError):p.finalize()

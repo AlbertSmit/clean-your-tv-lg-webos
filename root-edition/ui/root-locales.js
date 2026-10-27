@@ -2140,3 +2140,91 @@ if (window.HomeI18n) window.HomeI18n.add({
     "Changes apply after a TV restart. Standby is not enough. Active blocking is not verified here.": "變更將在電視重新啟動後生效。僅進入待機狀態不足以生效。此處不驗證封鎖功能是否實際運作。"
   }
 });
+
+// Homebrew configuration failure diagnostics (#110).
+if (window.HomeI18n) window.HomeI18n.add({
+  "en": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Homebrew service is unavailable. Open Homebrew Channel, then check status.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew is not running as root. Check root access in Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew returned an unsupported configuration response. Check its version, then retry.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew did not respond in time. Check status before trying again."
+  },
+  "ru": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew запретил доступ этому приложению. Измените настройку в Homebrew Channel. На webOS 11 Homebrew нужны совместимые права API.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Сервис Homebrew недоступен. Откройте Homebrew Channel и проверьте состояние.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew работает без root. Проверьте root-доступ в Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew вернул неподдерживаемый ответ настроек. Проверьте его версию и повторите попытку.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew не ответил вовремя. Проверьте состояние перед повторной попыткой."
+  },
+  "de": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew hat dieser App den Zugriff verweigert. Ändern Sie die Einstellung in Homebrew Channel. Unter webOS 11 benötigt Homebrew passende API-Berechtigungen.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Der Homebrew-Dienst ist nicht verfügbar. Öffnen Sie Homebrew Channel und prüfen Sie den Status.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew läuft nicht als root. Prüfen Sie den Root-Zugriff in Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew hat eine nicht unterstützte Konfigurationsantwort geliefert. Prüfen Sie die Version und versuchen Sie es erneut.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew hat nicht rechtzeitig geantwortet. Prüfen Sie vor einem neuen Versuch den Status."
+  },
+  "es": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew ha denegado el acceso a esta aplicación. Cambie el ajuste en Homebrew Channel. En webOS 11, Homebrew necesita permisos de API compatibles.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "El servicio Homebrew no está disponible. Abra Homebrew Channel y compruebe el estado.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew no se ejecuta como root. Compruebe el acceso root en Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew devolvió una respuesta de configuración no compatible. Compruebe su versión y vuelva a intentarlo.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew no respondió a tiempo. Compruebe el estado antes de volver a intentarlo."
+  },
+  "fr": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew refuse l’accès à cette application. Modifiez le réglage dans Homebrew Channel. Sous webOS 11, Homebrew nécessite des autorisations API compatibles.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Le service Homebrew est indisponible. Ouvrez Homebrew Channel, puis vérifiez l’état.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew ne fonctionne pas en tant que root. Vérifiez l’accès root dans Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew a renvoyé une réponse de configuration non prise en charge. Vérifiez sa version, puis réessayez.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew n’a pas répondu à temps. Vérifiez l’état avant de réessayer."
+  },
+  "it": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew ha negato l’accesso a questa app. Modifica l’impostazione in Homebrew Channel. Su webOS 11, Homebrew richiede autorizzazioni API compatibili.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Il servizio Homebrew non è disponibile. Apri Homebrew Channel e controlla lo stato.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew non è in esecuzione come root. Controlla l’accesso root in Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew ha restituito una risposta di configurazione non supportata. Controlla la versione e riprova.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew non ha risposto in tempo. Controlla lo stato prima di riprovare."
+  },
+  "pl": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew odmówił tej aplikacji dostępu. Zmień ustawienie w Homebrew Channel. W webOS 11 Homebrew wymaga zgodnych uprawnień API.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Usługa Homebrew jest niedostępna. Otwórz Homebrew Channel i sprawdź stan.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew nie działa jako root. Sprawdź dostęp root w Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew zwrócił nieobsługiwaną odpowiedź konfiguracji. Sprawdź wersję i spróbuj ponownie.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew nie odpowiedział na czas. Sprawdź stan przed ponowną próbą."
+  },
+  "pt-BR": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "O Homebrew negou acesso a este aplicativo. Altere a opção no Homebrew Channel. No webOS 11, o Homebrew precisa de permissões de API compatíveis.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "O serviço Homebrew está indisponível. Abra o Homebrew Channel e verifique o estado.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "O Homebrew não está sendo executado como root. Verifique o acesso root no Homebrew Channel.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "O Homebrew retornou uma resposta de configuração incompatível. Verifique a versão e tente novamente.",
+    "Homebrew did not respond in time. Check status before trying again.": "O Homebrew não respondeu a tempo. Verifique o estado antes de tentar novamente."
+  },
+  "ko": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew가 이 앱의 접근을 거부했습니다. Homebrew Channel에서 설정을 변경하세요. webOS 11에서는 Homebrew에 호환되는 API 권한이 필요합니다.",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Homebrew 서비스를 사용할 수 없습니다. Homebrew Channel을 열고 상태를 확인하세요.",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew가 root로 실행되고 있지 않습니다. Homebrew Channel에서 root 접근을 확인하세요.",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew가 지원하지 않는 설정 응답을 반환했습니다. 버전을 확인한 후 다시 시도하세요.",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew가 제시간에 응답하지 않았습니다. 다시 시도하기 전에 상태를 확인하세요."
+  },
+  "hi": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew ने इस ऐप की पहुँच अस्वीकार की। सेटिंग Homebrew Channel में बदलें। webOS 11 पर Homebrew को संगत API अनुमतियाँ चाहिए।",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Homebrew सेवा उपलब्ध नहीं है। Homebrew Channel खोलें, फिर स्थिति जाँचें।",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew root के रूप में नहीं चल रहा है। Homebrew Channel में root पहुँच जाँचें।",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew ने असमर्थित कॉन्फ़िगरेशन उत्तर दिया। उसका संस्करण जाँचें, फिर दोबारा कोशिश करें।",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew ने समय पर उत्तर नहीं दिया। दोबारा कोशिश करने से पहले स्थिति जाँचें।"
+  },
+  "zh-Hans": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew 拒绝此应用访问。请在 Homebrew Channel 中更改设置。webOS 11 上的 Homebrew 需要兼容的 API 权限。",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Homebrew 服务不可用。请打开 Homebrew Channel，然后检查状态。",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew 未以 root 身份运行。请在 Homebrew Channel 中检查 root 权限。",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew 返回了不支持的设置响应。请检查其版本，然后重试。",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew 未及时响应。重试前请检查状态。"
+  },
+  "zh-Hant": {
+    "Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.": "Homebrew 拒絕此應用程式存取。請在 Homebrew Channel 中變更設定。webOS 11 上的 Homebrew 需要相容的 API 權限。",
+    "Homebrew service is unavailable. Open Homebrew Channel, then check status.": "Homebrew 服務無法使用。請開啟 Homebrew Channel，然後檢查狀態。",
+    "Homebrew is not running as root. Check root access in Homebrew Channel.": "Homebrew 未以 root 身分執行。請在 Homebrew Channel 中檢查 root 權限。",
+    "Homebrew returned an unsupported configuration response. Check its version, then retry.": "Homebrew 傳回了不支援的設定回應。請檢查其版本，然後重試。",
+    "Homebrew did not respond in time. Check status before trying again.": "Homebrew 未及時回應。重試前請檢查狀態。"
+  }
+});

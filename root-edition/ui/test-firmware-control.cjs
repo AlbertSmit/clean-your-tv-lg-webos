@@ -41,8 +41,27 @@ function fixture(options) {
   await new Promise(r=>setImmediate(r));assert.equal((await f.api.set(false,false)).errorCode,'busy');
   options.release({returnValue:false});await pending;
   f=fixture({enabled:true});await f.api.set(true,true);assert(!f.calls.some(c=>c.method==='setConfiguration'));
-  for(const bad of [null,{}, {returnValue:true,root:true}, {returnValue:true,root:false,blockUpdates:false}, {returnValue:false,root:true,blockUpdates:false}]){
-    const api=create(()=>Promise.resolve(bad));assert.equal((await api.get()).errorCode,'unavailable');
+  for(const [bad,code] of [[null,'unavailable'],[{},'unavailable'],[{returnValue:true,root:true},'unsupported'],[{returnValue:false,root:true,blockUpdates:false},'unavailable']]){
+    const api=create(()=>Promise.resolve(bad));assert.equal((await api.get()).errorCode,code);
   }
+  const failures=[
+    [{returnValue:false,errorText:'Denied methods call \"getConfiguration\" for category \"/\" private-data'},'permission-denied'],
+    [{returnValue:false,errorText:'Service does not exist private-data'},'service-unavailable'],
+    [{returnValue:true,root:false,blockUpdates:false},'not-root'],
+    [{returnValue:true,root:true,blockUpdates:'false'},'unsupported'],
+  ];
+  for(const [value,code] of failures){
+    const calls=[],api=create((uri)=>{calls.push(uri);return Promise.resolve(value);});
+    assert.deepEqual(await api.get(),{returnValue:false,errorCode:code});
+    assert.equal((await api.set(true,false)).errorCode,code);
+    assert(!calls.some(uri=>uri.endsWith('/setConfiguration')),'failed capability read must not mutate Homebrew');
+    assert(!JSON.stringify(await api.get()).includes('private-data'));
+  }
+  for(const [message,code] of [['Response timed out. Check status before retrying.','timeout'],['Invalid service response','unsupported'],['Denied method call private-data','permission-denied']]){
+    const api=create(()=>Promise.reject(Error(message)));
+    assert.deepEqual(await api.get(),{returnValue:false,errorCode:code});
+  }
+  const injected=create(()=>Promise.resolve({returnValue:false,firmwareCode:'private-data'}));
+  assert.deepEqual(await injected.get(),{returnValue:false,errorCode:'unavailable'});
   console.log('PASS firmware control: Homebrew-only partial writes, strict values, readback, uncertainty, concurrency and stale state');
 })().catch(error=>{console.error(error);process.exit(1);});

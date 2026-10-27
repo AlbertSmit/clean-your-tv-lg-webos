@@ -10,6 +10,18 @@ third-party apps and TV firmware are outside the set.
 
 Current C3 checks covered supervisor bootstrap, installed-version menus and friendly feed-unavailable handling. A complete signed system upgrade and rollback remain untested. See [current acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md); [earlier Root update evidence](../docs/development/ROOT-UPDATES-TV-VALIDATION.md) retains its original artifact and scenario scope.
 
+## Candidate: firmware configuration API permission
+
+The #110 correction keeps the original four recovery ACLs and snapshot unchanged,
+so retained updater registration checks keep their exact contract. Its separate
+API data is referenced by the SDK Root Home manifest. New runtime code reconciles
+that reference at boot and after complete updates without rewriting a completed
+grant on every wake. Host-side repair leaves old runtime bytes unchanged; rerun
+`cytv enable-firmware-access --edition root` after an app-only update if the old
+runtime cannot maintain the reference. Cached Homebrew API groups may require a
+normal Homebrew service restart. The saved blocking preference is never toggled
+by permission maintenance. See [delivery, revocation and device evidence](../docs/LG-FIRMWARE-UPDATES.md#candidate-root-home-configuration-api-access-110).
+
 ## Candidate: Homebrew setup is separate from updates
 
 **Unpublished Homebrew Installer candidate:** CYTV Installer can install Root Home and Root

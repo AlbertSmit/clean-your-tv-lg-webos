@@ -9,6 +9,19 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
+    def test_firmware_access_command_checks_root_pending_and_uses_no_install(self):
+        from unittest.mock import MagicMock
+        for command,enabled in [('enable-firmware-access',True),('disable-firmware-access',False)]:
+            with self.subTest(command=command),tempfile.TemporaryDirectory() as tmp,patch('cytv.cli.Installer') as installer,patch('cytv.cli.package.verify_payload',return_value={}):
+                remote=MagicMock();code,output,_=self.run_cli([command,'--host','192.0.2.10','--edition','root','--data-dir',tmp,'--yes'],remote=remote)
+                self.assertEqual(code,0,output);installer.return_value.configure_firmware_access.assert_called_once_with(enabled)
+                installer.return_value.install.assert_not_called()
+        for edition,pending in [('no-root',False),('root',True)]:
+            with self.subTest(edition=edition),tempfile.TemporaryDirectory() as tmp,patch('cytv.cli.Installer') as installer:
+                if pending:state.Store(tmp).begin(state.target('192.0.2.10',edition),'install')
+                code,_,calls=self.run_cli(['enable-firmware-access','--host','192.0.2.10','--edition',edition,'--data-dir',tmp,'--yes'])
+                self.assertEqual(code,2);self.assertFalse(calls);installer.return_value.configure_firmware_access.assert_not_called()
+
     def test_wam_cache_cleanup_has_default_no_consent_even_with_yes(self):
         from unittest.mock import MagicMock
         for choice, cleared in [('n', False), ('', False), ('y', True)]:

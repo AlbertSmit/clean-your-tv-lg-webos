@@ -41,6 +41,125 @@ Upstream evidence: [configuration API](https://github.com/webosbrew/webos-homebr
 [startup implementation](https://github.com/webosbrew/webos-homebrew-channel/blob/main/services/startup.sh),
 and [early update-check limitation](https://github.com/webosbrew/webos-homebrew-channel/issues/96).
 
+## Unreleased diagnostics correction and webOS 11 access (#110)
+
+Root SSH access does not grant Root Home access to Homebrew's Luna API. On the
+maintainer's C3 (webOS 11.2.0, firmware 43.21.71, Homebrew 0.7.3, installed Root
+Home 0.4.0), read-only investigation confirmed that root can read configuration
+with `root: true`, while a client matching Root Home's generated LS2 client-name
+pattern receives a denied `getConfiguration` response (`returnValue: false`,
+error code `-1`). The generated Home client grants do not intersect Homebrew's
+configuration API grants. This models the application's LS2 access boundary;
+it is not a test of the newly built UI in the running application.
+
+Homebrew 0.7.3 exposes its elevated API to `public`, its own service group and
+ares CLI. Ordinary webOS 11 apps no longer receive `public`. Upstream
+[Homebrew #233](https://github.com/webosbrew/webos-homebrew-channel/pull/233)
+([merged permission change](https://github.com/webosbrew/webos-homebrew-channel/commit/50fa99e1f08959b665b2e34d0d85cb2222c4c2c9))
+adds `lunabus.query` for elevated APIs. At investigation time, the latest
+published Homebrew release is still
+[0.7.3](https://github.com/webosbrew/webos-homebrew-channel/releases/tag/v0.7.3).
+Do not assume a source merge is an available supported package or that this
+change alone grants every client access: the installed Home client still needs
+an intersecting supported grant. See also the related Installer investigation
+[#116](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/116).
+
+The candidate UI distinguishes denied API access, missing service, Homebrew
+running without root, timeout and unsupported configuration replies. Raw remote
+errors and configuration fields are not displayed. A denied call leaves the
+switch disabled and directs the user to change the setting in Homebrew Channel
+itself, whose own API grant is separate. The diagnostics change alone does not enable the denied API or establish
+active blocking. The following candidate access correction provides a separate
+CYTV-owned grant; its lifecycle and device acceptance are tracked separately.
+
+No Homebrew ACL, flag, overlay, service or package was modified during the
+read-only C3 investigation. The saved preference was unchanged in reads before
+and after. On/off
+writes, a real restart, effective server blocking and the new UI on the TV were
+not tested. Preserve the restart/security-update limitations above.
+
+## Candidate: Root Home configuration API access (#110)
+
+The candidate provides a CYTV-owned grant for Homebrew `getConfiguration` and
+`setConfiguration`, scoped to Root Home's existing private control group. It
+works independently of Homebrew's `public`/`lunabus.query` grants and does not
+edit Homebrew ACLs, binaries or configuration flags. LS2 grants a whole method,
+not individual JSON fields; the existing controller still writes only the
+strict boolean `blockUpdates` field and verifies it by reading back.
+
+Fresh Root provisioning registers this grant after validating recovery. An
+optional registration failure is reported as `firmware_permissions_registered:
+false` without failing core Home/recovery setup; verify the actual control and
+use the explicit maintenance command rather than treating core readiness as API
+access acceptance. For an
+existing supported Root installation, use the **new candidate installer**, with
+the saved trusted Root connection and no pending installation/removal:
+
+```sh
+cytv enable-firmware-access --edition root
+```
+
+The source checkout needs its normal verified embedded payload built first.
+The command verifies bundled source, installed Root identity, retained recovery
+code, original ACL hashes and pending operations. It runs the permission helper
+in the pinned TV Python, without replacing retained executable files. It takes
+the product lock and modifies only the SDK-generated Root Home manifest plus
+CYTV-owned permission data. Reopen Root Home and use **Check status**. If LS2
+still uses cached Homebrew API registration, stop other Homebrew work and
+restart Homebrew normally before retrying; do not patch its ACLs or restart the
+TV automatically just to test this command. A running Homebrew service can cache
+its API groups in either direction: restart it normally after revocation too
+before treating effective access as revoked.
+
+The new data consists of `firmware-permissions.json` (durable transition and
+original SDK manifest), `firmware-permissions.lock`, and
+`permissions/homebrew-configuration.api.json` under the existing private Root
+state. The original four recovery ACLs, their snapshot, recovery code/proof,
+Home intent and bootstrap/update selectors remain unchanged. Writes preserve
+manifest UID/GID/mode. Interrupted registration is resumed with the same command;
+a conflicting file, pending update/removal or changed proof stops the operation.
+
+To revoke this API access, without changing the Homebrew preference:
+
+```sh
+cytv disable-firmware-access --edition root
+```
+
+Revocation restores the current SDK manifest without the extra reference,
+removes the API data and records disabled access so automatic maintenance does
+not re-enable it. To change firmware blocking afterward, use Homebrew itself or
+explicitly enable API access again. Original Root removal restores the old
+client ACL, revoking Root Home's control group; SDK package removal removes the
+referencing manifest. Remaining inert permission data stays with archived Root
+recovery evidence. No external permission manifest is left behind.
+
+The candidate runtime reconciles the reference on boot and after a complete
+update, under the existing product/control locks. Failures never prevent Home,
+emergency or rollback recovery. It uses the existing `runtime/cli.py` path, so
+it does not expand the original 1.3 OTA executable inventory. A host-side grant
+repair leaves an older installed runtime unchanged: after a later app-only
+update regenerates the SDK manifest, rerun `enable-firmware-access` until that
+runtime is upgraded through a supported complete update or computer migration.
+All package rebuild/version decisions remain candidate gates.
+
+On the maintainer's C3 / webOS 11.2.0 / firmware 43.21.71 / Homebrew 0.7.3,
+the verified candidate helper registered the grant for installed Root Home
+0.4.0. LS2 scan alone left the running Homebrew API groups cached. Its normal
+quit and root-preserving restart loaded the new control-group grant. Root Home
+client reads then succeeded; an unrelated `getAppInfo` method and the Root
+Updater client remained denied. All 52 checked Root app/service files, the
+retained code/proof and original four ACLs/snapshot stayed byte-identical;
+Homebrew ACL/manifest bytes and other configuration fields stayed unchanged.
+The maintainer confirmed that the actual TV switch became available and toggled.
+No new TV app/runtime package was installed for this test.
+
+This is existing-installation access acceptance, not fresh-setup, physical
+signed upgrade/rollback/removal or multi-device acceptance. Standby/cold boot,
+revocation on the TV and active firmware-server blocking were not tested.
+Active blocking still requires the separately documented real restart and
+effective-host/network check. A successful API write alone does not
+prove that LG updates are blocked.
+
 ## Acceptance and further device checks
 
 Automated tests cover strict boolean values, partial configuration writes,

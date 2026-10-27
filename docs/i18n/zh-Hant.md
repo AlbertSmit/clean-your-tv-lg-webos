@@ -214,4 +214,6 @@ OTA 修復候選（#115）：1.3.0 原版 System Updater 因允許的檔案清�
 
 尚未發佈的修正（#108/#109）：準備好 System Updater 後，更新指示點與「全部更新」使用同一版本類別檢查。若只有整體發佈版本變更、所有元件版本均相同，則不會建議重新安裝。檢查期間無法安裝。僅在 System Updater 不存在時使用舊版檢查。仍待實際電視確認。
 
+候選版本 #110 存取修正：新安裝程式僅為 Homebrew 設定 API 註冊 CYTV 自有權限。現有 Root 安裝請執行 `cytv enable-firmware-access --edition root`，然後重新開啟 Root Home 並檢查 LG 韌體更新。此指令不會變更 Homebrew ACL 或封鎖設定。中斷後請重試相同指令。`cytv disable-firmware-access --edition root` 撤銷存取權限，但不變更封鎖設定。新執行環境在完整更新後維護註冊；舊執行環境在僅更新應用程式後可能需要再次執行指令。前提、回復及驗證限制請參閱韌體指南。
+
 CLI 候選版本：Windows 重新導向輸出時，所選編碼不支援的字元會顯示為跳脫序列，而不會導致程式失敗。UTF-8 保留翻譯後的文字。此變更不代表已確認 BX/webOS 5 的 Root 支援。

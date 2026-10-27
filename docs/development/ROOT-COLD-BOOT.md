@@ -66,6 +66,62 @@ retry presentation. The platform exposes separate foreground-read and launch
 calls: an app switch after the final read can still race the single request.
 No repeating watcher or automatic emergency-stop reset is added.
 
+## Exact 9194 candidate failure and shutdown ordering
+
+The exact `9194c16a1a38e136823624fd5c9bce1b373fc92c` test artifacts
+(build 40489987476) installed Root 0.5.0 on the maintainer's C3 after the
+supported #111 transition. Before testing, all runtime hashes, active intent,
+independent guardian and recovery integrity were checked. The owner confirmed
+Clean, Emby launch/playback with retained login, short Home returning Clean,
+arrows/hold/OK/Back/volume. These are basic-control passes only.
+
+The first new-runtime AC test failed: remote off ten seconds, AC off thirty
+seconds, reconnect/on and one minute without Home left Live TV/unconfigured
+channels visible. Input ENODEV led to intent revocation and stock recovery;
+a subsequent Home opened LG Home with working controls. The original log has
+no event timestamps/session binding, so it cannot distinguish power-off teardown
+from a restored observer after restart. No successful new-runtime AC boot,
+standby, emergency/off persistence or physical rollback is established.
+
+A separate passive diagnostic cycle kept Root disabled and did not grab/inject
+input or import product runtime. Firmware reported Active Standby about fourteen
+seconds before input ENODEV and repeated it about 1.4 seconds before input loss.
+Systemd reported stopping about 0.4 seconds after input loss; the firmware marker
+was not the recognized `remoteKey` value. This proves ordinary shutdown can
+remove input before the old detector recognizes shutdown. It supports this
+mechanism for #104 without supplying missing timing for the first failure or
+resolving #90. The separately owned diagnostic observer and its TV directory
+were removed. Root remains disabled with stock LG routing.
+
+## Shutdown evidence policy under preparation
+
+The guardian observes the existing local tvpower `power/getPowerState` endpoint
+through one owned interactive `luna-send` subscription. A valid subscribed ON
+snapshot (`Active` or `Screen Saver`) must precede `Active Standby` or `Power Off`.
+An initial OFF snapshot never authorizes retention. Each actual OFF push records
+fresh evidence; silence does not refresh it. The existing five-second expiry is
+unchanged. Active, Screen Saver, unknown/malformed replies, EOF or subscriber
+failure remove that subscription's evidence. No reconnect loop or input-error
+exception grants permission. If the subscription is unavailable, existing
+systemd/remoteKey checks remain and unclassified input faults still disable Root.
+
+A transaction-specific `.power` record uses the existing root-owned volatile
+health directory (0700, file0600), separately from `.shutdown` evidence. It is
+removed when the stream/guardian ends. All monitor writers carry their captured
+startup session; an old monitor cannot stamp evidence with a new session.
+Monitor startup also checks the existing transaction/generation/token/session
+binding. Normal stop joins owned observer threads and terminates/reaps the child.
+No durable schema, permissions, user controls or external network destination
+is added. No runtime module is added to the versioned closure.
+
+A restored old observer can report failure before boot dispatch increments the
+intent generation. When its bound enabled active/stopping intent belongs to a
+different startup session, it leaves recovery to boot dispatch, including the
+existing restore-before-gate and fresh input/guardian requirements. Same-session
+faults still revoke intent. Escape, failsafe and package loss override this deferral;
+previously fault-disabled intent is never re-enabled. This race is regression
+coverage, not a proven timestamped cause of the first AC failure.
+
 ## Delivery and acceptance
 
 Deliver the coherent retained runtime through supported checked setup/update.

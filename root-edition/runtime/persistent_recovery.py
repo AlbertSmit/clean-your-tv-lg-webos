@@ -267,6 +267,18 @@ def bound_exit(transaction, reason=None):
     if (binding['generation'], binding['token']) != (intent['generation'], intent['token']):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
+    from intent_runtime import boot_identity
+    try: current_boot = boot_identity()
+    except (OSError,ValueError): current_boot = None
+    home = d.home_present(purpose='live')
+    safe = home and not d.FAILSAFE.exists()
+    if (reason != 'escape' and safe and intent['enabled']
+            and intent['phase'] in ('active','stopping') and current_boot is not None
+            and intent['boot'] != current_boot):
+        # An old snapshot observer can run before boot dispatch changes the
+        # generation. Leave restore-first and fresh input gates to that owner.
+        # True also prevents callers falling back to an unbound route restore.
+        return True
     if reason == 'escape':
         from update_guard import cancel
         try:cancel(d.STATE,d.EXPECTED_UID,intent)
@@ -274,7 +286,7 @@ def bound_exit(transaction, reason=None):
             c.exit(intent, reason='fault')
             raise
     from shutdown_state import stopping
-    shutdown = d.home_present(purpose='live') and reason != 'escape' and intent['enabled'] and (
+    shutdown = safe and current_boot == intent['boot'] and reason != 'escape' and intent['enabled'] and (
         intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))
     print(json.dumps(dict(event='bound-exit-decision',transaction=transaction,reason=reason,
                          phase=intent['phase'],enabled=intent['enabled'],shutdown=shutdown)),flush=True)

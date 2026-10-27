@@ -97,6 +97,30 @@ runtime, the old worker snapshot or completion receipts. Record old request and
 new recovery-code identities separately. Fresh exact-source installers and all
 remaining hardware checks are still required before publication.
 
+## Exact 9194 Root 0.5.0 first AC result (#104)
+
+On the maintainer's OLED55C3RLA / 43.21.71, exact source
+`9194c16a1a38e136823624fd5c9bce1b373fc92c` / CI40489987476 completed checked
+fresh Root0.5 setup after the supported #111 recovery. Runtime integrity,
+active intent, independent guardian and recovery passed before the test.
+Owner-confirmed Clean, Emby launch/playback/retained login, short Home→Clean,
+arrows/hold/OK/Back/volume passed as basic controls.
+
+**First AC cold boot failed:** remote off10s, AC off30s, reconnect/on and no Home
+for1minute left LiveTV/unconfigured channels. Input ENODEV revoked intent and
+restored stock routing; subsequent Home opened LG Home with working controls.
+Original logging cannot place that input loss before versus after restart.
+A separate passive Root-disabled diagnostic cycle confirmed Active Standby before
+ENODEV and systemd stopping afterward. This is investigation only, not standby
+acceptance. The diagnostic observer was removed; Root remains disabled.
+
+Do not reuse these artifacts to accept the new shutdown correction. Deliver any
+new source through fresh exact artifacts and supported checked transition, only
+when the owner is ready. Cold boot, standby, emergency/off persistence and actual
+physical rollback remain pending. #104 is under further implementation; #90's
+original standby report remains separate. Keep raw evidence private and release
+acceptance empty. See [technical evidence](development/ROOT-COLD-BOOT.md).
+
 ## Existing Root installations and rollback
 
 Read [Root Home initialization](development/ROOT-HOME-READBACK.md) and

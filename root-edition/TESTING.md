@@ -188,3 +188,26 @@ request was subsequently continued using the complete separately verified fixed
 coordinator; independent status confirmed complete/current removal. Original
 Root state is retained and updater states archived. No new-runtime cold-boot
 acceptance is established. See the [candidate transition record](../docs/RC-1.4.0-TESTING.md#root-040-transition-regression-111).
+
+
+## Exact 9194 first AC failure and shutdown regression coverage
+
+Exact CI40489987476/source9194c16a Root0.5 installed on the maintainer's C3.
+Active intent/guardian/recovery and owner-confirmed Emby/Home/basic controls
+passed before AC testing. The first new-runtime remote-off10s/AC-off30s cycle
+failed: LiveTV remained after one minute without Home, ENODEV revoked intent,
+and stock LG Home/controls were restored. Root remains disabled.
+
+A separate passive Root-disabled diagnostic cycle proved Active Standby before
+input loss and systemd stopping afterward. It does not accept standby or establish
+when the original failed-cycle input loss occurred. The diagnostic observer was
+removed. [The technical record](../docs/development/ROOT-COLD-BOOT.md) separates
+these facts and the session-race hypothesis from hardware acceptance.
+
+Host regressions cover fresh ON→OFF subscription transitions, initial/stale OFF,
+unknown/unsubscribed/malformed/lost streams, cache expiry, actual child cleanup,
+old-session writers and observer exits before boot dispatch. Escape, explicit
+off, package loss, failsafe, same-session input faults, unconfirmed trials and
+restore-before-gate remain mandatory. Rebuild coherent exact-source artifacts
+and repeat the full supervised matrix after any correction; do not re-enable
+fault-disabled Root automatically or edit installed runtime/receipts.

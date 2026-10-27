@@ -12,13 +12,13 @@ function harness(root){
  const window=root?{RootUpdates:updates}:{HomeUpdates:updates};
  const context={window,document,Promise,setTimeout:()=>1,clearTimeout(){},createRootExit:()=>async()=>{},PalmServiceBridge:class{cancel(){}call(){this.onservicecallback(JSON.stringify({returnValue:true,result:{returnValue:true,result:{intent:{phase:'disabled'}}},state:{enabled:false}}));}}};
  vm.runInNewContext(fs.readFileSync(root?'root-edition/ui/root-settings.js':'launcher/renewal-panel.js','utf8'),context);
- return {panel:window.RenewalPanel,calls,button:()=>root?buttons.find(b=>b.textContent==='Software updates'):ids.renewalUpdates,close:()=>root?buttons.find(b=>b.textContent==='Back to Home').onclick():ids.renewalClose.onclick(),reply:value=>{const done=pending.shift();if(root)done.resolve(value);else done(value);},fail:()=>{const done=pending.shift();if(root)done.reject(Error('offline'));else done(null);},focus:()=>focused};
+ return {panel:window.RenewalPanel,getPanel:()=>window.RenewalPanel,panels:()=>document.body.children.length,calls,button:()=>root?buttons.find(b=>b.textContent==='Software updates'):ids.renewalUpdates,close:()=>root?buttons.find(b=>b.textContent==='Back to Home').onclick():ids.renewalClose.onclick(),reply:value=>{const done=pending.shift();if(root)done.resolve(value);else done(value);},fail:()=>{const done=pending.shift();if(root)done.reject(Error('offline'));else done(null);},focus:()=>focused};
 }
 (async()=>{
  for(const root of [false,true]){
   const h=harness(root);assert.equal(h.calls.length,0,'launcher startup must not check releases');
-  h.panel.open();await tick();assert.equal(h.calls.length,1,'settings opening checks automatically');
-  h.panel.open();assert.equal(h.calls.length,1,'already-open settings must not check twice');
+  h.panel.open();await tick();assert.equal(h.getPanel(),h.panel,'lazy panel construction must preserve the exported object');if(!root)assert.equal(h.panels(),1,'launcher settings markup is built only once');assert.equal(h.calls.length,1,'settings opening checks automatically');
+  h.panel.open();assert.equal(h.calls.length,1,'already-open settings must not check twice');if(!root)assert.equal(h.panels(),1,'repeated opens reuse the original launcher panel');
   h.close();h.panel.open();await tick();assert.equal(h.calls.length,1,'coalesce an in-flight check');
   const focus=h.focus();
   h.reply(root?{canInstall:true,reason:'available'}:{state:'available',canInstall:false});await tick();

@@ -2,8 +2,11 @@
 (function(){
  'use strict';
  function tr(s,p){return window.HomeI18n?HomeI18n.t(s,p):s.replace(/\{(\w+)\}/g,function(m,k){return p&&p[k]!==undefined?p[k]:m;});}function ht(s){return window.HomeI18n?HomeI18n.html(s):s;}
+ var panel=null,built=false,openSettings;
+ var api={isOpen:function(){return !!panel&&!panel.classList.contains('hidden');},open:function(){if(!built)build();if(openSettings)openSettings();}};
  function build(){
- var panel=document.createElement('section');panel.id='renewalPanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Home settings'));
+ if(built)return;built=true;
+ panel=document.createElement('section');panel.id='renewalPanel';panel.className='hidden';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',tr('Home settings'));
  panel.setAttribute('aria-modal','true');
  panel.innerHTML=ht([
    "<div id=\"settingsMain\" class=\"renewal-card settings-main\"><div class=\"settings-heading\"><h2>Home settings</h2><span class=\"settings-edition\">No-root Edition</span></div><section class=\"settings-home\"><h3>Your Home screen</h3><p id=\"homeRoutingStatus\" class=\"settings-status\" aria-live=\"polite\">Checking Home control…</p>",
@@ -125,7 +128,7 @@
   e.preventDefault();e.stopImmediatePropagation();
   if(k===461||k===27){if(developerOpen)showDeveloper(false);else close();}else if(k===13){if(!e.repeat)buttons[index].click();}else focus(index+(k===37||k===38||(k===9&&e.shiftKey)?-1:1));
  },true);
- window.RenewalPanel={isOpen:openNow,open:function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();}};
+ openSettings=function(){if(openNow())return;previous=document.activeElement;developerOpen=false;main.classList.remove('hidden');developer.classList.add('hidden');panel.setAttribute('aria-label',tr('Home settings'));panel.classList.remove('hidden');details.classList.add('hidden');document.getElementById('renewalDiagnostics').textContent=tr('Show diagnostics');document.getElementById('renewalDiagnostics').setAttribute('aria-expanded','false');focus(0);action('status');refreshHome();checkUpdates();};
  // Mount theme panel after panel is in DOM, then rebuild buttons array
  (function(){
   var container=document.getElementById('themeSection');
@@ -144,7 +147,7 @@
   }
  }());
  }
- window.RenewalPanel={isOpen:function(){return false;},open:function(){build();window.RenewalPanel.open();}};
+ window.RenewalPanel=api;
  // Settings markup, cosmetic controls and service requests wait for first open.
 }());
 

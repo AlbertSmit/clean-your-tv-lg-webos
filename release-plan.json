@@ -69,6 +69,11 @@
         104
       ],
       "summary": "Use a stable private startup-session nonce and one guarded initial Home presentation request; corrected-runtime cold-boot, focus and emergency/off acceptance remain mandatory before publication"
+    },
+    {
+      "pr": 112,
+      "issues": [],
+      "summary": "Fix Root 0.4 runtime validation before updater teardown"
     }
   ],
   "excluded": [],

@@ -95,8 +95,23 @@
     clearTimeout(timer);
     if (visible()) timer = setTimeout(function () { refresh(false, true); }, 1500);
   }
+  function readOffer(edition) {
+    return rpc('check', {edition:edition}).then(function (value) {
+      // Installed supervisors are immutable; older ones compare release tags only.
+      if (value && value.canInstall && value.components && value.components.length && value.components.every(function (component) { return typeof component.installed === 'string' && component.installed === component.version; })) {
+        value.canInstall = false; value.reason = 'current';
+      }
+      return value;
+    });
+  }
+  function check(edition, fallback) {
+    return rpc('status', {}).then(function () { return readOffer(edition); }, function (error) {
+      if (error.unavailable && fallback) return fallback();
+      throw error;
+    });
+  }
   function checkOffer(request) {
-    return rpc('check', {edition:options.edition}).then(function (value) {
+    return readOffer(options.edition).then(function (value) {
       if (request === generation) { offer = value; checkError = ''; }
     }).catch(function () {
       if (request !== generation) return;
@@ -192,6 +207,6 @@
       errorText = error.message; panel.hidden = false;
     }).then(function () { if (request !== generation) return; busy = false; render(); schedule(); });
   }
-  window.SystemUpdates = {open:open,rpc:rpc,isOpen:visible};
+  window.SystemUpdates = {open:open,rpc:rpc,check:check,isOpen:visible};
 }());
 });

@@ -242,3 +242,5 @@ Noch unveröffentlichte Root-Kaltstartkorrektur: Wenn die Home-Steuerung aktiv u
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 OTA-Korrekturkandidat (#115): Der ursprüngliche System Updater aus 1.3.0 kann 1.4.0 wegen geänderter erlaubter Dateien nicht installieren. Ein Abbruch vor dem Austausch ist keine Teilinstallation. Wiederherstellungsjournal behalten; nicht erneut installieren, Zustand löschen oder Pfadliste ändern. Der nächste Kandidat erhält die Pfad- und Berechtigungsverträge von 1.3.0; Hardware-Update und Rollback müssen noch abgestimmt getestet werden.
+
+Noch unveröffentlichte Korrektur (#108/#109): Bei eingerichtetem System Updater verwenden der Update-Punkt und „Alle aktualisieren“ dieselbe Prüfung der Edition. Eine neuere Gesamtversion ohne geänderte Komponentenversionen bietet keine Neuinstallation an. Während der Prüfung bleibt die Installation deaktiviert. Die alte Prüfung wird nur bei fehlendem System Updater verwendet. Die Bestätigung am Fernseher steht aus.

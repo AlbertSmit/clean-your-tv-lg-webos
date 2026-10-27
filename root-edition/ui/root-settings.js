@@ -7,13 +7,19 @@
   function checkUpdates() {
     if (checkingUpdates || !window.RootUpdates || !window.RootUpdates.rpc) return;
     checkingUpdates = true;
-    window.RootUpdates.rpc('check', {}).then(function (offer) {
-      if (!offer) return;
-      var available = offer.canInstall === true || offer.reason === 'missing-rollback';
+    function badge(available) {
       buttons[4].setAttribute('data-update-available', String(available));
       buttons[4].setAttribute('aria-label', t(available ? 'Software updates. Update available.' : 'Software updates'));
-    }).catch(function () {}).then(function () { checkingUpdates = false; });
+    }
+    function legacy() {
+      return window.RootUpdates.rpc('check', {}).then(function (offer) {
+        if (offer) badge(offer.canInstall === true || offer.reason === 'missing-rollback');
+      });
+    }
+    var check = window.SystemUpdates ? window.SystemUpdates.check('root', legacy).then(function (offer) { if (offer) badge(offer.canInstall === true); }) : legacy();
+    check.catch(function () {}).then(function () { checkingUpdates = false; });
   }
+
   function request(uri, payload, timeout) {
     return new Promise(function (resolve, reject) {
       var bridge, timer, done = false;

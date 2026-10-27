@@ -40,6 +40,23 @@ The computer installer can supply a verified optional ARMv7 Python if the TV's
 existing interpreter fails its requirements. Other root, Node and platform
 requirements still apply. See [optional Python](OPTIONAL-PYTHON.md).
 
+### Unreleased availability correction (#108 / #109)
+
+When System Updater is provisioned, Home settings checks that supervisor for the
+same edition as the Update all screen. Only a confirmed missing service falls
+back to the legacy Home-only check; failed network, permission or state checks
+retain the last confirmed badge and do not select a different feed. Settings
+remain usable and the check does not move remote focus.
+
+A newer project release alone is not a component upgrade: if all installed and
+target component versions match, the screen reports that components are current
+and disables Update all. This also filters misleading offers from older fixed
+supervisors. New computer provisions apply the same rule in the supervisor.
+A same-version rebuild is not offered as an unexplained reinstall. Installation
+stays disabled while the screen checks availability. This correction has local
+regression coverage; physical-TV confirmation and public delivery remain pending.
+No input-control, emergency-stop, recovery or rollback policy is changed.
+
 ### One-time computer preparation
 
 First inspect the existing TV. Keep it on the same trusted network, select the

@@ -230,3 +230,5 @@ Nieopublikowana poprawka zimnego startu Root: przy włączonej obsłudze Home i 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 Kandydat poprawki OTA (#115): oryginalny System Updater 1.3.0 nie instaluje 1.4.0 z powodu zmiany dozwolonych plików. Przerwanie przed wymianą nie oznacza częściowej instalacji. Zachowaj dziennik; nie ponawiaj, nie usuwaj stanu ani nie zmieniaj ścieżek. Następny kandydat zachowuje kontrakty ścieżek i uprawnień 1.3.0; aktualizacja i powrót na TV nadal wymagają uzgodnionych testów.
+
+Nieopublikowana poprawka (#108/#109): po przygotowaniu System Updater wskaźnik i „Aktualizuj wszystko” korzystają z tego samego sprawdzenia edycji. Nowsze wydanie ogólne bez zmian wersji składników nie proponuje ponownej instalacji. Podczas sprawdzania instalacja jest wyłączona. Starsze sprawdzanie działa tylko przy braku System Updater. Potwierdzenie na telewizorze jest nadal oczekiwane.

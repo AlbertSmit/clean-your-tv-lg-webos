@@ -302,6 +302,17 @@ class AbsentPathTests(DeviceBase):
         self.assertEqual(ca.read_bytes(),b'foreign')
 
 class ComponentOfferTests(DeviceBase):
+    def test_new_release_without_component_version_changes_is_current(self):
+        from test_core import release
+        prior=release('2.0.0');candidate=release('2.0.0');candidate['release']='v2.1.0'
+        self.device.integrity=lambda:None;self.device.fetch=lambda method,payload:{'candidate':candidate};self.device._verify_release=lambda value,edition:value;self.device._baseline=lambda edition:prior;self.device.installed=lambda app:'2.0.0'
+        self.device.check_legacy=lambda:None;self.device.verify_baseline=lambda value:True;self.device.cache_bytes=lambda c:b'cached';self.device.inspect=lambda raw,c:{}
+        offer=self.device.check('no-root')
+        self.assertFalse(offer['canInstall']);self.assertEqual(offer['reason'],'current')
+        candidate['components'][2]['version']='2.0.1'
+        offer=self.device.check('no-root')
+        self.assertTrue(offer['canInstall']);self.assertEqual(offer['reason'],'available')
+
     def test_newer_release_with_older_helper_is_not_installable(self):
         from test_core import release
         prior=release('2.0.0');prior['release']='v0.0.0';candidate=release('2.1.0');candidate['components'][1]['version']='1.9.0'

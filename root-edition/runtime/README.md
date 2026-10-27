@@ -39,6 +39,16 @@ state instead of using this Root runtime.
 
 A confirmed normal shutdown retains the Home override, generated profile and transaction binding so bootd can select Clean Your TV as its first app. Startup recovery still restores the old transaction before arming fresh health protection. Explicit exit, input failure without a shutdown signal, and failsafe recovery restore LG Home.
 
+The candidate shutdown monitor accepts only fresh transaction/session-bound evidence.
+Its local tvpower subscription must observe ON before Active Standby/Power Off;
+initial OFF snapshots, unknown replies and lost subscriptions grant no authority.
+Only actual pushes refresh the existing five-second evidence window. Returning ON
+or losing/invalidating the stream revokes its private volatile `.power` proof.
+No reconnect loop or ENODEV exception bypasses input recovery. A restored old
+observer defers enabled old-session intent to boot dispatch; escape, failsafe and
+package loss still override it. See [evidence and limits](../../docs/development/ROOT-COLD-BOOT.md).
+
+
 Unreleased cold-start correction: startup identity combines the kernel UUID with
 one private volatile session nonce, rather than clock-dependent `btime`. The
 nonce and its lock live beside the normal-start marker in

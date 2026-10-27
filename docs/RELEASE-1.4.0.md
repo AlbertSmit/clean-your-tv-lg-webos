@@ -121,3 +121,12 @@ must pass before publication, including first screen without Home, Emby-to-Home,
 repeated AC-off cycles and off/emergency preservation. Use fresh artifacts whose source SHA includes #103/#105 and #100; older
 pre-integration installers cannot validate or deliver these changes. A successful
 build does not satisfy the physical startup/rollback gates.
+
+
+The exact 9194c16a C3 Root0.5 test installation passed basic controls but failed
+its first AC cold boot: LiveTV remained and input ENODEV revoked Root intent.
+Root remains disabled with LG Home. A subsequent passive Root-disabled trace
+supports correcting normal-shutdown detection; its host regressions do not
+establish physical acceptance. New exact artifacts and the complete supervised
+cold-boot/standby/emergency/rollback matrix remain required. See the
+[recorded result](RC-1.4.0-TESTING.md#exact-9194-root-050-first-ac-result-104).

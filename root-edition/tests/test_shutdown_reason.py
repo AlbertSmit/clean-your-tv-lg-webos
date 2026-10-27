@@ -49,7 +49,7 @@ class MonitorTests(unittest.TestCase):
    attempts.append(1)
    if len(attempts)==1:raise OSError('transient write failure')
    recorded.set()
-  with patch.object(s,'PowerReason',return_value=observer),patch.object(s,'query',side_effect=lambda: release.wait(2) and False),patch.object(s,'record',side_effect=record):
+  with patch('intent_runtime.boot_identity',return_value='boot-a'),patch.object(s,'observe_power'),patch.object(s.os.path,'lexists',return_value=False),patch.object(s,'PowerReason',return_value=observer),patch.object(s,'query',side_effect=lambda: release.wait(2) and False),patch.object(s,'record',side_effect=record):
    stop=s.monitor('tx')
    try:self.assertTrue(recorded.wait(1));self.assertEqual(len(attempts),2)
-   finally:stop.set();release.set();time.sleep(.1)
+   finally:stop.set();release.set();stop.close()

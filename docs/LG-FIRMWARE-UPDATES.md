@@ -41,6 +41,43 @@ Upstream evidence: [configuration API](https://github.com/webosbrew/webos-homebr
 [startup implementation](https://github.com/webosbrew/webos-homebrew-channel/blob/main/services/startup.sh),
 and [early update-check limitation](https://github.com/webosbrew/webos-homebrew-channel/issues/96).
 
+## Unreleased diagnostics correction and webOS 11 access (#110)
+
+Root SSH access does not grant Root Home access to Homebrew's Luna API. On the
+maintainer's C3 (webOS 11.2.0, firmware 43.21.71, Homebrew 0.7.3, installed Root
+Home 0.4.0), read-only investigation confirmed that root can read configuration
+with `root: true`, while a client matching Root Home's generated LS2 client-name
+pattern receives a denied `getConfiguration` response (`returnValue: false`,
+error code `-1`). The generated Home client grants do not intersect Homebrew's
+configuration API grants. This models the application's LS2 access boundary;
+it is not a test of the newly built UI in the running application.
+
+Homebrew 0.7.3 exposes its elevated API to `public`, its own service group and
+ares CLI. Ordinary webOS 11 apps no longer receive `public`. Upstream
+[Homebrew #233](https://github.com/webosbrew/webos-homebrew-channel/pull/233)
+([merged permission change](https://github.com/webosbrew/webos-homebrew-channel/commit/50fa99e1f08959b665b2e34d0d85cb2222c4c2c9))
+adds `lunabus.query` for elevated APIs. At investigation time, the latest
+published Homebrew release is still
+[0.7.3](https://github.com/webosbrew/webos-homebrew-channel/releases/tag/v0.7.3).
+Do not assume a source merge is an available supported package or that this
+change alone grants every client access: the installed Home client still needs
+an intersecting supported grant. See also the related Installer investigation
+[#116](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/116).
+
+The candidate UI distinguishes denied API access, missing service, Homebrew
+running without root, timeout and unsupported configuration replies. Raw remote
+errors and configuration fields are not displayed. A denied call leaves the
+switch disabled and directs the user to change the setting in Homebrew Channel
+itself, whose own API grant is separate. A supported Homebrew prerequisite/client
+permission solution and physical acceptance remain outstanding; this diagnostics
+change does not enable the denied API or establish active blocking.
+
+No Homebrew ACL, flag, overlay, service or package was modified during the
+read-only C3 investigation. The saved preference was unchanged in reads before
+and after. On/off
+writes, a real restart, effective server blocking and the new UI on the TV were
+not tested. Preserve the restart/security-update limitations above.
+
 ## Acceptance and further device checks
 
 Automated tests cover strict boolean values, partial configuration writes,

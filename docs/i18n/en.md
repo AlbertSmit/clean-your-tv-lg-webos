@@ -236,3 +236,5 @@ Unreleased Root cold-start correction: with Home control enabled and LG Power On
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 Unreleased correction (#108/#109): with System Updater prepared, the update dot and Update all use the same edition check. A newer overall release without changed component versions does not offer reinstallation. During a check, installation stays disabled. Legacy checks are used only when System Updater is absent. Device confirmation is pending.
+
+Unreleased #110 diagnostics: root SSH access alone does not grant Home access to Homebrew’s configuration API. The screen distinguishes API denial, unavailable service, non-root service, timeout and unsupported replies. If access is denied, change the preference in Homebrew Channel itself. On webOS 11, Homebrew 0.7.3 permissions can block app calls; a supported permission solution remains pending. No ACL or blocking setting is changed automatically.

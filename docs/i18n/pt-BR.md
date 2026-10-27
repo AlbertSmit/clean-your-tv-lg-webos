@@ -231,3 +231,5 @@ Correção ainda não publicada da inicialização a frio do Root: com o control
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 Correção ainda não publicada (#108/#109): com System Updater preparado, o indicador e «Atualizar tudo» usam a mesma verificação da edição. Uma nova versão geral sem mudanças nas versões dos componentes não oferece reinstalação. Durante a verificação, a instalação fica desativada. A verificação antiga só é usada na ausência de System Updater. A confirmação no televisor está pendente.
+
+Diagnóstico ainda não publicado #110: o acesso SSH root não concede ao Home acesso automático à API de configuração do Homebrew. A tela distingue acesso negado, serviço indisponível, serviço sem root, tempo esgotado e respostas incompatíveis. Se o acesso for negado, altere a opção no Homebrew Channel. No webOS 11, as permissões do Homebrew 0.7.3 podem bloquear chamadas de aplicativos; uma solução de permissões compatível continua pendente. Permissões e opção de bloqueio não são alteradas automaticamente.

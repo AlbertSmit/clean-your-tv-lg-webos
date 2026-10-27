@@ -211,3 +211,5 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 尚未发布的修正（#108/#109）：准备好 System Updater 后，更新指示点与“全部更新”使用同一版本类别检查。若只有整体发布版本变更、所有组件版本均相同，则不会建议重新安装。检查期间无法安装。仅在 System Updater 不存在时使用旧版检查。仍待实际电视确认。
+
+尚未发布的 #110 诊断：SSH root 访问不会自动授予 Home 调用 Homebrew 设置 API 的权限。界面区分访问被拒绝、服务不可用、服务未以 root 运行、超时和不支持的响应。若访问被拒绝，请在 Homebrew Channel 中更改设置。在 webOS 11 上，Homebrew 0.7.3 的权限可能阻止应用调用；仍需受支持的权限解决方案。不会自动更改权限或封锁设置。

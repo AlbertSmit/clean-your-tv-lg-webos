@@ -229,3 +229,5 @@ ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. �
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 아직 배포되지 않은 수정 (#108/#109): System Updater를 준비한 경우 업데이트 표시와 «모두 업데이트»는 같은 에디션 검사를 사용합니다. 전체 릴리스 번호만 바뀌고 구성 요소 버전이 같으면 재설치를 제안하지 않습니다. 검사 중에는 설치할 수 없습니다. System Updater가 없을 때만 이전 검사를 사용합니다. 실제 TV 확인은 아직 필요합니다.
+
+아직 배포되지 않은 #110 진단: SSH root 접근만으로 Home에 Homebrew 설정 API 접근 권한이 부여되지는 않습니다. 화면은 접근 거부, 서비스 사용 불가, root 없는 서비스, 시간 초과 및 지원하지 않는 응답을 구분합니다. 접근이 거부되면 Homebrew Channel에서 설정을 변경하세요. webOS 11에서 Homebrew 0.7.3 권한은 앱 호출을 차단할 수 있으며 지원되는 권한 해결책은 아직 필요합니다. 권한과 차단 설정은 자동으로 변경되지 않습니다.

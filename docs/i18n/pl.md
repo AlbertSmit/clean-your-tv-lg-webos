@@ -230,3 +230,5 @@ Nieopublikowana poprawka zimnego startu Root: przy włączonej obsłudze Home i 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
 Nieopublikowana poprawka (#108/#109): po przygotowaniu System Updater wskaźnik i „Aktualizuj wszystko” korzystają z tego samego sprawdzenia edycji. Nowsze wydanie ogólne bez zmian wersji składników nie proponuje ponownej instalacji. Podczas sprawdzania instalacja jest wyłączona. Starsze sprawdzanie działa tylko przy braku System Updater. Potwierdzenie na telewizorze jest nadal oczekiwane.
+
+Nieopublikowana diagnostyka #110: dostęp SSH root nie zapewnia Home dostępu do API konfiguracji Homebrew. Ekran rozróżnia odmowę dostępu, brak usługi, usługę bez root, przekroczenie czasu i nieobsługiwane odpowiedzi. Przy odmowie dostępu zmień ustawienie w Homebrew Channel. W webOS 11 uprawnienia Homebrew 0.7.3 mogą blokować wywołania aplikacji; obsługiwane rozwiązanie uprawnień pozostaje do ustalenia. Uprawnienia ani blokowanie nie są zmieniane automatycznie.

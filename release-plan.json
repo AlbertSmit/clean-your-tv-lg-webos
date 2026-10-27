@@ -30,6 +30,11 @@
         107
       ],
       "summary": "Preserve LF in Windows-built POSIX payload scripts and prevent redirected legacy-console encoding crashes; partial #107, BX routing/recovery remains unresolved"
+    },
+    {
+      "pr": 122,
+      "issues": [],
+      "summary": "Correct published 1.4.0 README metadata and Android download labeling; enforce stable release links/component versions in candidate policy and required README CI checks"
     }
   ],
   "excluded": [],

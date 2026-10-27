@@ -1,6 +1,7 @@
 """Numbered terminal wizard and small maintenance command surface."""
 import argparse
 import getpass
+import io
 import json
 from pathlib import Path
 import sys
@@ -126,6 +127,11 @@ def choose_profile(args, store, ask, write, search, inspect):
 
 
 def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass, search=None, inspect=None, payload_root=None):
+    # Preserve the terminal/file encoding; escape unsupported text instead of
+    # aborting setup or even --help on redirected legacy Windows streams.
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(errors='backslashreplace')
     raw_args = list(sys.argv[1:] if argv is None else argv)
     if raw_args == ['--check-runtime']:
         from .runtime_check import check_runtime

@@ -20,6 +20,15 @@ the saved switch is not proof of active blocking. This also blocks firmware
 security updates, and Homebrew retains the preference after CYTV removal.
 See [operation, limitations and TV acceptance scope](../docs/LG-FIRMWARE-UPDATES.md).
 
+**Unreleased #110 access correction:** the candidate adds a CYTV-owned grant only
+for Homebrew configuration APIs. Existing supported Root installations can use
+`cytv enable-firmware-access --edition root` from the new installer, without
+replacing retained code or modifying Homebrew files. A normal Homebrew service
+restart may be needed for cached API groups. C3 acceptance confirmed the actual
+switch working with installed Root 0.4.0 / Homebrew 0.7.3; fresh setup, physical
+update/rollback/removal and effective blocking after restart remain separate
+gates. See the [access lifecycle and revocation](../docs/LG-FIRMWARE-UPDATES.md#candidate-root-home-configuration-api-access-110).
+
 ## Candidate: two setup clients, one installation
 
 **Unpublished Homebrew Installer candidate:** CYTV Installer is a separate Root-only on-TV

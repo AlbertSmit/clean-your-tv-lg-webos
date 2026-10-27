@@ -214,4 +214,4 @@ OTA 修復候選（#115）：1.3.0 原版 System Updater 因允許的檔案清�
 
 尚未發佈的修正（#108/#109）：準備好 System Updater 後，更新指示點與「全部更新」使用同一版本類別檢查。若只有整體發佈版本變更、所有元件版本均相同，則不會建議重新安裝。檢查期間無法安裝。僅在 System Updater 不存在時使用舊版檢查。仍待實際電視確認。
 
-尚未發佈的 #110 診斷：SSH root 存取不會自動授予 Home 呼叫 Homebrew 設定 API 的權限。介面區分存取遭拒、服務無法使用、服務未以 root 執行、逾時和不支援的回應。若存取遭拒，請在 Homebrew Channel 中變更設定。在 webOS 11 上，Homebrew 0.7.3 的權限可能阻止應用程式呼叫；仍需受支援的權限解決方案。不會自動變更權限或封鎖設定。
+候選版本 #110 存取修正：新安裝程式僅為 Homebrew 設定 API 註冊 CYTV 自有權限。現有 Root 安裝請執行 `cytv enable-firmware-access --edition root`，然後重新開啟 Root Home 並檢查 LG 韌體更新。此指令不會變更 Homebrew ACL 或封鎖設定。中斷後請重試相同指令。`cytv disable-firmware-access --edition root` 撤銷存取權限，但不變更封鎖設定。新執行環境在完整更新後維護註冊；舊執行環境在僅更新應用程式後可能需要再次執行指令。前提、回復及驗證限制請參閱韌體指南。

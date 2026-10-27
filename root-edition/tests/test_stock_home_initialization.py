@@ -145,9 +145,12 @@ class StockHomeTests(unittest.TestCase):
                 self.calls.append(method)
                 return {'root':True,'registered':True,'activityName':p.NAME+'.recovery'}
             return real(method)
-        with patch.object(p,'rpc',side_effect=bus), patch.object(p,'manifest',return_value={}), patch('startup_hook.install'):
+        def firmware():
+            self.assertTrue((self.root/'recovery-provision.json').exists())
+            self.calls.append('firmware')
+        with patch.object(p,'rpc',side_effect=bus), patch.object(p,'manifest',return_value={}), patch('startup_hook.install'), patch.object(p,'register_firmware_access',side_effect=firmware):
             p.finalize()
-        self.assertEqual(self.calls[-2:],['status','register'])
+        self.assertEqual(self.calls[-3:],['status','register','firmware'])
         self.assertTrue((self.root/'recovery-provision.json').exists())
 
     def test_failed_initialization_never_calls_service_or_publishes_readiness(self):

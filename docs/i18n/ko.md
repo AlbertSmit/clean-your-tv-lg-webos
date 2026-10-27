@@ -211,3 +211,5 @@ ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. �
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 미출시: 전용 Python 검사는 ABI, 디렉터리 안전 및 공간 오류를 구분합니다. 최초 설치에는 /var/lib에 320 MiB가 필요합니다. 큰 WAM Session Storage가 원인일 수 있으며, 지우면 앱 세션 상태가 손실될 수 있습니다. [복구 안내](../RECOVERY.md#private-python-and-low-var-space)를 확인하세요.
+
+아직 공개되지 않은 1.4.0 후보에서는 중단된 No-root 설치도 **TV 상태 확인** 후 **복구 및 재설치**를 제공합니다. Clean Your TV 앱을 제거하려는 경우에만 제거를 확인하고, 다시 설치하기 전에 버전을 검토하세요. 복구에 실패하면 해당 진단 보고서를 저장하고 중단하세요. TV의 최초 패키지 거부 원인은 아직 확인되거나 해결되지 않았습니다 (#21).

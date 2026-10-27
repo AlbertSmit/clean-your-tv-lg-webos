@@ -41,7 +41,16 @@ Published downloads remain v1.3.0. No new TV compatibility is established.
 - #99 / issue #95: private-Python preflight identifies ABI, ownership and storage
   checks, reports available/required space and advisory WAM size with bounded
   diagnostics. No app storage is deleted. Optional WAM cleanup and the separate
-  architecture report are not delivered by this candidate.
+  architecture report are not delivered by this candidate. The reporter has since
+  confirmed #94 passes in published cytv 0.4.0; the later Root deployment fails in #101.
+
+- Issues #101 and #21: accept observed C2 UID 1001 only for independently pinned
+  DATA at the exact shared packages/services containers; keep strict private
+  execution and own-file checks. Extend guided No-root recovery to interrupted
+  installs, with separate default-No removal before version review/reinstallation.
+  Existing failed Root operations retain their original drivers and need reviewed
+  recovery. The original No-root package rejection and both device results remain
+  unconfirmed; this is partial delivery for #21.
 
 ## Packaging and recovery
 

@@ -205,3 +205,7 @@ With desktop dependencies installed, `python scripts/preview-installer.py --lang
 saves screenshots of the real Qt widgets to `build/installer-preview/`. These use
 sample TV data and do not discover, connect to, or modify a TV. Add `--all-locales`
 to capture every supported language at the minimum window size.
+
+### Interrupted No-root installation in the unpublished 1.4.0 candidate
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21). Removing the apps may reset Home preferences. The default is No, including with `--yes`; noninteractive setup cannot approve this step. The existing TV-installer-idle, removal readback and unknown-outcome guards remain in force. Published v1.3.0 offers this button for unfinished removal only.

@@ -109,3 +109,7 @@ at most two additional launch attempts, only after LG Home has stayed visible
 for 1.5 seconds and the previous launch has settled for at least 5 seconds.
 Opening another app, explicitly visiting LG Home, disabling Home control, or
 turning the TV off cancels this recovery.
+
+### Interrupted No-root installation in the unpublished 1.4.0 candidate
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21). Removing the apps may reset Home preferences. The default is No, including with `--yes`; noninteractive setup cannot approve this step. The existing TV-installer-idle, removal readback and unknown-outcome guards remain in force. Published v1.3.0 offers this button for unfinished removal only.

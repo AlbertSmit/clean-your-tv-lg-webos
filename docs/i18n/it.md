@@ -213,3 +213,5 @@ verificata. Compatibilità e minore ritardo non confermati.
 [Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
 
 Non ancora pubblicato: il controllo di Python privato distingue errori ABI, sicurezza delle directory e spazio. La prima installazione richiede 320 MiB liberi in /var/lib. WAM Session Storage può spiegare la mancanza di spazio; cancellarlo può perdere lo stato delle sessioni. Vedi il [ripristino](../RECOVERY.md#private-python-and-low-var-space).
+
+Nel candidato 1.4.0 non ancora pubblicato, anche un’installazione No-root interrotta offre **Ripristina e reinstalla** dopo **Controlla lo stato della TV**. Conferma la rimozione solo se vuoi eliminare le app Clean Your TV, poi controlla le versioni prima di reinstallare. Se il ripristino fallisce, salva il relativo rapporto diagnostico e fermati. Il rifiuto iniziale del pacchetto da parte della TV non è ancora spiegato né confermato come risolto (#21).

@@ -29,6 +29,7 @@ html.home-tvos #homeShelf { display: block; position: absolute; top: 0; left: 0;
 .shelf-shade { background: linear-gradient(180deg, rgba(0,0,0,.04) 35%, rgba(0,0,0,.2) 100%); }
 .shelf-visible .shelf-backdrop { opacity: 1; }
 .shelf-visible .shelf-backdrop-soft { opacity: 0; }
+html.home-tvos body.app-grid .shelf-backdrop, html.home-tvos body.app-grid .shelf-backdrop-soft { transition: none; }
 .shelf-copy { position: absolute; left: 88px; top: 62px; opacity: 0; transition: opacity 180ms ease; }
 .shelf-mark { display: block; width: 460px; height: auto; filter: drop-shadow(0 4px 14px rgba(0,0,0,.55)); }
 .shelf-visible .shelf-copy { opacity: 1; }
@@ -38,7 +39,7 @@ html.home-tvos #homeStatus {
   display: flex; position: absolute; top: 50px; right: 56px; z-index: 4;
   width: 176px; height: 60px; align-items: center; justify-content: flex-end;
   padding: 5px 5px 5px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 32px;
-  background: linear-gradient(140deg, rgba(255,255,255,.14), rgba(255,255,255,.03));
+  background: linear-gradient(140deg, rgba(255,255,255,.14), rgba(255,255,255,.03)), rgba(30,42,48,.38);
   box-shadow: inset 0 1px 1px rgba(255,255,255,.15), 0 4px 12px rgba(0,0,0,.08);
   cursor: pointer; transition: opacity 180ms ease;
 }
@@ -66,11 +67,12 @@ html.home-tvos #dockBand {
   box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.1);
   pointer-events: none;
 }
-#dockTexture { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: .58; background-size: 1920px 1080px; background-repeat: no-repeat; background-position: -40px -784px; }
+#dockTexture { display: none; position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: .58; background-size: 1872px 278px; background-repeat: no-repeat; background-position: -24px -24px; }
 html.home-tvos #dockTexture { display: block; }
 html.reduced-effects #dockTexture { display: none !important; }
 html.home-tvos #stage { will-change: transform; transition: transform 260ms cubic-bezier(.23,1,.32,1); }
 html.home-tvos .item { width: 250px; transition: opacity 180ms ease, transform 180ms ease; }
+html.home-tvos #tiles.regrid .item { transition: none; }
 html.home-tvos .card { width: 250px; height: 150px; border-radius: 28px; background: #333441; box-shadow: 0 8px 13px rgba(0,0,0,.15); transition: transform 180ms cubic-bezier(.23,1,.32,1); }
 html.home-tvos .item.focused .card, html.home-tvos .item.moving .card { will-change: transform; }
 html.home-tvos .card::before {
@@ -145,7 +147,7 @@ html.reduced-effects .widgets, html.reduced-effects .widgets .glass-cell {
 
 /* The compact music card spans two dock tracks with a 2:1 aspect ratio. */
 .w-np {
-  padding: 30px 23px; color: #f7fbff; border-radius: 48px;
+  padding: 30px; color: #f7fbff; border-radius: 48px;
   border: 1px solid rgba(255,255,255,.24); border-top-color: rgba(255,255,255,.52);
   background: linear-gradient(145deg, rgba(235,242,245,.18), rgba(130,155,160,.12));
   box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.1);
@@ -162,7 +164,7 @@ html.reduced-effects .widgets, html.reduced-effects .widgets .glass-cell {
 html.reduced-effects .w-np { background: #303e47; }
 html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display: none; }
 .w-np-art {
-  width: 212px; height: 212px; flex-shrink: 0; margin-right: 18px; border-radius: 12px; overflow: hidden;
+  width: 212px; height: 212px; flex-shrink: 0; margin-right: 18px; border-radius: 18px; overflow: hidden;
   background: linear-gradient(145deg, #80929c, #5b737e 45%, #33454e);
   display: flex; align-items: center; justify-content: center;
   box-shadow: inset 0 1px 1px rgba(255,255,255,.2), 0 8px 18px rgba(0,0,0,.2);
@@ -173,16 +175,14 @@ html.reduced-effects .w-np-texture, html.reduced-effects .w-np::after { display:
 .w-np-label { font-size: 13px; font-weight: 500; letter-spacing: .7px; line-height: 18px; text-transform: uppercase; opacity: .7; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .w-np-title { font-size: 24px; font-weight: 500; letter-spacing: -.3px; line-height: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .w-np-artist { font-size: 22px; line-height: 27px; font-weight: 400; opacity: .7; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.w-np-badge { position: absolute; top: -8px; right: 0; width: 30px; height: 30px; opacity: .8; }
-.w-np-badge svg { display: block; width: 30px; height: 30px; fill: currentColor; }
-.w-np-badge path { fill: none; stroke: currentColor; stroke-width: 2; }
-.w-np { will-change: transform, opacity; transition: opacity 240ms cubic-bezier(.4,0,.2,1), transform 300ms cubic-bezier(.25,1,.4,1), visibility 240ms; }
-.w-np.w-np-hidden { opacity: 0; transform: translateY(18px) scale(.985); visibility: hidden; }
-.w-np.entering { animation: wNpCardIn 560ms cubic-bezier(.22,.61,.36,1) both; }
+.w-np-badge { position: absolute; top: 0; right: 0; width: 28px; height: 28px; opacity: .8; }
+.w-np-badge svg { display: block; width: 28px; height: 28px; fill: currentColor; }
+.w-np { transform-origin: top right; will-change: transform, opacity; transition: opacity 220ms ease-out, transform 320ms cubic-bezier(.2,.9,.3,1), visibility 220ms; }
+.w-np.w-np-hidden { opacity: 0; transform: scale(.88); visibility: hidden; }
+.w-np.entering { animation: wNpCardIn 360ms cubic-bezier(.2,.9,.3,1) both; }
 @keyframes wNpCardIn {
-  0% { opacity: 0; transform: translateY(26px) scale(.955); }
-  60% { opacity: 1; transform: translateY(-5px) scale(1.02); }
-  100% { opacity: 1; transform: none; }
+  from { opacity: 0; transform: scale(.88); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes wNpTextIn {
   from { opacity: 0; transform: translateY(9px); }
@@ -224,6 +224,7 @@ html.reduced-effects .w-np-animate, html.reduced-effects .w-np-art-animate { ani
   animation: wNpShimmer 2s ease-in-out infinite;
 }
 .w-np-art:not(.loading) .w-np-shimmer { display: none; }
+.w-np-art.loading .w-np-glyph { visibility: hidden; }
 @keyframes wNpShimmer {
   0% { transform: translateX(-130%); }
   55%, 100% { transform: translateX(230%); }
@@ -249,6 +250,23 @@ html.home-tvos .status-widgets {
 .status-widgets[aria-checked='false'] { opacity: .55; }
 html.home-tvos .status-widgets.focused, html.home-tvos .status-widgets:focus { outline: 3px solid #fff; outline-offset: 3px; opacity: 1; }
 html.home-tvos body.app-grid .status-widgets, html.home-tvos body.editing .status-widgets { visibility: hidden; }
+.status-church { display: none; }
+/* A calendar-style shortcut: one dock track wide, half the clock tall, bottom-aligned with it. */
+html.home-tvos .status-church {
+  position: absolute; left: 388px; top: 593px; width: 250px; height: 125px; z-index: 3;
+  display: flex; align-items: center; box-sizing: border-box; padding: 0 28px; border-radius: 32px; text-align: left; color: #fff;
+  border: 1px solid rgba(255,255,255,.24); border-top-color: rgba(255,255,255,.52);
+  background: linear-gradient(145deg, rgba(235,242,245,.18), rgba(130,155,160,.12)), rgba(22,30,36,.74);
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.14), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 28px rgba(0,0,0,.1);
+  transition: transform 180ms cubic-bezier(.23,1,.32,1), box-shadow 180ms ease;
+}
+.church-item { display: block; min-width: 0; padding-left: 16px; border-left: 4px solid rgba(255,255,255,.9); }
+.church-place, .church-area { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.church-place { font-size: 28px; font-weight: 600; letter-spacing: -.5px; line-height: 34px; }
+.church-area { font-size: 22px; font-weight: 500; line-height: 28px; opacity: .72; }
+html.home-tvos .status-church.focused, html.home-tvos .status-church:focus { outline: none; transform: scale(1.08); box-shadow: inset 0 2px 2px rgba(255,255,255,.2), inset 0 -1px 1px rgba(255,255,255,.12), 0 18px 32px rgba(0,0,0,.32); }
+html.home-tvos body.app-grid .status-church, html.home-tvos body.editing .status-church,
+html.home-tvos body.controls-open .status-church, html.home-tvos .status-church.church-off { visibility: hidden; }
 
 /* Widget settings inside Home settings */
 .widget-settings { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); }

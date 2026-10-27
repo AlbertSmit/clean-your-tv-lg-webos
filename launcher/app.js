@@ -32,8 +32,12 @@
       if (!layout.tvos || moveState || pickerOpen || undoState || focusZone === 'inputs') return false;
       focusTopButton(3);
       return true;
+    }, function () {
+      if (!layout.tvos || moveState || pickerOpen || undoState || focusZone === 'inputs') return false;
+      focusTopButton(4);
+      return true;
     }),
-    headerBottom = 0;
+    headerBottom = null;
   var toastTimer,
     columnCount = layout.columns,
     columnWidth = layout.columnWidth,
@@ -52,7 +56,7 @@
     ambientLayers = [getElement("ambientA"), getElement("ambientB")],
     ambientIndex = 0,
     ambientColor = null,
-    topButtons = [getElement("btnInputs"), getElement("btnWifi"), getElement("btnSettings"), getElement("btnWidgets")],
+    topButtons = [getElement("btnInputs"), getElement("btnWifi"), getElement("btnSettings"), getElement("btnWidgets"), getElement("btnChurch")],
     inputsPanel = getElement("inputsPanel"),
     tiles = [],
     focusZone = "grid",
@@ -736,10 +740,11 @@
         computeColorOnload(tile, image);
       }
     } else {
+      // The card matches the icon's own background; dominantColor only tints the ambient light.
       color = app.dominantColor || cachedColor(app.id);
-      if (!color && app.iconColor) {
+      if (app.iconColor) {
         cardBackground = tileBackground(app.iconColor);
-        color = parseHexColor(app.iconColor) || [68, 68, 68];
+        color = color || parseHexColor(app.iconColor) || [68, 68, 68];
       }
       if (!color) {
         computeColorOnload(tile, image);
@@ -793,9 +798,9 @@
   function tileTop(index) {
     return HomeUI.positionFor(layout, index).top;
   }
-  function layoutTiles() {
+  function layoutTiles(gridToggle) {
     tiles.forEach(function (e, t) {
-      tilesContainer.appendChild(e.el);
+      if (!gridToggle) tilesContainer.appendChild(e.el);
       // Position via transform so layout is never touched on updates.
       e.el.style.transform = "translate3d(" + tileLeft(t) + "px," + tileTop(t) + "px,0)";
       e.el.classList.toggle("dock", 0 === rowFor(t));
@@ -807,11 +812,16 @@
     dockBand.style.top = layout.dockTop + "px";
     dockBand.style.width = (layout.tvos ? 1824 : (dockCount - 1) * columnWidth + layout.cardWidth + 56) + "px";
     dockBand.style.height = layout.dockHeight + "px";
-    var header = document.querySelector("header");
-    headerBottom = header.offsetTop + header.offsetHeight;
     // Tile positions changed, so any cached top-button geometry is stale.
     topButtonRects = null;
-    loadVisibleIcons();
+    if (!gridToggle) loadVisibleIcons();
+  }
+  function currentHeaderBottom() {
+    if (headerBottom === null) {
+      var header = document.querySelector("header");
+      headerBottom = header.offsetTop + header.offsetHeight;
+    }
+    return headerBottom;
   }
   // Widgets are decorative tvOS-style surfaces fed by WidgetData (Home Assistant
   // in production, a fake provider in the browser preview). They are not part
@@ -892,20 +902,22 @@
       var row = rowFor(index);
       if (layout.tvos && layout.grid !== (row > 0)) {
         layout.grid = row > 0;
-        layoutTiles();
+        tilesContainer.classList.add("regrid");
+        layoutTiles(true);
+        tilesContainer.offsetWidth;
+        requestAnimationFrame(function () {
+          tilesContainer.classList.remove("regrid");
+        });
       }
       var top = tileTop(index);
       scrollOffset = HomeUI.scrollFor(layout, index, scrollOffset, !!moveState);
       loadVisibleIcons();
       stage.style.transform = "translate3d(0," + -scrollOffset + "px,0)";
       document.body.classList.toggle("app-grid", layout.tvos && scrollOffset > 0);
-      document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < headerBottom + 24);
+      document.body.classList.toggle("scrolled", layout.dockTop - scrollOffset < currentHeaderBottom() + 24);
       shelf.update(layout.tvos && row === 0, layout.tvos);
       dockGlass.update(layout.tvos, layout.grid, HomeUI.preferences().reducedEffects);
-      if (layout.tvos) {
-        getElement('dockTexture').style.backgroundPosition = '-40px ' + (-layout.dockTop + scrollOffset) + 'px';
-        return;
-      }
+      if (layout.tvos) return;
       var glassWidth = layout.focusScale * layout.cardWidth + layout.glassPadding,
         glassHeight = layout.focusScale * layout.cardHeight + layout.glassPadding,
         glassLeft = tileLeft(index) + layout.cardWidth / 2 - glassWidth / 2,
@@ -948,8 +960,16 @@
     setFocusZone("top");
     document.body.classList.remove("scrolled");
     topButtons[focusedTopButton].classList.remove("focused");
-    focusedTopButton = Math.max(0, Math.min(index, layout.tvos ? topButtons.length - 1 : 2));
+    focusedTopButton = Math.max(0, Math.min(index, layout.tvos ? (churchVisible() ? 4 : 3) : 2));
     topButtons[focusedTopButton].classList.add("focused");
+    // The church shortcut sits beside the clock widget, so keep the widgets on screen.
+    if (focusedTopButton === 4) {
+      document.body.classList.remove('controls-open');
+      statusControl.expanded(false);
+    }
+  }
+  function churchVisible() {
+    return !topButtons[4].classList.contains('church-off');
   }
   function setFocusZone(zone) {
     document.body.classList.toggle('controls-open', layout.tvos && zone === 'top');
@@ -964,6 +984,7 @@
       getElement("greeting").textContent = greetings[idx][1];
       break;
     }
+    headerBottom = null;
     if (window.HomeI18n) {
       getElement("clock").textContent = HomeI18n.formatTime(now);
       getElement("ampm").textContent = "";
@@ -974,8 +995,13 @@
       getElement("date").textContent = weekdays[now.getDay()] + "  " + now.getDate() + " " + months[now.getMonth()];
     }
     statusControl.update(getElement('clock').textContent + getElement('ampm').textContent);
+    if (focusZone === 'top' && focusedTopButton === 4 && !churchVisible()) focusTile(focusedTile);
   }
   function activateTopButton(index) {
+    if (index === 4) {
+      launchApp('com.webos.app.browser', 'Kerkdienst', {target: 'https://kerkdienstgemist.nl/stations/1341-Nieuwe-Kerk-Utrecht-Wittevrouwen-'});
+      return;
+    }
     if (index === 3) {
       if (!layout.tvos || moveState || pickerOpen || undoState || focusZone === 'inputs') return;
       if (!HomeUI.setPreference('widgetsVisible', !HomeUI.preferences().widgetsVisible)) {
@@ -1139,6 +1165,8 @@
           focusTopButton(focusedTopButton + 1);
         } else if (40 === key) {
           focusTile(0 === rowFor(focusedTile) ? focusedTile : 0);
+        } else if (38 === key && focusedTopButton === 4) {
+          focusTopButton(2);
         } else if (key === KEY_OK) {
           activateTopButton(focusedTopButton);
         } else if (layout.tvos && (key === KEY_BACK || key === 27)) {
@@ -1154,7 +1182,7 @@
         } else if (39 === key) {
           column < columnCount - 1 && focusedTile < lastIndex && focusTile(focusedTile + 1);
         } else if (38 === key) {
-          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? 2 : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, (topButtonRects || (topButtonRects = topButtons.slice(0, 3).map(function (e) {
+          0 === rowFor(focusedTile) ? focusTopButton(layout.tvos ? (focusedTile < 2 && churchVisible() ? 4 : 2) : (tileCenter = tileLeft(focusedTile) + layout.cardWidth / 2, nearestButton = 0, nearestDistance = 1 / 0, (topButtonRects || (topButtonRects = topButtons.slice(0, 3).map(function (e) {
             var n = e.getBoundingClientRect();
             return n.left + n.width / 2;
           }))).forEach(function (center, t) {
@@ -1214,6 +1242,7 @@
       return;
     }
     topButtonRects = null;
+    headerBottom = null;
     var previousZone = focusZone;
     cancelHold();
     closePicker();
@@ -1253,6 +1282,9 @@
   });
   afterRender(function () {
     refreshInventory();
+    if (layout.tvos) setTimeout(function () {
+      tiles.forEach(function (tile, index) { if (index < columnCount * 3) loadTileIcon(tile); });
+    }, 3000);
     callLuna("luna://com.palm.connectionmanager/getStatus", {
       subscribe: true
     }, function (e) {

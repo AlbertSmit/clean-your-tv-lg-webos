@@ -103,7 +103,7 @@ export function createWidgets(dataSource) {
   const minuteHand = clockEl.querySelector('.w-clock-minute');
 
   // — Weather cell —
-  const musicGlyph = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+  const musicGlyph = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 5.4 20.8 2.8v3.4L8.2 8.8z"/><path d="M8.2 6h1.8v11.2H8.2zM19 3.4h1.8v11.4H19z"/><ellipse cx="6.3" cy="17.3" rx="3.3" ry="2.6" transform="rotate(-20 6.3 17.3)"/><ellipse cx="17.1" cy="14.8" rx="3.3" ry="2.6" transform="rotate(-20 17.1 14.8)"/></svg>';
   const tempEl = <div class="w-wx-temp"></div>;
   const labelEl = <div class="w-wx-label"></div>;
   const metaEl = <div class="w-wx-meta"></div>;
@@ -135,13 +135,15 @@ export function createWidgets(dataSource) {
   const titleEl = <div class="w-np-title"></div>;
   const artistEl = <div class="w-np-artist"></div>;
   const textureEl = <div class="w-np-texture" aria-hidden="true"></div>;
+  const badgeEl = <span class="w-np-badge" aria-hidden="true"></span>;
+  badgeEl.innerHTML = musicGlyph;
   const npEl = (
     <div class="glass-cell w-np">
       {textureEl}
       <div class="w-np-content">
         {artEl}
         <div class="w-np-copy"><div class="w-np-label">{label}</div>{titleEl}{artistEl}</div>
-        <span class="w-np-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg></span>
+        {badgeEl}
       </div>
     </div>
   );
@@ -230,18 +232,24 @@ export function createWidgets(dataSource) {
       lastNP = null;
       return;
     }
-    const changed = !lastNP ||
+    const textChanged = !lastNP ||
       lastNP.title !== snap.title ||
-      lastNP.artist !== (snap.artist || '') ||
-      lastNP.artwork !== snap.artwork;
-    applyArtwork(snap.artwork, snap.artworkThumb);
+      lastNP.artist !== (snap.artist || '');
+    const artChanged = !lastNP || lastNP.artwork !== snap.artwork;
+    // Keep the current artwork on screen until the new track's artwork arrives.
+    const artPending = !snap.artwork && snap.artworkPending;
+    if (artPending) {
+      if (!artImgEl.getAttribute('src')) artEl.classList.add('loading');
+    } else {
+      applyArtwork(snap.artwork, snap.artworkThumb);
+    }
     titleEl.textContent = snap.title;
     artistEl.textContent = snap.artist || '';
-    if (changed) {
+    if (textChanged) {
       restartAnimation(titleEl, 'w-np-animate');
       restartAnimation(artistEl, 'w-np-animate');
-      restartAnimation(artEl, 'w-np-art-animate');
     }
+    if (artChanged && !artPending) restartAnimation(artEl, 'w-np-art-animate');
     lastNP = { title: snap.title, artist: snap.artist || '', artwork: snap.artwork };
   }
 

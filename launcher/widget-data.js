@@ -268,13 +268,17 @@ window.WidgetData = (function () {
       var completed = false;
       (artworkLoader || loadArtwork)(np, cfg.ha.url, 'Bearer ' + cfg.ha.token, function (durl) {
         completed = true;
+        out.nowPlaying.artworkPending = false;
         if (durl) {
           out.nowPlaying.artwork = durl.src;
           out.nowPlaying.artworkThumb = durl.thumb || null;
         }
         if (done) done(out);
       });
-      if (immediate && !completed && done) done(out);
+      if (immediate && !completed && done) {
+        out.nowPlaying.artworkPending = true;
+        done(out);
+      }
       return;
     }
     if (done) done(out);

@@ -37,6 +37,8 @@ const artifacts = path.resolve(__dirname, '../build/tests/appearance');
         title: index === 0 ? 'An app with a long title that must fit inside the selected tile' : 'App ' + String(index).padStart(2, '0'),
         icon: index === 12 ? 'missing-test-icon.png' : 'brand-v2-icon.png'})), inputs: []
     }) + ';'}));
+    await page.clock.install({time: new Date(2026, 10, 1, 10, 0)});
+    await page.clock.resume();
     await page.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
     await page.waitForFunction(() => document.querySelectorAll('#tiles .item').length === 14);
     assert.equal(await page.locator('[data-appearance]').count(), 0, 'appearance settings mount on first open');
@@ -108,6 +110,8 @@ const artifacts = path.resolve(__dirname, '../build/tests/appearance');
     assert.equal(await page.locator('body').evaluate(el => el.classList.contains('controls-open')), false, 'status control cannot steal active editing');
     assert.equal(await page.locator('.moving').count(), 1);
     await page.keyboard.press('Escape');
+    await page.keyboard.press('ArrowUp');
+    assert.equal(await page.locator('#btnChurch').evaluate(el => el.classList.contains('focused')), true, 'Up from the first dock tiles reaches the church shortcut');
     await page.keyboard.press('ArrowUp');
     assert.equal(await page.locator('#btnSettings').isVisible(), true, 'Up reveals LG controls');
     await page.keyboard.press('Escape');

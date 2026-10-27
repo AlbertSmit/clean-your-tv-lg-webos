@@ -363,6 +363,7 @@ handshake(coverSocket);
 const track = media('kitchen', 'playing', {entity_picture: '/cover'});
 states(coverSocket, [track]);
 assert.equal(covers.requests.length, 1);
+assert.equal(coverUpdates.at(-1).nowPlaying.artworkPending, true, 'music published before its cover must mark the artwork pending');
 const beforePosition = coverUpdates.length;
 stateChanged(coverSocket, media('kitchen', 'playing', {entity_picture: '/cover', media_position: 20, volume_level: 0.5}));
 assert.equal(coverUpdates.length, beforePosition, 'position and volume updates must not redraw widgets');
@@ -370,6 +371,7 @@ stateChanged(coverSocket, {entity_id: 'weather.home', state: 'sunny', attributes
 assert.equal(covers.requests.length, 1, 'weather changes must share an artwork request already in flight');
 covers.respond('image-bytes');
 assert.equal(coverUpdates.at(-1).nowPlaying.artwork, 'data:image/png;base64,TEST');
+assert.equal(coverUpdates.at(-1).nowPlaying.artworkPending, false);
 const beforeLoadedWeather = coverUpdates.length;
 stateChanged(coverSocket, {entity_id: 'weather.home', state: 'sunny', attributes: {temperature: 19}});
 assert.equal(covers.requests.length, 1, 'weather updates must reuse loaded artwork');

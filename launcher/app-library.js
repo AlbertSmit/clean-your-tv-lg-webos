@@ -74,6 +74,11 @@
       }
     };
   }
+  // Tiles show the bundled icon, so the TV's own icon path is not new artwork.
+  function bundledIcon(app) {
+    if (typeof TV_ICONS === 'object' && TV_ICONS && TV_ICONS[app.id]) app.icon = TV_ICONS[app.id];
+    return app;
+  }
   function installed(callback) {
     var bridge, done = false;
     var timer = setTimeout(function() { finish(null); }, 12000);
@@ -81,7 +86,7 @@
     try {
       bridge = new PalmServiceBridge();
       bridge.onservicecallback = function(raw) {
-        try { var result = JSON.parse(raw); finish(result.returnValue === true && Array.isArray(result.apps) ? clean(result.apps) : null); } catch (_) { finish(null); }
+        try { var result = JSON.parse(raw); finish(result.returnValue === true && Array.isArray(result.apps) ? clean(result.apps).map(bundledIcon) : null); } catch (_) { finish(null); }
       };
       var root = !!document.querySelector('script[src="root-settings.js"]');
       bridge.call('luna://' + (root ? 'com.cleanyourtv.root.preview.service' : 'com.local.nativehome.service') + '/listApps', '{}');

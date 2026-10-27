@@ -7,6 +7,7 @@ const apps = Array.from({length: 42}, (_, i) => ({id:'inventory.' + i, title:'Ap
   icon:i === 2 ? 'missing-test-icon.png' : 'brand-v2-icon.png', dominantColor:[20,40,60]}));
 apps[3].dominantColor = ['invalid',0,0];
 apps[3].iconColor = '#123456';
+apps[4].iconColor = '#fa233b';
 
 (async () => {
   const browser = await chromium.launch({headless:true, channel:process.env.BROWSER_CHANNEL || 'chrome'});
@@ -37,6 +38,7 @@ apps[3].iconColor = '#123456';
         };
       }, appearance);
       await page.route('**/config.js', route => route.fulfill({body:'window.CONFIG=' + JSON.stringify({columns:5,dockApps:apps.map(a=>a.id),hiddenApps:[]})}));
+      await page.route('**/icon-map.js', route => route.fulfill({body:'window.TV_ICONS={"inventory.0":"brand-v2-icon.png"}'}));
       await page.route('**/apps.js', route => route.fulfill({body:'window.TV_APPS=' + JSON.stringify({apps,inputs:[]})}));
       const open = async () => {
         await page.goto(pathToFileURL(path.join(appRoot,'index.html')).href);
@@ -48,6 +50,7 @@ apps[3].iconColor = '#123456';
       assert.equal(await page.evaluate(() => canvasReads), 0, 'validated colors and hex fallback avoid canvas reads');
       assert.equal(await page.locator('[data-app-id="inventory.0"] .card').evaluate(el=>el.style.background), 'rgb(20, 40, 60)');
       assert.equal(await page.locator('[data-app-id="inventory.3"] .card').evaluate(el=>el.style.background), 'rgb(18, 52, 86)');
+      assert.equal(await page.locator('[data-app-id="inventory.4"] .card').evaluate(el=>el.style.background), 'rgb(250, 35, 59)', 'card matches the icon background, not its dominant color');
       assert.equal(await page.locator('[data-app-id="inventory.41"] img').getAttribute('src'), null, 'deep icon waits for navigation');
       if (appearance === 'tvos') assert.equal(await page.locator('[data-app-id="inventory.6"] img').getAttribute('src'), null, 'idle tvOS loads dock icons first');
       const unchanged = await page.evaluate(apps => {
@@ -68,7 +71,7 @@ apps[3].iconColor = '#123456';
         window.tileNodes = Array.from(document.querySelectorAll('#tiles .item'));
         const focused = document.querySelector('#tiles .focused');
         inventoryRequests[0].onservicecallback(JSON.stringify({returnValue:true,apps:[
-          {id:'inventory.0',title:'Changed title'},
+          {id:'inventory.0',title:'Changed title',icon:'/usr/palm/applications/inventory.0/icon.png'},
           {id:'inventory.1',title:'Changed icon',icon:'brand-v2-largeIcon.png'},
           {id:'inventory.2',title:'Broken renamed'}
         ]}));

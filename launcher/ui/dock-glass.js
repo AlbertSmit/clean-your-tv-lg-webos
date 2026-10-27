@@ -1,7 +1,7 @@
 const textures = ['assets/dock-glass-home.jpg', 'assets/dock-glass-grid.jpg'];
 
 export function createDockGlass() {
-  let enabled = false, grid = false, current = null;
+  let enabled = false, grid = false, current = null, preloaded = false;
   const dock = document.getElementById('dockBand');
   const texture = document.getElementById('dockTexture');
 
@@ -20,6 +20,10 @@ export function createDockGlass() {
       enabled = tvos && !reducedEffects;
       grid = appGrid;
       refresh();
+      if (enabled && !preloaded) {
+        preloaded = true;
+        new Image().src = textures[grid ? 0 : 1];
+      }
     }
   };
 }

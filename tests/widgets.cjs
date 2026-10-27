@@ -27,6 +27,8 @@ function intersects(a, b) {
     await page.route('**/apps.js', route => route.fulfill({body: 'window.TV_APPS=' + JSON.stringify({
       apps: Array.from({length: 12}, (_, index) => ({id: 'test.' + index, title: 'App ' + index, icon: 'brand-v2-icon.png'})), inputs: []
     }) + ';'}));
+    await page.clock.install({time: new Date(2026, 10, 1, 10, 0)});
+    await page.clock.resume();
     await page.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
     await page.locator('.w-np-title').filter({hasText: 'Midnight City'}).waitFor();
     await page.evaluate(() => document.fonts.ready);
@@ -103,6 +105,7 @@ function intersects(a, b) {
 
     const perWidgetConfig = await page.evaluate(() => localStorage.getItem('cytv-widgets'));
     const focusBeforeToggle = await page.locator('#tiles .focused').getAttribute('data-app-id');
+    await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('#btnWidgets').evaluate(el => el.classList.contains('focused')), true);
@@ -184,6 +187,16 @@ function intersects(a, b) {
     for (let index = 0; index < 5; index++) await page.keyboard.press('ArrowRight');
     assert.equal(await page.locator('#btnWidgets').evaluate(el => el.classList.contains('focused')), false, 'Existing remote focus must skip the hidden switch');
     assert.deepEqual(errors, []);
+    const afternoon = await browser.newPage({viewport: {width: 1920, height: 1080}});
+    await afternoon.addInitScript(() => localStorage.setItem('cytv-appearance', 'tvos'));
+    await afternoon.clock.install({time: new Date(2026, 10, 1, 12, 0)});
+    await afternoon.clock.resume();
+    await afternoon.goto(pathToFileURL(path.join(appRoot, 'index.html')).href);
+    await afternoon.locator('#tiles .item').first().waitFor();
+    assert.equal(await afternoon.locator('#btnChurch').isVisible(), false, 'the church shortcut only shows from 09:30 until 12:00');
+    await afternoon.keyboard.press('ArrowUp');
+    assert.equal(await afternoon.locator('#btnSettings').isVisible(), true, 'outside church hours Up opens the LG controls directly');
+    await afternoon.close();
     console.log('PASS widgets: dock alignment, logo exclusion, artwork, empty/disabled states and remote navigation');
   } finally {
     await browser.close();

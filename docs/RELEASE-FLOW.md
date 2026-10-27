@@ -97,6 +97,23 @@ release PR ready. Release notes alone do not replace updated usage instructions.
   record why. Resolve stale instructions before marking the PR ready; document
   deliberate remaining limitations rather than checking an unfinished item.
 
+The README's `release:downloads` and `release:components` sections must match
+`release-versions.json`, including the release tag/notes links and Android
+versionCode. Update these visible sections when selecting versions at freeze;
+do not remove or duplicate their HTML boundary comments. Historical evidence
+outside those sections keeps its original versions. Run:
+
+```sh
+python3 -m unittest discover -s tests/setup -p test_readme_release.py
+```
+
+Required Linux/macOS setup tests validate the actual README; README-only changes
+now select these checks. The trusted release policy also reads and validates the
+candidate README as data. Policy-source changes take effect when integrated into
+`main`; required candidate tests enforce this check during the initial rollout.
+This detects metadata drift, not whether all explanatory prose is accurate:
+keep the manual documentation pass.
+
 Repeat this pass after scope changes, reversions or version changes. The release
 template and [release checklist](RELEASE_CHECKLIST.md) make it a maintainer gate;
 CI does not establish that documentation matches product behavior.

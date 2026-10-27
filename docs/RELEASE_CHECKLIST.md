@@ -6,6 +6,8 @@
   recovery guides, including translations, commands, links and versions.
 - Record reviewed/updated files, checks and remaining documentation limitations
   in the release PR. Release notes alone do not complete this check.
+- Verify README stable downloads/component sections against `release-versions.json`
+  with `python3 -m unittest discover -s tests/setup -p test_readme_release.py`.
 - Run scripts/test.sh and scripts/build.sh.
 - Build from a clean inventory; inspect package contents for credentials and state.
 - Preserve licenses and upstream attribution.

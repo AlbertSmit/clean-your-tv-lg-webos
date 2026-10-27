@@ -214,3 +214,7 @@ opóźnienie niepotwierdzone.
 Jeszcze niewydane: kontrola prywatnego Pythona rozróżnia błędy ABI, bezpieczeństwa katalogów i miejsca. Pierwsza instalacja wymaga 320 MiB wolnego w /var/lib. Duży WAM Session Storage może wyjaśniać brak miejsca; usunięcie może utracić stan sesji aplikacji. Zobacz [odzyskiwanie](../RECOVERY.md#private-python-and-low-var-space).
 
 W nieopublikowanym kandydacie 1.4.0 przerwana instalacja No-root również oferuje **Odzyskaj i zainstaluj ponownie** po **Sprawdź stan telewizora**. Potwierdź usunięcie tylko wtedy, gdy chcesz usunąć aplikacje Clean Your TV, a następnie sprawdź wersje przed ponowną instalacją. Jeśli odzyskiwanie się nie powiedzie, zapisz raport diagnostyczny i zatrzymaj się. Przyczyna pierwotnego odrzucenia pakietu przez TV nadal nie jest ustalona ani potwierdzona jako naprawiona (#21).
+
+Nieopublikowana poprawka zimnego startu Root: przy włączonej obsłudze Home i ekranie startowym LG ustawionym na Home, po sprawdzeniu zabezpieczeń Clean może otworzyć się raz, jeśli nadal widać telewizję lub LG Home. Aplikacja widoczna podczas ostatniego sprawdzenia zostaje zachowana; brak ponawiania. Jawne wyłączenie i trzy naciśnięcia Home pozostają wyłączone. Potrzebna jest sprawdzona instalacja/aktualizacja prywatnego środowiska; sama aktualizacja aplikacji nie wystarczy. Testy na telewizorze są nadal wymagane.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

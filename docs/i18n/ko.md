@@ -213,3 +213,7 @@ ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. �
 미출시: 전용 Python 검사는 ABI, 디렉터리 안전 및 공간 오류를 구분합니다. 최초 설치에는 /var/lib에 320 MiB가 필요합니다. 큰 WAM Session Storage가 원인일 수 있으며, 지우면 앱 세션 상태가 손실될 수 있습니다. [복구 안내](../RECOVERY.md#private-python-and-low-var-space)를 확인하세요.
 
 아직 공개되지 않은 1.4.0 후보에서는 중단된 No-root 설치도 **TV 상태 확인** 후 **복구 및 재설치**를 제공합니다. Clean Your TV 앱을 제거하려는 경우에만 제거를 확인하고, 다시 설치하기 전에 버전을 검토하세요. 복구에 실패하면 해당 진단 보고서를 저장하고 중단하세요. TV의 최초 패키지 거부 원인은 아직 확인되거나 해결되지 않았습니다 (#21).
+
+아직 출시되지 않은 Root 콜드 부팅 수정: Home 제어가 켜져 있고 LG 전원 켜기 화면이 Home이면, 보호 상태 확인 후 실시간 TV나 LG Home이 계속 표시될 때 Clean 실행을 한 번 요청할 수 있습니다. 마지막 화면 확인에서 이미 보이는 앱은 유지하며 재시도하지 않습니다. 직접 끄기와 Home 세 번 긴급 해제는 꺼진 상태로 유지됩니다. 검증된 설치/업데이트로 비공개 런타임을 교체해야 하며 앱만 업데이트해서는 적용되지 않습니다. TV 검증은 아직 남아 있습니다.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

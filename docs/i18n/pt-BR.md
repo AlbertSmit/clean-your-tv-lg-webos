@@ -215,3 +215,7 @@ Compatibilidade e menor atraso não confirmados.
 Ainda não publicado: a verificação de Python privado distingue falhas de ABI, segurança dos diretórios e espaço. A instalação inicial precisa de 320 MiB livres em /var/lib. WAM Session Storage pode explicar a falta de espaço; limpá-lo pode apagar o estado das sessões. Veja a [recuperação](../RECOVERY.md#private-python-and-low-var-space).
 
 No candidato 1.4.0 ainda não publicado, uma instalação No-root interrompida também oferece **Recuperar e reinstalar** após **Verificar status da TV**. Confirme a remoção somente se quiser remover os aplicativos Clean Your TV; depois confira as versões antes de reinstalar. Se a recuperação falhar, salve seu relatório de diagnóstico e pare. Isso ainda não identifica nem resolve a rejeição original do pacote pela TV (#21).
+
+Correção ainda não publicada da inicialização a frio do Root: com o controle Home ativado e a tela inicial da LG definida como Home, uma inicialização protegida pode abrir o Clean uma vez se ainda aparecer TV ao vivo ou LG Home. Um aplicativo visível na última verificação é preservado; não há nova tentativa. A desativação explícita e três toques em Home continuam desativados. É necessária instalação/atualização verificada do runtime privado; atualizar apenas o aplicativo não basta. A validação na TV ainda está pendente.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

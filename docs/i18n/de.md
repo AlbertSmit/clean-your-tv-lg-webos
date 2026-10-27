@@ -226,3 +226,7 @@ und schnellerer Ton sind unbestätigt.
 Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-, Verzeichnissicherheits- und Platzfehler. Die Ersteinrichtung braucht 320 MiB frei in /var/lib. Großer WAM Session Storage kann Platzmangel erklären; beim Löschen kann App-Sitzungszustand verloren gehen. Siehe [Wiederherstellung](../RECOVERY.md#private-python-and-low-var-space).
 
 Im unveröffentlichten Kandidaten 1.4.0 bietet auch eine unterbrochene No-root-Installation nach **TV-Status prüfen** die Aktion **Wiederherstellen und neu installieren**. Bestätigen Sie das Entfernen der Clean Your TV-Apps nur, wenn Sie es wünschen; prüfen Sie anschließend die Versionen vor der Neuinstallation. Schlägt die Wiederherstellung fehl, speichern Sie den Diagnosebericht und stoppen Sie. Die ursprüngliche Paketverweigerung des Fernsehers ist damit noch nicht geklärt oder behoben (#21).
+
+Noch unveröffentlichte Root-Kaltstartkorrektur: Wenn die Home-Steuerung aktiv und bei LG der Home-Startbildschirm gewählt ist, kann Clean nach erfolgreicher Schutzprüfung einmal geöffnet werden, falls noch Live-TV oder LG Home sichtbar ist. Eine bei der letzten Bildschirmprüfung sichtbare App bleibt erhalten; es gibt keine Wiederholung. Ausgeschaltete Steuerung und der Notausstieg mit dreimal Home bleiben aus. Die private Laufzeit muss über eine geprüfte Einrichtung/Aktualisierung ersetzt werden; ein reines App-Update reicht nicht. Die Geräteprüfung steht noch aus.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

@@ -239,3 +239,5 @@ Puedes cancelar y liberar espacio tú mismo. Consulta la guía y revisa /var/lib
 Corrección de arranque en frío de Root aún no publicada: con el control de Home activado y la pantalla de inicio de LG configurada en Home, un inicio protegido puede abrir Clean una vez si todavía aparece TV en directo o LG Home. Se conserva la aplicación visible en la última comprobación; no se reintenta. La desactivación explícita y tres pulsaciones de Home permanecen desactivadas. Se requiere instalar o actualizar de forma verificada el entorno privado; actualizar solo la aplicación no basta. La validación en el televisor sigue pendiente.
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Corrección OTA candidata (#115): el System Updater original de 1.3.0 no puede instalar 1.4.0 por cambios en los archivos permitidos. Un aborto previo al reemplazo no es una instalación parcial. Conserva el registro; no reintentes, borres el estado ni cambies las rutas. El siguiente candidato conserva los contratos de rutas y permisos de 1.3.0; la actualización y reversión en TV aún requieren pruebas coordinadas.

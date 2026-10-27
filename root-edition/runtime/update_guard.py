@@ -247,10 +247,173 @@ def cancelled(t,root,uid):
     return value['transaction']==t['transaction'] and value['ticket'] in (None,t['ticket'])
 
 
+def _anchor_bytes(path,uid,limit=4*1024*1024):
+    """Private data only; this gate must authenticate code before importing it."""
+    for parent in path.parents:
+        info=parent.lstat()
+        if (not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0,uid)
+                or info.st_mode&0o022 and not info.st_mode&stat.S_ISVTX):
+            raise ValueError('Unsafe rollback anchor ancestor')
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+    with os.fdopen(fd,'rb') as source:
+        info=os.fstat(source.fileno())
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid!=uid or info.st_nlink!=1
+                or info.st_mode&0o022 or info.st_size>limit):
+            raise ValueError('Unsafe rollback anchor file')
+        raw=source.read(limit+1)
+        if len(raw)>limit:raise ValueError('Oversized rollback anchor file')
+        return raw
+
+
+def _anchor_lock_held(path,uid):
+    # These locks belong to the parent System worker. Never wait on them here.
+    _anchor_bytes(path,uid,1024)
+    fd=os.open(path,os.O_RDWR|os.O_NOFOLLOW|os.O_NONBLOCK)
+    try:
+        try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:return
+        fcntl.flock(fd,fcntl.LOCK_UN)
+        raise ValueError('System rollback owner lock is not held')
+    finally:os.close(fd)
+
+
+INSTALLED=Path('/media/developer/apps')
+
+
+def stage_system_rollback_anchor(transaction,root=STATE,uid=0):
+    """Keep the original supervisor's prior anchor valid during retained rollback.
+
+    The active System journal still selects the candidate until an independently
+    observed rollback terminal selects the prior. This writes no installer proof.
+    The caller holds the routing lock, System journal lock and product lease.
+    """
+    import hashlib
+    import importlib
+    import importlib.abc
+    import importlib.util
+    import sys
+    import types
+    root=Path(root);identity(transaction)
+    system=root.parent/'clean-your-tv-system-updater'
+    if not os.path.lexists(system):return
+    tx_path=system/'transaction.json'
+    if not os.path.lexists(tx_path):return
+    tx=json.loads(_anchor_bytes(tx_path,uid))
+    if not isinstance(tx,dict):raise ValueError('Invalid System rollback transaction')
+    if tx.get('phase')!='rolling-back' or tx.get('resumeCycle')!='rollback':return
+    if (tx.get('id')!=transaction or tx.get('edition')!='root' or tx.get('homeResumePhase')!='complete'
+            or tx.get('rollbackAttempted') is not False):
+        raise ValueError('Original completed System rollback required')
+    reservation(transaction,root,uid)
+    ownership=root.parent/'clean-your-tv-installation'
+    operation=json.loads(_anchor_bytes(ownership/'operation.json',uid))
+    if (not isinstance(operation,dict) or set(operation)!={'schema','id','owner','journal','stage','terminal'}
+            or type(operation.get('schema')) is not int or operation.get('schema')!=1 or operation.get('owner')!='system-update'
+            or operation.get('journal')!='transaction.json' or operation.get('terminal') is not False
+            or not isinstance(operation.get('id'),str) or not re.fullmatch('[a-f0-9]{32}',operation['id'])
+            or not isinstance(operation.get('stage'),str) or not re.fullmatch('[a-zA-Z0-9_.-]{1,128}',operation['stage'])):
+        raise ValueError('Exclusive System rollback lease required')
+    _anchor_lock_held(ownership/'ownership.lock',uid)
+    _anchor_lock_held(system/'worker.lock',uid)
+    updater=root.parent/'clean-your-tv-root-updater';code=system/'code'
+    receipt=json.loads(_anchor_bytes(system/'infrastructure.json',uid))
+    inventory=receipt.get('code') if isinstance(receipt,dict) and receipt.get('schema')==1 else None
+    required={'package_identity.py','package_data.py','installation.py','python_binding.py'}|{'system_updater/'+n for n in ('__init__.py','core.py','device.py','support/__init__.py','support/store.py','support/package.py','support/profile.py','support/luna.py','policy.js','release-public.pem')}
+    if not isinstance(inventory,dict) or not required<=set(inventory):
+        raise ValueError('Authenticated supervisor code required')
+    sources={}
+    for name,digest in inventory.items():
+        path=Path(name)
+        if path.is_absolute() or '..' in path.parts or str(path)!=name or not isinstance(digest,str) or not re.fullmatch('[a-f0-9]{64}',digest):
+            raise ValueError('Unsafe supervisor rollback inventory')
+        raw=_anchor_bytes(code/name,uid)
+        if hashlib.sha256(raw).hexdigest()!=digest:
+            raise ValueError('Supervisor rollback code changed')
+        sources[str(code/name)]=raw
+    # Execute the captured verified source, never an adjacent bytecode cache.
+    # Absolute helper imports are confined to the same authenticated supervisor;
+    # ambient Root modules and sys.path do not choose this gate's byte authority.
+    alias='_cytv_rollback_'+uuid.uuid4().hex
+    helpers={name:str(code/(name+'.py')) for name in ('package_identity','package_data','installation','python_binding')}
+    helpers.update({'updater.store':str(code/'system_updater/support/store.py'),'updater.package':str(code/'system_updater/support/package.py')})
+    class VerifiedSource(importlib.abc.MetaPathFinder,importlib.abc.Loader):
+        def find_spec(self,name,path=None,target=None):
+            package=False
+            if name in helpers:filename=helpers[name]
+            elif name==alias or name.startswith(alias+'.'):
+                relative=name[len(alias):].lstrip('.').replace('.','/')
+                filename=str(code/'system_updater'/(relative+'.py'))
+                if filename not in sources:
+                    filename=str(code/'system_updater'/relative/'__init__.py');package=True
+            else:return None
+            if filename not in sources:raise ImportError('Unverified supervisor module '+name)
+            return importlib.util.spec_from_loader(name,self,origin=filename,is_package=package)
+        def create_module(self,spec):return None
+        def exec_module(self,module):
+            module.__file__=module.__spec__.origin
+            exec(compile(sources[module.__file__],module.__file__,'exec'),module.__dict__)
+    missing=object();saved={name:sys.modules.get(name,missing) for name in ('updater',*helpers)}
+    for name in saved:sys.modules.pop(name,None)
+    updater_namespace=types.ModuleType('updater');updater_namespace.__path__=[]
+    sys.modules['updater']=updater_namespace
+    finder=VerifiedSource();sys.meta_path.insert(0,finder)
+    try:
+        importlib.import_module(alias)
+        device_module=importlib.import_module(alias+'.device')
+        core_module=importlib.import_module(alias+'.core')
+        store_module=importlib.import_module(alias+'.support.store')
+        store=store_module.Store.__new__(store_module.Store);store.root=str(system);store.uid=uid
+        device=device_module.Device(store,code=code,root_state=root,root_updater=updater,installed=INSTALLED,uid=uid)
+        checked=core_module.Manager(store,device)._load()
+        if checked!=tx:raise ValueError('System rollback transaction changed')
+        for component in checked['components']:
+            install=component['installEvidence'];rollback=component['rollbackEvidence']
+            if (install['terminal'] is None or install['terminal'].get('success') is not True
+                    or rollback!={'intent':False,'submitted':None,'terminal':None}):
+                raise ValueError('Untouched rollback of a completed release required')
+        device.integrity(enforce=False)
+        candidate=device._verify_release(checked['candidate'],'root')
+        prior=device._verify_release(checked['prior'],'root')
+        if 'proof' not in candidate or device._baseline('root')!=candidate:
+            raise ValueError('Original signed System publication required')
+        device.require_components();device._root_integrity()
+        if not all(device.verify_installed(c) for c in candidate['components']):
+            raise ValueError('Completed System release changed')
+        for c in prior['components']:device.inspect(device.cache_bytes(c),c)
+        current_path=updater/'current.json';raw=_anchor_bytes(current_path,uid)
+        current=json.loads(raw)
+        def anchor(component):
+            return dict(version=component['version'],sha256=component['sha256'],size=component['size'],local=True,writer={'owner':'system-update','id':transaction})
+        original=anchor(candidate['components'][0]);target=anchor(prior['components'][0])
+        ticket_path=root/('system-rollback-anchor-'+transaction+'.json')
+        ticket=dict(schema=1,transaction=transaction,lease=operation['id'],candidate=original,prior=target)
+        if os.path.lexists(ticket_path):
+            if json.loads(_anchor_bytes(ticket_path,uid))!=ticket:
+                raise ValueError('Conflicting System rollback anchor receipt')
+            if current not in (original,target):raise ValueError('System rollback anchor changed')
+        elif current!=original:raise ValueError('Original completed System current required')
+        # A current descriptor always has an independently checked private cache.
+        component=prior['components'][0];prior_raw=device.cache_bytes(component)
+        cache=updater/'cache'/(component['sha256']+'.ipk')
+        if os.path.lexists(cache):
+            if _anchor_bytes(cache,uid,64*1024*1024)!=prior_raw:raise ValueError('Prior rollback cache conflict')
+        else:device.atomic(cache,prior_raw,exclusive=True)
+        if not os.path.lexists(ticket_path):atomic(ticket_path,ticket)
+        if current!=target:device.atomic(current_path,json.dumps(target,sort_keys=True,separators=(',',':')).encode())
+    finally:
+        sys.meta_path.remove(finder)
+        for name in list(sys.modules):
+            if name==alias or name.startswith(alias+'.'):sys.modules.pop(name,None)
+        for name,value in saved.items():
+            if value is missing:sys.modules.pop(name,None)
+            else:sys.modules[name]=value
+
+
 def suspend(transaction,root=STATE,uid=0):
     root=Path(root)
     with locked(root,uid):
         reservation(transaction,root,uid)
+        stage_system_rollback_anchor(transaction,root,uid)
         path=root/'update-home-resume.json';t=ticket(root,uid)
         if t is not None and t['transaction']!=transaction:raise ValueError('Resume ticket owner mismatch')
         if t is None:

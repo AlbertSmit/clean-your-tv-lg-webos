@@ -4,7 +4,7 @@ class E{constructor(tag){this.tag=tag;this.hidden=false;this.disabled=false;this
 const context={window:{},document:{body:new E('body'),createElement:t=>new E(t),addEventListener:(n,f)=>listeners.push(f)},Promise};
 vm.runInNewContext(fs.readFileSync(__dirname+'/root-audio.js','utf8'),context);
 let state={returnValue:true,enabled:false,observer:false,autoSupported:true,canRestart:true,canRestoreRoute:false,needsRestore:false,canRestoreSetting:false,mode:'earc',last:null};
-function request(uri,payload){if(uri.endsWith('/audioRecoveryStatus'))return Promise.resolve({...state});operations++;return new Promise(resolve=>{held=resolve;});}
+function request(uri,payload){if(uri.endsWith('/status') && payload.audio === 'status')return Promise.resolve({...state});assert(uri.endsWith('/enable'));assert(['configure','recover'].includes(payload.audio));operations++;return new Promise(resolve=>{held=resolve;});}
 const tick=()=>new Promise(r=>setImmediate(r));
 function key(keyCode){for(const f of listeners)f({keyCode,preventDefault(){},stopImmediatePropagation(){}});}
 (async()=>{

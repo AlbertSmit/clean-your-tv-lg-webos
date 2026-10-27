@@ -16,14 +16,17 @@ class AudioPackageTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as folder:
    package=builder.build(Path(folder).resolve()/'bundle')
    manifest=json.loads((package.parent/'bundle.json').read_text())
-   self.assertIn('runtime/audio_recovery.py',manifest['files'])
+   self.assertNotIn('runtime/audio_recovery.py',manifest['files'])
+   import subprocess
+   reply=subprocess.run([sys.executable,str(package.parent/'runtime/cli.py'),'audio','invalid'],capture_output=True,text=True)
+   self.assertEqual(json.loads(reply.stdout),{'returnValue':False,'errorCode':'unavailable'})
    with tarfile.open(fileobj=io.BytesIO(ar_members(package.read_bytes())['data.tar.gz']),mode='r:gz') as archive:
     names=archive.getnames()
-    self.assertIn('usr/palm/services/com.cleanyourtv.root.preview.service/audio-recovery.js',names)
+    self.assertNotIn('usr/palm/services/com.cleanyourtv.root.preview.service/audio-recovery.js',names)
     self.assertIn('usr/palm/applications/com.cleanyourtv.root.preview/root-audio.js',names)
    spec=importlib.util.spec_from_file_location('audio_provision',ROOT/'provision.py')
    provision=importlib.util.module_from_spec(spec);spec.loader.exec_module(provision)
    original={'service':'Exec=/usr/bin/run-js-service -n '+str(provision.SERVICE),'role':json.dumps({'appId':provision.NAME})}
    permissions=json.loads(provision.plan(original)['api'])
-   for method in ('audioRecoveryStatus','setAudioRecoveryEnabled','recoverAudio'):
+   for method in ('status','enable'):
     self.assertIn(provision.NAME+'/'+method,permissions[provision.NAME+'.control'])

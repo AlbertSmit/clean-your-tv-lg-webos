@@ -61,7 +61,7 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(json.loads(files[prefix + 'appinfo.json'])['id'], 'com.cleanyourtv.root.preview')
             self.assertEqual(json.loads(files['usr/palm/packages/com.cleanyourtv.root.preview/packageinfo.json'])['services'], ['com.cleanyourtv.root.preview.service'])
             service_prefix = 'usr/palm/services/com.cleanyourtv.root.preview.service/'
-            self.assertEqual({n[len(service_prefix):] for n in files if n.startswith(service_prefix)}, {'audio-recovery.js', 'service.js', 'startup-diagnostics.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json'})
+            self.assertEqual({n[len(service_prefix):] for n in files if n.startswith(service_prefix)}, {'service.js', 'startup-diagnostics.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json'})
             with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as archive:
                 self.assertEqual(archive.getmember(service_prefix + 'boot-recover.sh').mode, 0o755)
             self.assertEqual(files[prefix + 'apps.js'], b'window.TV_APPS = {apps: [], inputs: []};\n')

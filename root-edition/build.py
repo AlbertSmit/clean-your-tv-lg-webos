@@ -17,7 +17,7 @@ from cytv.package import IPK_MTIME
 
 SERVICE_ID = 'com.cleanyourtv.root.preview.service'
 SERVICE_SOURCE = Path(__file__).resolve().parent / 'service'
-SERVICE_FILES = ('audio-recovery.js', 'service.js','startup-diagnostics.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json')
+SERVICE_FILES = ('service.js','startup-diagnostics.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json')
 
 
 def tgz(files, executables=()):
@@ -76,6 +76,7 @@ def build(output, version='0.0.1'):
         'application_id': app_id, 'version': version,
         'hardware_validated': False, 'public_release_ready': False,
         'activates_system_home': False,
+        'runtime_layout': 'inline-audio-v1',
         'inventory': 'empty; configure locally for the later hardware test',
         'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(payload.items())},
     }

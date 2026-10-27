@@ -1,5 +1,7 @@
 # Updates and recovery — 1.1.0
 
+Candidate correction #115: [Root OTA compatibility with the original 1.3.0 supervisor](development/ROOT-OTA-13-COMPATIBILITY.md). Published1.4.0 is incompatible with that original destination inventory. An aborted pre-replacement attempt installed nothing; retain its journal and do not change private pins. The next candidate preserves the old paths and permissions; physical update/rollback acceptance remains pending.
+
 Use [v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
 
 ## Candidate: Installer updates and product updates

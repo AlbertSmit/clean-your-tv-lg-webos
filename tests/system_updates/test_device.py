@@ -415,3 +415,36 @@ class OriginalPreflightOrderTests(DeviceBase):
             with self.assertRaisesRegex(ValueError,'Supervisor infrastructure changed'):
                 self.device.install(c,self.fail,self.fail,self.fail)
             self.assertEqual(verifier.call_count,0);self.assertEqual(lockdown.call_count,0);self.assertEqual(submit.call_count,0)
+
+class InfrastructureOfferTests(DeviceBase):
+    def offer(self, new_files, corrupt=False):
+        old=tar({'runtime/cli.py':b'old'});new=tar(new_files)
+        root=ipk('com.cleanyourtv.root.preview');updater=ipk('com.cleanyourtv.root.updater')
+        def component(name,app,raw):return {'name':name,'application':app,'version':'1.0.0','kind':'ipk','sha256':digest(raw),'size':len(raw),'local':True}
+        previous={'name':'root-infrastructure','kind':'infrastructure','version':'1.0.0','sha256':digest(old),'size':len(old),'files':{'runtime/cli.py':digest(b'old')},'local':True,'absent':[]}
+        prior={'schema':1,'supervisor':1,'edition':'root','release':'v1.0.0','notes':'fixture','components':[component('root','com.cleanyourtv.root.preview',root),component('root-updater','com.cleanyourtv.root.updater',updater),previous]}
+        self.baseline(prior)
+        for c,raw in zip(prior['components'],[root,updater,old]):(self.root/'state/cache'/c['sha256']).write_bytes(raw)
+        target={'name':'root-infrastructure','kind':'infrastructure','version':'1.1.0','sha256':digest(new),'size':len(new)}
+        candidate={**prior,'release':'v1.1.0','components':[*prior['components'][:2],target],'proof':{'payload':'fixture','signature':'fixture'}}
+        self.device.integrity=lambda:None;self.device.check_legacy=lambda:None;self.device.verify_baseline=lambda value:True
+        self.device._verify_release=lambda value,edition:value;self.device.installed=lambda app:'1.0.0'
+        def fetch(method,payload=None,binary=False):
+            if method=='offer':return {'candidate':candidate}
+            if method=='package' and binary and payload=={'proof':candidate['proof'],'name':'root-infrastructure'}:return b'bad' if corrupt else new
+            raise AssertionError('unexpected external request')
+        self.device.fetch=fetch
+        result=self.device.offer('root')
+        self.assertIsNone(self.store.read('transaction'))
+        return result
+
+    def test_incompatible_candidate_is_not_offered_before_installation(self):
+        result=self.offer({'runtime/cli.py':b'new','runtime/new.py':b'foreign'})
+        self.assertFalse(result['canInstall'])
+        self.assertIn('computer migration',result['reason'])
+
+    def test_compatible_candidate_is_still_offered(self):
+        self.assertTrue(self.offer({'runtime/cli.py':b'new'})['canInstall'])
+
+    def test_downloaded_candidate_hash_mismatch_is_not_offered(self):
+        self.assertFalse(self.offer({'runtime/cli.py':b'new'},corrupt=True)['canInstall'])

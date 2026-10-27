@@ -1,5 +1,7 @@
 # Root software updates and recovery
 
+Candidate correction #115: [Root OTA compatibility with the original 1.3.0 supervisor](../docs/development/ROOT-OTA-13-COMPATIBILITY.md). Published1.4.0 is incompatible with that original destination inventory. An aborted pre-replacement attempt installed nothing; retain its journal and do not change private pins. The next candidate preserves the old paths and permissions; physical update/rollback acceptance remains pending.
+
 **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** updates a complete signed edition release set through
 an independent fixed **System Updater supervisor**. Root's set includes Root Home,
 Root Updater and the compatible Root recovery infrastructure. No-root's separate

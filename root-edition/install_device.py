@@ -326,7 +326,7 @@ class LocalDevice:
         if not source.is_file(): raise ValueError('supervisor_inspector_unavailable')
         from system_updater.device import Device
         store=checked_store(SUPERVISOR)
-        device=Device(store,code=SUPERVISOR/'code')
+        device=Device(store,code=SUPERVISOR/'code',root_state=ROOT,root_updater=UPDATER,installed=INSTALLED)
         receipt=store.read('infrastructure')
         if not isinstance(receipt,dict) or receipt.get('schema')!=1 or not isinstance(receipt.get('code'),dict) or not receipt['code']:
             raise ValueError('supervisor_infrastructure_unknown')
@@ -340,6 +340,10 @@ class LocalDevice:
         for name,entry in lockdown['files'].items():
             if name not in device._legacy_lockdown_paths() or safe_bytes(name,uid=0)!=entry['disabled'].encode():
                 raise ValueError('supervisor_lockdown_mismatch')
+        from system_updater.core import Manager
+        tx=Manager(store,device)._load()
+        if tx is not None and (tx['phase'] not in ('complete','rolled-back','aborted') or tx.get('homeResumePhase')!=tx['phase']):
+            raise ValueError('system_update_requires_recovery')
         baseline=device._baseline('root')
         # Standalone Root publication is separately proved by current_root(); a
         # historical System Root component cannot override that current writer.
@@ -349,6 +353,8 @@ class LocalDevice:
         updater=next(item for item in baseline['components'] if item['name']=='root-updater')
         raw=device.cache_bytes(updater)
         self.supervisor_updater=device.inspect(raw,updater)
+        infrastructure=next(item for item in baseline['components'] if item['name']=='root-infrastructure')
+        self.supervisor_infrastructure=device.inspect(device.cache_bytes(infrastructure),infrastructure)
         verify_package_modes(raw,INSTALLED)
         return baseline
 
@@ -373,9 +379,6 @@ class LocalDevice:
         files=bundle['files']
         support=('provision.py','startup_hook.py','activity.py','python_binding.py','system_permissions.py')
         support+=tuple(name for name in ('package_data.py','package_identity.py','startup_guard.py') if name in files)
-        for name in support:
-            if files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)):
-                raise ValueError('root_recovery_support_mismatch')
         release_raw=safe_bytes(ROOT/'release.json',limit=65536,uid=0)
         if files.get('release.json')!=sha(release_raw):
             raise ValueError('root_recovery_release_mismatch')
@@ -387,10 +390,11 @@ class LocalDevice:
                 or bundle['package'] not in files):
             raise ValueError('root_recovery_release_identity_mismatch')
         expected=set(deploy.RUNTIME_FILES)
-        # Published Root 0.4.0 predates the optional audio recovery module.
-        # Do not derive executable requirements from a newer candidate alone.
-        if version=='0.4.0':
-            expected.remove('audio_recovery.py')
+        layout=release.get('runtime_layout')
+        if layout is None and version=='0.5.0':
+            expected.add('audio_recovery.py')
+        elif layout not in (None,'inline-audio-v1'):
+            raise ValueError('root_recovery_runtime_inventory_mismatch')
         runtime_names={name[len('runtime/'):] for name in files if name.startswith('runtime/')}
         if runtime_names!=expected:
             raise ValueError('root_recovery_runtime_inventory_mismatch')
@@ -404,8 +408,31 @@ class LocalDevice:
             runtime={name:proof['files'].get(str(ROOT/'runtime'/name)) for name in expected}
         else:
             runtime={name:files.get('runtime/'+name) for name in expected}
+        changed=any(files.get(name)!=sha(safe_bytes(ROOT/name,uid=0)) for name in support)
+        changed=changed or any(digest!=files.get('runtime/'+name) for name,digest in runtime.items())
+        infrastructure={}
+        if changed:
+            if proof is None or not os.path.lexists(SUPERVISOR):
+                raise ValueError('root_recovery_current_provenance_required')
+            baseline=self.verify_supervisor()
+            # Only a verified signed publication may replace original bootstrap
+            # executable hashes. A locally captured baseline is not an OTA proof.
+            if 'proof' not in baseline:
+                raise ValueError('root_recovery_current_provenance_required')
+            current_root(ROOT,UPDATER,INSTALLED)
+            infrastructure=self.supervisor_infrastructure
+            if {name[len('runtime/'):] for name in infrastructure if name.startswith('runtime/')}!=expected:
+                raise ValueError('root_recovery_runtime_inventory_mismatch')
+            from system_updater.device import Device as SystemDevice
+            SystemDevice(checked_store(SUPERVISOR),code=SUPERVISOR/'code',root_state=ROOT,root_updater=UPDATER,installed=INSTALLED)._root_integrity()
+        for name in support:
+            original=files.get(name)
+            current=sha(safe_bytes(ROOT/name,uid=0))
+            if current!=original and (infrastructure.get('support/'+name)!=current or proof['files'].get(str(ROOT/name))!=current):
+                raise ValueError('root_recovery_support_mismatch')
         for name,digest in runtime.items():
-            if digest!=files.get('runtime/'+name) or digest!=sha(safe_bytes(ROOT/'runtime'/name,uid=0)):
+            expected_digest=infrastructure.get('runtime/'+name) if changed else files.get('runtime/'+name)
+            if digest!=expected_digest or digest!=sha(safe_bytes(ROOT/'runtime'/name,uid=0)):
                 raise ValueError('root_recovery_runtime_mismatch')
         Device.require_home_resume_runtime(ROOT)
 

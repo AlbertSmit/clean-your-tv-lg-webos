@@ -234,3 +234,5 @@ You can cancel and free space yourself. Use the manual cleanup guide and recheck
 Unreleased Root cold-start correction: with Home control enabled and LG Power On Screen set to Home, a healthy startup can request Clean once if Live TV or LG Home is still visible. An already visible app is preserved at the final screen check; automatic presentation is not retried. Explicit off and triple-Home stay off. The corrected retained runtime needs checked setup/update; an app-only update is insufficient. Device acceptance remains pending.
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Candidate OTA fix (#115): published 1.3.0 cannot apply 1.4.0 through the original System Updater because its allowed file inventory changed. An aborted attempt before replacement is not a partial installation. Preserve its recovery journal; do not retry, clear state or edit the pinned list. The next candidate restores the 1.3.0 path and permission contracts; hardware upgrade and rollback still need coordinated testing.

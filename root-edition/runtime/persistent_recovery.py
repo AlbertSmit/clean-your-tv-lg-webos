@@ -92,7 +92,7 @@ class Coordinator:
         with self.locked(expected):
             intent, effect = self.event(expected, reason)
             try:
-                from audio_recovery import inhibit
+                from cli import inhibit
                 inhibit(d.STATE)
             except Exception: pass  # Audio state must never block emergency Home restoration.
             return self._recover(intent) if effect == 'recover' else dict(intent=intent,effect=effect)

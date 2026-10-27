@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Prepare Root OTA compatibility with the original 1.3.0 System Updater (#115):
+  preserve managed paths and LS2 grants, validate candidate infrastructure before
+  offering installation, and authenticate current runtime separately from its
+  original bootstrap. Hardware update/rollback acceptance is still pending.
+
+
 ## v1.4.0
 
 - Integrate #80, #81, #87, #89, #97 and #99: safe settings diagnostics, guided

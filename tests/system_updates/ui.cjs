@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 function harness(options = {}) {
-  const ids = {}, events = {}, calls = [], timers = new Map(); let nextTimer = 0, confirmation, captures = 0;
+  const ids = {}, events = {}, calls = [], timers = new Map(); let nextTimer = 0, confirmation, captures = 0, pendingCheck;
   const document = {activeElement:null, hidden:false, createElement(tag) {
     const element = {tagName:tag, hidden:false, disabled:false, children:[], textContent:'', scrollTop:0, clientHeight:400,
       appendChild(child) { this.children.push(child); return child; }, setAttribute(){}, addEventListener(){},
@@ -22,10 +22,11 @@ function harness(options = {}) {
   const context = {window,document,Promise,Error,JSON,PalmServiceBridge:function(){ this.cancel=()=>{}; this.call=(uri,raw)=>{ const method=uri.split('/').pop(),payload=JSON.parse(raw); calls.push({uri,method,payload}); let result = method==='check'?offer:state;
     if (method==='install') state=result={id:'tx',edition:offer.edition,release:'v1.3.0',phase:'downloading',components:[]};
     if (method==='rollback') state=result={id:'tx',phase:'rolling-back'};
+    if(method==='check'&&options.deferCheck){pendingCheck=()=>{this.onservicecallback(JSON.stringify({returnValue:true,result:offer}));};return;}
     this.onservicecallback(JSON.stringify(options.unavailable?{returnValue:false,errorText:'Service does not exist'}:(options.failure || method==='status' && options.statusFailure || method==='check' && options.checkFailure)?{returnValue:false,errorText:options.failure || options.statusFailure || options.checkFailure}:{returnValue:true,result})); }; },setTimeout(fn,ms){ const id=++nextTimer; timers.set(id,{fn,ms}); return id; },clearTimeout(id){timers.delete(id);}};
   context.HomeI18n=i18n; if(options.locale)vm.runInNewContext(fs.readFileSync('launcher/catalogs.js','utf8'),context);
   vm.runInNewContext(fs.readFileSync('launcher/system-updates.js','utf8'),context);
-  return {window,document,ids,calls,timers,offer,translated,set checkFailure(value){options.checkFailure=value;},set statusFailure(value){options.statusFailure=value;}, get confirmation(){return confirmation;},get captures(){return captures;},set state(value){state=value;},key(code){for(const fn of events.keydown||[])fn({keyCode:code,preventDefault(){},stopImmediatePropagation(){}});},async poll(){const timer=[...timers.values()].find(t=>t.ms===1500); assert(timer,'durable state must be polled'); timers.clear(); timer.fn(); await settle();}};
+  return {window,document,ids,calls,timers,offer,translated,finishCheck(){pendingCheck();},set checkFailure(value){options.checkFailure=value;},set statusFailure(value){options.statusFailure=value;}, get confirmation(){return confirmation;},get captures(){return captures;},set state(value){state=value;},key(code){for(const fn of events.keydown||[])fn({keyCode:code,preventDefault(){},stopImmediatePropagation(){}});},async poll(){const timer=[...timers.values()].find(t=>t.ms===1500); assert(timer,'durable state must be polled'); timers.clear(); timer.fn(); await settle();}};
 }
 async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
 (async()=>{
@@ -45,7 +46,21 @@ async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
   }
   const russian=harness({locale:'ru'}); await russian.window.SystemUpdates.open({edition:'no-root'}); assert.equal(russian.ids.systemUpdateInstall.textContent,'Обновить всё'); russian.ids.systemUpdateInstall.click(); assert.equal(russian.confirmation.opts.title,'Install system update?'); assert(!russian.ids.systemUpdateStatus.textContent.includes('signed system'));
   const restoreError=harness(); await restoreError.window.SystemUpdates.open({edition:'root',recovery:true,error:'Profile restoration failed'}); await restoreError.poll(); assert(restoreError.ids.systemUpdateStatus.textContent.includes('Profile restoration failed'),'polling must retain profile restoration errors until an explicit refresh'); restoreError.ids.systemUpdateRecovery.click(); await settle(); assert(!restoreError.ids.systemUpdateStatus.textContent.includes('Profile restoration failed'));
+  for (const edition of ['no-root','root']) {
+    const current=harness({edition});
+    current.offer.components.forEach(c=>{c.version=c.installed;});
+    await current.window.SystemUpdates.open({edition});
+    assert(current.ids.systemUpdateInstall.disabled,'same component versions from an older supervisor must not offer installation');
+    assert(current.ids.systemUpdateStatus.textContent.includes('All components are up to date.'));
+    current.ids.systemUpdateInstall.click();assert.equal(current.confirmation,undefined);
+  }
+  const checking=harness({deferCheck:true});const opening=checking.window.SystemUpdates.open({edition:'no-root'});await settle();
+  assert(checking.ids.systemUpdateInstall.disabled,'pending availability must not permit installation');
+  checking.ids.systemUpdateInstall.click();assert.equal(checking.confirmation,undefined);
+  checking.finishCheck();await opening;
+  assert.equal(checking.ids.systemUpdateInstall.disabled,false,'a verified newer offer enables installation after the check');
   const unrooted=harness({canInstall:false,reason:'root-required'}); await unrooted.window.SystemUpdates.open({edition:'no-root'}); assert(unrooted.ids.systemUpdateInstall.disabled); assert(unrooted.ids.systemUpdateStatus.textContent.includes('computer'),'unrooted installation requires the computer update path');
+  const migration=harness({edition:'root',locale:'ru',canInstall:false,reason:'Infrastructure inventory changed; computer migration required'}); await migration.window.SystemUpdates.open({edition:'root'}); assert(migration.ids.systemUpdateInstall.disabled); assert(migration.ids.systemUpdateStatus.textContent.includes('миграция с компьютера')); migration.ids.systemUpdateInstall.click(); assert(!migration.calls.some(c=>c.method==='install'));
   const stale=harness(); await stale.window.SystemUpdates.open({edition:'no-root'}); stale.ids.systemUpdateInstall.click(); stale.key(461); stale.confirmation.accept(); await settle(); assert.equal(stale.captures,0,'closed panels must invalidate pending confirmation');
   const broken=harness({captureError:true}); await broken.window.SystemUpdates.open({edition:'no-root'}); broken.ids.systemUpdateInstall.click(); broken.confirmation.accept(); await settle(); assert(!broken.calls.some(c=>c.method==='install'),'incomplete capture must block installation');
   const standalone=harness({standalone:true}); standalone.state={id:'old',phase:'complete',canRollback:true}; await standalone.window.SystemUpdates.open({edition:'no-root',standalone:true,recovery:true}); assert(standalone.ids.systemUpdateInstall.disabled); assert(!standalone.ids.systemUpdateRollback.disabled); standalone.ids.systemUpdateRollback.click(); assert(standalone.confirmation.opts.message.includes('components') && standalone.confirmation.opts.message.includes('Settings changed')); standalone.confirmation.accept(); await settle(); assert(standalone.calls.some(c=>c.method==='rollback'));
@@ -85,7 +100,7 @@ async function settle(){for(let i=0;i<15;i++)await Promise.resolve();}
   assert(progress.ids.systemUpdateStatus.textContent.includes('Update information could not be verified.'));
   assert(!progress.ids.systemUpdateStatus.textContent.includes('Nothing was installed'));
   const newMessages=['No previous update is saved for rollback yet.','Update information is not available yet. Try again later.','Could not connect to check for updates. Check your connection and try again.','Update information could not be verified. Nothing was installed.','Could not connect to the update server. Nothing was installed.','Update information is not available yet. Nothing was installed.','Update information could not be verified.','System updater removal is in progress. Continue removal from the computer.'];
-  for (const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru']) {
+  for (const locale of ['en','de','es','pt-BR','fr','it','ko','hi','pl','ru','zh-Hans','zh-Hant']) {
     for(const reason of ['feed-unavailable','connection-error']) {
       const installed=harness({locale,canInstall:false,reason}); installed.offer.release=null; installed.offer.notes=''; installed.offer.components=[{name:'root',installed:'2.3.4',version:null}];
       await installed.window.SystemUpdates.open({edition:'root'});

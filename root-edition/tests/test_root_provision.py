@@ -10,6 +10,13 @@ p = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(p)
 
 class ProvisionTests(unittest.TestCase):
+    def setUp(self):
+        # Stock-route initialization has its own real journal/readback fixture.
+        self.real_firmware_registration=p.register_firmware_access
+        firmware=patch.object(p,'register_firmware_access',return_value=True);firmware.start();self.addCleanup(firmware.stop)
+        context=patch.object(p,'prepare_stock_home')
+        context.start();self.addCleanup(context.stop)
+
     def original(self):
         return {'service':'[D-BUS Service]\nName='+p.NAME+'\nExec=/usr/bin/run-js-service -n '+str(p.SERVICE)+'\n',
                 'role':json.dumps({'appId':p.NAME,'allowedNames':['*'],'permissions':[{'outbound':['*']}]}),
@@ -36,13 +43,27 @@ class ProvisionTests(unittest.TestCase):
         data={'version':1}
         with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'returnValue':True,'root':False}),patch.object(p,'write') as write:
             with self.assertRaises(ValueError):p.finalize()
-            write.assert_not_called()
+            self.assertNotIn(p.STATE/'recovery-provision.json', [call.args[0] for call in write.call_args_list])
     def test_finalize_owned_registration(self):
         data={'version':1}
         with patch.object(p,'secure',return_value=json.dumps(data).encode()),patch.object(p,'manifest',return_value=data),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write,patch('startup_hook.install') as hook:
             p.finalize()
             hook.assert_called_once_with(p.secure,p.write)
             self.assertEqual(write.call_args[0][0],p.STATE/'recovery-provision.json')
+            p.register_firmware_access.assert_called_once_with()
+    def test_firmware_registration_reads_runtime_cli_envelope(self):
+        from types import SimpleNamespace
+        for outer,nested,granted,want in [(True,True,True,True),(True,True,False,False),(False,True,True,False),(True,False,True,False)]:
+            with self.subTest(outer=outer,nested=nested,granted=granted),patch('python_binding.command',return_value='/usr/bin/python3'),patch.object(p.subprocess,'run',return_value=SimpleNamespace(stdout=json.dumps({'returnValue':outer,'result':{'returnValue':nested,'permissions_installed':granted}}).encode())):
+                self.assertEqual(self.real_firmware_registration(),want)
+
+    def test_optional_firmware_grant_failure_preserves_core_recovery_readiness(self):
+        data={'version':1}
+        with patch.object(p,'secure',return_value=b'{}'),patch.object(p,'manifest',return_value={}),patch.object(p,'rpc',return_value={'root':True,'registered':True,'activityName':p.NAME+'.recovery'}),patch.object(p,'write') as write,patch('startup_hook.install'),patch.object(p,'register_firmware_access',side_effect=ValueError('unsupported SDK ownership')):
+            result=p.finalize()
+            self.assertTrue(result['returnValue']);self.assertFalse(result['firmware_permissions_registered'])
+            self.assertEqual(write.call_args[0][0],p.STATE/'recovery-provision.json')
+
     def test_runtime_drift_refuses_registration(self):
         with patch.object(p,'secure',return_value=b'{}'),patch.object(p,'manifest',return_value={'changed':True}),patch.object(p,'rpc') as rpc:
             with self.assertRaises(ValueError):p.finalize()
@@ -63,16 +84,36 @@ class ProvisionTests(unittest.TestCase):
                 rpc.assert_called_once_with('restore');write.assert_not_called()
     def test_rpc_keeps_stdin_open_until_reply(self):
         child=MagicMock(); child.poll.return_value=None
-        with patch.object(p.subprocess,'Popen',return_value=child) as popen,patch.object(p.select,'select',return_value=([child.stdout],[],[])),patch.object(p.os,'read',return_value=b'{"returnValue":true}'):
+        def read(*args):
+            child.stdin.close.assert_not_called()
+            return b'{"returnValue":true}'
+        with patch.object(p.subprocess,'Popen',return_value=child) as popen,patch.object(p.select,'select',return_value=([child.stdout],[],[])),patch.object(p.os,'read',side_effect=read):
             self.assertTrue(p.rpc('status')['returnValue'])
             self.assertIs(popen.call_args.kwargs['stdin'],p.subprocess.PIPE)
-            child.stdin.close.assert_not_called()
             child.terminate.assert_called_once()
-            child.communicate.assert_called_once_with(timeout=1)
+            child.wait.assert_called_once_with(timeout=1)
+            child.communicate.assert_not_called()
+            child.stdin.close.assert_called_once()
     def test_refresh_fixed_scan(self):
         with patch.object(p.Path,'is_file',return_value=True),patch.object(p.subprocess,'run') as run:
             self.assertTrue(p.refresh()['returnValue'])
             self.assertEqual(run.call_args.args[0],['/usr/bin/ls-control','scan-services'])
+
+    def test_home_rpcs_have_fixed_uris_and_payloads(self):
+        cases = (
+            ('home-read','com.webos.settingsservice/getSystemSettings',{'category':'general','keys':['defaultApps']}),
+            ('home-profiles','com.webos.service.systemprofile/getProfiles',{'names':['defaultApps','idleApp'],'subscribe':False}),
+            ('home-stock','com.webos.service.applicationmanager/setDefaultApp',{'category':'home','appId':'com.webos.app.home'}),
+        )
+        for method,uri,payload in cases:
+            child=MagicMock();child.poll.return_value=None
+            with self.subTest(method=method), patch.object(p.subprocess,'Popen',return_value=child) as popen, patch.object(p.select,'select',return_value=([child.stdout],[],[])), patch.object(p.os,'read',return_value=b'{"returnValue":true}'):
+                p.rpc(method)
+                argv=popen.call_args.args[0]
+                self.assertEqual(argv[:4],['/usr/bin/luna-send','-n','1','luna://'+uri])
+                self.assertEqual(json.loads(argv[4]),payload)
+        with patch.object(p.subprocess,'Popen') as popen, self.assertRaises(ValueError): p.rpc('setDefaultApp')
+        popen.assert_not_called()
 
     def test_repeated_rollback_checks_restored_hashes_without_rpc(self):
         entries={str(path):{'original':'x','original_sha256':p.sha(b'x'),'installed_sha256':p.sha(b'y'),'mode':0o644,'uid':0,'gid':0} for path in p.FILES.values()}
@@ -137,3 +178,16 @@ class ProvisionTests(unittest.TestCase):
         with patch.object(p.os.path,'lexists',return_value=True),patch.object(p,'write') as write:
             with self.assertRaises(ValueError):p.repair_pending()
             write.assert_not_called()
+
+    def test_explicit_pending_resume_accepts_only_recorded_original_or_owned_partial_writes(self):
+        original=self.original();updated=p.plan(original)
+        files=list(p.FILES.items())
+        saved={'version':1,'service':p.NAME,'files':{str(path):{'original':original[key],'original_sha256':p.sha(original[key].encode()),'installed_sha256':p.sha(updated[key]),'mode':0o644,'uid':0,'gid':0} for key,path in files}}
+        snapshot=p.STATE/'ls2-provision-snapshot.json';data={path:(original[key].encode() if i%2 else updated[key]) for i,(key,path) in enumerate(files)};data[snapshot]=p.encoded(saved)
+        def write(path,raw,mode=0o600):data[path]=raw
+        with patch.object(p,'secure',side_effect=lambda path:data[path]),patch.object(p.os.path,'lexists',return_value=False),patch.object(p,'manifest',return_value={'version':1,'mode':'recovery-only'}),patch.object(p,'write',side_effect=write),patch.object(p.os,'chown'):
+            self.assertTrue(p.resume_pending()['repaired_pending'])
+            self.assertTrue(all(data[path]==updated[key] for key,path in files))
+            self.assertIn(p.STATE/'recovery-provision.pending.json',data)
+            data[files[0][1]]=b'foreign edit'
+            with self.assertRaisesRegex(ValueError,'drift'):p.resume_pending()

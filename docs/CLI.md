@@ -1,6 +1,8 @@
 # cytv standalone installer
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+1.4.0: [release notes](RELEASE-1.4.0.md) and [C3 acceptance / limits](RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
+
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
@@ -70,6 +72,18 @@ flow; it does not delete the operation journal to bypass recovery. Declining
 keeps recovery data. Non-interactive installation stops with instructions to
 use the interactive installer or `cytv uninstall` for the same saved TV/profile.
 If recovery fails, attach the new diagnostic report for the `uninstall` phase.
+
+Desktop behavior in 1.3.0 (absent from earlier v1.2.0 installers): successful
+status, doctor or restore checks with an unfinished No-root removal offer
+**Recover and reinstall** for the same saved connection. This uses the existing
+interactive install/removal flow and preserves its separate default-No recovery
+confirmation. Desktop report delivery uses a dedicated report event rather than
+recognizing a filename in translated log text. Failure reports retain the failed
+action, phase, traceback locations and allowlisted error metadata; the window
+offers **Save diagnostic report…** without another doctor run. CLI and Android
+still receive the existing report path through their normal output adapters.
+No new TV endpoint, permission, persistent recovery state or automatic retry is
+introduced. Issue #65's original device failure remains under investigation.
 
 Developer Mode key failures include a safe `connection` object in diagnostic
 JSON: `protocol: developer-key` and an allowlisted `reason_code`:
@@ -211,6 +225,30 @@ profile/packaged inventory instead of reading a fresh SSAP inventory:
 
 Before daily use check arrows/OK, short Home, in-app Back and exit confirmation,
 volume/pointer, standby/wake and cold boot. Both editions use three short Home presses within two seconds for emergency exit.
+
+## Candidate: shared Root operations
+
+**Unreleased source behavior:** Root installation and complete removal share the
+on-TV coordinator with CYTV Installer. The normal cytv platform/edition choices,
+SSH trust and No-root flow remain. A current verified product can be inspected,
+restored and removed across either client without reinstalling or resetting its
+profile. Older or uncertain infrastructure is not silently migrated.
+
+Run `cytv status` first after interruption, then use restore/diagnostics as needed.
+The offered **Finish Root setup** action verifies completed package/recovery
+setup and then performs explicit activation; it does **not** restart an incomplete
+worker. The on-TV UI's Continue action is limited to proven final readback. For
+other recognized interrupted stages, the source setup CLI provides
+[`--operation` plus `--resume`](MANUAL_INSTALL.md#candidate-shared-product-continuation)
+using the original stored snapshot and lease. No generic clear-lock, reset or
+blind retry is supported. Keep journals and private recovery material.
+
+Homebrew upgrades the separate Installer, not the installed product. System
+Updater preparation remains an explicit optional action; complete signed product
+updates keep their existing updater. Installer-only deletion leaves the product
+installed; use complete-product removal to restore LG routing and clean owned
+packages/private startup wrappers while retaining recovery evidence and referenced runtime
+slots. See [candidate requirements](INSTALL.md#candidate-on-tv-root-installation).
 
 ## Maintenance
 
@@ -370,8 +408,21 @@ python -m venv .venv-cytv
 
 Output is `dist/cytv` or `dist/cytv.exe`. Build each target natively; PyInstaller
 does not turn a macOS executable into a Windows/Linux executable. The workflow
-does this in four separate jobs. It tests both source and frozen payload smoke
-checks, without TV access or release publication.
+does this in four separate jobs. Use a fresh virtual environment: build requirements
+select binary `cryptography` wheels with their own static OpenSSL rather than a
+source build that can conflict with Python's bundled `libssl` on Intel macOS.
+An already installed source build is not replaced by pip's binary-only option;
+recreate the environment if the runtime check fails.
+
+Both console and GUI builders run `--check-payload` and the internal offline
+`--check-runtime` probe on the frozen executable before packaging succeeds. The
+runtime probe loads Python TLS and SSH dependencies, signs/verifies RSA and
+Ed25519 data, encrypts/decrypts AES-GCM data and derives a bcrypt key. Dependency
+load errors fail the build with their original exception; these checks do not
+connect to a TV, read connection profiles or publish a release. GUI startup smoke
+remains a separate check. A focused Intel macOS PR workflow freezes both actual
+entrypoints without a TV payload and runs the same probe before integration.
+This is an unreleased fix for issue #93.
 
 For source development, `python scripts/build-cytv.py --payload-only` prepares the
 embedded assets, then `python -m cytv` runs the same wizard. Public payload sources
@@ -392,3 +443,53 @@ The production builder reads `release-versions.json` and rejects mismatched Home
 Helper, Root or cytv versions, including packaged service metadata. Build from the
 release commit with `python scripts/build-cytv.py`; no separate local source tree
 is required. The wizard has no trial or Keep step.
+
+## Home button diagnostics
+
+The console executable can collect the existing opt-in Home Helper recording
+using its own saved No-root TV connection:
+
+    ./cytv home-diagnostics --edition no-root
+
+Use the platform-specific console executable name on Windows. With multiple
+saved No-root connections, select the affected TV. With no saved connection,
+follow normal address, trust and Developer Mode prompts; do not copy private
+Android profile/key files to a computer. The Helper must already be running.
+Press Home once when prompted, leave the remote untouched for the recording,
+then attach the generated JSON after reviewing it. Recording does not restart
+Helper or change the saved Home choice; standby and cold boot remain separate
+acceptance checks.
+
+Next-candidate Home settings (not published v1.2.0): a failed status read is shown
+as unknown, with Change Home hidden until a valid response. This avoids showing
+an unconfirmed off switch. It does not repair a firmware denial or unavailable
+request-file transport, prove that Helper stopped, or automatically start it.
+
+## Unreleased: optional WAM cache cleanup
+
+`cytv clean-wam-cache --edition root` estimates Cache/Code Cache usage and available
+`/var/lib` space, offers manual guidance and requires default-No confirmation.
+It requests only `cache` and `codecache` through the TV's native WAM API; it does
+not delete files itself. Session Storage and other app state are excluded.
+`--yes` does not authorize cleanup; noninteractive mode and pending local operations
+are refused. Cache rebuilding may slow the next app launch. No reboot, automatic
+retry or setup resume occurs. See [scope, manual maintenance and evidence](WAM-CLEANUP.md).
+Published installers do not include this action yet.
+
+## Candidate: redirected Windows output and POSIX payloads (#107)
+
+The next candidate preserves the stream's selected encoding and writes unsupported
+console characters as backslash escapes (for example, `\u041f`) instead of failing
+with `UnicodeEncodeError`. UTF-8 output keeps the original localized text. This
+applies to help, errors and normal CLI output; it does not change TV settings or
+saved JSON data. A UTF-8 terminal/log remains preferable for readable localized text.
+These source changes are not a claim about already published installers.
+
+Windows source checkouts use LF for text through `.gitattributes`; binary assets
+remain unchanged. `--check-payload` verifies file hashes and rejects CR characters
+in loose or IPK-contained `.sh` scripts. It rejects a defective build rather than
+rewriting a signed or published package. Rebuild installers from a fresh checkout;
+do not edit installed recovery scripts or retained transaction files.
+
+The separate Root routing/recovery incompatibility on BX/webOS 5 remains unresolved.
+See the [investigation record](development/ISSUE-107-WINDOWS.md).

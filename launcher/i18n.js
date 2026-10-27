@@ -2,9 +2,14 @@
 (function(root){
  'use strict';
  var key='tvhome.language',systemKey='tvhome.system-language.v1',catalogs={},active='en',dialog=null,previous=null,systemLanguage=null,pending=false,callbacks=[];
- var languages=[{code:'en',name:'English'},{code:'de',name:'Deutsch'},{code:'es',name:'Español'},{code:'pt-BR',name:'Português (Brasil)'},{code:'fr',name:'Français'},{code:'it',name:'Italiano'},{code:'ko',name:'한국어'},{code:'hi',name:'हिन्दी'},{code:'pl',name:'Polski'},{code:'ru',name:'Русский'}];
+ var languages=[{code:'en',name:'English'},{code:'de',name:'Deutsch'},{code:'es',name:'Español'},{code:'pt-BR',name:'Português (Brasil)'},{code:'fr',name:'Français'},{code:'it',name:'Italiano'},{code:'ko',name:'한국어'},{code:'hi',name:'हिन्दी'},{code:'pl',name:'Polski'},{code:'ru',name:'Русский'},{code:'zh-Hans',name:'简体中文'},{code:'zh-Hant',name:'繁體中文'}];
  function normalize(value){
-  var base=String(value||'').replace(/_/g,'-').toLowerCase().split('-')[0];
+  var parts=String(value||'').split('.')[0].split('@')[0].replace(/_/g,'-').toLowerCase().split('-'),base=parts[0];
+  if(base==='zh'){
+   if(parts.indexOf('hans')>=0)return 'zh-Hans';
+   if(parts.indexOf('hant')>=0)return 'zh-Hant';
+   return parts.indexOf('tw')>=0||parts.indexOf('hk')>=0||parts.indexOf('mo')>=0?'zh-Hant':'zh-Hans';
+  }
   if(base==='pt')return 'pt-BR';
   for(var i=0;i<languages.length;i++)if(languages[i].code===base)return base;
   return null;

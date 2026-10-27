@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 from pathlib import Path
 try:
-    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QRadioButton
+    from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit, QComboBox, QRadioButton, QDialog
     from cytv.gui import Wizard
     from cytv.desktop import Prompt
     HAS_QT = True
@@ -83,7 +83,8 @@ class GuiTests(unittest.TestCase):
                 ('restore', 'Return to LG Home'),
                 ('uninstall', 'Uninstall Clean Your TV'),
                 ('home-diagnostics', 'Home button diagnostics'),
-                ('enable-system-updates', 'Enable updates for all TV components (root required)')]):
+                ('enable-system-updates', 'Enable updates for all TV components (root required)'),
+                ('clean-wam-cache', 'Clear WAM caches (root required)')]):
             with self.subTest(command=command):
                 calls = []
                 def runner(argv, **kwargs):
@@ -144,6 +145,42 @@ class GuiTests(unittest.TestCase):
                 self.assertNotEqual(w.title.text(), 'Make your TV feel like yours')
         w.close()
 
+    def test_chinese_fonts_follow_startup_and_language_changes(self):
+        from PySide6.QtGui import QFontDatabase, QTextLayout
+        from cytv import i18n
+        from cytv.gui_style import STYLE
+        fonts = Path(__file__).resolve().parents[2] / 'launcher/fonts'
+        for name in ('SC', 'TC'):
+            self.assertGreaterEqual(QFontDatabase.addApplicationFont(str(fonts / ('NotoSans%s.ttf' % name))), 0)
+        i18n.configure('zh-Hant')
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        self.app.processEvents()
+
+        def rendered_family():
+            layout = QTextLayout('中文', w.title.font())
+            layout.beginLayout()
+            layout.createLine()
+            layout.endLayout()
+            return {run.rawFont().familyName() for run in layout.glyphRuns()}
+
+        self.assertEqual(rendered_family(), {'Noto Sans TC'})
+        for code, family in [('zh-Hans', 'Noto Sans SC'), ('zh-Hant', 'Noto Sans TC')]:
+            w.language.setCurrentIndex(list(i18n.LANGUAGES).index(code))
+            self.app.processEvents()
+            self.assertEqual(rendered_family(), {family})
+        w.language.setCurrentIndex(list(i18n.LANGUAGES).index('en'))
+        self.assertEqual(w.styleSheet(), STYLE)
+        w.close()
+        i18n.configure('auto')
+        with patch('cytv.i18n.system_languages', return_value=['zh-TW']):
+            w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        self.app.processEvents()
+        self.assertEqual(rendered_family(), {'Noto Sans TC'})
+
     def test_translated_secret_and_confirmation_keep_semantics(self):
         from cytv import i18n
         w = Wizard()
@@ -153,6 +190,71 @@ class GuiTests(unittest.TestCase):
         w.show_prompt(Prompt('SSH key passphrase: ', secret=True))
         self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
         w.close()
+
+    def test_secret_prompt_separates_current_guidance_from_collapsed_history(self):
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.show()
+        w.receive('text', 'Earlier setup instruction')
+        w.show_prompt(Prompt('Developer Mode passphrase: ', secret=True))
+        self.app.processEvents()
+        self.assertNotIn('Earlier setup instruction', w.content.toPlainText())
+        self.assertIn('six characters', w.content.toPlainText())
+        self.assertIn('Key Server', w.content.toPlainText())
+        self.assertIn('Earlier setup instruction', w.details.toPlainText())
+        self.assertTrue(w.details.isHidden())
+        w.details_toggle.click()
+        self.assertFalse(w.details.isHidden())
+        self.assertEqual(w.form.findChild(QLineEdit).echoMode(), QLineEdit.EchoMode.Password)
+
+    def test_preparation_pages_do_not_answer_connection_confirmation(self):
+        from cytv.desktop import Channel
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.channel = Channel(lambda *args: None)
+        w.receive('step', (3, 'Prepare the TV connection', True))
+        for heading, text in [('1. Developer Mode', 'Install the app'),
+                              ('2. Dev Mode Status', 'Restart the TV'),
+                              ('3. Key Server', 'Leave the app open')]:
+            w.receive('heading', heading)
+            w.receive('text', text)
+        w.receive('step', (4, 'Review and install', False))
+        w.receive('text', 'TV: 192.0.2.10')
+        prompt = Prompt('Connect to check installed versions? [Y/n]: ')
+        w.show_prompt(prompt)
+        self.assertIn('Install the app', w.content.toPlainText())
+        self.assertNotIn('Restart the TV', w.content.toPlainText())
+        self.assertTrue(w.channel.answers.empty())
+        def click_default():
+            next(b for b in w.form.findChildren(QPushButton) if b.isDefault()).click()
+        click_default()
+        self.assertIn('Restart the TV', w.content.toPlainText())
+        next(b for b in w.form.findChildren(QPushButton) if b.text() == 'Back').click()
+        self.assertIn('Install the app', w.content.toPlainText())
+        for _ in range(3):
+            click_default()
+        self.assertIn('TV: 192.0.2.10', w.content.toPlainText())
+        self.assertTrue(w.channel.answers.empty())
+        self.assertEqual(w.pending, prompt)
+        click_default()
+        self.assertEqual(w.channel.answers.get_nowait(), 'y')
+
+    def test_example_viewer_keeps_dark_theme_and_does_not_answer_password_prompt(self):
+        from cytv.desktop import Channel
+        w = Wizard()
+        self.addCleanup(w.close)
+        w.channel = Channel(lambda *args: None)
+        prompt = Prompt('Developer Mode passphrase: ', secret=True)
+        w.show_prompt(prompt)
+        w.show_reference('key-server')
+        self.app.processEvents()
+        viewer = w.findChild(QDialog)
+        self.assertTrue(viewer.isVisible())
+        self.assertTrue(viewer.isModal())
+        self.assertLess(viewer.grab().toImage().pixelColor(2, 2).lightness(), 80)
+        viewer.reject()
+        self.assertEqual(w.pending, prompt)
+        self.assertTrue(w.channel.answers.empty())
 
     def test_failed_language_save_keeps_visible_and_active_selection(self):
         from cytv import i18n

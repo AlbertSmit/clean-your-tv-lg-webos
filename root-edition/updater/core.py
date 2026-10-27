@@ -274,7 +274,9 @@ class Manager:
                         selected=tx['prior' if rollback else 'candidate']
                         if not self.io.verify_installed(selected):
                             return self._save(tx,'recovery-required' if rollback else 'rolling-back','confirmed application identity mismatch')
-                        self.store.write('current',selected)
+                        previous=tx['prior'].get('writer',{})
+                        system=previous.get('id') if previous.get('owner')=='system-update' else previous.get('system')
+                        self.store.write('current',dict(selected,writer={'owner':'root-update','id':tx['id'],'system':system}))
                         return self._save(tx,'rolled-back' if rollback else 'complete')
                     if now < tx['launched'] or now >= tx['deadline']:
                         return self._save(tx,'recovery-required' if rollback else 'rolling-back','restored profile readiness unconfirmed' if rollback else 'application health confirmation timed out')
@@ -331,6 +333,18 @@ class Manager:
     def ready(self, transaction, version): return self._health(transaction, version, 'ready')
 
     def confirm(self, transaction, version): return self._health(transaction, version, 'confirm')
+
+    def component_removed(self):
+        """Stop at a phase boundary; never reinstall an externally removed package."""
+        with self.store.lock():
+            tx=self._load()
+            if tx is None or tx['phase'] in FINISHED:return tx
+            error='CYTV component removed; recovery evidence retained'
+            try:
+                self._safe_route()
+            except Exception as exc:
+                return self._save(tx,'recovery-required',error+': '+str(exc))
+            return self._save(tx,'aborted' if tx['installEvidence']['submitted'] is None and tx['phase'] in ('preparing','downloading','backed-up','restoring-route') else 'recovery-required',error)
 
     def reconcile(self):
         return self.run()

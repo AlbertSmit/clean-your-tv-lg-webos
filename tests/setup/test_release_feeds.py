@@ -97,11 +97,29 @@ class ReleaseFeeds(unittest.TestCase):
         executables = {app+n for n in ('detach','relay','resume')}
         def prepare(files=helper_files, approval=approval, raw=None):
             # This approval reproduces the historical permission-only repair.
-            # Keep its original tar dates; modern packages require their own approval.
+            # Keep its original tar dates/layout; modern packages need their own approval.
             if raw is None:
                 with patch('cytv.package.IPK_MTIME', 0):
                     raw = ipk('com.local.nativehome','0.6.17',files,
                         executable=executables, helper_state=True, architecture='arm')
+                # Modern builders omit shared-parent chmod records. This historical
+                # approval pins those five original directory headers as well.
+                import io, tarfile
+                parts = read_ar(raw)
+                with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as archive:
+                    members = {m.name:(m, archive.extractfile(m).read() if m.isfile() else None)
+                               for m in archive}
+                with tarfile.open(fileobj=io.BytesIO(read_ar(prior_helper)['data.tar.gz'])) as archive:
+                    for member in archive:
+                        if member.name in {'usr','usr/palm','usr/palm/applications','usr/palm/packages','usr/palm/services'}:
+                            self.assertTrue(member.isdir())
+                            members.setdefault(member.name, (member, None))
+                output = io.BytesIO()
+                with tarfile.open(fileobj=output, mode='w:gz', format=tarfile.USTAR_FORMAT) as archive:
+                    for member, data in (members[name] for name in sorted(members)):
+                        archive.addfile(member, io.BytesIO(data) if data is not None else None)
+                parts['data.tar.gz'] = output.getvalue()
+                raw = ar(parts)
             candidate = dict(current, helper=raw)
             return release.prepare_manifests('v0.10.10', {'tag':'v0.10.10','versions':{'home':'1.3.6','root':'0.1.10','helper':'0.6.17'}},
                 candidate, build(), prior, compatibility=approval)

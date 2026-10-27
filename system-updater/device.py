@@ -15,6 +15,7 @@ import signal
 import stat
 import subprocess
 import time
+from package_identity import identity, owners_present, TransitionUnknown, ROOT, UPDATER, SYSTEM
 from .core import IDENTITIES, SETS, release_set, version
 from .support.package import archive, members, safe_bytes, verify_payload
 from .support.luna import call
@@ -63,7 +64,20 @@ class Device:
         self.root_state=Path(root_state);self.root_updater=Path(root_updater);self.installed_root=Path(installed)
         self.legacy_states=[self.root_updater/'transaction.json',self.installed_root/'usr/palm/services/com.cleanyourtv.updater.service/state/transaction.json']
 
-    def integrity(self):
+    def owner_identity(self,owner,purpose='worker'):
+        return identity(owner,purpose=purpose,installed=self.installed_root,uid=self.uid,
+                        states={ROOT:self.root_state,UPDATER:self.root_updater,SYSTEM:self.state})
+
+    def components_present(self):
+        owners=[SYSTEM]
+        tx=self.store.read('transaction')
+        if tx and tx.get('edition')=='root':owners.extend((ROOT,UPDATER))
+        return owners_present(owners,self.owner_identity)
+
+    def require_components(self):
+        if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
+
+    def integrity(self,*,enforce=True):
         if os.path.lexists(self.state/'cytv-removal.json'):raise ValueError('System updater removal is in progress. Continue removal from the computer.')
         receipt=self.store.read('infrastructure')
         if not isinstance(receipt,dict) or receipt.get('schema')!=1 or not isinstance(receipt.get('code'),dict) or not receipt['code']:raise ValueError('One-time System Updater setup required')
@@ -73,7 +87,7 @@ class Device:
             if digest(safe_bytes(self.code/name,limit=4*1024*1024,uid=self.uid))!=expected:raise ValueError('Supervisor infrastructure changed')
         from python_binding import verify_binding
         verify_binding(self.state)
-        self.enforce_legacy_lockdown()
+        if enforce:self.enforce_legacy_lockdown()
         return receipt
 
     def fetch(self,method,payload=None,binary=False):
@@ -113,7 +127,7 @@ class Device:
 
     def installed(self,application):
         if application not in IDENTITIES.values() or application is None:raise ValueError('Foreign application')
-        value=json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+application+'/appinfo.json'),limit=65536))
+        value=(self.owner_identity(application) if application in (ROOT,UPDATER,SYSTEM) else json.loads(safe_bytes(self.installed_root/('usr/palm/applications/'+application+'/appinfo.json'),limit=65536)))
         if value.get('id')!=application:raise ValueError('Installed application identity mismatch')
         version(value.get('version'));return value['version']
 
@@ -122,6 +136,7 @@ class Device:
         return all(self.verify_installed(c) for c in baseline['components'])
 
     def offer(self,edition):
+        self.require_components()
         self.integrity()
         if edition not in SETS:raise ValueError('Invalid edition')
         value=self.fetch('offer',{'edition':edition})
@@ -129,12 +144,17 @@ class Device:
         except (ValueError,KeyError,TypeError):raise ValueError(VERIFICATION_ERROR) from None
         prior=self._baseline(edition);reason='available'
         if any(version(c['version'])<version(p['version']) for c,p in zip(candidate['components'],prior['components'])):reason='component-downgrade'
-        elif version(candidate['release'][1:])<=version(prior['release'][1:]):reason='current'
+        elif version(candidate['release'][1:])<=version(prior['release'][1:]) or all(c['version']==p['version'] for c,p in zip(candidate['components'],prior['components'])):reason='current'
         else:
             try:
                 self.check_legacy()
                 if not self.verify_baseline(prior):raise ValueError('Installed baseline changed')
                 for c in prior['components']:self.inspect(self.cache_bytes(c),c)
+                for c in candidate['components']:
+                    if c['kind']=='infrastructure':
+                        raw=(self.cache_bytes(c) if os.path.lexists(self.cached(c)) else
+                             self.fetch('package',{'proof':candidate['proof'],'name':c['name']},binary=True))
+                        self.inspect(raw,c)
             except Exception as error:reason=str(error)
         components=[]
         for c in candidate['components']:
@@ -171,7 +191,7 @@ class Device:
         pinned=json.loads(safe_bytes(self.code/'infrastructure-paths.json',limit=65536,uid=self.uid))
         if not isinstance(pinned,list) or not pinned or len(set(pinned))!=len(pinned):raise ValueError('Invalid pinned infrastructure inventory')
         for name in pinned:
-            if isinstance(name,str) and name.startswith('support/') and name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
+            if isinstance(name,str) and name.startswith('support/') and name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/package_identity.py','support/updater/store.py','support/updater/package.py','support/startup_guard.py'):raise ValueError('Foreign infrastructure support path')
             if not isinstance(name,str):raise ValueError('Unsafe managed infrastructure path')
             path=PurePosixPath(name)
             if path.is_absolute() or '..' in path.parts or str(path)!=name or len(path.parts)<2 or path.parts[0] not in ('runtime','service','updater','support'):raise ValueError('Unsafe managed infrastructure path')
@@ -215,6 +235,7 @@ class Device:
         return {name:digest(value) for name,value in files.items()}
 
     def prepare(self,candidate,prior):
+        self.require_components()
         self.integrity();self._verify_release(candidate,candidate['edition']);self._verify_release(prior,prior['edition'])
         for c in prior['components']:self.inspect(self.cache_bytes(c),c)
         required=sum(c['size'] for c in candidate['components'])+128*1024*1024
@@ -251,7 +272,7 @@ class Device:
         if name not in self._infra_inventory():raise ValueError('Foreign infrastructure destination')
         kind,relative=name.split('/',1)
         if kind=='support':
-            if name not in ('support/python_binding.py','support/python_boot.js'):raise ValueError('Foreign infrastructure support path')
+            if name not in ('support/python_binding.py','support/python_boot.js','support/package_data.py','support/package_identity.py','support/updater/store.py','support/updater/package.py','support/startup_guard.py'):raise ValueError('Foreign infrastructure support path')
             return self.root_state/relative
         return (self.root_updater/'code' if kind=='updater' else self.root_state/kind)/relative
 
@@ -282,12 +303,31 @@ class Device:
             if any(saved==c for saved in release['components']):self._verify_release(release,tx['edition']);return
         raise ValueError('Component outside reserved release')
 
-    def install(self,c,on_submit,on_terminal):
-        self.integrity();self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
+    def install(self,c,on_submit,on_terminal,on_intent):
+        tx=self.store.read('transaction')
+        rollback=isinstance(tx,dict) and tx.get('phase')=='rolling-back' and tx.get('rollbackAttempted') is True
+        if rollback:
+            from .core import Manager
+            tx=Manager(self.store,self)._load()
+            index=next(i for i,p in enumerate(tx['prior']['components']) if p['name']==c['name'])
+            prior=tx['prior']['components'][index];leg=tx['components'][index]['rollbackEvidence']
+            if (any(c.get(k)!=prior.get(k) for k in ('version','sha256','size')) or not leg['intent']
+                    or c['kind']!='infrastructure' and leg['submitted'] is not None or leg['terminal'] is not None
+                    or any(e['installEvidence']['intent'] and e['installEvidence']['terminal'] is None and e['name']!='root-infrastructure' for e in tx['components'])):
+                raise ValueError('Original System rollback proof required')
+            try:self.require_components()
+            except TransitionUnknown:pass  # Complete owner observation; only this original rollback may proceed.
+        else:self.require_components()
+        self.integrity(enforce=False)
+        self._trusted_component(c);raw=self.cache_bytes(c);hashes=self.inspect(raw,c)
+        if c['kind']=='infrastructure':self.validate_infrastructure_transition()
+        # Only the original synchronous Manager call can persist this intent.
+        # All preflight is read-only; lockdown and other effects follow intent.
+        on_intent()
+        self.enforce_legacy_lockdown()
         if c['kind']=='infrastructure':
             # Infrastructure writes have a durable intent in core and per-file
             # atomic replacement. Restart reconciles only known before/after bytes.
-            self.validate_infrastructure_transition()
             self._stop_service_processes(str(self.root_state/'service'))
             on_submit({'component':c['name'],'sha256':c['sha256']})
             files=archive(raw)
@@ -323,7 +363,11 @@ class Device:
         if c['kind']=='infrastructure':
             return (all(digest(safe_bytes(self._infra_path(name),uid=self.uid))==expected for name,expected in hashes.items())
                     and all(not os.path.lexists(self._infra_path(name)) for name in c.get('absent',[])))
-        verify_payload(self.installed_root,hashes)
+        verify_payload(self.installed_root,hashes,uid=self.uid)
+        if c['application'] in (ROOT,UPDATER):
+            from package_data import read_verified
+            info='usr/palm/applications/'+c['application']+'/appinfo.json'
+            return json.loads(read_verified(self.installed_root/info,sha256=hashes[info],installed=self.installed_root,uid=self.uid))['version']==c['version']
         return self.installed(c['application'])==c['version']
 
     def runtime(self,mode,transaction=None):
@@ -504,6 +548,7 @@ class Device:
         self.enforce_legacy_lockdown()
 
     def finish(self,tx):
+        self.require_components()
         if tx['phase'] not in ('complete','rolled-back','aborted'):raise ValueError('Update not finished')
         if tx['edition']=='root':
             if tx['phase']!='aborted':self.sync_root_baseline(tx)
@@ -526,7 +571,9 @@ class Device:
         self.rpc('luna://com.webos.applicationManager/launch',{'id':'com.local.nativehome','params':{'nativeHomeAuto':True}})
         return {'status':'attempted'}
 
-    def launch(self,edition):return self.rpc('luna://com.webos.applicationManager/launch',{'id':IDENTITIES['root' if edition=='root' else 'home']})
+    def launch(self,edition):
+        self.require_components()
+        return self.rpc('luna://com.webos.applicationManager/launch',{'id':IDENTITIES['root' if edition=='root' else 'home']})
 
     @staticmethod
     def now():return time.time()
@@ -650,7 +697,13 @@ class Device:
         if target.exists():
             if safe_bytes(target,limit=64*1024*1024,uid=self.uid)!=raw:raise ValueError('Legacy recovery cache conflict')
         else:self.atomic(target,raw,exclusive=True)
-        store.write('current',{'version':c['version'],'sha256':c['sha256'],'size':c['size'],'local':True})
+        store.write('current',{'version':c['version'],'sha256':c['sha256'],'size':c['size'],'local':True,'writer':{'owner':'system-update','id':tx['id']}})
+        own=next(c for c in selected['components'] if c['name']=='root-updater')
+        raw=self.cache_bytes(own);hashes=self.inspect(raw,own)
+        verify_payload(self.installed_root,hashes,uid=self.uid)
+        with tarfile.open(fileobj=io.BytesIO(members(raw)['data.tar.gz']),mode='r:gz') as archive:
+            executable=sorted(m.name for m in archive if m.isfile() and m.mode&0o111)
+        store.write('installed-package',{'schema':1,'files':hashes,'executable':executable})
 
     @staticmethod
     def _cycle(tx):return tx['id']+('-rollback' if tx.get('resumeCycle')=='rollback' else '')

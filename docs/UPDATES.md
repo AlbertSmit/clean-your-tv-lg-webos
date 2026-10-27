@@ -1,6 +1,27 @@
 # Updates and recovery — 1.1.0
 
-Use [v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
+Candidate correction #115: [Root OTA compatibility with the original 1.3.0 supervisor](development/ROOT-OTA-13-COMPATIBILITY.md). Published1.4.0 is incompatible with that original destination inventory. An aborted pre-replacement attempt installed nothing; retain its journal and do not change private pins. The next candidate preserves the old paths and permissions; physical update/rollback acceptance remains pending.
+
+Use [v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0) for setup. Keep legacy recovery available until the transition and the new supervisor have both been verified. A signed whole-edition update still requires compatible installed infrastructure; a standalone launcher update does not provision it.
+
+## Candidate: Installer updates and product updates
+
+**Unpublished Homebrew Installer candidate:** CYTV Installer adds Root setup through Homebrew
+Channel; no public catalog availability is established. Homebrew updates only
+`com.cleanyourtv.installer`. Its embedded component versions are independent of
+later product releases: upgrading Installer does not update Root Home or either
+updater. Existing Root/System Updaters retain recovery and signed complete-set
+product updates. Optional System Updater preparation must be explicitly chosen.
+
+Verified current installations share profiles, ownership and recovery with cytv
+without reinstalling. Unknown older infrastructure still requires its matching
+recovery/migration review; fresh packaged-preference migration is not an
+infrastructure upgrade. After interruption inspect status first, preserve records
+and use only a proven continuation. Installer-only deletion leaves the installed
+product; complete removal restores LG Home and cleans only owned components,
+registrations and startup hooks while retaining independent recovery and runtime
+slots. [Setup contract](INSTALL.md#candidate-on-tv-root-installation) ·
+[pending physical acceptance](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
 
 ## Updating every component from the TV
 
@@ -18,6 +39,23 @@ verification key and destination allowlist cannot be replaced by release data.
 The computer installer can supply a verified optional ARMv7 Python if the TV's
 existing interpreter fails its requirements. Other root, Node and platform
 requirements still apply. See [optional Python](OPTIONAL-PYTHON.md).
+
+### Unreleased availability correction (#108 / #109)
+
+When System Updater is provisioned, Home settings checks that supervisor for the
+same edition as the Update all screen. Only a confirmed missing service falls
+back to the legacy Home-only check; failed network, permission or state checks
+retain the last confirmed badge and do not select a different feed. Settings
+remain usable and the check does not move remote focus.
+
+A newer project release alone is not a component upgrade: if all installed and
+target component versions match, the screen reports that components are current
+and disables Update all. This also filters misleading offers from older fixed
+supervisors. New computer provisions apply the same rule in the supervisor.
+A same-version rebuild is not offered as an unexplained reinstall. Installation
+stays disabled while the screen checks availability. This correction has local
+regression coverage; physical-TV confirmation and public delivery remain pending.
+No input-control, emergency-stop, recovery or rollback policy is changed.
 
 ### One-time computer preparation
 

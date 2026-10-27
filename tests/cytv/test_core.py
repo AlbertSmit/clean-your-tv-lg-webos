@@ -1,4 +1,5 @@
 """Private state and package boundaries: no network or TV required."""
+import gzip
 import hashlib
 import io
 import json
@@ -75,6 +76,18 @@ class StateTests(unittest.TestCase):
 
 
 class PackageTests(unittest.TestCase):
+    def test_gzip_metadata_is_canonical_across_build_hosts(self):
+        files = {'z.txt': b'last', 'a.txt': b'first'}
+        packed = package.tgz(files)
+        self.assertEqual(packed, package.tgz(dict(reversed(list(files.items())))))
+        parts = package.read_ar(package.ipk('app', '1.0.0', files))
+        control = {'control': b'Package: app\nVersion: 1.0.0\nArchitecture: all\nMaintainer: Clean Your TV\nDescription: Clean Your TV\n'}
+        for compressed, expected in ((packed, files), (parts['control.tar.gz'], control), (parts['data.tar.gz'], files)):
+            # Deflate, no filename/flags, epoch mtime, level 9, unknown OS.
+            self.assertEqual(compressed[:10], b'\x1f\x8b\x08\x00\x00\x00\x00\x00\x02\xff')
+            with tarfile.open(fileobj=io.BytesIO(gzip.decompress(compressed)), mode='r:') as archive:
+                self.assertEqual({item.name: archive.extractfile(item).read() for item in archive}, expected)
+
     def test_personalized_ipks_have_modern_reproducible_tar_dates(self):
         for app in ('com.gathin.tvhome', package.ROOT_APP):
             with self.subTest(app=app):

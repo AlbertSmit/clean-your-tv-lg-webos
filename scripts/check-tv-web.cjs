@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {compile} = require('./compile-tv-web.cjs');
 (async () => {
-  for (const directory of ['launcher', 'root-edition/ui', 'updater-app']) {
+  for (const directory of ['launcher', 'root-edition/ui', 'updater-app', 'homebrew/app']) {
     const files = {};
     function collect(current, prefix = '') {
       for (const entry of fs.readdirSync(current, {withFileTypes: true})) {

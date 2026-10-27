@@ -48,7 +48,7 @@ class SetupTests(unittest.TestCase):
                         self.assertFalse(source_name.endswith('/.'))
                         uploads.append(Path(source_name).name)
             with patch.object(deploy, 'verify_bundle', return_value={'files': {'safe': 'unused'}}):
-                setup.execute('install', 'living-room', source, run=run)
+                setup.execute('install', 'living-room', source, run=run, component_only=True)
             self.assertEqual(set(uploads), {'safe', 'bundle.json'})
 
     def test_non_install_has_fixed_remote_command_and_no_upload(self):
@@ -131,6 +131,7 @@ class DeployTests(unittest.TestCase):
             bundle = root / 'bundle'
             builder.build(bundle)
             events = []
+            from package_data import read_verified as package_reader
             def observe(app, path, **kwargs):
                 kwargs['on_ready']()
                 raise deploy.OutcomeUnknown('No terminal evidence')
@@ -254,15 +255,17 @@ class DeployTests(unittest.TestCase):
             package = builder.build(bundle)
             installed = root / 'installed'
             calls = []
+            from package_data import read_verified as package_reader
             def observe(app, path, **kwargs):
                 kwargs['on_ready']()
                 with tarfile.open(fileobj=io.BytesIO(ar_members(package.read_bytes())['data.tar.gz'])) as archive:
                     for member in archive:
+                        if member.isdir():continue
                         target = installed / member.name
                         target.parent.mkdir(parents=True, exist_ok=True)
                         target.write_bytes(archive.extractfile(member).read())
                 return {'completed':True}
-            with patch.object(deploy, 'STATE', root / 'state'), patch.object(deploy, 'INSTALLED', installed):
+            with patch.object(deploy, 'STATE', root / 'state'), patch.object(deploy, 'INSTALLED', installed), patch('package_data.read_verified',side_effect=lambda path,**kw: package_reader(path,**{**kw,'uid':__import__('os').getuid()})):
                 result = deploy.install(bundle, run=lambda args: calls.append(args[-1]), observe=observe)
             self.assertTrue(result['returnValue'])
             self.assertFalse(result['home_changed'])
@@ -334,3 +337,40 @@ class DeployTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class SharedSetupEntryTests(unittest.TestCase):
+    def fixture(self):
+        import hashlib
+        temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup)
+        root=Path(temp.name).resolve()
+        for name in ('root','updater'):
+            folder=root/name;folder.mkdir();(folder/'install_driver.py').write_bytes(b'trusted driver')
+            (folder/'bundle.json').write_text(json.dumps({'files':{'install_driver.py':hashlib.sha256(b'trusted driver').hexdigest()}}))
+        return root/'root',root/'updater'
+
+    def test_host_setup_install_uses_shared_request_and_candidate(self):
+        setup=load('setup');root,updater=self.fixture();calls=[]
+        setup.execute('install','living-room',root,updater_bundle=updater,operation='a'*32,run=lambda args,**kwargs:calls.append(args))
+        command=calls[-1][-1]
+        self.assertIn('/root-updater/install_driver.py install --payload ',command)
+        self.assertIn('--operation '+'a'*32,command);self.assertIn('--candidate ',command)
+        self.assertNotIn('deploy.py install',command)
+
+    def test_documented_shared_status_requests_current_proof(self):
+        setup=load('setup');root,updater=self.fixture();calls=[]
+        setup.execute('status','living-room',root,updater_bundle=updater,operation='a'*32,run=lambda args,**kwargs:calls.append(args))
+        self.assertIn('--verify-current',calls[-1][-1])
+        self.assertIn('--operation '+'a'*32,calls[-1][-1])
+
+    def test_component_install_requires_explicit_low_level_flag(self):
+        setup=load('setup');root,_=self.fixture()
+        with self.assertRaisesRegex(ValueError,'component-only'):
+            setup.execute('install','living-room',root,run=lambda *a,**k:self.fail('SSH before complete bundle validation'))
+
+    def test_updater_host_apply_routes_to_product_unless_explicit_component_recovery(self):
+        import sys
+        updater=load('setup_updater');root,bundle=self.fixture()
+        with patch('updater.bootstrap.verify_bundle',return_value={'files':{}}),patch('deploy.verify_bundle',return_value={'package':'baseline.ipk','files':{}}),patch('setup.execute_product') as product,patch.object(sys,'argv',['setup-updater','--bundle',str(bundle),'--baseline',str(root),'--ssh','living-room','--apply','--operation','a'*32]):
+            updater.main()
+        self.assertEqual(product.call_args.args[:4],('install','living-room',root,bundle))
+        self.assertEqual(product.call_args.kwargs['operation'],'a'*32)

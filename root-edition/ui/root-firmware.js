@@ -18,9 +18,16 @@
   }
   function error(reply) {
     render(reply && reply.status);
+    var reasons = {
+      'permission-denied':'Homebrew denied this app access. Change the setting in Homebrew Channel. On webOS 11, Homebrew needs compatible API permissions.',
+      'service-unavailable':'Homebrew service is unavailable. Open Homebrew Channel, then check status.',
+      'not-root':'Homebrew is not running as root. Check root access in Homebrew Channel.',
+      unsupported:'Homebrew returned an unsupported configuration response. Check its version, then retry.',
+      timeout:'Homebrew did not respond in time. Check status before trying again.'
+    };
     status.textContent = t(reply && reply.errorCode === 'changed' ? 'The setting changed elsewhere. Check it before trying again.' :
       reply && (reply.errorCode === 'unconfirmed' || reply.errorCode === 'busy') ? 'The change was not confirmed. Check status before trying again.' :
-      'Homebrew Channel with root access is required. Check its settings, then retry.');
+      reasons[reply && reply.errorCode] || 'Homebrew Channel with root access is required. Check its settings, then retry.');
   }
   function refresh() {
     if (busy) return;

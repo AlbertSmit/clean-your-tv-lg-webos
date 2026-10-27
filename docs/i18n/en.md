@@ -1,12 +1,19 @@
 # Clean Your TV — user guide
 
+1.4.0: the maintainer accepted the corrected C3 power, Home, focus and off-state tests and manual rollback to 1.3.0; #90 was closed at their request. Other TVs, eARC audio and physical Android remain unverified. Basic controls from the previous candidate were not all repeated. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
+
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 ## Before installation
 
-This guide covers **[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.2.0.md).
+This guide covers **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. Latest-download links follow the published stable release. See the [installation guide](../INSTALL.md) and [release notes](../RELEASE-1.3.0.md).
 
-The release contains cytv **0.3.1**, Home **1.4.1**, Home Helper **0.6.19**, Root Edition **0.3.0**, Home Updater and Root Updater **0.2.1**, Android **0.2.1-preview** (version code **10**) and System Updater supervisor **1.0.0** (protocol **1**). These are the v1.2.0 release components.
+The release contains cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root Edition **0.4.0**, Home Updater and Root Updater **0.3.0**, Android **0.3.0-preview** (version code **11**) and System Updater supervisor **1.1.0** (protocol **1**). These are the v1.3.0 release components.
+
+The unpublished 1.4.0 candidate selects Android 0.4.0 (code 13), without preview, after maintainer-approved emulator checks. Tested: Android 15 ARM64 / WebView 124. Physical phones and live phone-to-TV recovery remain unverified; Android 7 / WebView 108 is a minimum requirement, not a tested phone. Update without uninstalling or clearing data. Published downloads still provide 0.3.0-preview. Report problems with phone, Android/WebView, TV/firmware, edition and failed step; exclude credentials.
+
+Known issue in 1.3.0: Root Home control can turn off after standby and return Home presses to LG. Turn Home control on again explicitly in Clean Your TV settings; if activation fails, keep LG Home and save diagnostics. See [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) and the [current acceptance record](../RELEASE-1.3.0-ACCEPTANCE.md).
 
 Keep the TV on and the computer on the same trusted local network. No always-on computer is needed afterward. Compatibility depends on model, firmware and remote; Root has outstanding hardware checks.
 
@@ -15,6 +22,31 @@ Keep the TV on and the computer on the same trusted local network. No always-on 
 The updated No-root Helper requires TV Node.js 0.12.2 or newer. The installer checks the TV runtime before installation. Older published packages do not gain this compatibility automatically; input-device access and standby/cold boot still need testing on each model.
 
 - **Root:** existing root SSH access is required. The installer does not root the TV. Do not enable Developer Mode on an existing rooted setup. Keep root access and recovery services available.
+
+
+## Developer Mode setup (No-root)
+
+Developer Mode lets CYTV install apps on a TV without root.
+
+1. On the TV, open LG Apps, search for Developer Mode and install it.
+2. Open Developer Mode and sign in with your LG Developer account. Create an account at webostv.developer.lge.com if needed.
+3. Turn on Dev Mode Status. The TV restarts. Open Developer Mode again.
+4. Turn on Key Server and leave Developer Mode open. Its IP Address is the TV address to enter in CYTV.
+5. Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.
+
+Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.
+
+Pairing is a separate step: when the TV asks, approve CYTV with your remote.
+
+Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.
+
+Home is your app screen. Home Helper makes the Home button open it.
+
+After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps. Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.
+
+Desktop CYTV shows preparation one step at a time. Details opens the operation log. LG example images can be enlarged; use the code from your own TV.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Optional Python for Root in v1.1.0
 
@@ -36,7 +68,7 @@ Use the same private data directory for setup; when moving a cache, prepare a fr
 - **macOS 13+:** extract `cytv-macos-arm64.zip` (Apple Silicon) or `cytv-macos-x64.zip` (Intel), move `cytv.app` into Applications and open it. Allow Local Network access. If blocked, use Privacy & Security → Open Anyway only for a trusted project download; do not disable Gatekeeper. Older-system acceptance is not established.
 - **Linux x64:** on Ubuntu 22.04+, Debian 12+ or Mint 21+, open `cytv-linux-x64.deb` in the graphical package installer, install, then open Clean Your TV from the applications menu. Desktop libraries may require Internet access. Linux ARM is not included. The standalone `cytv-linux-x64` executable is the CLI; use the `.deb` for the graphical app.
 
-[Android installer](../../android/README.md): all ten interface languages are available. The top-right control shows the current language; tap it to choose another. Your selection is saved on the phone.
+[Android installer](../../android/README.md): all twelve interface languages are available. The top-right control shows the current language; tap it to choose another. Your selection is saved on the phone.
 
 Android status and recovery keep the selected action visible during connection and show its own progress. Text uses the phone’s system font with larger labels and help text.
 
@@ -59,7 +91,7 @@ Arrows select tiles; OK opens them; hold OK to reorder. Short Back retains the a
 
 **New builds: press Home three times within two seconds**, releasing between presses, to return to LG Home and stop Home control. This preserves preferences. Older No-root Helper versions through 0.6.13 instead use holding Home for about two seconds; holding Home is not the Root emergency gesture.
 
-No-root: open **Home Helper** from LG Apps to resume; opening Home alone does not clear the stop. Root: turn **Change Home** on in Home settings to resume. **Open LG Home** opens LG Home once without changing routing. To restore LG Home as the persistent destination, turn **Change Home** off or run `cytv restore`. Do not run both controllers together. If a failure repeats, leave LG Home active.
+No-root: Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept. Root: turn **Change Home** on in Home settings to resume. **Open LG Home** opens LG Home once without changing routing. To restore LG Home as the persistent destination, turn **Change Home** off or run `cytv restore`. Do not run both controllers together. If a failure repeats, leave LG Home active.
 
 ```sh
 ./cytv --language en status
@@ -135,3 +167,92 @@ In **Home settings → Widgets**, enter your Home Assistant URL and long-lived t
 The header **Widgets** switch shows or hides all widgets and disconnects HA live updates when off. Click it, or from the dock press **Up → Right → OK** (Settings → Widgets); focus returns to the dock. The choice survives restarts and preserves individual widget settings. Now Playing is a compact 2:1 card without playback controls. Use the HA dashboard server’s base URL without `/config/devices/...` or dashboard suffixes, and create the token in **Profile → Security**. A registered HomePod device alone does not confirm the required music metadata.
 
 HA sends live updates over WebSocket after loading the initial state; there is no recurring REST polling. The connection closes while the TV document is hidden or Existing appearance is selected. Temporary failures retry with delays from 1 to 30 seconds; an invalid token requires corrected configuration or a restarted connection. Weather starts off for new installations; an explicit saved enabled choice is kept. The music card shows a Now Playing label, title and artist, without album text.
+
+## New in 1.3.0: guided desktop recovery
+
+New in 1.3.0. After Check TV status, connection diagnostics or Return to LG Home, an unfinished No-root removal offers **Recover and reinstall** for the same TV and connection. Review and explicitly confirm finishing removal (default: No), then review the bundled versions before installation. **Set up my TV** also offers this recovery directly. Returning to LG Home alone does not finish removal. On failure, use **Save diagnostic report…** to save the report from that failed attempt, then attach it to your issue; no terminal is needed. If no report could be created, include the visible error. Keep recovery files; failed or ambiguous operations are not retried automatically. This does not yet establish a fix for the reported G5/firmware 43.21.71 failure (#65).
+
+## New in 1.3.0 — #12
+
+Android Tools keeps the selected TV, edition and SSH port after returning to the start screen; No-root normally uses 9922. If Home settings cannot verify Home control, they show an unknown status and hide Change Home until a valid reply. This does not mean Helper stopped and does not restart it. These changes are not in the published v1.2.0 packages.
+
+Root diagnostics in 1.3.0 (#55): after a failed setup, save the diagnostic report from that attempt. It can include categorized recovery-service startup failures; keep recovery state and retained drivers. This does not yet confirm a fix on OLED Flex.
+
+## Unreleased candidate: Root setup through Homebrew
+
+This source candidate adds the separate **CYTV Installer** app for **Root only**.
+It is not yet published in the Homebrew catalog. cytv keeps No-root and Root on
+Windows, macOS, Linux and Android; existing download links remain published cytv.
+
+Installer requires existing root, Homebrew Channel with root exec, Node.js **8+**
+and working Python **3.9+**. For supported ARMv7/`armv8l` 32-bit userspace it
+embeds a pinned private Python offline. Opening/status is read-only: explicitly
+prepare missing Python, inspect again, then review installation. Runtime setup
+needs **320 MiB free after Installer installation**, plus TV package staging space
+which has not been measured. No new model/firmware compatibility is established.
+
+Setup installs Root Home and Root Updater; System Updater preparation is an
+explicit optional choice. Enable Change Home separately after verification;
+setup never clears emergency/off. Current verified installations share profiles
+and recovery across cytv/TV without reinstall or reset. Unknown older infrastructure
+needs diagnosis; packaged-preference import is only for fresh setup, not browser
+storage or infrastructure migration.
+
+After interruption inspect status first. Continue appears only with the original
+snapshot/lease and proven final readback. Other stages need status, restore or
+diagnosis; the source CLI can explicitly resume additional recognized stages.
+cytv's Finish Root setup does not restart an incomplete worker. Never delete
+journals or blindly retry. Homebrew updates Installer only; existing updaters own
+product updates/signed complete sets. Deleting Installer leaves the product.
+Explicit complete removal restores LG Home and cleans owned startup hooks while
+retaining independent recovery/archive evidence and referenced Python slots.
+All physical checks for this path remain pending; the historical Root 0.2.0 C3
+results above do not validate Homebrew setup.
+
+Startup uses receipt-owned private wrappers that check installed package identity as data. Packaged startup scripts are never executed. Missing or unsafe packages stop automatic rearming; independent recovery can still restore LG Home. Inspection may briefly stage verified files privately without changing Home or the product.
+
+[Candidate setup and recovery (English)](../INSTALL.md#candidate-on-tv-root-installation) ·
+[Pending physical acceptance (English)](../development/HOMEBREW-INSTALL-ACCEPTANCE.md)
+
+
+For this source candidate, an existing Root installation needs checked recovery and fresh setup to receive the corrected private runtime. Updating Installer alone does not replace it. Keep recovery records and enable Home only through the normal setup/settings flow.
+
+Next candidate only: No-root Settings → Developer Mode → Show diagnostics includes safe storage/Home RPC failure categories and the actual service version. Viewing diagnostics does not enable renewal or start Helper. A failed status check does not prove Helper stopped. This does not establish a C5 fix; see [diagnostics (English)](../SETTINGS-DIAGNOSTICS.md).
+
+The report receives remote focus. Up/Down scrolls it; Left/Right or Enter returns to nearby actions, and Back returns to Home settings.
+
+**Unreleased, #82:** when the Home setting is absent, explicit Root setup can initialize it to LG Home and verify the readback before enabling recovery. Status/doctor never writes it. An uncertain write is not repeated; keep recovery data. The explicit LG Home setting remains after removal. This firmware still needs device testing.
+
+## Unreleased candidate: HDMI sound recovery (Root)
+
+Home settings → HDMI sound offers Reconnect eARC and confirmed HDMI-route fallback
+recovery. ARC-only, combined/WOW Orchestra and unknown modes are skipped.
+Recover after power-on is experimental, off by default; it may interrupt healthy
+audio after power-on/standby and requires a supported power subscription. Back can
+close the panel during cleanup. After interruption, check status; restore the saved
+setting only if you want eARC on. Home restoration/emergency stop disables automation
+until explicit enable. Older private runtimes need checked fresh setup. TV compatibility
+and faster audio acquisition remain unconfirmed.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Unreleased: private Python preflight reports ABI, directory safety and free-space failures separately. Initial setup needs 320 MiB free in /var/lib. A large WAM Session Storage may explain low space; clearing it can lose app session state. See the [recovery guide](../RECOVERY.md#private-python-and-low-var-space).
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21).
+
+
+**Unreleased — WAM:** `cytv clean-wam-cache --edition root`. Only cache and codecache are requested. Session Storage, cookies, Local Storage, Service Worker and databases are excluded. Close TV apps first. Cached data will be downloaded or rebuilt; the next app launch may be slower. [WAM](../WAM-CLEANUP.md).
+
+You can cancel and free space yourself. Use the manual cleanup guide and recheck /var/lib; removing apps may free a different partition. **Session Storage (SSH):** Close TV apps first. This deletes app session state and may sign you out or lose unsaved work. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+Unreleased Root cold-start correction: with Home control enabled and LG Power On Screen set to Home, a healthy startup can request Clean once if Live TV or LG Home is still visible. An already visible app is preserved at the final screen check; automatic presentation is not retried. Explicit off and triple-Home stay off. The corrected retained runtime needs checked setup/update; an app-only update is insufficient. Device acceptance remains pending.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Candidate OTA fix (#115): published 1.3.0 cannot apply 1.4.0 through the original System Updater because its allowed file inventory changed. An aborted attempt before replacement is not a partial installation. Preserve its recovery journal; do not retry, clear state or edit the pinned list. The next candidate restores the 1.3.0 path and permission contracts; hardware upgrade and rollback still need coordinated testing.
+
+Unreleased correction (#108/#109): with System Updater prepared, the update dot and Update all use the same edition check. A newer overall release without changed component versions does not offer reinstallation. During a check, installation stays disabled. Legacy checks are used only when System Updater is absent. Device confirmation is pending.
+
+Candidate #110 access correction: the new installer registers a CYTV-owned grant only for Homebrew configuration APIs. For an existing Root setup, run `cytv enable-firmware-access --edition root`, then reopen Root Home and check LG firmware updates. No Homebrew ACL or blocking preference is changed by this command. Retry the same command after interruption. `cytv disable-firmware-access --edition root` revokes access without changing blocking. New runtime builds maintain registration after complete updates; an older retained runtime may need the command again after an app-only update. See the firmware guide for prerequisites, rollback and acceptance limits.
+
+Candidate CLI: redirected Windows output escapes characters unavailable in the selected encoding instead of failing. UTF-8 keeps the localized text. This does not establish Root support on BX/webOS 5.

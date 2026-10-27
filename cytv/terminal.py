@@ -83,6 +83,13 @@ class Console:
     def reader(self, ask):
         return lambda prompt: ask(self.prompt(prompt))
 
+    def report(self, path):
+        self.heading('Diagnostic report')
+        self.raw('  ' + str(path.resolve()))
+
+    def recovery(self, profile):
+        self('Removal is unfinished. Choose Set up my TV to finish removal and reinstall.')
+
 
 def console(write):
     return write if isinstance(write, Console) else Console(write)

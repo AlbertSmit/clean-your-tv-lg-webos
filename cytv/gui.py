@@ -6,10 +6,10 @@ import sys
 import threading
 
 from PySide6.QtCore import QObject, Signal, QUrl, QTimer, Qt
-from PySide6.QtGui import QDesktopServices, QIcon, QFontDatabase, QFont
+from PySide6.QtGui import QDesktopServices, QIcon, QFontDatabase, QFont, QPixmap
 from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout,
                               QLabel, QLineEdit, QMainWindow, QMessageBox, QProgressBar,
-                              QPushButton, QTextBrowser, QVBoxLayout, QWidget, QButtonGroup)
+                              QPushButton, QTextBrowser, QVBoxLayout, QWidget, QButtonGroup, QDialog)
 
 from cytv import __version__, cli, diagnostics, i18n
 from cytv.i18n import translate as tr
@@ -23,6 +23,7 @@ MAINTENANCE_ACTIONS = (
     ('Uninstall Clean Your TV', 'uninstall'),
     ('Home button diagnostics', 'home-diagnostics'),
     ('Enable updates for all TV components (root required)', 'enable-system-updates'),
+    ('Clear WAM caches (root required)', 'clean-wam-cache'),
 )
 
 
@@ -37,12 +38,15 @@ class Wizard(QMainWindow):
         self.run = run
         self.running = False
         self.pending = None
+        self.preparation = []
+        self.collect_preparation = False
         self.report = None
+        self.recovery_profile = None
         self.worker = None
         self.setWindowTitle('Clean Your TV')
         self.resize(1060, 820)
         self.setMinimumSize(900, 680)
-        self.setStyleSheet(STYLE)
+        self.apply_language_font()
         self.current_step = 0
         self.command = 'install'
         self.events = Events()
@@ -134,6 +138,8 @@ class Wizard(QMainWindow):
         layout.addWidget(self.preview)
         self.content = QTextBrowser()
         self.content.setOpenExternalLinks(False)
+        self.content.setOpenLinks(False)
+        self.content.anchorClicked.connect(lambda url: self.show_reference(url.path()) if url.scheme() == 'guide' else None)
         self.content.setFrameShape(QFrame.Shape.NoFrame)
         self.content.document().setDefaultStyleSheet(
             'p { margin-top: 6px; margin-bottom: 12px; line-height: 140%; } '
@@ -151,6 +157,17 @@ class Wizard(QMainWindow):
         self.form_layout.setContentsMargins(16, 16, 16, 16)
         self.form_layout.setSpacing(10)
         layout.addWidget(self.form)
+        self.details_toggle = QPushButton()
+        self.details_toggle.setCheckable(True)
+        self.details_toggle.setObjectName('detailsToggle')
+        self.details_toggle.setMinimumHeight(36)
+        self.details_toggle.toggled.connect(self.toggle_details)
+        layout.addWidget(self.details_toggle)
+        self.details = QTextBrowser()
+        self.details.setOpenExternalLinks(False)
+        self.details.setMaximumHeight(150)
+        self.details.setAccessibleName(tr('Details'))
+        layout.addWidget(self.details)
         footer = QHBoxLayout()
         footer.addStretch()
         self.cancel = QPushButton(tr('Close'))
@@ -166,6 +183,13 @@ class Wizard(QMainWindow):
         if hasattr(self, 'preview'):
             self.preview.setFixedHeight(144 if self.height() < 760 else 206)
 
+    def apply_language_font(self):
+        family = {'zh-Hans': 'Noto Sans SC', 'zh-Hant': 'Noto Sans TC'}.get(i18n.resolved_language())
+        # Keep the existing typography for other languages and use the script's
+        # packaged outlines ahead of system CJK fallback for Chinese.
+        style = STYLE.replace('font-family: ', 'font-family: "' + family + '", ', 1) if family else STYLE
+        self.setStyleSheet(style)
+
     def change_language(self):
         if self.running:
             return
@@ -178,6 +202,7 @@ class Wizard(QMainWindow):
             self.language.blockSignals(False)
             self.error_dialog('Could not save language preference', 'Check write access to the application data folder and try again.')
             return
+        self.apply_language_font()
         self.language.setAccessibleName(tr('Language'))
         self.language.setItemText(0, tr('Auto'))
         self.cancel.setText(tr('Close'))
@@ -231,6 +256,10 @@ class Wizard(QMainWindow):
         dialog.exec()
 
     def home(self):
+        self.recovery_profile = None
+        self.preparation = []
+        self.collect_preparation = False
+        self.reset_details()
         self.clear_form()
         self.preview.show()
         self.subtitle.show()
@@ -259,6 +288,9 @@ class Wizard(QMainWindow):
         actions.setAccessibleName(tr('Maintenance action'))
         for label, command in MAINTENANCE_ACTIONS:
             actions.addItem(tr(label), command)
+        help_text = QLabel(tr('Check TV status shows what is installed. Return to LG Home restores the standard screen. Uninstall Clean Your TV removes the CYTV apps.'))
+        help_text.setWordWrap(True)
+        maintenance_layout.addWidget(help_text)
         maintenance_layout.addWidget(actions)
         execute = QPushButton(tr('Run selected maintenance action'))
         execute.setMinimumHeight(44)
@@ -272,7 +304,86 @@ class Wizard(QMainWindow):
         self.maintenance.setVisible(expanded)
         self.maintenance_toggle.setText(tr('Maintenance action') + ('  ▾' if expanded else '  ▸'))
 
-    def start(self, command):
+    def toggle_details(self, expanded):
+        self.details.setVisible(expanded)
+        self.details_toggle.setText(tr('Details') + ('  ▾' if expanded else '  ▸'))
+
+    def reset_details(self):
+        self.details.clear()
+        self.details_toggle.setChecked(False)
+        self.toggle_details(False)
+        self.details_toggle.hide()
+
+    def guide_path(self, name):
+        if name not in ('sign-in', 'dev-mode', 'key-server'):
+            return None
+        for directory in (cli.payload_dir() / 'setup-guide',
+                          Path(__file__).resolve().parents[1] / 'android/app/src/main/assets/ui/guide'):
+            path = directory / (name + '.png')
+            if path.is_file():
+                return path
+        return None
+
+    def show_reference(self, name):
+        path = self.guide_path(name)
+        if path is None:
+            return
+        dialog = QDialog(self)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.setWindowTitle(tr('Example from LG'))
+        layout = QVBoxLayout(dialog)
+        picture = QLabel()
+        picture.setAccessibleName(tr('Example from LG'))
+        picture.setPixmap(QPixmap(str(path)).scaled(760, 430, Qt.AspectRatioMode.KeepAspectRatio,
+                                                   Qt.TransformationMode.SmoothTransformation))
+        picture.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(picture)
+        caption = QLabel(tr('Example from LG. The screen may look different on your TV. Use the code shown on your own TV.'))
+        caption.setWordWrap(True)
+        layout.addWidget(caption)
+        close = QPushButton(tr('Close'))
+        close.clicked.connect(dialog.close)
+        layout.addWidget(close)
+        dialog.open()
+
+    def instruction_card(self, title, messages, image=None):
+        paragraphs = ''.join('<p style="margin-top: 4px; margin-bottom: 0; line-height: 125%">' + html.escape(tr(text)).replace('\n', '<br>') + '</p>' for text in messages)
+        path = self.guide_path(image)
+        if path is not None:
+            picture = QPixmap(str(path))
+            width = 240
+            height = round(width * picture.height() / max(1, picture.width()))
+            paragraphs = ('<table width="100%" cellpadding="6"><tr><td valign="top" width="250">'
+                          '<a href="guide:' + image + '"><img src="' + QUrl.fromLocalFile(str(path)).toString() +
+                          f'" width="{width}" height="{height}" alt="' + html.escape(tr('Example from LG')) + '"></a><p style="font-size: 13px">' +
+                          html.escape(tr('Example from LG')) + ' · <a style="color: #d6c5ae" href="guide:' + image + '">' +
+                          html.escape(tr('Enlarge')) + '</a></p></td><td valign="top">' + paragraphs + '</td></tr></table>')
+        return ('<table width="100%" cellspacing="0" cellpadding="12" '
+                'style="background-color: #272521; border: 1px solid #51483e"><tr><td>'
+                '<h3 style="color: #f3ede3; margin-top: 0; margin-bottom: 6px">' + html.escape(tr(title)) + '</h3>' + paragraphs + '</td></tr></table>')
+
+    def show_preparation(self, index, prompt):
+        if index == len(self.preparation):
+            self.preparation = []
+            self.content.setHtml(self.review_content)
+            self.title.setText(self.review_title)
+            self.badge.setText(tr('Step 4 of 4'))
+            self.update_steps(4)
+            self.show_prompt(prompt)
+            return
+        self.clear_form()
+        self.title.setText(tr('Prepare the TV connection'))
+        self.badge.setText(tr('Step 3 of 4') + f' · {index + 1} / {len(self.preparation)}')
+        self.update_steps(3)
+        title, messages = self.preparation[index]
+        image = {'1. Developer Mode': 'sign-in', '2. Dev Mode Status': 'dev-mode',
+                 '3. Key Server': 'key-server'}.get(title)
+        self.content.setHtml(self.instruction_card(title, messages, image))
+        if index:
+            self.button('Back', lambda: self.show_preparation(index - 1, prompt))
+        self.button('Continue', lambda: self.show_preparation(index + 1, prompt), True).setFocus()
+
+    def start(self, command, profile=None):
         if self.running:
             return
         self.running = True
@@ -284,11 +395,14 @@ class Wizard(QMainWindow):
         self.steps.setVisible(command == 'install')
         self.update_steps(1)
         self.badge.setText(tr('Connecting to your TV' if command == 'install' else 'Maintenance action'))
-        if command != 'install':
-            self.rail_title.setText(tr(self.operation_title))
+        self.rail_title.setText(tr(self.operation_title))
         self.language.setEnabled(False)
         self.report = None
+        self.recovery_profile = None
         self.pending = None
+        self.preparation = []
+        self.collect_preparation = False
+        self.reset_details()
         self.content.clear()
         self.clear_form()
         self.title.setText(tr('Connecting to your TV' if command == 'install' else self.operation_title))
@@ -300,6 +414,9 @@ class Wizard(QMainWindow):
         def work():
             try:
                 args = [command, '--report'] if command == 'doctor' else [command]
+                if profile:
+                    args += ['--host', profile['host'], '--edition', profile['edition'],
+                             '--port', str(profile['port']), '--no-discovery']
                 args += ['--language', i18n.language_choice()]
                 code = self.run(args, ask=self.channel.ask, secret=self.channel.secret, write=self.channel.console)
             except Exception:
@@ -315,6 +432,10 @@ class Wizard(QMainWindow):
     def receive(self, kind, value):
         if kind == 'step':
             number, title, clear = value
+            self.collect_preparation = number == 3
+            if self.collect_preparation:
+                self.preparation = []
+            self.details.append(html.escape(tr(title)))
             if self.command == 'install':
                 self.title.setText(tr(title))
                 self.subtitle.hide()
@@ -325,18 +446,27 @@ class Wizard(QMainWindow):
                 self.subtitle.setText(tr(title))
                 self.subtitle.show()
                 self.badge.setText(tr('Maintenance action'))
-            if clear:
-                self.content.clear()
+            self.content.clear()
         elif kind in ('text', 'heading', 'error', 'error-heading'):
             text = tr(value)
-            if kind == 'text' and text.endswith('.json') and 'diagnostic-' in text:
-                path = Path(text.strip())
-                if path.is_file():
-                    self.report = path
             tag = 'h3' if kind in ('heading', 'error-heading') else 'p'
             color = '#ff6b6b' if kind.startswith('error') else '#f3ede3' if kind == 'heading' else '#c0b5a5'
             style = f' style="color: {color}"'
-            self.content.append(f'<{tag}{style}>' + html.escape(text).replace('\n', '<br>') + f'</{tag}>')
+            markup = f'<{tag}{style}>' + html.escape(text).replace('\n', '<br>') + f'</{tag}>'
+            self.content.append(markup)
+            self.details.append(markup)
+            self.details_toggle.show()
+            if self.collect_preparation:
+                if kind == 'heading':
+                    self.preparation.append((value, []))
+                elif kind == 'text' and self.preparation:
+                    self.preparation[-1][1].append(value)
+        elif kind == 'report':
+            path = Path(value)
+            if path.is_file():
+                self.report = path
+        elif kind == 'recovery':
+            self.recovery_profile = dict(value)
         elif kind == 'prompt':
             self.show_prompt(value)
         elif kind == 'done':
@@ -356,26 +486,63 @@ class Wizard(QMainWindow):
             if self.command == 'install':
                 self.update_steps(self.current_step, value)
             self.content.moveCursor(self.content.textCursor().MoveOperation.End)
+            failed = value not in (0, 130)
+            recover = value == 0 and self.recovery_profile is not None
+            if recover:
+                profile = dict(self.recovery_profile)
+                self.title.setText(tr('Recovery available'))
+                self.badge.setText(self.title.text())
+                self.subtitle.setText(tr('Restore LG Home, finish removal and reinstall. You will review each step before changes.'))
+                self.button('Recover and reinstall', lambda: self.start('install', profile), True)
             if self.report:
-                self.button('Save diagnostic report…', self.save_report)
-            if value not in (0, 130):
+                self.button('Save diagnostic report…', self.save_report, failed)
+                if failed:
+                    self.subtitle.setText(tr('Save the report from this failed attempt and attach it to your issue. Recovery data has been kept.'))
+            elif failed:
+                self.subtitle.setText(tr('A diagnostic report could not be created. Include the visible error when opening an issue.'))
+            if failed:
                 self.button('Open an issue', lambda: QDesktopServices.openUrl(QUrl(diagnostics.ISSUE_URL)))
-            self.button('Back to start', self.home, True)
+            self.button('Back to start', self.home, not recover and not (failed and self.report))
 
     def show_prompt(self, prompt):
         self.pending = prompt
         self.progress.hide()
         self.cancel.setEnabled(True)
         self.clear_form()
-        label = QLabel(tr('Connection check' if self.command != 'install' and prompt.label.startswith('Edition [') else prompt.title))
+        self.details_toggle.setChecked(False)
+        if (self.preparation and self.preparation[0][0] == '1. Developer Mode'
+                and prompt.label.startswith('Connect to check installed versions?')):
+            self.review_title = self.title.text()
+            self.review_content = self.content.toHtml()
+            self.show_preparation(0, prompt)
+            return
+        if prompt.secret:
+            developer = prompt.label.startswith('Developer Mode')
+            title = 'Developer Mode code (Passphrase)' if developer else prompt.title
+            self.title.setText(tr(title))
+            self.subtitle.hide()
+            if developer:
+                cards = [self.instruction_card('Where to find the code', [
+                    'Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.'], 'key-server'),
+                    self.instruction_card('Important', [
+                    'Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.'])]
+            else:
+                help_text = ('Enter the passphrase that unlocks your private SSH key file.' if prompt.label.startswith('SSH key')
+                             else 'Enter your existing TV root SSH password. This was set when SSH access was configured.')
+                cards = [self.instruction_card(title, [help_text])]
+            self.content.setHtml('<p style="margin-bottom: 16px"></p>'.join(cards))
+        label = QLabel(tr('Connection check' if self.command != 'install' and prompt.label.startswith('Edition [') else 'Developer Mode code (Passphrase)' if prompt.secret and prompt.label.startswith('Developer Mode') else prompt.title))
         label.setWordWrap(True)
         label.setObjectName('promptTitle')
         self.form_layout.addWidget(label)
         if prompt.kind == 'confirm':
-            yes = self.button('Connect and remember' if prompt.label.startswith('Connect') else 'Continue', lambda: self.submit('y'), prompt.default == 'y')
+            trust_prompt = prompt.label.startswith('Connect and remember this TV?')
+            label = ('Recover and reinstall' if prompt.label.startswith('Finish removal before installing again?')
+                     else 'Connect and remember' if trust_prompt else 'Continue')
+            yes = self.button(label, lambda: self.submit('y'), prompt.default == 'y')
             no = self.button('No, go back / cancel this operation', lambda: self.submit('n'), prompt.default == 'n')
             (yes if prompt.default == 'y' else no).setFocus()
-            if prompt.label.startswith('Connect'):
+            if trust_prompt:
                 self.button('Connection details', lambda: self.submit('?'))
         elif prompt.kind == 'choice' and prompt.label.startswith('Edition'):
             options = QWidget()
@@ -413,7 +580,7 @@ class Wizard(QMainWindow):
             self.button('TV is on — check again', lambda: self.submit(''), True).setFocus()
         else:
             entry = QLineEdit()
-            entry.setAccessibleName(tr(prompt.title))
+            entry.setAccessibleName(label.text())
             label.setBuddy(entry)
             if prompt.secret:
                 entry.setEchoMode(QLineEdit.EchoMode.Password)
@@ -440,6 +607,9 @@ class Wizard(QMainWindow):
     def submit(self, value):
         if not self.pending:
             return
+        if self.pending.secret:
+            self.content.clear()
+            self.title.setText(tr('Connecting to your TV'))
         self.pending = None
         self.clear_form()
         self.cancel.setEnabled(False)

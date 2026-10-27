@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Device-side recovery provisioning. Never changes Home or upstream Homebrew files."""
+"""Recovery provisioning; may initialize an absent Home override to verified LG Home."""
 import argparse
 import hashlib
 import fcntl
@@ -18,7 +18,7 @@ STATE = Path('/var/lib/clean-your-tv-root')
 BASE = Path('/var/luna-service2-dev')
 PRIVATE_SERVICE = STATE/'service'
 RUNNER = STATE/'run-recovery-service'
-PRIVATE_FILES = ('service.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
+PRIVATE_FILES = ('service.js','startup-diagnostics.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
 SYSTEM_FILES = tuple(Path(x) for x in ('/usr/bin/node','/usr/palm/services/jsservicelauncher/bootstrap-node.js','/usr/palm/services/jsservicelauncher/bootstrap.js'))
 RUNTIME = STATE / 'runtime'
 FILES = {'service': BASE/'services.d'/(NAME+'.service'),
@@ -63,7 +63,7 @@ def runner_bytes():
     return ('#!/bin/sh\nset -eu\n[ "$#" -eq 0 ] || exit 2\n'
             'cd '+str(PRIVATE_SERVICE)+'\n'
             'export NODE_PATH=/usr/palm/frameworks:/usr/lib/nodejs:/usr/lib/node_modules\n'
-            'exec /usr/bin/node /usr/palm/services/jsservicelauncher/bootstrap-node.js -- '
+            'exec /usr/bin/node --require '+str(PRIVATE_SERVICE/'startup-diagnostics.js')+' /usr/palm/services/jsservicelauncher/bootstrap-node.js -- '
             +str(STATE/'bootstrap.pid')+' /var/palm/ls2-dev '+str(PRIVATE_SERVICE)+'\n').encode()
 
 def prepare_private_service():
@@ -111,7 +111,7 @@ def manifest():
     if b'/var/lib/clean-your-tv-root/runtime/cli.py boot' not in secure(callback):
         raise ValueError('Unexpected boot callback')
     verify_binding(STATE)
-    binding = [STATE/name for name in ('python_binding.py','python_boot.js','python-launcher','python-runtime.json') if os.path.lexists(STATE/name)]
+    binding = [STATE/name for name in ('python_binding.py','python_boot.js','package_data.py','package_identity.py','startup_guard.py','updater/store.py','updater/package.py','python-launcher','python-runtime.json') if os.path.lexists(STATE/name)]
     paths = binding + [RUNNER] + [PRIVATE_SERVICE/name for name in PRIVATE_FILES] + sorted(RUNTIME.glob('*.py'))
     if RUNTIME/'cli.py' not in paths: raise ValueError('Missing runtime')
     return {'version':1,'mode':'recovery-only','boot_callback':str(callback),
@@ -140,7 +140,7 @@ def apply():
         os.chown(path,saved['files'][str(path)]['uid'],saved['files'][str(path)]['gid'])
     return {'returnValue':True,'next':'Refresh LS2 registration, then finalize. Trials remain disabled.'}
 
-def repair_pending():
+def repair_pending(allow_original=False):
     """Upgrade only incomplete recovery provisioning, never an active trial."""
     if os.path.lexists(STATE/'recovery-provision.json') or os.path.lexists(STATE/'profile-trial.json'):
         raise ValueError('Only never-activated provisioning may be repaired')
@@ -152,7 +152,7 @@ def repair_pending():
     updated=plan(original)
     for key,file in FILES.items():
         entry=saved['files'][str(file)]
-        if sha(entry['original'].encode())!=entry['original_sha256'] or sha(secure(file)) not in (entry['installed_sha256'],entry.get('previous_installed_sha256')):
+        if sha(entry['original'].encode())!=entry['original_sha256'] or sha(secure(file)) not in (entry['installed_sha256'],entry.get('previous_installed_sha256'),entry['original_sha256'] if allow_original else None):
             raise ValueError('Pending provision drift')
         newhash=sha(updated[key])
         if newhash!=entry['installed_sha256']:
@@ -160,42 +160,104 @@ def repair_pending():
             entry['previous_installed_sha256']=entry['installed_sha256']
             entry['installed_sha256']=newhash
     write(path,encoded(saved))
+    if allow_original:write(STATE/'recovery-provision.pending.json',encoded(manifest()))
     for key,file in FILES.items():
         entry=saved['files'][str(file)]
         write(file,updated[key],entry['mode']);os.chown(file,entry['uid'],entry['gid'])
     return {'returnValue':True,'repaired_pending':True}
 
 
+def resume_pending():
+    return repair_pending(allow_original=True)
+
+
+class RecoveryRPCError(ValueError):
+    def __init__(self, reason, code=None):
+        super().__init__('Recovery RPC failed: '+reason)
+        self.details = {'reason': reason}
+        if type(code) is int and -(2**31) <= code < 2**31:
+            self.details['luna_error_code'] = code
+
+
+def startup_record():
+    try:
+        path = STATE/'recovery-service.json'
+        if path.lstat().st_size > 32768: return None
+        value = json.loads(secure(path))
+        return value if isinstance(value, dict) and value.get('schema') == 1 else None
+    except (OSError, ValueError):
+        return None
+
+
 def rpc(method):
     if method in ('register','unregister'):
         import activity
         return activity.manage(method,secure,write)
-    if method not in ('status','register','restore','unregister'):
+    home_calls = {
+        'home-read': ('com.webos.settingsservice/getSystemSettings', {'category':'general','keys':['defaultApps']}),
+        'home-profiles': ('com.webos.service.systemprofile/getProfiles', {'names':['defaultApps','idleApp'],'subscribe':False}),
+        'home-stock': ('com.webos.service.applicationmanager/setDefaultApp', {'category':'home','appId':'com.webos.app.home'}),
+    }
+    if method not in ('status','restore') and method not in home_calls:
         raise ValueError('Unsupported recovery method')
-    uri = 'luna://'+NAME+'/'+method
-    process = subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,'{}'],
-                               stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    uri, payload = home_calls.get(method, (NAME+'/'+method, {}))
+    uri = 'luna://'+uri
+    try:
+        process = subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,json.dumps(payload)],
+                                   stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    except OSError as error:
+        raise RecoveryRPCError('client-start-failed') from error
     try:
         # This TV exits luna-send early if stdin closes before its first reply.
-        deadline = time.monotonic()+(610 if method == 'restore' else 45)
-        data = b''
+        deadline = time.monotonic()+(610 if method == 'restore' else 5 if method in home_calls else 45)
+        data, total = b'', 0
+        streams = [process.stdout, process.stderr]
         while time.monotonic() < deadline:
-            if not select.select([process.stdout],[],[],max(0,deadline-time.monotonic()))[0]: break
-            chunk = os.read(process.stdout.fileno(),4096)
-            if not chunk: break
-            data += chunk
-            if len(data) > 65536: raise ValueError('Oversized recovery reply')
-            try: reply = json.loads(data)
-            except ValueError: continue
-            if not isinstance(reply,dict) or reply.get('returnValue') is not True:
-                raise ValueError('Service '+method+' failed')
-            return reply
-        raise TimeoutError('Recovery service did not reply: '+method)
+            ready = select.select(streams, [], [], max(0, deadline-time.monotonic()))[0]
+            if not ready: break
+            for stream in ready:
+                chunk = os.read(stream.fileno(), 4096)
+                if not chunk:
+                    if stream is process.stdout:
+                        reason = 'invalid-reply' if data else 'client-exited'
+                        raise RecoveryRPCError(reason)
+                    streams.remove(stream)
+                    continue
+                total += len(chunk)
+                if total > 65536: raise RecoveryRPCError('oversized-client-output')
+                if stream is process.stderr: continue  # Drain, but never export raw errors.
+                data += chunk
+                try: reply = json.loads(data)
+                except ValueError: continue
+                if not isinstance(reply,dict) or type(reply.get('returnValue')) is not bool:
+                    raise RecoveryRPCError('invalid-reply')
+                if reply['returnValue'] is False:
+                    error = RecoveryRPCError('negative-reply', reply.get('errorCode'))
+                    text = reply.get('errorText')
+                    text = text[:1024].lower() if isinstance(text, str) else ''
+                    for category, phrases in (('permission-denied', ('denied methods call', 'permission denied', 'access denied')),
+                                              ('service-missing', ('service does not exist', 'service is not registered')),
+                                              ('method-missing', ('unknown method', 'method does not exist'))):
+                        if any(phrase in text for phrase in phrases):
+                            error.details['luna_reason'] = category
+                            break
+                    raise error
+                return reply
+        reason = 'client-exited' if process.poll() is not None else 'timeout'
+        raise RecoveryRPCError(reason)
+    except RecoveryRPCError as error:
+        code = process.poll()  # Before cleanup, so our terminate() is not reported as the cause.
+        if type(code) is int and 0 <= code <= 255: error.details['client_exit_status'] = code
+        raise
     finally:
         if process.poll() is None: process.terminate()
-        try: process.communicate(timeout=1)
+        # Never re-buffer arbitrary output through communicate() during cleanup.
+        for stream in (process.stdin, process.stdout, process.stderr):
+            try: stream.close()
+            except OSError: pass
+        try: process.wait(timeout=1)
         except subprocess.TimeoutExpired:
-            process.kill(); process.communicate()
+            process.kill(); process.wait(timeout=1)
 
 def refresh():
     executable = next((path for path in (Path('/usr/bin/ls-control'),Path('/usr/sbin/ls-control')) if path.is_file()),None)
@@ -204,19 +266,115 @@ def refresh():
                    stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     return {'returnValue':True,'operation':'scan-services','effective_registration_verified':False}
 
+
+def prepare_stock_home():
+    """Setup only: materialize an absent override, never infer a SAM readback.
+
+    A submitted write is reconciled by observation, never repeated. The explicit
+    stock override remains after removal; it selects the same original LG Home.
+    """
+    stock = 'com.webos.app.home'
+    receipt = STATE/'stock-home-initialization.json'
+    def settings():
+        reply = rpc('home-read')
+        try: value = reply['settings']['defaultApps']
+        except (KeyError, TypeError) as error: raise ValueError('Incomplete Home settings readback') from error
+        if (not isinstance(value,dict) or ('home' in value and
+                (not isinstance(value['home'],str) or not value['home'] or value['home'].strip()!=value['home']))):
+            raise ValueError('Invalid Home settings readback')
+        return value
+
+    current = settings()
+    has_receipt = os.path.lexists(receipt)
+    pending = json.loads(secure(receipt)) if has_receipt else None
+    if has_receipt and (
+            not isinstance(pending,dict) or set(pending) != {'schema','phase','defaultApps','profiles'}
+            or type(pending['schema']) is not int or pending['schema'] != 1
+            or pending['phase'] not in ('submitted','verified')
+            or not isinstance(pending['defaultApps'],dict) or 'home' in pending['defaultApps']):
+        raise ValueError('Invalid stock Home initialization evidence; keep recovery data')
+    if pending is None and 'home' in current: return
+    # Even a dangling marker is ambiguous. Never alter established recovery or
+    # an existing routing transaction to retrofit support onto retained code.
+    blocked = [STATE/name for name in ('recovery-provision.json','profile-trial.json',
+               'persistent-intent.json','persistent-binding.json','profile-candidate.stage')]
+    blocked.append(Path('/var/webos-profile/override/clean-your-tv-root.json'))
+    if pending is None and any(os.path.lexists(path) for path in blocked):
+        raise ValueError('Home initialization requires never-activated provisioning')
+    try:
+        profiles = rpc('home-profiles')['profiles']
+        if (profiles['defaultApps']['categories']['home'] != stock
+                or profiles['idleApp']['appId'] != stock or profiles['idleApp']['support'] is not True):
+            raise ValueError('Home initialization requires stock profiles')
+    except (KeyError, TypeError) as error:
+        raise ValueError('Incomplete stock profiles') from error
+    if pending is None:
+        pending = {'schema':1,'phase':'submitted','defaultApps':current,'profiles':profiles}
+        write(receipt,encoded(pending))  # Durable intent before the only write.
+        try: rpc('home-stock')
+        except RecoveryRPCError: pass  # A missing reply is not proof of failure.
+        current = settings()
+        profiles = rpc('home-profiles')['profiles']
+    if current != dict(pending['defaultApps'],home=stock) or profiles != pending['profiles']:
+        raise ValueError('Stock Home initialization unconfirmed; keep recovery data, do not replay')
+    if pending['phase'] != 'verified': write(receipt,encoded(dict(pending,phase='verified')))
+
+
+def register_firmware_access():
+    from python_binding import command
+    reply=subprocess.run([command(STATE),str(RUNTIME/'cli.py'),'provision-firmware-access'],check=True,timeout=30,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    envelope=json.loads(reply.stdout)
+    result=envelope.get('result') if isinstance(envelope,dict) and envelope.get('returnValue') is True else None
+    return isinstance(result,dict) and result.get('returnValue') is True and result.get('permissions_installed') is True
+
+
 def finalize():
-    expected = json.loads(secure(STATE/'recovery-provision.pending.json'))
-    if manifest() != expected: raise ValueError('Runtime changed since provisioning')
-    reply = rpc('status')
-    if reply.get('root') is not True:
-        raise ValueError('Recovery callback process is not root')
-    reply = rpc('register')
-    if reply.get('root') is not True or reply.get('registered') is not True or reply.get('activityName') != NAME+'.recovery':
-        raise ValueError('Recovery activity not verified')
-    import startup_hook
-    startup_hook.install(secure,write)
-    write(STATE/'recovery-provision.json',encoded(expected))
-    return {'returnValue':True,'mode':'recovery-only','activity':reply}
+    before = startup_record()
+    phase = 'manifest'
+    try:
+        expected = json.loads(secure(STATE/'recovery-provision.pending.json'))
+        if manifest() != expected: raise ValueError('Runtime changed since provisioning')
+        phase = 'stock-home'
+        prepare_stock_home()
+        phase = 'status'
+        reply = rpc('status')
+        if reply.get('root') is not True:
+            raise ValueError('Recovery callback process is not root')
+        phase = 'register'
+        reply = rpc('register')
+        if reply.get('root') is not True or reply.get('registered') is not True or reply.get('activityName') != NAME+'.recovery':
+            raise ValueError('Recovery activity not verified')
+        phase = 'startup-hook'
+        import startup_hook
+        startup_hook.install(secure,write)
+        phase = 'publish'
+        write(STATE/'recovery-provision.json',encoded(expected))
+        phase = 'firmware-permissions'
+        try: firmware_ready=register_firmware_access()
+        except Exception: firmware_ready=False  # Optional settings must not block core Home/recovery setup.
+        return {'returnValue':True,'mode':'recovery-only','activity':reply,'firmware_permissions_registered':bool(firmware_ready)}
+    except Exception as error:
+        report = {'schema':1, 'phase':phase, 'reason':'failed'}
+        attempt = os.environ.get('CYTV_ROOT_INSTALL_ATTEMPT', '')
+        import re
+        if re.fullmatch('[a-f0-9]{32}', attempt): report['attempt'] = attempt
+        if isinstance(error, RecoveryRPCError): report.update(error.details)
+        after = startup_record()
+        report['startup_state'] = 'unavailable' if after is None else 'stale'
+        if after is not None and after != before and after.get('phase') in ('starting','exited'):
+            report['startup_state'] = after['phase']
+            code = after.get('exit_status')
+            if type(code) is int and 0 <= code <= 255: report['startup_exit_status'] = code
+            exception = after.get('exception', {})
+            if isinstance(exception, dict):
+                if exception.get('name') in ('Error','TypeError','SyntaxError','ReferenceError','RangeError'):
+                    report['exception_name'] = exception['name']
+                if exception.get('code') in ('MODULE_NOT_FOUND','ERR_DLOPEN_FAILED','EACCES','EPERM','ENOENT'):
+                    report['exception_code'] = exception['code']
+        try: write(STATE/'recovery-failure.json',encoded(report))
+        except (OSError, ValueError): pass
+        raise
+
 
 def disable_trials():
     # Serialize readiness revocation with the runtime's trial publication lock.
@@ -283,7 +441,7 @@ def rollback():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback','repair_pending'])
+    parser.add_argument('command', choices=['plan','apply','refresh','finalize','rollback','repair_pending','resume_pending'])
     command = parser.parse_args().command
     if os.geteuid() != 0 and command != 'plan': raise ValueError('Root required')
     if command == 'plan':

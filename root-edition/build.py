@@ -17,26 +17,13 @@ from cytv.package import IPK_MTIME
 
 SERVICE_ID = 'com.cleanyourtv.root.preview.service'
 SERVICE_SOURCE = Path(__file__).resolve().parent / 'service'
-SERVICE_FILES = ('service.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json')
+SERVICE_FILES = ('service.js','startup-diagnostics.js', 'app-inventory.js', 'handlers.js', 'services.json', 'package.json', 'boot-recover.sh', 'activity.json')
 
 
 def tgz(files, executables=()):
-    """Create a reproducible archive containing regular relative files only."""
-    buffer = io.BytesIO()
-    with tarfile.open(fileobj=buffer, mode='w', format=tarfile.USTAR_FORMAT) as archive:
-        for name, data in sorted(files.items()):
-            if (not name or name.startswith('/') or '\\' in name or '\x00' in name
-                    or any(part in ('', '.', '..') for part in name.split('/'))):
-                raise ValueError('Unsafe archive path: ' + repr(name))
-            member = tarfile.TarInfo(name)
-            member.mtime = IPK_MTIME
-            member.size = len(data)
-            member.mode = 0o755 if name in executables else 0o644
-            archive.addfile(member, io.BytesIO(data))
-    compressed = io.BytesIO()
-    with gzip.GzipFile(fileobj=compressed, mode='wb', filename='', mtime=0) as stream:
-        stream.write(buffer.getvalue())
-    return compressed.getvalue()
+    """Secure owned package leaves, without chmod records for platform containers."""
+    from cytv.package import tgz as package_tgz
+    return package_tgz(files, executable=executables)
 
 
 def ar(parts):
@@ -67,6 +54,8 @@ def build(output, version='0.0.1'):
         if SERVICE_SOURCE.is_symlink() or path.is_symlink() or not path.is_file():
             raise ValueError('Missing or indirect service source: ' + service_file)
         payload[service_prefix + service_file] = path.read_bytes()
+    from startup_hook import packaged_content
+    payload['usr/palm/applications/'+app_id+'/startup.sh']=packaged_content(app_id)
     service_info = json.loads(payload[service_prefix + 'services.json'])
     service_package = json.loads(payload[service_prefix + 'package.json'])
     if (service_info.get('id') != SERVICE_ID
@@ -81,12 +70,13 @@ def build(output, version='0.0.1'):
                'Architecture: all\nMaintainer: Clean Your TV\n'
                'Description: Isolated Root Edition hardware-test candidate\n').encode()
     package = ar({'debian-binary': b'2.0\n', 'control.tar.gz': tgz({'control': control}),
-                  'data.tar.gz': tgz(payload, {service_prefix + 'boot-recover.sh'})})
+                  'data.tar.gz': tgz(payload, {service_prefix + 'boot-recover.sh', 'usr/palm/applications/'+app_id+'/startup.sh'})})
     name = app_id + '_' + version + '_all.ipk'
     release = {
         'application_id': app_id, 'version': version,
         'hardware_validated': False, 'public_release_ready': False,
         'activates_system_home': False,
+        'runtime_layout': 'inline-audio-v1',
         'inventory': 'empty; configure locally for the later hardware test',
         'files': {name: hashlib.sha256(data).hexdigest() for name, data in sorted(payload.items())},
     }

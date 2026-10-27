@@ -1,34 +1,42 @@
 {
   "schema": 1,
-  "version": "1.2.0",
+  "version": null,
   "changes": [
     {
-      "pr": 60,
+      "pr": 118,
       "issues": [
-        59
+        115
       ],
-      "summary": "Allow confirmed Helper start when firmware denies status"
+      "summary": "Restore the original v1.3.0 Root OTA path/LS2 contract, guarded retained rollback and signed computer recovery; physical signed upgrade/rollback acceptance pending"
     },
     {
-      "pr": 61,
+      "pr": 119,
       "issues": [
-        55
+        108,
+        109
       ],
-      "summary": "Validate Root migration early and recover pre-provision removal; OLED Flex recovery-service startup remains unresolved"
+      "summary": "Suppress same-component-version update offers and align settings badges with the edition-specific System Updater; physical-TV confirmation pending"
     },
     {
-      "pr": 62,
+      "pr": 120,
       "issues": [
-        51
+        110
       ],
-      "summary": "Retain safe Luna rejection metadata in installer diagnostics; UN70006LA installation refusal remains unresolved"
+      "summary": "Restore Root Home access to Homebrew configuration APIs and localized diagnostics; C3 switch accepted, effective blocking after TV restart and full lifecycle acceptance pending"
     },
     {
-      "pr": 63,
+      "pr": 121,
+      "issues": [
+        107
+      ],
+      "summary": "Preserve LF in Windows-built POSIX payload scripts and prevent redirected legacy-console encoding crashes; partial #107, BX routing/recovery remains unresolved"
+    },
+    {
+      "pr": 122,
       "issues": [],
-      "summary": "Add Root control for LG firmware update blocking"
+      "summary": "Correct published 1.4.0 README metadata and Android download labeling; enforce stable release links/component versions in candidate policy and required README CI checks"
     }
   ],
   "excluded": [],
-  "acceptance": "2026-10-25: maintainer confirmed LG OLED55C3RLA / firmware 43.21.71 and reported all checks normal after Home/Back, triple-Home, standby/restart, rollback and firmware-control acceptance request; directed release. Tested installer/source revision not restated; no exact final-installer or original-reporter compatibility claim. See docs/RELEASE-1.2.0-ACCEPTANCE.md for confirmation, automated checks, verified published 1.1.0 rollback hashes and limitations. Issues #55/#51 remain partial; #59 original-device confirmation outstanding."
+  "acceptance": ""
 }

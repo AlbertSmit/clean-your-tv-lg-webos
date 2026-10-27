@@ -82,3 +82,15 @@ contents. It never writes a TV file or refreshes a registration cache.
 
 A valid local plan is **not permission to apply it** and is not a complete recovery
 system. The live metadata/cache transaction remains a release gate.
+
+
+Unreleased cold-boot correction: rooted SDK DATA may have ordinary `0777` modes.
+The corrected private readers require independent original package hashes; they
+do not repair shared permissions or execute shared source. Missing/conflicting
+current, transaction or own-package proof keeps automatic Home rearm inhibited,
+while independent private LG Home restoration remains available. Deliver the
+changed helper closure through checked fresh setup/rebootstrap, preserving
+existing recovery archives and unknown-operation records. Updating Installer
+alone does not replace retained private product code. Root remains disabled until
+an explicit activation through the normal setup/settings flow. See the
+[candidate authority and acceptance record](../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).

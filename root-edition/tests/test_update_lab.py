@@ -4,7 +4,7 @@ import hashlib
 import io
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import tarfile
 import tempfile
@@ -25,8 +25,32 @@ def payload(path):
         size = int(header[48:58])
         parts[header[:16].decode().strip().rstrip('/')] = raw[offset + 60:offset + 60 + size]
         offset += 60 + size + size % 2
+    files, directories, seen = {}, set(), set()
+    roots = {'usr/palm/'+kind+'/'+owner+suffix
+             for owner in (APP, UPDATER)
+             for kind, suffix in (('applications',''), ('services','.service'), ('packages',''))}
     with tarfile.open(fileobj=io.BytesIO(parts['data.tar.gz'])) as archive:
-        return {member.name: archive.extractfile(member).read() for member in archive}
+        for member in archive:
+            name = member.name
+            relative = PurePosixPath(name)
+            if (not name or relative.is_absolute() or str(relative) != name
+                    or '..' in relative.parts or '\\' in name or '\x00' in name
+                    or name in seen
+                    or not any(name == root or name.startswith(root+'/') for root in roots)):
+                raise ValueError('Unsafe isolated lab package path')
+            seen.add(name)
+            if member.isdir():
+                if member.size or member.mode != 0o755 or member.uid != 0 or member.gid != 0:
+                    raise ValueError('Unsafe isolated lab package directory')
+                directories.add(name)
+            elif member.isfile():
+                files[name] = archive.extractfile(member).read()
+            else:
+                raise ValueError('Special isolated lab package entry')
+    ancestors = {str(parent) for name in files for parent in PurePosixPath(name).parents}
+    if directories - ancestors:
+        raise ValueError('Unowned isolated lab package directory')
+    return files
 
 
 class LabTests(unittest.TestCase):

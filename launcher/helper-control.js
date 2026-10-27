@@ -16,7 +16,7 @@
    // Published Helper 0.6.17 omits running; homeStatus confirms control is responding.
    rpc('luna://com.gathin.tvhome.renewal/homeStatus',{},function(s){if(request!==generation||panel.hidden)return;
     buttons[1].disabled=!s||s.returnValue!==true||typeof s.enabled!=='boolean';
-    status.textContent=t(buttons[1].disabled?'Helper is unavailable. Reinstall the complete Home package from your computer.':s.enabled?'Home and return from apps open Clean Your TV.':'Home and return from apps open LG Home.');
+    status.textContent=t(buttons[1].disabled?'Home status is unknown. The Home button may still work.':s.enabled?'Home and return from apps open Clean Your TV.':'Home and return from apps open LG Home.');
    });
   });
  }

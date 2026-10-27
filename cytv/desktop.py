@@ -56,6 +56,18 @@ class DesktopConsole(Console):
         self.emit('heading', title)
 
     def error(self, message, heading=False):
+        # The window offers the failed attempt's report directly; CLI commands
+        # remain useful only in the terminal adapter.
+        message = {
+            'TV rejected the operation. Run cytv doctor; no automatic retry was attempted.':
+                'The TV rejected this step. No automatic retry was attempted.',
+            'TV package operation failed. Run cytv status before retrying.':
+                'The TV package operation failed. No automatic retry was attempted.',
+            'TV command failed. Run cytv doctor; retain the operation journal.':
+                'This step could not be confirmed. Check that the TV is on and connected to the same network.',
+            'Operation could not be confirmed. Check TV connectivity and run cytv status or cytv doctor. Retain local and TV recovery state; do not retry blindly.':
+                'This step could not be confirmed. Check that the TV is on and connected to the same network.',
+        }.get(message, message)
         self.emit('error-heading' if heading else 'error', message)
 
     def step(self, number, title, clear=True):
@@ -70,6 +82,13 @@ class DesktopConsole(Console):
 
     def reader(self, ask):
         return ask
+
+    def report(self, path):
+        self.emit('report', str(path.resolve()))
+
+    def recovery(self, profile):
+        super().recovery(profile)
+        self.emit('recovery', dict(profile))
 
 
 class Channel:

@@ -52,7 +52,7 @@ def run(transaction):
     try:
         return watch(transaction, lambda:d.safe_json(d.STATE/'profile-trial.json'),
                      ready,restore,time.monotonic,time.sleep,continuation=continuation)
-    finally: shutdown.set()
+    finally: shutdown.close()
 
 
 if __name__ == '__main__':

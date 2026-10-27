@@ -25,6 +25,8 @@ def release(version):
 class IO:
     def __init__(self):
         self.time=1000; self.calls=[]; self.current=release('1.0.0'); self.candidate=release('1.1.0'); self.outcomes=[]; self.active=True; self.prepare_error=False
+    def require_components(self):pass
+    def components_present(self):return True
     def now(self):return self.time
     def offer(self,edition):return {'candidate':copy.deepcopy(self.candidate),'prior':copy.deepcopy(self.current),'canInstall':True}
     def check_legacy(self):self.calls.append('legacy')
@@ -35,7 +37,8 @@ class IO:
         if self.prepare_error:raise ValueError('cache failed')
     def suspend(self,tx):self.calls.append('suspend');self.active=False
     def routing_safe(self):return not self.active
-    def install(self,c,on_submit,on_terminal):
+    def install(self,c,on_submit,on_terminal,on_intent):
+        on_intent()
         self.calls.append('install:'+c['name']+':'+c['version']);on_submit({'application':c['application']})
         outcome=self.outcomes.pop(0) if self.outcomes else True
         if outcome=='crash':raise KeyboardInterrupt('power loss')
@@ -105,8 +108,8 @@ class LayoutTests(CoreBase):
 class TerminalErrorTests(CoreBase):
     def test_terminal_success_followed_by_registration_failure_triggers_rollback(self):
         install=self.io.install
-        def fail_after_receipt(c,submitted,terminal):
-            install(c,submitted,terminal)
+        def fail_after_receipt(c,submitted,terminal,on_intent):
+            install(c,submitted,terminal,on_intent)
             raise ValueError('registration restoration failed')
         self.io.install=fail_after_receipt;self.reserve();self.assertEqual(self.advance('rolling-back')['phase'],'rolling-back')
 
@@ -138,3 +141,32 @@ class ComponentVersionTests(CoreBase):
         self.io.current['release']='v0.0.0';self.io.candidate['components'][1]['version']='0.9.0'
         with self.assertRaisesRegex(ValueError,'downgrade'):self.reserve()
         self.assertIsNone(self.store.read('transaction'));self.assertFalse(any(c.startswith('install:') for c in self.io.calls))
+
+class OriginalIntentCallbackTests(CoreBase):
+    def test_submission_without_original_intent_callback_is_refused(self):
+        self.reserve();self.advance('installing')
+        def install(c,submitted,terminal,on_intent):submitted({'application':c['application']})
+        self.io.install=install
+        result=self.m.run();e=result['components'][0]['installEvidence']
+        self.assertEqual(result['phase'],'recovery-required')
+        self.assertEqual(e,{'intent':False,'submitted':None,'terminal':None})
+
+    def test_original_intent_callback_cannot_be_invoked_twice(self):
+        self.reserve();self.advance('installing')
+        def install(c,submitted,terminal,on_intent):
+            on_intent();on_intent();submitted({'application':c['application']})
+        self.io.install=install
+        result=self.m.run();e=result['components'][0]['installEvidence']
+        self.assertEqual(result['phase'],'recovery-required')
+        self.assertEqual(e,{'intent':True,'submitted':None,'terminal':None})
+        self.assertEqual(self.Manager(self.store,self.io).run()['phase'],'recovery-required')
+
+    def test_local_continuation_terminal_requires_this_invocations_intent_callback(self):
+        self.io=RootIO();self.m=self.Manager(self.store,self.io)
+        self.m.install('root','v1.1.0',profile());self.io.outcomes=[True,True,'crash']
+        with self.assertRaises(KeyboardInterrupt):self.advance('verifying')
+        def install(c,submitted,terminal,on_intent):terminal({'success':True})
+        self.io.install=install
+        result=self.Manager(self.store,self.io).run()
+        self.assertEqual(result['phase'],'recovery-required')
+        self.assertIsNone(result['components'][2]['installEvidence']['terminal'])

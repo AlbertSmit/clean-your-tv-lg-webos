@@ -20,10 +20,10 @@ FILES = (
     'assets/profile-avatar.jpg', 'fonts/sf-pro-text_semibold.woff2', 'fonts/sf-pro-text_regular.woff2', 'fonts/sf-pro-text_light.woff', 'fonts/sf-pro-display_semibold.woff2', 'fonts/sf-pro-display_regular.woff2', 'fonts/sf-pro-display_medium.woff2', 'fonts/sf-pro-display_bold.woff2',
     'fonts/InterDisplay-Regular.woff2', 'fonts/InterDisplay-Medium.woff2', 'fonts/InterDisplay-SemiBold.woff2', 'fonts/Inter-OFL.txt',
     'brand-v2-icon.png', 'brand-v2-largeIcon.png', 'splash.png',
-    'fonts/outfit.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/OFL.txt',
+    'fonts/outfit-300.ttf', 'fonts/outfit-400.ttf', 'fonts/outfit-500.ttf', 'fonts/outfit-700.ttf', 'fonts/NotoSans.ttf', 'fonts/NotoSans-OFL.txt', 'fonts/NotoSansDevanagari.ttf', 'fonts/NotoSansDevanagari-OFL.txt', 'fonts/NotoSansKR.ttf', 'fonts/NotoSansKR-OFL.txt', 'fonts/NotoSansSC.ttf', 'fonts/NotoSansSC-OFL.txt', 'fonts/NotoSansTC.ttf', 'fonts/NotoSansTC-OFL.txt', 'fonts/OFL.txt',
 )
 UI = Path(__file__).resolve().parent / 'ui'
-UI_FILES = ('root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')
+UI_FILES = ('root-audio-locales.js', 'root-audio.js', 'root-locales.js', 'root-exit.js', 'root-firmware-control.js', 'root-firmware.js', 'root-settings.js', 'root-settings.css', 'root-profile-data.js', 'root-profile.js', 'root-updates.js')
 
 
 def prepare(version='0.0.1'):
@@ -64,7 +64,7 @@ def prepare(version='0.0.1'):
     entry = '<script src="profile-bootstrap.js"></script>'
     if html.count(entry) != 1:
         raise ValueError('Unexpected launcher entry')
-    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script>window.ROOT_VERSION = ' + json.dumps(version) + ';</script>\n  <script src="root-locales.js"></script>\n  <script src="root-exit.js"></script>\n  <script src="root-firmware-control.js"></script>\n  <script src="root-firmware.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="root-updates.js"></script>\n  <script src="root-profile-data.js"></script>\n  <script src="root-profile.js"></script>').encode()
+    files['index.html'] = html.replace(entry, '<link rel="stylesheet" href="root-settings.css">\n  <script>window.ROOT_VERSION = ' + json.dumps(version) + ';</script>\n  <script src="root-locales.js"></script>\n  <script src="root-audio-locales.js"></script>\n  <script src="root-exit.js"></script>\n  <script src="root-firmware-control.js"></script>\n  <script src="root-firmware.js"></script>\n  <script src="root-audio.js"></script>\n  <script src="root-settings.js"></script>\n  <script src="root-updates.js"></script>\n  <script src="root-profile-data.js"></script>\n  <script src="root-profile.js"></script>').encode()
     files['appinfo.json'] = (json.dumps(info, indent=2) + '\n').encode()
     for name in UI_FILES:
         path = UI / name

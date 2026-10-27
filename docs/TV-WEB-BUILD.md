@@ -167,6 +167,33 @@ These scheduling checks provide rendering/input opportunities, not measured spee
 gains. Cold boot, standby return, first remote input, direct Helper entry and
 recovery still require physical-TV acceptance on LG 50UP77006LB.
 
+## Static TV fonts
+
+Home and Root Home use static Outfit Light (300), Regular (400), Medium (500)
+and Bold (700) files. Each CSS face declares one weight, including 700 for browser
+bold defaults. This preserves the intended typography without variable-axis
+support. The retained variable source defaults to Thin (100); old engines can
+render that default for every weight (issue #68). Do not reference it in TV CSS.
+The CSS gate rejects weight ranges; binary regressions check fixed weights,
+distinct baked outlines, original character mappings and Root package staging.
+Both preview inventories include the same static assets and OFL license.
+
+To regenerate from the retained `launcher/fonts/outfit.ttf`, use a temporary
+Python environment with `fonttools==4.60.1` (not a TV/build runtime dependency):
+
+```sh
+for weight in 300 400 500 700; do
+  fonttools varLib.instancer launcher/fonts/outfit.ttf wght=$weight --static \
+    --update-name-table --no-recalc-timestamp -o launcher/fonts/outfit-$weight.ttf
+done
+```
+
+See [fontTools instancing](https://fonttools.readthedocs.io/en/latest/varLib/instancer.html).
+No setup steps or controls change. The fix is unreleased; visual acceptance on
+the reporter's LG LM6370PSB / webOS 4.5 / Chromium 53 remains required. Host tests
+verify assets and rendering in a current browser, not physical TV readability.
+The separately reported Helper-unavailable state remains unresolved.
+
 ## Regression checks
 
 `npm run test:compat` verifies the ESLint configuration (including rejected browser
@@ -183,7 +210,8 @@ BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:legacy-ui
 BROWSER_CHANNEL=chromium TV_WEB_DIR=build/legacy-ui npm run test:startup-ui
 ```
 
-The browser test disables `inset` and selected JS APIs to reproduce issue #20.
+The browser test verifies the actual rendered Outfit face for each weight, then
+disables `inset` and selected JS APIs to reproduce issue #20.
 It checks actual card hit-testing, dimensions, icon fallback, scrolling,
 launch/navigation and full-screen dialogs. This models the reported engine
 limitations in a current browser; it is not an emulator of an entire old TV.
@@ -223,3 +251,31 @@ References: [LG engine versions](https://webostv.developer.lge.com/develop/speci
 [Babel preset-env](https://babeljs.io/docs/babel-preset-env),
 [PostCSS preset-env](https://preset-env.cssdb.org/),
 [doiuse](https://github.com/anandthakker/doiuse).
+
+
+## Chinese UI fonts
+
+The 1.3.0 candidate adds `zh-Hans` (Simplified Chinese) and `zh-Hant`
+(Traditional Chinese). Explicit script tags take precedence over a region;
+`zh`, CN and SG default to Hans, while TW, HK and MO default to Hant.
+The preference is selectable and persisted using the existing language setting.
+Home, Root Home, both independent updaters and Homebrew Installer carry static
+Regular Noto Sans SC/TC subsets and their SIL OFL licenses. Desktop payloads
+also include them; Android uses its platform font fallback.
+
+The sources are [Google Fonts Noto Sans SC](https://github.com/google/fonts/tree/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/notosanssc)
+and [Noto Sans TC](https://github.com/google/fonts/tree/e7db6ca603fd4862010383ff17ffd6cc4ffac1c0/ofl/notosanstc),
+pinned at commit `e7db6ca603fd4862010383ff17ffd6cc4ffac1c0`. To regenerate,
+download each original `NotoSansSC[wght].ttf` / `NotoSansTC[wght].ttf` into a
+temporary directory as `NotoSansSC-variable.ttf` / `NotoSansTC-variable.ttf`,
+then run:
+
+```sh
+/path/to/fonttools-4.60.1/bin/python scripts/subset-chinese-fonts.py /path/to/original-fonts
+```
+
+This developer-only tool bakes weight 400 and retains the catalog character set
+plus Chinese date text. Regenerate after adding Chinese strings; package tests
+reject missing catalog glyphs or variable fonts. User app names outside this
+subset continue to use the TV's system fallback. These fonts do not establish
+physical-TV rendering acceptance; verify both scripts on the candidate packages.

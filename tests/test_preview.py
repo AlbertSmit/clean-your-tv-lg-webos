@@ -49,7 +49,10 @@ class PreviewTest(unittest.TestCase):
                 url = urljoin('/clean-your-tv-lg-webos/launcher/index.html', app['icon'])
                 self.assertTrue(url.startswith('/clean-your-tv-lg-webos/preview/icons/'))
                 self.assertTrue((Path(directory) / urlsplit(url).path.lstrip('/')).is_file())
-            self.assertTrue((output / 'launcher/fonts/outfit.ttf').is_file())
+            for edition in ('launcher', 'root-launcher'):
+                for weight in (300, 400, 500, 700):
+                    self.assertEqual((output / edition / ('fonts/outfit-%s.ttf' % weight)).read_bytes(),
+                                     (ROOT / ('launcher/fonts/outfit-%s.ttf' % weight)).read_bytes())
             self.assertTrue((output / 'root-launcher/root-settings.js').is_file())
             self.assertFalse((output / 'root-launcher/native-bootstrap.js').exists())
             self.assertFalse((output / 'root-launcher/renewal-panel.js').exists())

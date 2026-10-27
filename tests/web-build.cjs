@@ -98,6 +98,7 @@ const postcss = require('postcss');
   assert.deepEqual(animation.nodes.map(rule => rule.selector), ['from', 'to'], 'keyframe steps must not be scoped as element selectors');
   const statesAgain = await compile(states);
   assert.equal(statesAgain['style.css'], states['style.css'], 'theme compilation must not duplicate variants on repeated packaging');
+  await assert.rejects(() => compile({'style.css': '@font-face{font-family:Outfit;src:url(outfit.ttf);font-weight:100 900}'}), /font-weight.*static/, 'variable font ranges must not reach legacy engines');
   console.log('PASS ES5 scripts and inline scripts, missing built-ins, physical CSS offsets, polyfill ordering and idempotent HTML');
   console.log('PASS supplied ES module/JSX bundle, Nano JSX rendering, ES5 gate, module isolation, license and Python packaging');
 })().catch(error => {console.error(error); process.exitCode = 1;});

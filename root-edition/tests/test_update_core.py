@@ -97,6 +97,31 @@ class UpdateTests(unittest.TestCase):
         self.m.confirm(tx['id'], '1.1.0')
     def installs(self): return [c for c in self.io.calls if c.startswith('install:')]
 
+    def test_removal_at_each_phase_retains_evidence_without_install_replay(self):
+        for phase in ('preparing','downloading','backed-up','restoring-route','installing','awaiting-launch','verifying','rolling-back','verifying-rollback'):
+            with self.subTest(phase=phase),tempfile.TemporaryDirectory() as tmp:
+                store=Store(os.path.realpath(tmp),uid=os.getuid());io=Device();io.store=store;m=Manager(store,io)
+                m.install('1.1.0',profile())
+                if phase in ('rolling-back','verifying-rollback'):
+                    while m.status()['phase']!='verifying':m.run()
+                    m.rollback()
+                if phase=='installing':
+                    # Durable submission without a terminal event must remain unknown.
+                    io.outcomes=['crash']
+                    with self.assertRaises(KeyboardInterrupt):
+                        while True:m.run()
+                else:
+                    for _ in range(20):
+                        if m.status()['phase']==phase:break
+                        m.run()
+                    self.assertEqual(m.status()['phase'],phase)
+                before=copy.deepcopy(m.status());installs=[c for c in io.calls if c.startswith('install:')]
+                result=m.component_removed()
+                self.assertIn(result['phase'],('aborted','recovery-required'))
+                self.assertEqual(result['installEvidence'],before['installEvidence']);self.assertEqual(result['rollbackEvidence'],before['rollbackEvidence'])
+                self.assertEqual(store.read(before['profile']),profile());self.assertFalse(io.active)
+                m.run();self.assertEqual(installs,[c for c in io.calls if c.startswith('install:')])
+
     def test_install_only_enqueues_and_preserves_exact_immutable_snapshot(self):
         original = profile()
         tx = self.m.install('1.1.0', original)
@@ -121,6 +146,18 @@ class UpdateTests(unittest.TestCase):
         self.assertEqual('1.1.0', self.store.read('current')['version'])
         self.assertEqual(profile(), self.m.restore_profile()['profile'])
         self.assertEqual(['install:1.1.0'], self.installs())
+
+    def test_current_writer_keeps_last_system_publication_without_changing_signed_candidate(self):
+        for previous in ({'owner':'system-update','id':'c'*32},{'owner':'root-update','id':'d'*32,'system':'c'*32}):
+            with self.subTest(previous=previous),tempfile.TemporaryDirectory() as temp:
+                self.io.prior['writer']=previous
+                store=Store(os.path.realpath(temp),uid=os.getuid());self.store=store;self.io.store=store;self.io.version='1.0.0';self.io.outcomes=[True];self.m=Manager(store,self.io)
+                original=copy.deepcopy(self.io.candidate);tx=self.start();self.advance('verifying');self.receipt(tx);self.advance('complete')
+                current=store.read('current')
+                self.assertEqual(current['writer'],{'owner':'root-update','id':tx['id'],'system':'c'*32})
+                self.assertEqual({k:v for k,v in current.items() if k!='writer'},original)
+                self.assertEqual(store.read('transaction')['candidate'],original)
+                self.assertEqual(self.io.candidate,original)
 
     def test_timely_confirmation_survives_late_poll_and_worker_restart(self):
         tx=self.start();self.advance('verifying')

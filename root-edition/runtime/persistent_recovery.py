@@ -91,11 +91,15 @@ class Coordinator:
         if reason not in ('exit','fault'): raise ValueError('Invalid stop reason')
         with self.locked(expected):
             intent, effect = self.event(expected, reason)
+            try:
+                from cli import inhibit
+                inhibit(d.STATE)
+            except Exception: pass  # Audio state must never block emergency Home restoration.
             return self._recover(intent) if effect == 'recover' else dict(intent=intent,effect=effect)
 
     def boot(self, expected, boot, token, failsafe):
         with self.locked(expected):
-            intent, effect = self.event(expected, 'boot', boot=boot, token=token, failsafe=failsafe)
+            intent, effect = self.event(expected, 'boot', boot=boot, token=token, failsafe=failsafe or not d.home_present())
             return self._recover(intent) if effect == 'recover' else dict(intent=intent,effect=effect)
 
     def resume_recovery(self, expected):
@@ -104,6 +108,7 @@ class Coordinator:
             return self._recover(expected)
 
     def _recover(self, intent):
+        if intent['enabled'] and not d.home_present():intent,_=self.event(intent,'fault')
         try:
             if not os.path.lexists(self.binding) and not intent['enabled']:
                 # A start may fail before any routing journal/binding was made.
@@ -149,6 +154,8 @@ class Coordinator:
         # makes LG Home the first app on the next boot. Boot recovery still
         # restores the old transaction before arming a fresh guarded route.
         with self.locked(expected):
+            if not d.home_present(purpose='live'):
+                intent,_=self.event(expected,'fault');self._recover(intent);return True
             if expected['phase'] not in ('active','stopping') or not expected['enabled']:
                 raise ValueError('Shutdown cannot promote unconfirmed intent')
             # Persist classification before any RPC can stall or shutdown kills us.
@@ -196,6 +203,7 @@ class Coordinator:
         with self.locked(expected):
             if expected['phase'] != 'starting': raise ValueError('No verified boot recovery')
             try:
+                d.require_home()
                 result = emergency_trial.start(before_publish=lambda tx:self._bind(expected,tx))
                 import time
                 from persistent_health import require_fresh
@@ -205,8 +213,8 @@ class Coordinator:
                     except (OSError,ValueError): time.sleep(.1)
                 self._healthy(expected)
                 intent, effect = self.event(expected,'ready')
-                # bootd presents the retained Home before protection is ready.
-                # Reopening it now would steal focus from an app the user chose.
+                # Rearm protection without a foreground side effect here.
+                # The boot dispatcher separately checks startup and foreground.
                 return dict(intent=intent,effect=effect,trial=result,persistent=True)
             except Exception:
                 current = self.store.read()
@@ -238,6 +246,7 @@ class Coordinator:
         # The existing independent 60-second deadline is never removed here.
         import emergency_trial
         with self.locked(expected):
+            d.require_home()
             intent, effect = self.event(expected, 'enable', boot=boot, token=token)
             try:
                 result = emergency_trial.start(before_publish=lambda tx:self._bind(intent, tx))
@@ -258,6 +267,18 @@ def bound_exit(transaction, reason=None):
     if (binding['generation'], binding['token']) != (intent['generation'], intent['token']):
         # A newer lifecycle owns boot recovery; never disable it from an old observer.
         return None
+    from intent_runtime import boot_identity
+    try: current_boot = boot_identity()
+    except (OSError,ValueError): current_boot = None
+    home = d.home_present(purpose='live')
+    safe = home and not d.FAILSAFE.exists()
+    if (reason != 'escape' and safe and intent['enabled']
+            and intent['phase'] in ('active','stopping') and current_boot is not None
+            and intent['boot'] != current_boot):
+        # An old snapshot observer can run before boot dispatch changes the
+        # generation. Leave restore-first and fresh input gates to that owner.
+        # True also prevents callers falling back to an unbound route restore.
+        return True
     if reason == 'escape':
         from update_guard import cancel
         try:cancel(d.STATE,d.EXPECTED_UID,intent)
@@ -265,7 +286,7 @@ def bound_exit(transaction, reason=None):
             c.exit(intent, reason='fault')
             raise
     from shutdown_state import stopping
-    shutdown = reason != 'escape' and intent['enabled'] and (
+    shutdown = safe and current_boot == intent['boot'] and reason != 'escape' and intent['enabled'] and (
         intent['phase'] == 'stopping' or (intent['phase'] == 'active' and stopping(transaction)))
     print(json.dumps(dict(event='bound-exit-decision',transaction=transaction,reason=reason,
                          phase=intent['phase'],enabled=intent['enabled'],shutdown=shutdown)),flush=True)

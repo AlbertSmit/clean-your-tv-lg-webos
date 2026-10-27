@@ -11,7 +11,7 @@ import uuid
 from . import __version__
 from .state import private_write
 from .terminal import console
-from .errors import TVConnectionError, DeveloperKeyError, UserError, TVCommandError, TVRejected
+from .errors import TVConnectionError, DeveloperKeyError, UserError, TVCommandError, TVRejected, PythonPreflightError, root_recovery_details
 
 ISSUE_URL = 'https://github.com/Razdva122/clean-your-tv-lg-webos/issues/new'
 KERNEL_ARCHES = ('armv7l', 'armv7', 'armv8l', 'aarch64', 'arm64', 'x86_64', 'i686', 'unknown')
@@ -40,8 +40,15 @@ def create_report(store, action, profile, phase, error=None, tv_info=None):
         report['connection'] = {'protocol': 'developer-key', 'reason_code': error.reason_code}
     if isinstance(error, TVCommandError):
         report['ssh_command'] = {'exit_status': error.exit_status}
+        recovery = root_recovery_details(getattr(error, 'root_recovery', None))
+        if recovery: report['root_recovery'] = recovery
     if isinstance(error, TVRejected):
         report['luna'] = error.luna
+    if isinstance(error, PythonPreflightError):
+        safe = PythonPreflightError(error.reason, error.available_kib, error.required_kib, error.wam_session_kib)
+        report['python_runtime'] = {'reason': safe.reason}
+        report['python_runtime'].update({key: getattr(safe, key) for key in
+            ('available_kib', 'required_kib', 'wam_session_kib') if getattr(safe, key) is not None})
     if tv_info and isinstance(tv_info.get('root_requirements'), dict):
         checks = tv_info['root_requirements']
         report['tv']['root_requirements'] = {
@@ -65,7 +72,7 @@ def suggest_issue(write, store, action, profile, phase, error, tv_info=None):
     try:
         path = create_report(store, action, profile, phase, error, tv_info)
         write.heading('Attach this diagnostic report')
-        write.raw('  ' + str(path.resolve()))
+        write.report(path)
     except (OSError, ValueError):
         write.error('Could not save a diagnostic file. Include cytv ' + __version__ + ', your desktop OS, edition and failed step: ' + phase + '.')
     write('')

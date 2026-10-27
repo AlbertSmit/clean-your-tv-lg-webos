@@ -72,7 +72,7 @@
     message.textContent = displayError ? t(displayError) : phase ? t(descriptions[phase] || 'Update state: {status}. Keep the TV powered on.', {status:phase}) : busy ? t('Checking for updates…') : recovery ? t('No previous update is saved for rollback yet.') : offer && offer.canInstall ? t('A signed system update is available.') : t('Your apps and settings stay saved.');
     if (!recovery && phase && checkError) message.textContent += '\n' + t(checkError);
     if (!recovery && !displayError && offer && !offer.canInstall && offer.reason && !phase) {
-      var reasons = {'feed-unavailable':'Update information is not available yet. Try again later.', 'connection-error':'Could not connect to check for updates. Check your connection and try again.', current:'All components are up to date.', 'root-required':'Update available. Without root, install it from a computer using the guide.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.', 'missing-baseline':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
+      var reasons = {'Infrastructure inventory changed; computer migration required':'This update requires a computer migration. Keep recovery records.', 'feed-unavailable':'Update information is not available yet. Try again later.', 'connection-error':'Could not connect to check for updates. Check your connection and try again.', current:'All components are up to date.', 'root-required':'Update available. Without root, install it from a computer using the guide.', 'missing-rollback':'A verified recovery package for this version is missing. Run the one-time computer setup.', 'missing-baseline':'A verified recovery package for this version is missing. Run the one-time computer setup.'};
       message.textContent += '\n' + t(reasons[offer.reason] || 'Update unavailable: {reason}', {reason:offer.reason});
     }
     if (!profileAvailable() && !recovery) message.textContent += '\n' + t('For regular updates, open Home settings.');
@@ -95,8 +95,23 @@
     clearTimeout(timer);
     if (visible()) timer = setTimeout(function () { refresh(false, true); }, 1500);
   }
+  function readOffer(edition) {
+    return rpc('check', {edition:edition}).then(function (value) {
+      // Installed supervisors are immutable; older ones compare release tags only.
+      if (value && value.canInstall && value.components && value.components.length && value.components.every(function (component) { return typeof component.installed === 'string' && component.installed === component.version; })) {
+        value.canInstall = false; value.reason = 'current';
+      }
+      return value;
+    });
+  }
+  function check(edition, fallback) {
+    return rpc('status', {}).then(function () { return readOffer(edition); }, function (error) {
+      if (error.unavailable && fallback) return fallback();
+      throw error;
+    });
+  }
   function checkOffer(request) {
-    return rpc('check', {edition:options.edition}).then(function (value) {
+    return readOffer(options.edition).then(function (value) {
       if (request === generation) { offer = value; checkError = ''; }
     }).catch(function () {
       if (request !== generation) return;
@@ -194,6 +209,6 @@
       errorText = error.message; panel.hidden = false;
     }).then(function () { if (request !== generation) return; busy = false; render(); schedule(); });
   }
-  window.SystemUpdates = {open:open,rpc:rpc,isOpen:visible};
+  window.SystemUpdates = {open:open,rpc:rpc,check:check,isOpen:visible};
 }());
 });

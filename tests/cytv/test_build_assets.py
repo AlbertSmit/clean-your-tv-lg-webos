@@ -1,10 +1,23 @@
 """All runtime modules must be included even before their first Git commit."""
+import hashlib
 from pathlib import Path
 import runpy
 import unittest
 
 
 class BuildAssetsTests(unittest.TestCase):
+    def test_home_package_includes_storage_diagnostics_dependency(self):
+        import json
+        from cytv import package
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        sources = build['tracked_files']('renewal-service')
+        app = {'appinfo.json': json.dumps({'id':'com.gathin.tvhome','version':'1.0.0','type':'native'}).encode()}
+        files = package.data_files(build['pack_app'](app, sources))
+        prefix = 'usr/palm/services/com.gathin.tvhome.renewal/'
+        self.assertEqual(files[prefix+'diagnostics.js'], (root/'renewal-service/diagnostics.js').read_bytes())
+        self.assertIn(b"require('./diagnostics')", files[prefix+'service.js'])
+
     def test_https_service_assets_survive_the_public_source_filter(self):
         import json
         from cytv import package
@@ -31,6 +44,17 @@ class BuildAssetsTests(unittest.TestCase):
                                      ('brand-stacked.svg', 'logo-stacked-dark.svg')]:
                 self.assertEqual((Path(directory) / packaged).read_bytes(),
                                  (root / 'assets/brand' / master).read_bytes())
+
+    def test_setup_examples_are_staged_for_offline_desktop_use(self):
+        import tempfile
+        root = Path(__file__).resolve().parents[2]
+        build = runpy.run_path(str(root / 'scripts/build-cytv.py'))
+        with tempfile.TemporaryDirectory() as directory:
+            build['stage_guide_assets'](Path(directory))
+            for name in ('sign-in.png', 'dev-mode.png', 'key-server.png'):
+                actual = (Path(directory) / 'setup-guide' / name).read_bytes()
+                self.assertTrue(actual.startswith(b'\x89PNG\r\n\x1a\n'))
+                self.assertEqual(actual, (root / 'android/app/src/main/assets/ui/guide' / name).read_bytes())
 
     def test_new_public_runtime_modules_are_packaged(self):
         build = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/build-cytv.py'))
@@ -127,7 +151,10 @@ class BuildAssetsTests(unittest.TestCase):
         published = root / 'native/published/com.local.nativehome_0.6.16_arm.ipk'
         self.assertEqual(baseline('0.6.16'), published.read_bytes())
         self.assertEqual(baseline('0.6.17'), (root / 'native/published/com.local.nativehome_0.6.17_arm.ipk').read_bytes())
-        self.assertIsNone(baseline('0.6.18'))
+        current = baseline('0.6.19')
+        self.assertIsNotNone(current, 'Keep the exact published 0.6.19 package')
+        self.assertEqual(hashlib.sha256(current).hexdigest(), '52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b')
+        self.assertIsNone(baseline('0.6.20'))
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / 'native/published' / published.name
             fixture.parent.mkdir(parents=True)
@@ -135,3 +162,8 @@ class BuildAssetsTests(unittest.TestCase):
             with patch.dict(baseline.__globals__, ROOT=Path(directory)):
                 with self.assertRaisesRegex(ValueError, 'hash'):
                     baseline('0.6.16')
+            current_fixture = fixture.with_name('com.local.nativehome_0.6.19_arm.ipk')
+            current_fixture.write_bytes(current + b'corruption')
+            with patch.dict(baseline.__globals__, ROOT=Path(directory)):
+                with self.assertRaisesRegex(ValueError, 'hash'):
+                    baseline('0.6.19')

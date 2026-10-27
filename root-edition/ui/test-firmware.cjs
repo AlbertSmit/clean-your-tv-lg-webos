@@ -9,7 +9,7 @@ vm.runInNewContext(fs.readFileSync(__dirname+'/root-firmware.js','utf8'),context
 const ui=context.window.RootFirmware,tick=()=>new Promise(r=>setImmediate(r));
 function request(uri,payload){
  if(hold)return new Promise(r=>{hold=r;});
- if(fail)return Promise.resolve({returnValue:false,errorCode:'unavailable'});
+ if(fail)return Promise.resolve(typeof fail==='object'?fail:{returnValue:false,errorCode:'unavailable'});
  if(changed && uri.endsWith('/getConfiguration')) enabled=true;
  if(uri.endsWith('/setConfiguration')){
   assert.equal(typeof payload.blockUpdates,'boolean');
@@ -29,6 +29,17 @@ function key(keyCode){listeners.keydown({keyCode,preventDefault(){},stopImmediat
  assert(elements.some(e=>e.textContent==='The setting changed elsewhere. Check it before trying again.'));
  changed=false;fail=true;buttons[1].onclick();await tick();assert(toggle.disabled);assert.equal(toggle.attrs['aria-checked'],'false');
  assert(elements.some(e=>e.textContent==='Homebrew Channel with root access is required. Check its settings, then retry.'));
+ for(const [reply,phrase] of [
+  [{returnValue:false,errorText:'Denied methods call getConfiguration private-data'},'denied this app'],
+  [{returnValue:true,root:false,blockUpdates:false},'not running as root'],
+  [{returnValue:false,errorText:'Service does not exist'},'service is unavailable'],
+  [{returnValue:true,root:true,blockUpdates:'false'},'unsupported configuration'],
+ ]){
+  fail=reply;buttons[1].focus();buttons[1].onclick();await tick();
+  const message=elements.find(e=>e.id==='rootFirmwareStatus').textContent;
+  assert(message.includes(phrase),'show the specific Homebrew failure instead of claiming root is missing: '+phrase);
+  assert(!message.includes('private-data'));assert(toggle.disabled);assert.equal(focused,buttons[1]);
+ }
  key(461);assert.equal(returned,1);
  fail=false;enabled=false;hold=true;ui.open(request,()=>returned++);await tick();key(461);const late=hold;hold=false;
  ui.open(request,()=>returned++);await tick();late({returnValue:true,root:true,blockUpdates:true});await tick();

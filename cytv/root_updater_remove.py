@@ -114,7 +114,7 @@ def operate(action, state, base, hook, installed, destination, refresh, stop_pro
         expected['hook']=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH\n/usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
         legacy_hook=('#!/bin/sh\n/usr/bin/python3 '+str(state/'code/run-updater.py')+' worker </dev/null >/dev/null 2>&1 &\n').encode()
         retained_hook=hook if os.path.lexists(hook) else state/'removed-registration/hook'
-        if python=='/usr/bin/python3' and read(retained_hook)==legacy_hook:expected['hook']=legacy_hook
+        if python=='/usr/bin/python3' and hook_read(retained_hook,state,hook,APP,installed,expected['hook'])==legacy_hook:expected['hook']=legacy_hook
         paths['hook']=hook
         journal=state/'cytv-removal.json'
         record=json.loads(read(journal)) if os.path.lexists(journal) else None
@@ -134,8 +134,8 @@ def operate(action, state, base, hook, installed, destination, refresh, stop_pro
         # Validate the entire set before changing any file. Never follow receipt paths.
         for key,path in paths.items():
             if os.path.lexists(path):
-                if read(path)!=expected[key]: raise ValueError('Updater registration changed: '+key)
-            elif record is None or read(saved/key)!=expected[key]:
+                if (hook_read(path,state,hook,APP,installed,expected['hook']) if key=='hook' else read(path))!=expected[key]: raise ValueError('Updater registration changed: '+key)
+            elif record is None or (hook_read(saved/key,state,hook,APP,installed,expected['hook']) if key=='hook' else read(saved/key))!=expected[key]:
                 raise ValueError('Unverified missing updater registration: '+key)
         if action=='inspect': return {'ownership_verified':True,'phase':record['phase'] if record else 'installed'}
         if record is None:
@@ -178,6 +178,9 @@ if __name__=='__main__': main()
 
 # Dropbear on webOS limits exec request size. Keep the fixed script in one
 # bounded command without uploading an executable or relying on shell heredocs.
+from .startup_remove import HELPER
+SCRIPT=SCRIPT.replace('\ndef operate(',HELPER+'\ndef operate(',1)
+
 import base64
 import zlib
 COMMAND = 'import base64,zlib;exec(zlib.decompress(base64.b64decode(' + repr(base64.b64encode(zlib.compress(SCRIPT.encode())).decode()) + ')))'

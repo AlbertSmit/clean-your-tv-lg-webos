@@ -22,7 +22,7 @@ def tracked_files(prefix):
     # Explicit public runtime dependencies may be new files in a source checkout.
     # Do not include arbitrary untracked files or local profile data.
     required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js', 'native/app/websocket.js'],
-                'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
+                'renewal-service': ['renewal-service/home-control.js', 'renewal-service/diagnostics.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
                 'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
                 'launcher': ['launcher/startup-metrics.js', 'launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/theme-panel.js', 'launcher/appearance.css', 'launcher/ui/index.jsx',
@@ -33,9 +33,13 @@ def tracked_files(prefix):
                              'launcher/assets/dock-glass-home.jpg', 'launcher/assets/dock-glass-grid.jpg',
                              'launcher/fonts/InterDisplay-Regular.woff2', 'launcher/fonts/InterDisplay-Medium.woff2',
                              'launcher/fonts/InterDisplay-SemiBold.woff2', 'launcher/fonts/Inter-OFL.txt',
+                             'launcher/fonts/outfit-300.ttf', 'launcher/fonts/outfit-400.ttf',
+                             'launcher/fonts/outfit-500.ttf', 'launcher/fonts/outfit-700.ttf',
                              'launcher/fonts/NotoSans.ttf', 'launcher/fonts/NotoSans-OFL.txt',
                              'launcher/fonts/NotoSansDevanagari.ttf', 'launcher/fonts/NotoSansDevanagari-OFL.txt',
-                             'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt'],
+                             'launcher/fonts/NotoSansKR.ttf', 'launcher/fonts/NotoSansKR-OFL.txt',
+                             'launcher/fonts/NotoSansSC.ttf', 'launcher/fonts/NotoSansSC-OFL.txt',
+                             'launcher/fonts/NotoSansTC.ttf', 'launcher/fonts/NotoSansTC-OFL.txt'],
                 'native/service': ['native/service/app-inventory.js']}
     if prefix == 'native/app':
         required[prefix] += [p.relative_to(ROOT).as_posix() for p in (ROOT/'native/app/vendor/ws-legacy').rglob('*') if p.is_file()]
@@ -103,13 +107,22 @@ def stage_brand_assets(payload):
         (payload / packaged).write_bytes((ROOT / 'assets/brand' / master).read_bytes())
 
 
-# Helper 0.6.16 is already published: preserve its bytes until the version changes.
+def stage_guide_assets(payload):
+    target = payload / 'setup-guide'
+    target.mkdir(exist_ok=True)
+    for name in ('sign-in.png', 'dev-mode.png', 'key-server.png', 'README.md'):
+        shutil.copy2(ROOT / 'android/app/src/main/assets/ui/guide' / name, target / name)
+
+
+# Preserve exact published Helper packages while their versions remain selected.
 HELPER_0_6_16_SHA256 = 'ccabf56c814d2aaf35853d95be2aac67614a67b79e223151b93260d58b82f5f1'
 HELPER_0_6_17_SHA256 = '165d933c17f1ed24f0ab65986293c7488b0b5d875db5f7b1215e46f24d422f92'
 
+HELPER_0_6_19_SHA256 = '52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b'
 
 def helper_baseline(version):
-    expected = {'0.6.16': HELPER_0_6_16_SHA256, '0.6.17': HELPER_0_6_17_SHA256}.get(version)
+    expected = {'0.6.16': HELPER_0_6_16_SHA256, '0.6.17': HELPER_0_6_17_SHA256,
+                '0.6.19': HELPER_0_6_19_SHA256}.get(version)
     if expected is None:
         return None
     data = (ROOT / ('native/published/com.local.nativehome_' + version + '_arm.ipk')).read_bytes()
@@ -171,6 +184,7 @@ def build_payload():
     (payload / 'fallback.png').write_bytes(launcher['brand-v2-icon.png'])
     (payload / 'installer.png').write_bytes((ROOT / 'assets/icons/installer.png').read_bytes())
     stage_brand_assets(payload)
+    stage_guide_assets(payload)
     subprocess.run([sys.executable, 'root-edition/build.py', '--output', str(payload / 'root'), '--version', versions['root']], cwd=ROOT, check=True)
     subprocess.run([sys.executable, 'root-edition/build_updater.py', '--output', str(payload / 'root-updater')], cwd=ROOT, check=True)
     stage_updater(payload)
@@ -223,6 +237,7 @@ def main():
     executable = ROOT / 'dist' / ('cytv.exe' if os.name == 'nt' else 'cytv')
     subprocess.run([str(executable), '--version'], check=True)
     subprocess.run([str(executable), '--check-payload'], check=True)
+    subprocess.run([str(executable), '--check-runtime'], check=True)
     print('Built:', executable)
     if args.desktop:
         from desktop_packaging import build_desktop

@@ -6,8 +6,12 @@ import subprocess
 import time
 
 
-def call(uri,payload,timeout=15):
-    p=subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,json.dumps(payload)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+def call(uri,payload,timeout=15,app_id=None):
+    identity=[]
+    if app_id is not None:
+        if app_id!='com.gathin.tvhome' or uri!='luna://com.cleanyourtv.updater.service/status': raise ValueError('Unsupported fixed caller identity')
+        identity=['-a',app_id,'-m',app_id+'-cytv']
+    p=subprocess.Popen(['/usr/bin/luna-send',*identity,'-n','1',uri,json.dumps(payload)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     try:
         end=time.monotonic()+timeout;raw=b''
         while time.monotonic()<end:

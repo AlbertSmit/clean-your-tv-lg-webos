@@ -7,13 +7,19 @@
   function checkUpdates() {
     if (checkingUpdates || !window.RootUpdates || !window.RootUpdates.rpc) return;
     checkingUpdates = true;
-    window.RootUpdates.rpc('check', {}).then(function (offer) {
-      if (!offer) return;
-      var available = offer.canInstall === true || offer.reason === 'missing-rollback';
+    function badge(available) {
       buttons[4].setAttribute('data-update-available', String(available));
       buttons[4].setAttribute('aria-label', t(available ? 'Software updates. Update available.' : 'Software updates'));
-    }).catch(function () {}).then(function () { checkingUpdates = false; });
+    }
+    function legacy() {
+      return window.RootUpdates.rpc('check', {}).then(function (offer) {
+        if (offer) badge(offer.canInstall === true || offer.reason === 'missing-rollback');
+      });
+    }
+    var check = window.SystemUpdates ? window.SystemUpdates.check('root', legacy).then(function (offer) { if (offer) badge(offer.canInstall === true); }) : legacy();
+    check.catch(function () {}).then(function () { checkingUpdates = false; });
   }
+
   function request(uri, payload, timeout) {
     return new Promise(function (resolve, reject) {
       var bridge, timer, done = false;
@@ -74,7 +80,7 @@
       refreshMode().then(function () { message.textContent = t(error); });
     });
   }
-  var order = [3, 1, 5, 4, 0, 6, 2];
+  var order = [3, 1, 5, 4, 0, 7, 6, 2];
   function focus(index) {
     selected = index;
     if (!buttons[selected].disabled) buttons[selected].focus();
@@ -96,6 +102,12 @@
     if (index === 2) return close();
     if (index === 5) { if (window.HomeI18n) window.HomeI18n.openLanguagePicker(); return; }
     if (index === 3) return changeMode();
+    if (index === 7) {
+      if (!window.RootAudio) return;
+      panel.hidden = true;
+      window.RootAudio.open(request, function () { panel.hidden = false; focus(7); });
+      return;
+    }
     if (index === 6) {
       if (!window.RootFirmware) return;
       panel.hidden = true;
@@ -137,10 +149,10 @@
     var back = document.createElement('div'); back.className = 'renewal-actions'; footer.appendChild(back);
     buttons = [];
     order.forEach(function (i) {
-      var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates','Language','LG firmware updates'];
+      var labels = ['TV settings','Open LG Home','Back to Home','Change Home','Software updates','Language','LG firmware updates','HDMI sound'];
       var b = document.createElement('button'); b.textContent = t(labels[i]);
       if (i === 3) { b.className = 'home-routing-switch'; b.setAttribute('role','switch'); b.setAttribute('aria-checked','false'); }
-      var target = i === 6 ? firmware : i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back;
+      var target = i === 6 || i === 7 ? firmware : i === 3 || i === 1 ? homeActions : i === 4 || i === 0 || i === 5 ? links : back;
       if (i === 1) {
         b.className = 'home-visit-button';
         b.setAttribute('aria-describedby', 'rootHomeVisitHint');

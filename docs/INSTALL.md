@@ -1,12 +1,93 @@
 # Install Clean Your TV — No-root and Root
 
-**[v1.2.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0)** contains cytv **0.3.1**, Home **1.4.1**, Helper **0.6.19**, Root **0.3.0**, both edition Updaters **0.2.1**, Android **0.2.1-preview / code 10** and System Updater **1.0.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.2.0.md) and [compatibility](COMPATIBILITY.md).
+Release 1.4.0: Android **0.4.0 / code 13** removes preview after maintainer-approved Android 15 ARM64 / WebView 124 emulator checks. Physical phones and live phone-to-TV recovery remain unverified. Latest-download links follow the published release. See [Android acceptance and limits](../android/STABLE-READINESS.md).
+
+1.4.0: [release notes](RELEASE-1.4.0.md) and [C3 acceptance / limits](RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
+
+**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 
 Use **cytv** to install either edition. It includes the runtime and TV packages;
 you do not need to build from source. Both editions run on the TV after setup,
 so your computer can be switched off during everyday use.
+
+## Set up Developer Mode (No-root)
+
+Desktop CYTV shows preparation one step at a time. Details opens the operation log. LG example images can be enlarged; use the code from your own TV.
+
+Developer Mode lets CYTV install apps on a TV without root. Home is your app screen. Home Helper makes the Home button open it.
+
+1. On the TV, open LG Apps, search for Developer Mode and install it.
+2. Open Developer Mode and sign in with your LG Developer account. Create an account at webostv.developer.lge.com if needed.
+3. Turn on Dev Mode Status. The TV restarts. Open Developer Mode again.
+4. Turn on Key Server and leave Developer Mode open. Its IP Address is the TV address to enter in CYTV.
+5. Enter Passphrase: the six characters shown in Developer Mode on the TV. Match uppercase and lowercase letters.
+
+Use the code from the TV, not your LG account password. If no code is visible, turn on Key Server.
+
+Pairing is a separate step: when the TV asks, approve CYTV with your remote.
+
+Keep Developer Mode active: open it before the timer runs out and press EXTEND while the TV is online. If it expires, LG can remove these apps.
+
+After installation, press Home to try it. If LG Home opens, open Home Helper from the TV's apps. Three short Home presses within two seconds return to LG Home. To restart Home control, open Home Helper, choose Start Helper and confirm. Your saved Home screen choice is kept.
+
+See [LG’s Developer Mode instructions](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app). Root TVs use their existing SSH access; do not enable Developer Mode on them.
+
+## Candidate: on-TV Root installation
+
+**Unpublished Homebrew Installer candidate; not a published download or catalog
+listing.** The separate CYTV Installer is Root-only. The existing cytv choices
+for No-root and Root on Windows/macOS/Linux/Android remain available.
+
+For a supervised candidate test, use the exact privately supplied, verified
+Installer IPK and record its hash. The TV must already have root, working Homebrew
+Channel exec with effective root privileges, Node.js 8+, webOS installer services,
+compatible ARM32 input and Python 3.9+ with the required modules. For supported
+ARMv7/`armv8l` 32-bit userspace only, Installer embeds a pinned offline private
+runtime; a 64-bit CPU/kernel alone is not support. It requires at least 320 MiB
+free **after** installing Installer, plus actual package-manager staging capacity
+which has not been measured on a TV. Existing suitable Python is reused.
+
+1. Open Installer to inspect prerequisites and retained operations. Opening,
+   reopening and status do not install components or Python.
+2. If Python is missing, explicitly choose runtime preparation. Reinspect after
+   it finishes, then review the actual candidate and components before installation.
+3. Normal setup installs Root Home and Root Updater. Choose System Updater
+   preparation explicitly if wanted; it is optional. Fresh app discovery stays
+   local to the TV. `--migrate-packaged-home` imports only validated packaged
+   preferences into a fresh setup, not browser storage or old infrastructure.
+4. Wait for verified completion. **Home activation is separate:** explicitly
+   enable Change Home after recovery/input checks. Setup never clears an off or
+   emergency-stop preference. Test triple-Home, standby and cold boot separately.
+
+A verified current installation opens maintenance with the same profile and
+recovery records used by cytv; changing clients needs no reinstall or reset.
+Unknown old infrastructure, inconsistent receipts and unfinished operations stop
+new setup. Keep the original journals, snapshots, logs and interpreter bindings.
+After a lost reply, reopen/status first. The TV Continue action is offered only
+for an original request/snapshot with proven final-readback install/removal state.
+Other uncertain stages require status, restore or diagnosis. The source
+[explicit CLI continuation](MANUAL_INSTALL.md#candidate-shared-product-continuation)
+can recognize additional safe stages; it never blindly repeats an unknown
+submission. cytv's Finish Root setup verifies completed setup before activation;
+it does not restart an incomplete product worker.
+
+Homebrew upgrades Installer only. Product updates still use existing Root/System
+Updater contracts and signed complete release sets. Deleting Installer in LG or
+Homebrew leaves separately installed product components and recovery intact.
+Complete-product removal is an explicit Installer/cytv action: restore LG Home,
+verify ownership, remove packages/registrations and owned private startup wrappers, and retain
+independent recovery/archive evidence and referenced Python slots. Direct deletion
+of Root Home or either updater is a different scenario requiring physical testing;
+private startup guards stop rearming when owner package metadata is missing or unsafe, while live routing and
+worker disappearance protections must also be verified. See the exact
+[acceptance matrix and state/permission inventory](development/HOMEBREW-INSTALL-ACCEPTANCE.md).
+Startup uses receipt-owned private wrappers and validates shared package metadata
+as data; it never executes packaged startup scripts. Independent recovery remains
+available after package loss. Inspection may briefly stage verified code/data
+privately without changing the product or Home.
+Historical C3 checks do not certify this new path.
 
 ## 1. Choose your edition
 
@@ -61,11 +142,11 @@ Download the matching package from the
 | macOS Apple Silicon / Intel | `cytv-macos-arm64.zip` / `cytv-macos-x64.zip`; extract, move `cytv.app` to Applications and open it |
 | Ubuntu 22.04+, Debian 12+, Mint 21+ x64 | Install `cytv-linux-x64.deb`, then open Clean Your TV from the applications menu |
 | Windows x64 | Extract `cytv-windows-x64-desktop.zip`, then open `cytv-desktop/cytv-desktop.exe` with `_internal` beside it |
-| Android ARM64 | Install `cytv-android-arm64.apk`; this is a debug-signed preview |
+| Android ARM64 | Install `cytv-android-arm64.apk`; this is a non-debuggable preview with the retained signing identity |
 
 For Windows, use File Explorer **Extract All** and keep the complete folder.
 Windows publisher signing is not configured. See [Windows desktop setup](DESKTOP_INSTALL.md#windows-x64).
-Android 0.2.1-preview requirements, APK installation and limitations are covered
+Android 0.3.0-preview requirements, APK installation and limitations are covered
 in the [Android guide](../android/README.md); physical-TV acceptance remains unverified.
 The standalone `cytv-linux-x64` executable is the CLI; install the `.deb` above
 for the Linux graphical app.
@@ -97,8 +178,10 @@ uses the guarded fallback; it is not proof of early restoration.
 **Root:** cytv installs Root Home, independent recovery and Root Updater, prepares
 its rollback baseline, verifies setup, then activates Home and opens it.
 There is **no trial countdown or Keep confirmation** in this normal setup flow.
-The manual Root bundle has a separate updater-setup step; do not substitute a
-standalone Root IPK for the complete installation.
+Published manual bundles have their own updater-setup procedure. The unreleased
+source setup instead takes both bundles in one shared request; see
+[manual setup](MANUAL_INSTALL.md#7-root-first-installation-checks-and-persistent-activation).
+Do not substitute a standalone Root IPK for the complete installation.
 
 For an interrupted operation, use **Check TV status** first. If offered, use
 **Finish Root setup** to complete a verified installation. Retain recovery files;

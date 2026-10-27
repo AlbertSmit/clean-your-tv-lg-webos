@@ -11,7 +11,7 @@ The project lockup reads **clean your tv / FOR LG webOS**.
 - `symbol-black.svg`, `symbol-white.svg`: true single-colour house marks.
 - `wordmark.svg`: custom lettering only, converted from the approved study into smoothed vector contours.
 - `readme-logo.png`, `readme-logo-dark.png`: transparent README headers for light/dark themes.
-- `downloads/*.svg`: linked README download cards with locally drawn Windows window, Apple, Linux penguin (Tux) and Android robot platform identifiers. Cream/muted brown vectors retain the quiet charcoal card styling; labels identify the Windows GUI ZIP and Android ARM64 preview APK. These platform identifiers are separate from the project’s B1 house identity.
+- `downloads/*.svg`: linked README download cards with locally drawn Windows window, Apple, Linux penguin (Tux) and Android robot platform identifiers. Cream/muted brown vectors retain the quiet charcoal card styling; labels identify the Windows GUI ZIP and Android ARM64 APK. These platform identifiers are separate from the project’s B1 house identity.
 - `brand-overview.svg`, `brand-overview.png`: identity and application-family preview.
 
 Identity SVG masters contain vector paths, no raster images, filters, external fonts or live text. Download cards use live system-font labels for legibility and local vector platform symbols; they make no external asset requests.

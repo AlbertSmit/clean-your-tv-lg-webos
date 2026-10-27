@@ -31,6 +31,62 @@ class UpdaterRemovalTests(unittest.TestCase):
         return state,base,hook,installed,str(state)+'.archive-'+'a'*32
 
 
+    def link_fixture(self,root):
+        import hashlib
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('hook_build',Path(__file__).parents[2]/'root-edition/startup_hook.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        args=self.fixture(root);state,base,hook,installed,_=args
+        app='com.cleanyourtv.root.updater';target=installed/'applications'/app/'startup.sh';target.parent.mkdir(parents=True)
+        target.write_bytes(module.packaged_content(app));(target.parent/'appinfo.json').write_text(json.dumps({'id':app}))
+        hook.unlink();hook.symlink_to(target)
+        (state/'startup-hook.json').write_text(json.dumps(dict(version=2,path=str(hook),target=str(target),owner_app=app,target_sha256=hashlib.sha256(target.read_bytes()).hexdigest())))
+        return args,target
+
+    def test_owned_link_archives_without_following_after_target_deletion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args,target=self.link_fixture(Path(tmp).resolve())
+            run=lambda action:namespace['operate'](action,*args,lambda:None,lambda _:None)
+            self.assertTrue(run('inspect')['ownership_verified'])
+            target.unlink();(target.parent/'appinfo.json').unlink();target.parent.rmdir()
+            self.assertTrue(run('disable')['disabled']);self.assertTrue(run('disable')['disabled'])
+            self.assertTrue((args[0]/'removed-registration/hook').is_symlink())
+            self.assertTrue(run('finalize')['removed'])
+            self.assertTrue((Path(args[4])/'startup-hook.json').exists())
+
+    def test_foreign_link_or_changed_package_is_never_archived(self):
+        for case in ('foreign','receipt'):
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as tmp:
+                args,target=self.link_fixture(Path(tmp).resolve());state,_,hook,_,_=args
+                if case=='foreign':hook.unlink();hook.symlink_to(state/'registration.json')
+                elif case=='changed':target.write_bytes(b'changed')
+                else:(state/'startup-hook.json').unlink()
+                with self.assertRaises((ValueError,OSError)):namespace['operate']('disable',*args,lambda:self.fail('refresh'),lambda _:None)
+                self.assertTrue(hook.is_symlink());self.assertFalse((state/'cytv-removal.json').exists())
+
+    def test_replaced_target_cannot_block_exact_owned_link_cleanup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args,target=self.link_fixture(Path(tmp).resolve());target.write_bytes(b'foreign executable bytes');target.parent.chmod(0o777)
+            self.assertTrue(namespace['operate']('disable',*args,lambda:None,lambda _:None)['disabled'])
+    def test_private_wrapper_receipt_is_owned_and_removal_is_repeatable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            args=self.fixture(Path(tmp).resolve());state,_,hook,_,_=args
+            raw=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH PYTHONHOME PYTHONPATH\nexec /usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/startup_guard.py')+' com.cleanyourtv.root.updater\n')
+            hook.write_text(raw);hook.chmod(0o700)
+            (state/'startup-hook.json').write_text(json.dumps(dict(version=3,path=str(hook),owner_app='com.cleanyourtv.root.updater',sha256=__import__('hashlib').sha256(raw.encode()).hexdigest())))
+            run=lambda action:namespace['operate'](action,*args,lambda:None,lambda _:None)
+            self.assertTrue(run('inspect')['ownership_verified']);self.assertTrue(run('disable')['disabled']);self.assertTrue(run('disable')['disabled'])
+
+    def test_interrupted_private_wrapper_publication_removes_exact_prior_link(self):
+        import hashlib
+        with tempfile.TemporaryDirectory() as tmp:
+            args,target=self.link_fixture(Path(tmp).resolve());state,_,hook,_,_=args
+            prior=(state/'startup-hook.json').read_bytes();(state/'startup-hook.previous.json').write_bytes(prior)
+            raw=('#!/bin/sh\nunset NODE_OPTIONS NODE_PATH PYTHONHOME PYTHONPATH\nexec /usr/bin/node '+str(state/'code/python_boot.js')+' '+str(state)+' '+str(state/'code/startup_guard.py')+' com.cleanyourtv.root.updater\n').encode()
+            (state/'startup-hook.json').write_text(json.dumps(dict(version=3,path=str(hook),owner_app='com.cleanyourtv.root.updater',sha256=hashlib.sha256(raw).hexdigest())))
+            target.write_bytes(b'foreign script')
+            self.assertTrue(namespace['operate']('disable',*args,lambda:None,lambda _:None)['disabled'])
+
     def test_managed_hook_requires_literal_owned_binding(self):
         managed='/var/lib/clean-your-tv-python/4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea/bin/python3.13'
         with tempfile.TemporaryDirectory() as tmp:

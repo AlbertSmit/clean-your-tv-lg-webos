@@ -9,6 +9,7 @@ import sys
 import time
 
 from updater.package import APP, inspect_package, safe_bytes, verify_payload
+from package_identity import identity, owners_present, TransitionUnknown, ROOT, UPDATER, SYSTEM
 
 STATE = Path('/var/lib/clean-your-tv-root-updater')
 ROOT_STATE = Path('/var/lib/clean-your-tv-root')
@@ -22,6 +23,16 @@ class Device:
         self.root_state=Path(root_state)
         self.installed_root=Path(installed)
         self.state=Path(store.root)
+
+    def owner_identity(self,owner,purpose='worker'):
+        return identity(owner,purpose=purpose,installed=self.installed_root,uid=self.store.uid,
+                        states={ROOT:self.root_state,UPDATER:self.state,SYSTEM:self.state.parent/'clean-your-tv-system-updater'})
+
+    def components_present(self):
+        return owners_present((UPDATER,APP),self.owner_identity)
+
+    def require_components(self):
+        if not self.components_present():raise ValueError('CYTV component removed; retained recovery requires inspection')
 
     def integrity(self):
         receipt=self.store.read('infrastructure')
@@ -76,12 +87,10 @@ class Device:
         return value
 
     def installed(self):
-        raw=safe_bytes(self.installed_root/('usr/palm/applications/'+APP+'/appinfo.json'),limit=65536)
-        app=json.loads(raw)
-        if app.get('id')!=APP or app.get('type')!='web':raise ValueError('Root application unavailable')
-        return {'version':app['version']}
+        return {'version':self.owner_identity(APP)['version']}
 
     def offer(self):
+        self.require_components()
         self.integrity()
         candidate=self.fetch('offer')['candidate'];self.descriptor(candidate,True)
         prior=self.store.read('current');installed=self.installed()['version']
@@ -98,6 +107,7 @@ class Device:
         return self.state/'cache'/(digest+'.ipk')
 
     def prepare(self, candidate, prior):
+        self.require_components()
         self.integrity();self.descriptor(candidate,True);self.descriptor(prior)
         previous=safe_bytes(self.cached(prior),uid=0);inspect_package(previous,prior)
         # Include decompressed application, cached rollback and filesystem overhead.
@@ -163,6 +173,7 @@ class Device:
         if intent and intent.get('phase')!='disabled':raise ValueError('Root intent remains enabled')
 
     def finish(self, transaction):
+        self.require_components()
         if not transaction or transaction.get('phase') not in ('complete','rolled-back','aborted'):return
         with self.store.lock():
             current=self.store.read('transaction')
@@ -180,6 +191,17 @@ class Device:
             return result
 
     def install(self, manifest, on_submit, on_terminal):
+        tx=self.store.read('transaction')
+        rollback=isinstance(tx,dict) and tx.get('phase')=='rolling-back' and tx.get('rollbackAttempted') is True
+        if rollback:
+            from updater.core import Manager
+            tx=Manager(self.store,self)._load()
+            if (any(manifest.get(k)!=tx['prior'].get(k) for k in ('version','sha256','size'))
+                    or tx['installEvidence']['terminal'] is None or any(v is not None for v in tx['rollbackEvidence'].values())):
+                raise ValueError('Original rollback submission proof required')
+            try:self.require_components()
+            except TransitionUnknown:pass  # All owners checked; this exact prior leg owns partial Root DATA.
+        else:self.require_components()
         self.descriptor(manifest)
         path=self.cached(manifest);inspect_package(safe_bytes(path,uid=0),manifest)
         from observed_install import install
@@ -209,12 +231,15 @@ class Device:
 
     def verify_installed(self, manifest):
         hashes=inspect_package(safe_bytes(self.cached(manifest),uid=0),manifest)
-        verify_payload(self.installed_root,hashes)
+        verify_payload(self.installed_root,hashes,uid=self.store.uid)
         self.repair_registration();self.integrity()
-        if self.installed()['version']!=manifest['version']:raise ValueError('Installed version mismatch')
+        from package_data import read_verified
+        info='usr/palm/applications/'+APP+'/appinfo.json'
+        if json.loads(read_verified(self.installed_root/info,sha256=hashes[info],installed=self.installed_root,uid=self.store.uid))['version']!=manifest['version']:raise ValueError('Installed version mismatch')
         return True
 
     def launch(self):
+        self.require_components()
         from updater.luna import call
         return call('luna://com.webos.applicationManager/launch',{'id':APP})
 

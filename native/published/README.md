@@ -1,9 +1,23 @@
 # Published Helper baseline
 
-These files preserve specific historical rollback baselines. Published v1.0.3
-uses Helper 0.6.18; the unpublished 1.1.0 candidate builds Helper 0.6.19 from
-source and needs its own exact archive/rollback approval. Selecting 0.6.19 does
-not reuse the 0.6.17 file below. See [candidate notes](../../docs/RELEASE-1.1.0.md).
+These files preserve exact published Helper packages. Both the source and installer
+builders reuse the pinned bytes while the corresponding version is selected.
+New Helper versions build from source and require their own release approval.
+
+## Current 0.6.19 baseline
+
+`com.local.nativehome_0.6.19_arm.ipk` is the exact public Helper from
+[v1.2.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.2.0),
+downloaded as a standalone release asset and verified against its `SHA256SUMS`.
+
+SHA-256: `52510c9115a518a05849f6618516b41886aea54b7f74ea4763ffeeaf63c03e7b`.
+
+The archive retains the published gzip headers. Repacking identical contents with
+a different Python gzip implementation changes its bytes and is rejected by the
+same-version signed-feed guard. Reusing this package preserves the published
+update and rollback baseline without weakening that guard.
+
+## Historical 0.6.17 baseline
 
 `com.local.nativehome_0.6.17_arm.ipk` is the exact Helper from
 [v1.0.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.0.0),

@@ -55,6 +55,7 @@ Do not claim hardware acceptance from automated tests or package installation. -
 - [ ] This description matches the inventory and states proposed versus committed component versions.
 - [ ] Final version matches `release-versions.json` and release notes.
 - [ ] Changed component manifests and versions agree.
+- [ ] README stable release links and component versions pass automated metadata validation.
 - [ ] Candidate documentation pass is complete; affected guides/translations match the release and remaining limitations are recorded above.
 - [ ] Rebuilt packages contain the intended changes; pinned baselines and delivery limitations are recorded.
 - [ ] TV acceptance evidence and untested paths are recorded in `acceptance`.

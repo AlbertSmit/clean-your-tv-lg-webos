@@ -90,6 +90,11 @@ async function stylesheet(code, filename) {
   compiled.root.walkDecls(/^(overflow-wrap|word-wrap)$/, declaration => {
     if (declaration.value === 'anywhere') unsupported.push(filename + ': ' + declaration.prop + ': anywhere requires a legacy break-word value');
   });
+  compiled.root.walkAtRules(/^font-face$/i, face => {
+    face.walkDecls(/^font-weight$/i, declaration => {
+      if (/\s/.test(declaration.value.trim())) unsupported.push(filename + ': font-weight ranges require static font faces for legacy engines');
+    });
+  });
   await postcss([doiuse({browsers: targets, onFeatureUsage: usage => {
     // Ignore css-variables since we transform them via preset-env stage 0
     if (usage.feature === 'css-variables') return;

@@ -40,6 +40,14 @@
         95
       ],
       "summary": "Explain failed private-Python ABI/ownership/storage checks with bounded diagnostics; no WAM cleanup, original installation outcome remains unconfirmed"
+    },
+    {
+      "pr": 102,
+      "issues": [
+        21,
+        101
+      ],
+      "summary": "Accept C2 UID1001 only for independently pinned shared package DATA and guide interrupted No-root install recovery; existing Root-operation recovery and original No-root package refusal remain unconfirmed"
     }
   ],
   "excluded": [],

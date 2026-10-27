@@ -1,89 +1,66 @@
-import json
-import os
-from pathlib import Path
-import shutil
-import shlex
+import inspect
 import subprocess
 import tempfile
+from pathlib import Path
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from cytv import wam_cleanup as wam
+from cytv.errors import UserError
 
-@unittest.skipUnless(os.name == 'posix' and shutil.which('node'), 'Requires POSIX Node.js filesystem fixtures')
+
 class CleanupTests(unittest.TestCase):
-    def test_bootstrap_ignores_node_preload_environment(self):
-        command = wam._command('probe').replace(shlex.quote(wam.SCRIPT), shlex.quote(self.script))
-        prefix = 'set -eu\nsafe_mode() { return 0; }\nancestors() { return 0; }\n'
-        result = subprocess.run(['/bin/sh', '-c', prefix + command],
-            env=dict(os.environ, NODE_OPTIONS='--require /nonexistent-cytv-wam-preload'),
-            capture_output=True, text=True, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('CYTV_WAM_READY', result.stdout)
+    def test_cleanup_requests_only_two_native_types_once(self):
+        self.assertEqual(list(inspect.signature(wam.clean).parameters), ['remote'])
+        remote = MagicMock()
+        remote.luna.return_value = {'returnValue': True}
+        wam.clean(remote)
+        remote.luna.assert_called_once_with('com.webos.service.webappmanager/clearBrowsingData',
+                                            {'types': ['cache', 'codecache']}, timeout=60)
+        remote.run.assert_not_called()
 
-    def test_reboot_preserves_busybox_applet_name(self):
-        executable = self.base.parent/'busybox'
-        marker = self.base.parent/'reboot-called'
-        executable.write_text('#!/bin/sh\n[ "${0##*/}" = reboot ] && touch ' + str(marker) + '\n')
-        executable.chmod(0o700)
-        reboot_path = self.base.parent/'reboot'
-        reboot_path.symlink_to(executable)
-        def run(remote, script, **kwargs):
-            prefix = 'set -eu\nsafe_mode() { return 0; }\nancestors() { return 0; }\n'
-            prefix += 'command() { printf "%s" ' + str(reboot_path) + '; }\n'
-            result = subprocess.run(['/bin/sh', '-c', prefix + script], capture_output=True, text=True, timeout=10)
-            return result.stdout
-        with patch.object(wam, '_run', side_effect=run):
-            wam.reboot(None)
-        self.assertTrue(marker.exists())
+    def test_rejection_malformed_reply_and_disconnect_never_retry_or_delete_files(self):
+        self.assertEqual(list(inspect.signature(wam.clean).parameters), ['remote'])
+        for reply in ({'returnValue': False}, {}, {'returnValue': 1}, None, UserError('remote-private-data'), OSError(), ValueError('remote-private-data'), RuntimeError('remote-private-data')):
+            with self.subTest(reply=reply):
+                remote = MagicMock()
+                if isinstance(reply, Exception): remote.luna.side_effect = reply
+                else: remote.luna.return_value = reply
+                with self.assertRaises(UserError) as caught: wam.clean(remote)
+                self.assertNotIn('remote-private-data', str(caught.exception))
+                self.assertIn('may already have been cleared', str(caught.exception))
+                self.assertEqual(remote.luna.call_count, 1)
+                remote.run.assert_not_called()
 
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temp.cleanup)
-        self.base = Path(self.temp.name).resolve()/'Default'
-        self.base.mkdir(mode=0o700)
-        self.mounts = self.base.parent/'mountinfo'
-        self.mounts.write_text('1 0 0:1 / / rw - tmpfs tmpfs rw\n')
-        self.script = wam.SCRIPT.replace("'/var/lib/wam/Default'", json.dumps(str(self.base))).replace('var OWNER = 0;', 'var OWNER = '+str(os.getuid())+';').replace("'/proc/self/mountinfo'",json.dumps(str(self.mounts)))
-        for name in ('Session Storage','Cache','Code Cache','GPUCache','Local Storage','Service Worker','databases'):
-            folder=self.base/name;folder.mkdir(mode=0o700);(folder/'data').write_bytes(b'preserve-or-delete')
-        self.node = shutil.which('node')
-    def run_js(self, action, token='-'):
-        return subprocess.run([self.node,'-e',self.script,action,token],capture_output=True,text=True,timeout=10)
-    def token(self):
-        result=self.run_js('probe')
-        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        return result.stdout.split()[1]
-    def test_only_selected_trees_removed(self):
-        token=self.token(); result=self.run_js('clean',token)
-        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        self.assertEqual(result.stdout,'CYTV_WAM_CLEARED')
-        for name in ('Session Storage','Cache','Code Cache','GPUCache'):self.assertFalse((self.base/name).exists())
-        for name in ('Local Storage','Service Worker','databases'):self.assertEqual((self.base/name/'data').read_bytes(),b'preserve-or-delete')
-    def test_already_empty_selection_is_a_safe_noop(self):
-        for name in ('Session Storage','Cache','Code Cache','GPUCache'):
-            shutil.rmtree(self.base/name)
-        result = self.run_js('clean', self.token())
-        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertTrue((self.base/'Local Storage'/'data').exists())
+    def test_inspection_reads_only_bounded_counters(self):
+        self.assertTrue(hasattr(wam, 'INSPECT'), 'Native cache inspection is missing')
+        remote = MagicMock()
+        with patch.object(wam, '_run', return_value='CYTV_WAM_CACHE 101292 511948'):
+            self.assertEqual(wam.inspect(remote), {'bytes': 101292 * 1024, 'available_kib': 511948})
+        remote.luna.assert_not_called()
+        for reply in ('CYTV_WAM_CACHE -1 1', 'CYTV_WAM_CACHE 1 99999999999999999999',
+                      'CYTV_WAM_CACHE 1 2\nprivate-data', ''):
+            with self.subTest(reply=reply), patch.object(wam, '_run', return_value=reply):
+                with self.assertRaises(UserError): wam.inspect(remote)
 
-    def test_changed_snapshot_refuses_before_deletion(self):
-        token=self.token();(self.base/'Cache'/'new').write_bytes(b'new')
-        self.assertNotEqual(self.run_js('clean',token).returncode,0)
-        self.assertTrue((self.base/'Session Storage'/'data').exists())
-    def test_symlink_and_hardlink_refused_before_deletion(self):
-        for link in ('symbolic','hard'):
-            path=self.base/'Cache'/'link';target=self.base/'Local Storage'/'data'
-            if link=='symbolic':path.symlink_to(target)
-            else:os.link(target,path)
-            self.assertNotEqual(self.run_js('probe').returncode,0)
-            self.assertEqual(target.read_bytes(),b'preserve-or-delete');path.unlink()
-    def test_mountpoint_and_writable_directory_refused(self):
-        encoded=str(self.base/'Session Storage').replace(' ','\\040')
-        self.mounts.write_text('1 0 0:1 / '+encoded+' rw - tmpfs tmpfs rw\n')
-        self.assertNotEqual(self.run_js('probe').returncode,0)
-        self.mounts.write_text('1 0 0:1 / / rw - tmpfs tmpfs rw\n')
-        os.chmod(self.base/'Cache',0o777)
-        self.assertNotEqual(self.run_js('probe').returncode,0)
+    def test_real_inspection_is_read_only_and_missing_caches_are_zero(self):
+        self.assertTrue(hasattr(wam, 'INSPECT'), 'Native cache inspection is missing')
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory).resolve() / 'Default'
+            base.mkdir()
+            protected = base / 'Session Storage'
+            protected.mkdir(); (protected / 'data').write_bytes(b'keep')
+            script = wam.INSPECT.replace('/var/lib/wam/Default', str(base)).replace('/usr/bin/luna-send', '/bin/sh')
+            prefix = "set -eu\nsafe_mode() { return 0; }\nancestors() { return 0; }\ndf() { printf 'header\\nfixture 1 1 511948 1 /var\\n'; }\n"
+            result = subprocess.run(['/bin/sh', '-c', prefix + script], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, 'CYTV_WAM_CACHE 0 511948')
+            self.assertEqual((protected / 'data').read_bytes(), b'keep')
+            cache = base / 'Cache'; cache.mkdir(); (cache / 'data').write_bytes(b'x' * 8192)
+            result = subprocess.run(['/bin/sh', '-c', prefix + script], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertGreater(int(result.stdout.split()[1]), 0)
+            self.assertEqual((cache / 'data').read_bytes(), b'x' * 8192)
 
-if __name__=='__main__':unittest.main()
+
+if __name__ == '__main__': unittest.main()

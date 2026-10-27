@@ -1,6 +1,5 @@
 # Clean Your TV — 사용자 안내
 
-미출시: Root WAM 정리는 명시적 확인이 필요한 별도 유지 관리 작업입니다. 앱 세션 상태가 손실될 수 있습니다. 이후 TV를 실제 재부팅하고 공간을 확인한 뒤 설치를 다시 시작하세요. [안내와 제한](../WAM-CLEANUP.md)을 확인하세요.
 
 No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니다. LG Developer Mode를 사용하면 No-root를, 기존 root SSH 접근 권한이 있으면 Root를 선택하세요. 호환성과 테스트 범위는 각 버전마다 다릅니다.
 
@@ -216,4 +215,7 @@ ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. �
 
 아직 공개되지 않은 1.4.0 후보에서는 중단된 No-root 설치도 **TV 상태 확인** 후 **복구 및 재설치**를 제공합니다. Clean Your TV 앱을 제거하려는 경우에만 제거를 확인하고, 다시 설치하기 전에 버전을 검토하세요. 복구에 실패하면 해당 진단 보고서를 저장하고 중단하세요. TV의 최초 패키지 거부 원인은 아직 확인되거나 해결되지 않았습니다 (#21).
 
-취소한 뒤 LG 설정에서 사용하지 않는 앱을 삭제하거나 수동 정리 안내에 따라 직접 공간을 확보할 수 있습니다. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+**미출시 — WAM:** `cytv clean-wam-cache --edition root`. cache와 codecache만 요청합니다. Session Storage, 쿠키, Local Storage, Service Worker 및 데이터베이스는 제외됩니다. 먼저 TV 앱을 닫으세요. 캐시를 다시 받거나 만들므로 다음 앱 실행이 느릴 수 있습니다. [WAM](../WAM-CLEANUP.md).
+
+취소하고 직접 공간을 확보할 수 있습니다. 수동 안내를 따르고 /var/lib를 다시 확인하세요. 앱 삭제는 다른 파티션의 공간을 확보할 수 있습니다. **Session Storage (SSH):** 먼저 TV 앱을 닫으세요. 앱 세션 상태를 삭제하며 로그아웃되거나 저장하지 않은 작업을 잃을 수 있습니다. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

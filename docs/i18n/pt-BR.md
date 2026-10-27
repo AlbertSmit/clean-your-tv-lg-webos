@@ -1,6 +1,5 @@
 # Clean Your TV — guia de uso
 
-Ainda não publicado: a limpeza opcional do WAM em Root é uma ação separada de manutenção com confirmação explícita. Pode apagar o estado das sessões. Depois reinicie a TV de verdade, confira o espaço e tente instalar novamente. Veja [instruções e limites](../WAM-CLEANUP.md).
 
 No-root e Root são opções equivalentes para diferentes configurações da TV. Escolha No-root para LG Developer Mode ou Root se já tiver acesso root por SSH. A compatibilidade e os testes realizados são específicos de cada edição.
 
@@ -218,4 +217,7 @@ Ainda não publicado: a verificação de Python privado distingue falhas de ABI,
 
 No candidato 1.4.0 ainda não publicado, uma instalação No-root interrompida também oferece **Recuperar e reinstalar** após **Verificar status da TV**. Confirme a remoção somente se quiser remover os aplicativos Clean Your TV; depois confira as versões antes de reinstalar. Se a recuperação falhar, salve seu relatório de diagnóstico e pare. Isso ainda não identifica nem resolve a rejeição original do pacote pela TV (#21).
 
-Você pode cancelar e liberar espaço por conta própria removendo apps não usados nas configurações da LG ou seguindo o guia de limpeza manual. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+**Não publicado — WAM:** `cytv clean-wam-cache --edition root`. Somente cache e codecache são solicitados. Session Storage, cookies, Local Storage, Service Worker e bancos de dados são excluídos. Feche os apps da TV. O cache será baixado ou criado novamente; a próxima abertura pode ser mais lenta. [WAM](../WAM-CLEANUP.md).
+
+Você pode cancelar e liberar espaço por conta própria. Siga o guia e confira /var/lib; remover apps pode liberar outra partição. **Session Storage (SSH):** Feche os apps da TV primeiro. O estado das sessões será apagado; você pode ser desconectado ou perder trabalho não salvo. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

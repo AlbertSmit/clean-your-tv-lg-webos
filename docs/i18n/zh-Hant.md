@@ -1,6 +1,5 @@
 # Clean Your TV — 使用者指南
 
-尚未發佈：可選 Root WAM 清理是一項需要明確確認的獨立維護操作，可能遺失應用程式工作階段狀態。清理後請完整重新啟動電視，檢查可用空間，再重新開始安裝。請參閱[說明與限制](../WAM-CLEANUP.md)。
 
 No-root 和 Root 是適用於不同電視組態的同等選項。使用 LG 開發者模式請選擇 No-root；已有 root SSH 訪問請選擇 Root。兩種版本的兼容性與測試範圍分別記錄。
 
@@ -198,4 +197,7 @@ Home 設定 → HDMI 聲音提供 eARC 重新連接和已確認的 HDMI 輸出�
 
 在尚未發布的 1.4.0 候選版中，中斷的 No-root 安裝也可在**檢查電視狀態**後使用**恢復並重新安裝**。只有確定要移除 Clean Your TV 應用程式時才確認移除，然後在重新安裝前檢查版本。如果恢復失敗，請儲存該次診斷報告並停止操作。電視最初拒絕安裝套件的原因仍未確定，也尚未確認已修復（#21）。
 
-你可以取消操作，在 LG 設定中刪除不用的應用程式，或按照手動清理指南自行清理空間。 [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+**尚未發佈 — WAM:** `cytv clean-wam-cache --edition root`. 只請求 cache 和 codecache。不會清理 Session Storage、cookies、Local Storage、Service Worker 和 databases。 請先關閉電視應用程式。快取會重新下載或建立；下次啟動可能需要更多時間。 [WAM](../WAM-CLEANUP.md).
+
+可以取消並自行清理空間。請按手動指南操作並再次檢查 /var/lib；刪除應用程式可能只清理其他分區。 **Session Storage (SSH):** 請先關閉電視應用程式。這會刪除工作階段狀態，可能登出帳號或遺失未儲存的資料。 [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

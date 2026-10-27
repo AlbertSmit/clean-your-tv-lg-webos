@@ -1,6 +1,5 @@
 # Clean Your TV — Benutzeranleitung
 
-Noch nicht veröffentlicht: optionale Root-WAM-Bereinigung als separate Wartungsaktion mit ausdrücklicher Bestätigung. App-Sitzungszustand kann verloren gehen. Danach TV wirklich neu starten, Platz prüfen und Einrichtung erneut starten. Siehe [Anleitung und Grenzen](../WAM-CLEANUP.md).
 
 No-root und Root sind gleichwertige Optionen für unterschiedliche TV-Konfigurationen. Wählen Sie No-root für LG Developer Mode oder Root für vorhandenen Root-Zugriff per SSH. Kompatibilität und Testumfang hängen von der jeweiligen Edition ab.
 
@@ -229,4 +228,7 @@ Noch nicht veröffentlicht: Die Prüfung für privates Python unterscheidet ABI-
 
 Im unveröffentlichten Kandidaten 1.4.0 bietet auch eine unterbrochene No-root-Installation nach **TV-Status prüfen** die Aktion **Wiederherstellen und neu installieren**. Bestätigen Sie das Entfernen der Clean Your TV-Apps nur, wenn Sie es wünschen; prüfen Sie anschließend die Versionen vor der Neuinstallation. Schlägt die Wiederherstellung fehl, speichern Sie den Diagnosebericht und stoppen Sie. Die ursprüngliche Paketverweigerung des Fernsehers ist damit noch nicht geklärt oder behoben (#21).
 
-Sie können abbrechen und selbst Platz freigeben: ungenutzte Apps in den LG-Einstellungen entfernen oder der Anleitung zur manuellen Bereinigung folgen. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+**Noch nicht veröffentlicht — WAM:** `cytv clean-wam-cache --edition root`. Nur cache und codecache werden angefordert. Session Storage, Cookies, Local Storage, Service Worker und Datenbanken sind ausgeschlossen. Zuerst TV-Apps schließen. Cache-Daten werden neu geladen oder erstellt; der nächste App-Start kann länger dauern. [WAM](../WAM-CLEANUP.md).
+
+Sie können abbrechen und selbst Platz freigeben. Anleitung beachten und /var/lib erneut prüfen; Apps können auf einer anderen Partition liegen. **Session Storage (SSH):** Zuerst TV-Apps schließen. App-Sitzungszustand wird gelöscht; Abmeldung oder Verlust ungespeicherter Arbeit ist möglich. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).

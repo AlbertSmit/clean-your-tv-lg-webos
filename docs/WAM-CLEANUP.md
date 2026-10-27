@@ -1,109 +1,103 @@
-# Optional Root WAM cleanup
+# Optional Root WAM cache cleanup
 
-**Unreleased cytv change for issue #95.** These controls are absent from published
-installers until a later verified release includes this change. They are separate
-from normal installation, diagnostics and the on-TV Homebrew Installer. Do not
-run them as routine maintenance: first establish that `/var` is low on space.
+**Unreleased 1.4.0 candidate behavior; absent from published installers.**
+This is a separate console/desktop maintenance action, not part of installation,
+diagnostics, Android UI or the on-TV Homebrew Installer. First check whether
+`/var` is actually short of space. A large app-storage total on another partition
+does not establish that private Python has enough space in `/var/lib`.
 
 ## Review and confirm
 
-Close TV applications and keep the TV on. With a matching development desktop
-build, open **Maintenance → Clear WAM session data and caches (root required)**.
-With a matching console build, run:
+Close TV apps. In a matching candidate desktop build, open **Maintenance → Clear
+WAM caches (root required)**. In a matching console build, run:
 
 ```sh
 cytv clean-wam-cache --edition root
 ```
 
-Use your existing trusted Root SSH connection. TV Python is not required; this
-path needs verified root-owned Node.js 8+ and safe system tools. A No-root profile,
-noninteractive mode or a locally recorded pending installation/removal stops the action. `--yes`
-does not authorize cleanup or reboot. Preserve existing recovery records.
+Use your existing trusted Root SSH connection. TV Python and Node are not needed.
+No-root profiles, noninteractive mode and locally recorded pending installations
+or removals are refused. Preserve recovery records and resolve those operations
+first. `--yes` cannot authorize this action; the cleanup prompt defaults to **No**.
 
-cytv inspects only these directories below `/var/lib/wam/Default/`:
+The review shows approximate disk usage of `Cache` and `Code Cache`, available
+space in `/var/lib`, the manual alternative and these limits:
 
-- `Session Storage`
-- `Cache`
-- `Code Cache`
-- `GPUCache`
+- The only requested WAM types are `cache` and `codecache`.
+- Session Storage, cookies, Local Storage, Service Worker and databases
+  are not requested for deletion. This is not a reset of all app data. GPUCache
+  is not a separately selected path; internal shader-cache handling belongs to
+  the TV engine and is not promised unchanged on untested firmware.
+- Apps may download or rebuild cached data; their next launch can be slower.
+- Sizes are estimates, not a locked snapshot or a promise of recovered space.
 
-The review shows their total logical file size, which is **not** a prediction of
-freed disk blocks. Both cleanup and the later reboot prompt default to **No**.
-Session Storage contains app state: deletion may sign you out or lose unsaved
-work. The report that a C2 remained signed in is not a guarantee for other apps.
-Local Storage, Service Worker, `databases`, managed Python and recovery records
-are outside the selected trees and are never cleanup targets.
+cytv calls the TV's own `com.webos.service.webappmanager/clearBrowsingData` API.
+It never deletes WAM files itself, changes ownership, stops/masks services or
+falls back to a shell cleanup when the API is missing, denied or unconfirmed.
+An omitted `types` argument or `all` would clear a much broader set of data; cytv
+always sends the explicit fixed pair above.
+
+A positive reply means the request was accepted. Recheck actual free space:
+
+```sh
+df -Pk /var/lib
+```
+
+If the connection fails, some cache may already have been cleared. Inspect space
+before deciding to retry; cytv does not retry automatically. No reboot, service
+restart or installation resume is requested. Start setup again explicitly after
+checking space. Initial private-Python provisioning still needs **320 MiB** free;
+cache cleanup does not resolve ABI, ownership or interrupted-operation failures.
 
 ## Free space yourself instead
 
-You can decline automated cleanup and remove unused apps through LG settings.
-Check free space again before attempting setup. Do not delete private Python or
-installation/recovery records to make room. The low-space error and maintenance
-screen both offer this alternative and link to this guide.
+Cancel the action if you prefer manual maintenance. Removing unused apps in LG
+settings may help their installation partition, but may not free `/var`; verify
+`df -Pk /var/lib` afterwards. Never delete private Python or recovery records to
+make room, and do not change ownership of WAM's service-owned directories.
 
-Experienced Root operators may instead review these exact WAM folders over their
-existing trusted SSH connection. Close TV apps first. **Deleting session state
-can sign you out and lose unsaved work; it cannot be undone.** Manual commands do
-not provide cytv's ownership, link, mountpoint or snapshot checks. Do not use this
-path to bypass a safety refusal or a pending installation/removal.
-
-Inspect first (these commands do not delete files):
+For an experienced Root operator, inspect only the known storage first:
 
 ```sh
 df -Pk /var/lib
-du -xsk /var/lib/wam/Default/Session\ Storage /var/lib/wam/Default/Cache /var/lib/wam/Default/Code\ Cache /var/lib/wam/Default/GPUCache
+du -skx "/var/lib/wam/Default/Session Storage" /var/lib/wam/Default/Cache "/var/lib/wam/Default/Code Cache" /var/lib/wam/Default/GPUCache
 ```
 
-Only if you have reviewed the paths, understand the risks and deliberately choose
-to erase these four folders, run this separate destructive command:
+**Manual Session Storage deletion can sign you out and lose unsaved app state;
+it cannot be undone.** The C2 reporter remained signed in, which is not a promise
+for other apps. A running WAM can change files and hold deleted data open. Before
+manual deletion, establish a device-specific maintenance procedure that prevents
+all WAM writers and respawns, and includes verified recovery of TV services. A
+single process check or closing visible apps is not such a barrier. Service names,
+stop propagation and recovery differ across firmware; do not copy an unverified
+stop/mask sequence or alter ownership to bypass the automatic action's limits.
+
+Only after that prerequisite is satisfied, and after reviewing the exact path,
+the destructive Session Storage command is:
 
 ```sh
-rm -rf -- "/var/lib/wam/Default/Session Storage" "/var/lib/wam/Default/Cache" "/var/lib/wam/Default/Code Cache" "/var/lib/wam/Default/GPUCache"
+rm -rf -- "/var/lib/wam/Default/Session Storage"
 ```
 
-Then, when ready to interrupt TV use, run `reboot` once. After a real restart,
-check `df -Pk /var/lib` again and explicitly retry setup. Standby is not a reboot;
-freed space and successful installation are not guaranteed.
+Local Storage, Service Worker, databases, cookies and recovery state remain outside
+that path. Restore the services using the reviewed maintenance procedure. If a real
+TV restart is required, explicitly choose when to run `reboot` once; standby is
+not a restart. Then recheck space and app state before starting setup again. Do
+not infer successful cleanup or reboot from SSH disconnection.
 
-## Safety checks and failure recovery
+## Evidence and remaining acceptance
 
-The action refuses symlinks, hard-linked files, special files, non-root ownership,
-group/other write access, nested mountpoints (including same-device mounts) and
-unexpected filesystem boundaries. Inspection reads metadata, not app file
-contents. Node preload environment variables are cleared before execution. It hashes the inspected tree metadata; changes before confirmation
-stop cleanup before deletion. The TV script rechecks each inode before removal.
-Traversal is bounded to 100,000 entries and depth 64; exceeding either limit stops
-cleanup. Missing selected folders are a safe no-op. No new dependency, network
-endpoint, persistent receipt or startup hook is created.
+On OLED55C3RLA / firmware **43.21.71**, SDK **11.2.0**, a separately authorized
+single API request for `cache` and `codecache` returned true. Free space increased
+from **511948 to 612704 KiB** (about **98.4 MiB**); WAM remained active. Aggregate
+content/identity fingerprints of Session Storage, Local Storage, Service Worker,
+databases and cookie files were unchanged. No reboot or install was performed.
+The original root-owner-only filesystem cleaner refused this TV's normal `wam`
+UID 505, which motivated using WAM's native API instead of relaxing deletion guards.
 
-WAM can still write while the TV runs. If a folder changes during removal, cleanup
-can stop after deleting some selected files. The installer reports uncertainty
-and never retries automatically. Close apps, inspect the TV and retained storage
-state, then decide whether to retry explicitly. Do not broaden the deletion paths
-or remove other state to bypass a refusal.
-
-After successful cleanup, reboot the TV explicitly. The optional reboot button
-submits one request; SSH disconnection does not prove completion, so cytv leaves
-reboot completion unverified and never resubmits it. If you decline, perform a real
-TV restart yourself rather than standby. Open deleted files may retain disk space
-until WAM exits. Check space over your existing SSH connection after restart:
-
-```sh
-df -Pk /var/lib
-```
-
-Then start installation explicitly. Initial private-Python provisioning still
-requires **320 MiB** free; cleanup does not activate Home or resume installation.
-If ABI or ownership checks also fail, solve those separately. Keep the failed
-attempt's diagnostic report; do not share SSH credentials or raw app listings.
-
-## Hardware evidence
-
-The issue reporter described recovering space on OLED65C2AUA / firmware 04.40.90 /
-webOS 22 by manually clearing these folders and rebooting. No physical TV has
-been used to validate this new automated action. Node/shell temporary-filesystem
-fixtures verify scope and refusal behavior; they do not establish app session,
-reboot, standby or cold-boot compatibility. Device acceptance must record the
-exact installer, model/firmware, free space before/after a real restart, resulting
-app state and the subsequent Python/Root setup outcome. Keep issue #95 open until
-its remaining reported failure and acceptance are resolved.
+This was a direct API experiment, not acceptance of an exact frozen installer.
+The C3 had about 500 MiB free before testing, so it did not reproduce the reporter's
+low-space installation failure. Exact candidate installer checks, normal app
+behavior and other models/firmware remain acceptance work. The reported C2's large
+Session Storage is not automatically cleared; issue #95 remains partially addressed
+and open. See the [source review and measurements](research/2026-10-27-wam-storage-cleanup.md).

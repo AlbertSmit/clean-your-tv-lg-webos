@@ -430,22 +430,20 @@ def main(argv=None, ask=input, write=print, connect=None, secret=getpass.getpass
             elif args.command == 'clean-wam-cache':
                 from . import wam_cleanup
                 phase = 'clean-wam-cache'
-                write('You can cancel and free space yourself by removing unused apps in LG settings or following the manual cleanup guide.')
+                write('You can cancel and free space yourself. Use the manual cleanup guide and recheck /var/lib; removing apps may free a different partition.')
                 write.raw('https://github.com/Razdva122/clean-your-tv-lg-webos/blob/release/next/docs/WAM-CLEANUP.md')
                 snapshot = wam_cleanup.inspect(remote)
-                write.heading('Clear WAM session data and caches')
-                write.raw('Session Storage, Cache, Code Cache, GPUCache')
-                write('Close TV apps first. This deletes app session state and may sign you out or lose unsaved work.')
-                write('Local Storage, Service Worker and databases are excluded.')
-                write('Selected WAM files: {size} MiB. Space may remain occupied until a real TV reboot.'.format(size=format(snapshot['bytes']/1048576, '.1f')))
-                if not prompts.confirm('Clear these four WAM folders?', ask, write):
-                    write('Cancelled. No WAM files were removed.')
+                write.heading('Clear WAM caches')
+                write.raw('Cache, Code Cache')
+                write('Close TV apps first. Cached data will be downloaded or rebuilt; the next app launch may be slower.')
+                write('Only cache and codecache are requested. Session Storage, cookies, Local Storage, Service Worker and databases are excluded.')
+                write('WAM cache estimate: {size} MiB. Free in /var/lib: {available} MiB.'.format(
+                    size=format(snapshot['bytes']/1048576, '.1f'), available=format(snapshot['available_kib']/1024, '.1f')))
+                if not prompts.confirm('Clear WAM Cache and Code Cache through the TV service?', ask, write):
+                    write('Cancelled. No cache cleanup was requested.')
                     return 0
-                wam_cleanup.clean(remote, snapshot['token'])
-                write('WAM cleanup completed. Reboot the TV, recheck free space, then start installation again.')
-                if prompts.confirm('Reboot the TV now?', ask, write):
-                    wam_cleanup.reboot(remote)
-                    write('Reboot completion is unverified. Do not repeat automatically; check the TV and restart it manually if needed.')
+                wam_cleanup.clean(remote)
+                write('Cache cleanup request accepted. Recheck free space before retrying installation; no reboot or setup resume was requested.')
             elif args.command == 'doctor':
                 phase = 'doctor'
                 installer.preflight()

@@ -84,7 +84,7 @@ class GuiTests(unittest.TestCase):
                 ('uninstall', 'Uninstall Clean Your TV'),
                 ('home-diagnostics', 'Home button diagnostics'),
                 ('enable-system-updates', 'Enable updates for all TV components (root required)'),
-                ('clean-wam-cache', 'Clear WAM session data and caches (root required)')]):
+                ('clean-wam-cache', 'Clear WAM caches (root required)')]):
             with self.subTest(command=command):
                 calls = []
                 def runner(argv, **kwargs):

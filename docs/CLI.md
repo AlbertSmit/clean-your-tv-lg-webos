@@ -465,10 +465,13 @@ as unknown, with Change Home hidden until a valid response. This avoids showing
 an unconfirmed off switch. It does not repair a firmware denial or unavailable
 request-file transport, prove that Helper stopped, or automatically start it.
 
-## Unreleased: optional WAM cleanup
+## Unreleased: optional WAM cache cleanup
 
-`cytv clean-wam-cache --edition root` reviews four fixed WAM session/cache
-folders and requires separate default-No consent to delete them and to request a
-reboot. `--yes` does not bypass consent; noninteractive mode is refused. This can
-lose app session state. See [scope, guards and recovery](WAM-CLEANUP.md). The action
-never resumes installation and is not present in published installers yet.
+`cytv clean-wam-cache --edition root` estimates Cache/Code Cache usage and available
+`/var/lib` space, offers manual guidance and requires default-No confirmation.
+It requests only `cache` and `codecache` through the TV's native WAM API; it does
+not delete files itself. Session Storage and other app state are excluded.
+`--yes` does not authorize cleanup; noninteractive mode and pending local operations
+are refused. Cache rebuilding may slow the next app launch. No reboot, automatic
+retry or setup resume occurs. See [scope, manual maintenance and evidence](WAM-CLEANUP.md).
+Published installers do not include this action yet.

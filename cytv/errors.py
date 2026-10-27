@@ -25,7 +25,7 @@ class PythonPreflightError(UserError):
             if self.wam_session_kib:
                 message += '\nWAM Session Storage uses {size} MiB and may contribute to low space. Review the recovery guide before clearing app state.'.format(
                     size=format(self.wam_session_kib / 1024, '.1f').removesuffix('.0'))
-            message += '\nYou can cancel and free space yourself by removing unused apps in LG settings or following the manual cleanup guide.'
+            message += '\nYou can cancel and free space yourself. Use the manual cleanup guide and recheck /var/lib; removing apps may free a different partition.'
             message += '\nClose TV apps first. This deletes app session state and may sign you out or lose unsaved work.'
             message += '\nhttps://github.com/Razdva122/clean-your-tv-lg-webos/blob/release/next/docs/WAM-CLEANUP.md'
         else:

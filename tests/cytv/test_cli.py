@@ -9,28 +9,28 @@ from cytv import cli, state
 
 
 class CLITests(unittest.TestCase):
-    def test_wam_cleanup_has_separate_default_no_consent_even_with_yes(self):
+    def test_wam_cache_cleanup_has_default_no_consent_even_with_yes(self):
         from unittest.mock import MagicMock
-        for answers, cleared, rebooted in [(['n'], False, False), (['y', 'n'], True, False), (['y', 'y'], True, True)]:
-            with self.subTest(answers=answers), tempfile.TemporaryDirectory() as tmp, \
-                 patch('cytv.wam_cleanup.inspect', return_value={'token': 'a'*64, 'bytes': 1024}) as inspect, \
-                 patch('cytv.wam_cleanup.clean') as clean, patch('cytv.wam_cleanup.reboot') as reboot, \
-                 patch('cytv.cli.Installer') as installer, patch('cytv.cli.package.verify_payload') as payload:
-                prompts = []
-                output = []
-                choices = iter(answers)
+        for choice, cleared in [('n', False), ('', False), ('y', True)]:
+            with self.subTest(choice=choice), tempfile.TemporaryDirectory() as tmp, \
+                 patch('cytv.wam_cleanup.inspect', return_value={'bytes': 1024, 'available_kib': 511948}), \
+                 patch('cytv.wam_cleanup.clean') as clean, patch('cytv.cli.Installer') as installer, \
+                 patch('cytv.cli.package.verify_payload') as payload:
+                prompts, output = [], []
                 remote = MagicMock()
                 code = cli.main(['clean-wam-cache', '--host', '192.0.2.10', '--edition', 'root',
-                    '--data-dir', tmp, '--yes'], ask=lambda label: (prompts.append(label), next(choices))[1],
+                    '--data-dir', tmp, '--yes'], ask=lambda label: (prompts.append(label), choice)[1],
                     write=output.append, connect=lambda *args: remote)
                 self.assertEqual(code, 0)
-                self.assertIn('free space yourself', '\n'.join(output))
-                self.assertIn('may sign you out or lose unsaved work', ' '.join(' '.join(output).split()))
-                self.assertIn('docs/WAM-CLEANUP.md', '\n'.join(output))
+                text = ' '.join(' '.join(output).split())
+                self.assertIn('free space yourself', text)
+                self.assertIn('next app launch may be slower', text)
+                self.assertIn('Session Storage, cookies, Local Storage, Service Worker and databases are excluded', text)
+                self.assertIn('docs/WAM-CLEANUP.md', text)
+                self.assertEqual(len(prompts), 1)
                 self.assertIn('[y/N]', prompts[0])
                 self.assertEqual(clean.call_count, int(cleared))
-                self.assertEqual(reboot.call_count, int(rebooted))
-                if cleared: clean.assert_called_once_with(remote, 'a'*64)
+                if cleared: clean.assert_called_once_with(remote)
                 installer.return_value.install.assert_not_called()
                 payload.assert_not_called()
 

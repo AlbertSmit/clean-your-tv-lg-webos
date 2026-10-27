@@ -206,14 +206,16 @@ saves screenshots of the real Qt widgets to `build/installer-preview/`. These us
 sample TV data and do not discover, connect to, or modify a TV. Add `--all-locales`
 to capture every supported language at the minimum window size.
 
-## Unreleased: optional WAM cleanup
+## Unreleased: optional WAM cache cleanup
 
-A matching development desktop build adds **Maintenance → Clear WAM session data
-and caches (root required)**. Review the selected folders and session-data warning,
-then explicitly confirm cleanup; reboot is a second default-No choice. It uses
-existing Root SSH without TV Python. See [WAM cleanup](WAM-CLEANUP.md) for failure
-recovery, limitations and required device acceptance. Published downloads do not
-yet include this action.
+A matching candidate adds **Maintenance → Clear WAM caches (root required)**.
+Review the estimated Cache/Code Cache size, free space, slower-next-launch warning
+and manual alternative before the default-No prompt. Only the native WAM API types
+`cache` and `codecache` are requested. Session Storage and other app data are
+excluded; no root filesystem deletion, service stop, reboot, retry or setup resume
+is performed. Existing Root SSH is required; TV Python/Node are not. See
+[WAM cache cleanup](WAM-CLEANUP.md) for manual Session Storage risks and the limited
+C3 API evidence. Published downloads do not include this action yet.
 
 ### Interrupted No-root installation in the unpublished 1.4.0 candidate
 

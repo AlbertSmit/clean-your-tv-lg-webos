@@ -23,7 +23,7 @@ MAINTENANCE_ACTIONS = (
     ('Uninstall Clean Your TV', 'uninstall'),
     ('Home button diagnostics', 'home-diagnostics'),
     ('Enable updates for all TV components (root required)', 'enable-system-updates'),
-    ('Clear WAM session data and caches (root required)', 'clean-wam-cache'),
+    ('Clear WAM caches (root required)', 'clean-wam-cache'),
 )
 
 

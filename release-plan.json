@@ -76,6 +76,13 @@
         111
       ],
       "summary": "Validate the exact release-bound Root 0.4 runtime before disabling updaters; C3 original-request removal continuation verified, new-runtime acceptance remains pending"
+    },
+    {
+      "pr": 113,
+      "issues": [
+        104
+      ],
+      "summary": "Recognize fresh session-bound firmware shutdown before input teardown and defer restored old observers to guarded boot recovery; first9194 AC failed, corrected-runtime hardware acceptance remains pending"
     }
   ],
   "excluded": [],

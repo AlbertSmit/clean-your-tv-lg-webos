@@ -18,6 +18,13 @@
       "summary": "Suppress same-component-version update offers and align settings badges with the edition-specific System Updater; physical-TV confirmation pending"
     },
     {
+      "pr": 120,
+      "issues": [
+        110
+      ],
+      "summary": "Restore Root Home access to Homebrew configuration APIs and localized diagnostics; C3 switch accepted, effective blocking after TV restart and full lifecycle acceptance pending"
+    },
+    {
       "pr": 121,
       "issues": [
         107

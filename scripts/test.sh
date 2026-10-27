@@ -11,6 +11,7 @@ has() { [[ "$selected" == *" $1 "* ]]; }
 if has tv; then
 npm run test:compat
 npm run lint:compat
+node tests/startup-metrics.cjs
 node tests/widget-data.cjs
 node tests/helper-compat.cjs
 for test in tests/apps/*.cjs; do

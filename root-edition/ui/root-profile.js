@@ -2,10 +2,12 @@
 (function () {
   'use strict';
   function t(source, params) { if (window.HomeI18n) return window.HomeI18n.t(source, params); return String(source).replace(/\{(\w+)\}/g, function (_, key) { return params && params[key] !== undefined ? params[key] : '{' + key + '}'; }); }
+  if (window.HomeStartup) window.HomeStartup.mark('profileGateStart');
   var data = window.RootProfileData, failed = false, booted = false, systemRestore = false;
   var marker = 'tvhome.root.restored.v1';
   function recovery(error) {
     failed = true;
+    if (!booted && window.HomeStartup) window.HomeStartup.mark('profileGateBlocked');
     window.RootUpdates.open({recovery:true, error:t('Launcher profile could not be restored.') + ' ' + t(error.message)});
   }
   function save(profile) {
@@ -37,6 +39,7 @@
   }};
   function boot(restored) {
     if (booted) return; booted = true;
+    if (window.HomeStartup) window.HomeStartup.mark('profileGateComplete');
     window.RootLauncherRendered = false;
     var script = document.createElement('script'); script.src = 'app.js';
     script.onerror = function () { recovery(Error('Launcher could not start')); };

@@ -94,7 +94,18 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
           const r = card.getBoundingClientRect();
           return card.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
         }), 'a populated DOM is insufficient: the viewport must not clip the cards');
+        const startup = await page.evaluate(() => HomeStartup.snapshot());
+        for (const name of ['firstJS', 'languageReply', 'languageReady', 'profileGateStart',
+          'profileGateComplete', 'appStart', 'gridCreated', 'inventoryRefreshStart', 'firstPaintProxy', 'widgetsCreated']) {
+          assert.equal(typeof startup[name], 'number', 'startup milestone: ' + name);
+        }
+        assert.equal(startup.firstHandledKey, undefined);
+        assert.equal(startup.inventoryRefreshComplete, undefined, 'held inventory request remains pending');
+        await page.keyboard.press('a');
+        assert.equal(await page.evaluate(() => HomeStartup.snapshot().firstHandledKey), undefined,
+          'unhandled keys are not startup input acceptance');
         await page.keyboard.press('ArrowRight');
+        assert.equal(typeof await page.evaluate(() => HomeStartup.snapshot().firstHandledKey), 'number');
         await page.keyboard.press('Enter');
         assert.deepEqual(await page.evaluate(() => window.launches), ['test.1']);
         await page.keyboard.press('ArrowDown');
@@ -135,6 +146,7 @@ const profiles = ['modern', 'no-inset', 'no-inset-or-es2015'];
         await page.evaluate(() => inventoryRequests[0].onservicecallback(JSON.stringify({
           returnValue: true, apps: [{id: 'test.0', title: 'Updated title'}, {id: 'airplay', title: 'AirPlay'}]
         })));
+        assert.equal(typeof await page.evaluate(() => HomeStartup.snapshot().inventoryRefreshComplete), 'number');
         assert.equal(await page.locator('#tiles .focused').count(), 0, 'late inventory must preserve Inputs focus');
         await page.keyboard.press('Escape');
         assert(await page.locator('#inputsPanel').evaluate(el => el.classList.contains('hidden')), 'Back still closes Inputs after inventory refresh');

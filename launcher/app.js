@@ -1,6 +1,9 @@
 !function () {
   "use strict";
 
+  function startupMark(name) { if (window.HomeStartup) window.HomeStartup.mark(name); }
+  startupMark('appStart');
+
   function tr(text, params) {
     return window.HomeI18n ? HomeI18n.t(text, params) : text.replace(/\{(\w+)\}/g, function (m, k) {
       return params && params[k] !== undefined ? params[k] : m;
@@ -210,6 +213,7 @@
       }
     }
     focusTile(nextFocus);
+    startupMark('gridCreated');
   }
   // Insert a single app tile at a given index without re-rendering the
   // rest of the grid. Used by picker-add and hide-undo paths.
@@ -568,6 +572,7 @@
       }
     }, true);
     rebuild();
+    startupMark('inventoryRefreshStart');
     AppLibrary.installed(function (apps) {
       if (apps !== null) {
         library.refresh(apps);
@@ -579,6 +584,7 @@
           rebuild(tiles[focusedTile] && tiles[focusedTile].app.id);
         }
       }
+      startupMark('inventoryRefreshComplete');
     });
   }
   // Tile rendering, icon colors and grid geometry.
@@ -763,6 +769,7 @@
   function ensureWidgets() {
     if (typeof window.WidgetData === 'undefined' || !HomeUI.createWidgets || widgets) return;
     widgets = HomeUI.createWidgets(window.WidgetData);
+    startupMark('widgetsCreated');
     window.WidgetData.subscribe(refreshWidgets);
   }
   function refreshWidgets() {
@@ -777,6 +784,7 @@
     stopWidgetWatch = window.WidgetData.watch(function (snap) {
       if (generation !== widgetRefreshGeneration) return;
       widgets.update(snap);
+      startupMark('widgetDataFirst');
     });
   }
   function tileBackground(hex) {
@@ -1107,6 +1115,7 @@
       var tileCenter, nearestButton, nearestDistance;
       event.preventDefault();
     }
+    startupMark('firstHandledKey');
   });
   var lastWheel = 0;
   getElement('viewport').addEventListener('wheel', function (event) {
@@ -1192,4 +1201,5 @@
   focusZone = "none";
   focusTile(0);
   window.RootLauncherRendered = true;
+  if (window.HomeStartup) window.HomeStartup.paintProxy();
 }();

@@ -1,12 +1,13 @@
 (window.HomeI18n?HomeI18n.ready:function(callback){callback();})(function(){
 (function(){
  'use strict';
+ if(window.HomeStartup)window.HomeStartup.mark('profileGateStart');
  var booted=false,profileError=false,systemRestore=null,restoreMarker='tvhome.rollback.restored.v1';
  function rpc(method,payload,cb,service){var b,done=false;var timer=setTimeout(function(){finish(null);},2000);
   function finish(r,ok){if(done)return;done=true;clearTimeout(timer);if(b)try{b.cancel();}catch(_){}cb(r,ok===true);}
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?(r.result===undefined?r.state:r.result):null,r.returnValue===true);}catch(_){finish(null);}};b.call((service||'luna://com.cleanyourtv.updater.service/')+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
  }
- function boot(){if(booted)return;booted=true;var s=document.createElement('script');s.src='app.js';s.onload=function(){
+ function boot(){if(booted)return;booted=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateComplete');var s=document.createElement('script');s.src='app.js';s.onload=function(){
   // A populated rendered grid is a startup signal, not proof of every TV feature.
   if(!systemRestore&&!document.querySelector('#tiles .item[data-app-id]'))return;
   var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
@@ -66,7 +67,7 @@
   finish(!saved);
  });
  }
- function systemError(error){profileError=true;window.SystemUpdates.open({edition:'no-root',recovery:true,error:error.message});}
+ function systemError(error){profileError=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateBlocked');window.SystemUpdates.open({edition:'no-root',recovery:true,error:error.message});}
  if(window.SystemUpdates){
   window.SystemUpdates.rpc('restoreProfile',{edition:'no-root'}).then(function(restored){
    if(!restored){legacy();return;}

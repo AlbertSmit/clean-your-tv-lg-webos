@@ -74,10 +74,11 @@
  refresh();
  if(root.PalmServiceBridge&&preference()==='auto'){
   pending=true;var bridge,timer,finished=false;
-  function finish(value){if(finished)return;finished=true;root.clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}systemLanguage=value;refresh();pending=false;var queued=callbacks;callbacks=[];queued.forEach(function(cb){cb();});if(root.document)apply(root.document);}
+  function finish(value){if(finished)return;finished=true;root.clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}systemLanguage=value;refresh();pending=false;if(root.HomeStartup)root.HomeStartup.mark('languageReady');var queued=callbacks;callbacks=[];queued.forEach(function(cb){cb();});if(root.document)apply(root.document);}
   timer=root.setTimeout(function(){finish(null);},1200);
-  try{bridge=new root.PalmServiceBridge();bridge.onservicecallback=function(raw){var language=null;try{var r=JSON.parse(raw);if(r.returnValue===true)language=r.settings.localeInfo.locales.UI;}catch(_){}finish(language);};bridge.call('luna://com.webos.settingsservice/getSystemSettings',JSON.stringify({key:'localeInfo'}));}catch(_){finish(null);}
+  try{bridge=new root.PalmServiceBridge();bridge.onservicecallback=function(raw){if(root.HomeStartup)root.HomeStartup.mark('languageReply');var language=null;try{var r=JSON.parse(raw);if(r.returnValue===true)language=r.settings.localeInfo.locales.UI;}catch(_){}finish(language);};bridge.call('luna://com.webos.settingsservice/getSystemSettings',JSON.stringify({key:'localeInfo'}));}catch(_){finish(null);}
  }
+ if(!pending&&root.HomeStartup)root.HomeStartup.mark('languageReady');
  if(root.document){
   root.document.addEventListener('focusin',function(e){if(!confirmation||confirmation.hidden)return;var index=confirmationButtons.indexOf(e.target);if(index>=0)confirmationSelected=index;else confirmationButtons[confirmationSelected].focus();},true);
   ['keydown','keyup'].forEach(function(type){root.document.addEventListener(type,function(e){

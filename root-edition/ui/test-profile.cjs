@@ -12,13 +12,13 @@ for(const mutate of [p=>p.renewal={},p=>p.config.extra=true,p=>p.inventory.apps[
 }
 const tick=()=>new Promise(r=>setImmediate(r));
 function harness({restore=null,saved=null,tiles=['app.one'],version='0.0.1',packaged=profile.inventory,unavailable=false,memory=new Map(),iconStatus=200,i18n=false}={}){
- const calls=[],scripts=[],errors=[];if(saved!==null)memory.set(data.key,typeof saved==='string'?saved:JSON.stringify(saved));
+ const calls=[],scripts=[],errors=[],marks=[];if(saved!==null)memory.set(data.key,typeof saved==='string'?saved:JSON.stringify(saved));
  const storage={getItem:k=>memory.has(k)?memory.get(k):null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};
- const window={AppLibrary:require('../../launcher/app-library.js'),ROOT_VERSION:version,RootProfileData:data,TV_APPS:packaged,CONFIG:profile.config,RootUpdates:{rpc:async(method,payload)=>{calls.push([method,payload]);if(unavailable)throw Error('not provisioned');return restore;},open:o=>errors.push(o),confirmLaunch:t=>calls.push(['confirmLaunch',t])}};
+ const window={HomeStartup:{mark:name=>marks.push(name)},AppLibrary:require('../../launcher/app-library.js'),ROOT_VERSION:version,RootProfileData:data,TV_APPS:packaged,CONFIG:profile.config,RootUpdates:{rpc:async(method,payload)=>{calls.push([method,payload]);if(unavailable)throw Error('not provisioned');return restore;},open:o=>errors.push(o),confirmLaunch:t=>calls.push(['confirmLaunch',t])}};
  if(i18n){window.HomeI18n={preference:()=>memory.get('tvhome.language')||'auto',refresh(){},t:s=>s};window.location={reload(){calls.push(['reload',memory.get('tvhome.root.restored.v1')]);}};}
  const document={body:{appendChild:s=>{scripts.push(s);}},createElement:()=>({}),querySelectorAll:selector=>(selector.includes('[data-app-id]')?tiles:tiles.concat([null])).map(id=>({getAttribute:()=>id}))};
  const ctx={window,document,localStorage:storage,Promise,setTimeout,clearTimeout,XMLHttpRequest:class{open(method,url){assert.strictEqual(method,'GET');assert.strictEqual(url,'icons/one.png');}send(){this.status=iconStatus;this.response={size:3};this.onload();}},FileReader:class{readAsDataURL(){this.result=icon;this.onload();}}};
- vm.runInNewContext(fs.readFileSync(__dirname+'/root-profile.js','utf8'),ctx);return {window,calls,scripts,errors,memory};
+ vm.runInNewContext(fs.readFileSync(__dirname+'/root-profile.js','utf8'),ctx);return {window,calls,scripts,errors,memory,marks};
 }
 (async()=>{
  for(const [before,after] of [['ru','ko'],['en','auto'],['auto','en']]){
@@ -35,6 +35,7 @@ function harness({restore=null,saved=null,tiles=['app.one'],version='0.0.1',pack
  assert.strictEqual((await localized.window.RootProfile.capture()).settings['tvhome.language'],'ko');
  localized.memory.set('tvhome.language','ru');localized=harness({memory:localized.memory,restore:{profile:translatedProfile,transaction:'lang',version:'0.0.1',phase:'complete'}});await tick();assert.strictEqual(localized.memory.get('tvhome.language'),'ru');
  let h=harness({restore:{profile,transaction:'tx',version:'0.0.1',phase:'verifying'}});await tick();
+ assert.deepStrictEqual(h.marks,['profileGateStart','profileGateComplete']);
  assert.strictEqual(h.scripts.length,1);assert.deepStrictEqual(h.window.TV_APPS,profile.inventory);assert.strictEqual(h.memory.get('tvhome.order'),profile.settings['tvhome.order']);
  h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert.deepStrictEqual(h.calls.map(x=>x[0]),['restoreProfile','ready','confirm']);assert.strictEqual(h.calls[1][1].transaction,'tx');assert.strictEqual(h.calls[1][1].version,'0.0.1');
  const captured=await h.window.RootProfile.capture();assert.deepStrictEqual(JSON.parse(JSON.stringify(captured)),profile);assert.strictEqual(h.calls.length,3);
@@ -42,7 +43,7 @@ function harness({restore=null,saved=null,tiles=['app.one'],version='0.0.1',pack
  h=harness({restore:{profile,transaction:'layout',version:'0.0.1',phase:'verifying'},memory:layoutMemory,tiles:[]});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(h.calls.some(x=>x[0]==='ready'),'saved layout visibility must match the launcher model');
  h=harness({restore:{profile,transaction:'tx',version:'0.0.1',phase:'verifying'},tiles:['wrong']});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));assert(h.errors.length);
  h=harness({restore:{profile,transaction:'tx',version:'0.0.2',phase:'verifying'}});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
- h=harness({saved:'{broken'});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
+ h=harness({saved:'{broken'});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);assert.deepStrictEqual(h.marks,['profileGateStart','profileGateBlocked']);
  h=harness({packaged:{apps:[],inputs:[]},unavailable:true});await tick();assert.strictEqual(h.scripts.length,0);assert(h.errors.length);
  h=harness({restore:null,packaged:{apps:[],inputs:[]}});await tick();assert.strictEqual(h.scripts.length,1);h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));
  const empty=JSON.parse(JSON.stringify(profile));empty.config.hiddenApps=['app.one'];h=harness({restore:{profile:empty,transaction:'empty',version:'0.0.1',phase:'verifying'},tiles:[]});await tick();h.scripts[0].onload();await tick();assert(!h.calls.some(x=>x[0]==='ready'));assert(h.errors.length);

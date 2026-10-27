@@ -24,7 +24,7 @@ def tracked_files(prefix):
     required = {'native/app': ['native/app/helper-entry.js', 'native/app/state-permissions.js', 'native/app/home-control.js', 'native/app/websocket.js'],
                 'renewal-service': ['renewal-service/home-control.js', 'renewal-service/ca-bundle.crt', 'renewal-service/ca-LICENSE.txt'],
                 'updater-service': ['updater-service/ca-bundle.crt', 'updater-service/ca-LICENSE.txt'],
-                'launcher': ['launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
+                'launcher': ['launcher/startup-metrics.js', 'launcher/system-updates.js', 'launcher/helper-control.js', 'launcher/release-notes.js', 'launcher/app-library.js', 'launcher/i18n.js', 'launcher/catalogs.js', 'launcher/i18n.css',
                              'launcher/theme-panel.js', 'launcher/appearance.css', 'launcher/ui/index.jsx',
                              'launcher/ui/layouts.js', 'launcher/ui/preferences.js', 'launcher/ui/tile.jsx',
                              'launcher/ui/shelf.jsx', 'launcher/ui/appearance-panel.jsx',

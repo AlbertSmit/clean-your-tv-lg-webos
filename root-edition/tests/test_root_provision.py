@@ -28,7 +28,7 @@ class ProvisionTests(unittest.TestCase):
         api=json.loads(result['api'])
         self.assertEqual(api['activities.callbacks'],[p.NAME+'/boot'])
         self.assertEqual(json.loads(result['client']),{p.NAME:['activity.operation'], 'com.cleanyourtv.root.preview':[p.NAME+'.control'], 'com.cleanyourtv.root.preview-*':[p.NAME+'.control']})
-        self.assertEqual(api[p.NAME+'.control'],[p.NAME+'/'+x for x in ('status','restore','enable','confirm','listApps','audioRecoveryStatus','setAudioRecoveryEnabled','recoverAudio')])
+        self.assertEqual(api[p.NAME+'.control'],[p.NAME+'/'+x for x in ('status','restore','enable','confirm','listApps')])
         self.assertIn('com.cleanyourtv.root.preview', json.loads(result['role'])['permissions'][0]['inbound'])
         self.assertIn('com.cleanyourtv.root.preview-*', json.loads(result['role'])['permissions'][0]['inbound'])
         self.assertNotIn(p.NAME+'/trial',str(api))

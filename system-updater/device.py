@@ -150,6 +150,11 @@ class Device:
                 self.check_legacy()
                 if not self.verify_baseline(prior):raise ValueError('Installed baseline changed')
                 for c in prior['components']:self.inspect(self.cache_bytes(c),c)
+                for c in candidate['components']:
+                    if c['kind']=='infrastructure':
+                        raw=(self.cache_bytes(c) if os.path.lexists(self.cached(c)) else
+                             self.fetch('package',{'proof':candidate['proof'],'name':c['name']},binary=True))
+                        self.inspect(raw,c)
             except Exception as error:reason=str(error)
         components=[]
         for c in candidate['components']:

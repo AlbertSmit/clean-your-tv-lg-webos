@@ -241,6 +241,8 @@ Correction Root du démarrage à froid non publiée : si le contrôle Home est a
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
+Correctif OTA candidat (#115) : le System Updater original de 1.3.0 ne peut pas installer 1.4.0 car les fichiers autorisés ont changé. Un arrêt avant remplacement n’est pas une installation partielle. Conservez le journal ; ne relancez pas, ne supprimez pas l’état et ne modifiez pas les chemins. Le prochain candidat conserve les contrats de chemins et permissions de 1.3.0 ; mise à jour et retour arrière sur TV restent à tester ensemble.
+
 Correction non publiée (#108/#109) : lorsque System Updater est configuré, le voyant et « Tout mettre à jour » utilisent la même vérification de l’édition. Une nouvelle version globale sans changement des versions des composants ne propose pas de réinstallation. L’installation reste désactivée pendant la vérification. L’ancienne vérification sert uniquement si System Updater est absent. La confirmation sur téléviseur reste attendue.
 
 Diagnostic non publié #110 : l’accès SSH root ne donne pas automatiquement à Home accès à l’API de configuration Homebrew. L’écran distingue accès refusé, service indisponible, service sans root, délai dépassé et réponse non prise en charge. Si l’accès est refusé, modifiez le réglage dans Homebrew Channel. Sous webOS 11, les autorisations de Homebrew 0.7.3 peuvent bloquer les appels des applications ; une solution d’autorisations prise en charge reste à établir. Aucune autorisation ni préférence de blocage n’est modifiée automatiquement.

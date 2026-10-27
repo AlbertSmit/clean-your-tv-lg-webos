@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT/'runtime'))
 
 class AudioTests(unittest.TestCase):
     def setUp(self):
-        path=ROOT/'runtime/audio_recovery.py'
+        path=ROOT/'runtime/cli.py'
         self.assertTrue(path.exists(), 'eARC runtime is missing')
         spec=importlib.util.spec_from_file_location('audio_recovery', path)
         self.a=importlib.util.module_from_spec(spec);spec.loader.exec_module(self.a)
@@ -156,8 +156,8 @@ class AudioTests(unittest.TestCase):
             self.assertEqual(self.writes,[])
         self.engine.call=old
     def test_optional_audio_failure_cannot_block_explicit_home_restore(self):
-        import audio_recovery,cli,intent_runtime,update_guard
-        with patch.object(audio_recovery,'inhibit',side_effect=ValueError('unsafe optional policy')),patch.object(update_guard,'cancel'),patch.object(intent_runtime,'restore',return_value='restored'):
+        import cli,intent_runtime,update_guard
+        with patch.object(cli,'inhibit',side_effect=ValueError('unsafe optional policy')),patch.object(update_guard,'cancel'),patch.object(intent_runtime,'restore',return_value='restored'):
             self.assertEqual(cli.execute('restore'),'restored')
     def test_repeated_or_late_boot_launch_does_not_rearm_cold_reset(self):
         import intent_runtime
@@ -237,7 +237,7 @@ class AudioTests(unittest.TestCase):
             return reply
         self.engine.call=cancel
         with patch.object(self.a.os,'geteuid',return_value=0),patch.object(self.a,'blocked',return_value=False),patch.object(self.a,'Store',return_value=self.store),patch.object(self.a,'Engine',return_value=self.engine),patch.object(update_guard,'control',side_effect=lambda *a:contextlib.nullcontext()),patch.object(self.a,'launch') as launch:
-            self.assertFalse(self.a.main('enable')['returnValue'])
+            self.assertFalse(self.a.audio_main('enable')['returnValue'])
             launch.assert_not_called()
         self.assertFalse(self.store.policy()['enabled'])
     def test_old_worker_cannot_disable_newer_explicit_policy(self):
@@ -254,7 +254,7 @@ class AudioTests(unittest.TestCase):
             return reply
         self.engine.call=disable
         with patch.object(self.a.os,'geteuid',return_value=0),patch.object(self.a,'blocked',return_value=False),patch.object(self.a,'Store',return_value=self.store),patch.object(self.a,'Engine',return_value=self.engine),patch.object(update_guard,'control',side_effect=lambda *a:contextlib.nullcontext()),patch.object(self.a,'launch') as launch:
-            self.assertFalse(self.a.main('enable')['returnValue']);launch.assert_not_called()
+            self.assertFalse(self.a.audio_main('enable')['returnValue']);launch.assert_not_called()
         self.assertFalse(self.store.policy()['enabled'])
     def test_policy_file_symlink_is_rejected(self):
         self.store.root.joinpath('policy.json').symlink_to(Path(self.tmp.name)/'foreign')

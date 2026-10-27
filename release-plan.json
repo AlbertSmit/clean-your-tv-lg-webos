@@ -3,6 +3,13 @@
   "version": null,
   "changes": [
     {
+      "pr": 118,
+      "issues": [
+        115
+      ],
+      "summary": "Restore the original v1.3.0 Root OTA path/LS2 contract, guarded retained rollback and signed computer recovery; physical signed upgrade/rollback acceptance pending"
+    },
+    {
       "pr": 119,
       "issues": [
         108,

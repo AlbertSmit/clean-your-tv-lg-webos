@@ -213,3 +213,14 @@ off, package loss, failsafe, same-session input faults, unconfirmed trials and
 restore-before-gate remain mandatory. Rebuild coherent exact-source artifacts
 and repeat the full supervised matrix after any correction; do not re-enable
 fault-disabled Root automatically or edit installed runtime/receipts.
+
+
+## Candidate: original 1.3.0 System OTA (#115)
+
+[Compatibility contract and offline evidence](../docs/development/ROOT-OTA-13-COMPATIBILITY.md)
+cover the original supervisor, exact paths/LS2 plan, signed current-runtime
+validation, update and both rollback timings. The test fixture replaces TV RPC,
+SDK installation and runtime suspension/finish boundaries; it does not accept
+physical controls or audio. Coordinate a future C3 test of the actual frozen
+signed upgrade, preserved apps/settings, Home/emergency state and retained rollback.
+Do not borrow the earlier fresh-install/manual-rollback acceptance for this path.

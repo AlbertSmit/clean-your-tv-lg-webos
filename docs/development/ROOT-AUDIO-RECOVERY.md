@@ -1,7 +1,9 @@
-# Root HDMI audio recovery (unreleased)
+# Root HDMI audio recovery
 
 Implements the approved [eARC research proposal](../research/2026-10-26-earc.md),
-separately from PR #27's Bluetooth/microphone controls. No version is selected.
+separately from PR #27's Bluetooth/microphone controls. Controls shipped in 1.4.0.
+The next-candidate OTA compatibility correction (#115) changes their packaging
+and internal RPC route, with no new user controls or hardware acceptance.
 
 ## Controls
 
@@ -21,15 +23,22 @@ Restore saved eARC setting: use it only if eARC on is your desired setting.
 
 ## Runtime and authority
 
-runtime/audio_recovery.py owns transactions and a detached worker, independent
-of the UI/JS RPC lifetime and Home-button controller. service/audio-recovery.js
-allows only fixed operations, exact keys/boolean values and uid 0. The existing
-private service runner selects the verified Python binding; no shell interpolation
-is used. The Root control LS2 group gains exactly audioRecoveryStatus,
-setAudioRecoveryEnabled and recoverAudio. No new network endpoint, global platform
-permission, elevated third-party application or startup hook is installed.
-Luna calls use the existing privileged local command sender. Actual field shape,
-method availability and LS2 access remain physical acceptance requirements.
+The next candidate places the audio transaction engine and detached worker in
+`runtime/cli.py`, independent of the UI/JS RPC lifetime and Home-button controller.
+`service/handlers.js` permits only fixed operations, exact keys/booleans and uid0.
+Audio state uses `status` with `{audio:"status"}`; explicit configuration/recovery
+uses `enable` with `{audio:"configure",enabled:boolean}` or
+`{audio:"recover",operation:...}`. The read-only route cannot write settings.
+This preserves the published 1.3.0 LS2 plan and executable destination inventory.
+The runner selects the verified Python binding without shell interpolation.
+No additional LS2 grant, network endpoint, global permission, privileged
+third-party app or startup hook is introduced. Method support and audible results
+still need physical acceptance.
+
+Published 1.4.0 instead has separate `audio_recovery.py` / `audio-recovery.js`
+files and three dedicated audio methods/grants. Those historical installed
+contracts are not silently edited by the candidate. See
+[Root OTA compatibility](ROOT-OTA-13-COMPATIBILITY.md).
 
 All new state is in /var/lib/clean-your-tv-root/audio-recovery/, mode 0700.
 Files are root-owned, mode 0600, atomic fsync/replace writes. Separate flock locks

@@ -27,7 +27,7 @@
   function refresh() {
     var current = ++generation;
     draw(null);
-    return request(service+'audioRecoveryStatus', {}, 60000).then(function (reply) {
+    return request(service+'status', {audio:'status'}, 60000).then(function (reply) {
       if (current !== generation) return;
       draw(reply);
       if (!panel.hidden && buttons[selected].disabled) focus(2);
@@ -37,9 +37,9 @@
     if (busy || !state || buttons[index].disabled) return;
     var current = ++generation, old = state;
     busy = true; draw(old);
-    var method = index === 1 ? 'setAudioRecoveryEnabled' : 'recoverAudio';
-    var payload = index === 1 ? {enabled:!old.enabled} :
-      {operation:old.needsRestore ? 'restore-setting' : old.canRestoreRoute ? 'restore-hdmi' : 'restart-earc'};
+    var method = 'enable';
+    var payload = index === 1 ? {audio:'configure',enabled:!old.enabled} :
+      {audio:'recover',operation:old.needsRestore ? 'restore-setting' : old.canRestoreRoute ? 'restore-hdmi' : 'restart-earc'};
     request(service+method, payload, 60000).then(function (reply) {
       busy = false;
       if (current !== generation) { if (!panel.hidden) refresh(); return; }

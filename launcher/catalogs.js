@@ -2359,3 +2359,42 @@ HomeI18n.add({
     "Home is your app screen. Home Helper makes the Home button open it.": "Home 是您的應用程式主畫面。Home Helper 讓遙控器的 Home 鍵開啟此畫面。"
   }
 });
+
+HomeI18n.add({
+  "en": {
+    "This update requires a computer migration. Keep recovery records.": "This update requires a computer migration. Keep recovery records."
+  },
+  "de": {
+    "This update requires a computer migration. Keep recovery records.": "Dieses Update erfordert eine Migration am Computer. Bewahre die Wiederherstellungsdaten auf."
+  },
+  "es": {
+    "This update requires a computer migration. Keep recovery records.": "Esta actualización requiere una migración desde un ordenador. Conserva los registros de recuperación."
+  },
+  "pt-BR": {
+    "This update requires a computer migration. Keep recovery records.": "Esta atualização exige migração pelo computador. Preserve os registros de recuperação."
+  },
+  "fr": {
+    "This update requires a computer migration. Keep recovery records.": "Cette mise à jour nécessite une migration depuis un ordinateur. Conservez les données de récupération."
+  },
+  "it": {
+    "This update requires a computer migration. Keep recovery records.": "Questo aggiornamento richiede una migrazione dal computer. Conserva i dati di ripristino."
+  },
+  "ko": {
+    "This update requires a computer migration. Keep recovery records.": "이 업데이트에는 컴퓨터를 통한 마이그레이션이 필요합니다. 복구 기록을 보관하세요."
+  },
+  "hi": {
+    "This update requires a computer migration. Keep recovery records.": "इस अपडेट के लिए कंप्यूटर से माइग्रेशन आवश्यक है। रिकवरी रिकॉर्ड सुरक्षित रखें।"
+  },
+  "pl": {
+    "This update requires a computer migration. Keep recovery records.": "Ta aktualizacja wymaga migracji z komputera. Zachowaj dane odzyskiwania."
+  },
+  "ru": {
+    "This update requires a computer migration. Keep recovery records.": "Для этого обновления нужна миграция с компьютера. Сохраните записи восстановления."
+  },
+  "zh-Hans": {
+    "This update requires a computer migration. Keep recovery records.": "请使用电脑安装此更新，并保留恢复记录。"
+  },
+  "zh-Hant": {
+    "This update requires a computer migration. Keep recovery records.": "請使用電腦安裝此更新，並保留復原記錄。"
+  }
+});

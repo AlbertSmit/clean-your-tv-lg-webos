@@ -210,4 +210,6 @@ Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出�
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
+OTA 修复候选（#115）：1.3.0 原版 System Updater 因允许的文件列表变化而无法安装 1.4.0。替换前中止不等于部分安装。请保留恢复日志，不要重试、清除状态或修改路径列表。下个候选保留 1.3.0 的路径和权限契约；电视上的升级与回退仍需协调测试。
+
 尚未发布的修正（#108/#109）：准备好 System Updater 后，更新指示点与“全部更新”使用同一版本类别检查。若只有整体发布版本变更、所有组件版本均相同，则不会建议重新安装。检查期间无法安装。仅在 System Updater 不存在时使用旧版检查。仍待实际电视确认。

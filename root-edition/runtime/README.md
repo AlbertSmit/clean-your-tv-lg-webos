@@ -117,3 +117,14 @@ existing recovery archives and unknown-operation records. Updating Installer
 alone does not replace retained private product code. Root remains disabled until
 an explicit activation through the normal setup/settings flow. See the
 [candidate authority and acceptance record](../../docs/development/HOMEBREW-INSTALL-ACCEPTANCE.md#cold-boot-data-authority-correction).
+
+
+## Candidate: original 1.3.0 OTA contract
+
+Audio commands now use the existing `cli.py audio <command>` entry point and
+`cli.py audio worker <generation> <boot|watch>`. No additional executable path is
+installed. Root service audio requests use validated payloads on the existing
+read-only status and mutating enable methods, preserving original LS2 grants.
+The optional policy stays off by default; Home off/emergency cancellation is
+unchanged. [Compatibility and rollback evidence](../../docs/development/ROOT-OTA-13-COMPATIBILITY.md)
+describes the authenticated retained-rollback anchor receipt and offline limits.

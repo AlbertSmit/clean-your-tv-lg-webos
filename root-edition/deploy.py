@@ -15,7 +15,7 @@ from python_binding import command as python_command, install_launcher
 APP = 'com.cleanyourtv.root.preview'
 STATE = Path('/var/lib/clean-your-tv-root')
 INSTALLED = Path('/media/developer/apps')
-RUNTIME_FILES = ('audio_recovery.py', 'bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'device_adapter.py', 'guardian_device.py',
+RUNTIME_FILES = ('bounded_profile_trial.py', 'cli.py', 'update_guard.py', 'device_adapter.py', 'guardian_device.py',
                  'helper_bridge.py', 'profile_guardian.py', 'profile_plan.py', 'profile_recovery.py', 'provision.py',
                  'staged_publication.py', 'transport.py', 'emergency_gesture.py', 'emergency_reader.py',
                  'emergency_watchdog.py', 'emergency_trial.py', 'persistent_lifecycle.py',

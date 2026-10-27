@@ -230,4 +230,6 @@ Correção ainda não publicada da inicialização a frio do Root: com o control
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
 
+Correção OTA candidata (#115): o System Updater original da 1.3.0 não instala a 1.4.0 devido à mudança nos arquivos permitidos. Parar antes da substituição não é instalação parcial. Preserve o registro; não repita, apague o estado ou altere os caminhos. O próximo candidato mantém os contratos de caminhos e permissões da 1.3.0; atualização e retorno na TV ainda exigem testes coordenados.
+
 Correção ainda não publicada (#108/#109): com System Updater preparado, o indicador e «Atualizar tudo» usam a mesma verificação da edição. Uma nova versão geral sem mudanças nas versões dos componentes não oferece reinstalação. Durante a verificação, a instalação fica desativada. A verificação antiga só é usada na ausência de System Updater. A confirmação no televisor está pendente.

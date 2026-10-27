@@ -22,7 +22,7 @@ vm.runInNewContext(fs.readFileSync(__dirname+'/../python_boot.js','utf8'),{modul
 const helper=helperModule.exports;
 vm.runInNewContext(fs.readFileSync(__dirname+'/service.js','utf8'),{require(name){
  if(name==='webos-service')return function(){this.register=function(){};};
- if(name==='./handlers')return fn=>{invoke=fn;return {};};
+ if(name==='./handlers'){const handlers=fn=>{invoke=fn;return {};};handlers.audio=require('./handlers').audio;return handlers;}
  if(name==='child_process')return child;
  if(name===state+'/python_boot.js')return helper;
  return require(name);

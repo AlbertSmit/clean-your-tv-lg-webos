@@ -5,6 +5,18 @@ var service = new Service('com.cleanyourtv.root.preview.service');
 function pythonCommand(){return require('/var/lib/clean-your-tv-root/python_boot.js').command('/var/lib/clean-your-tv-root');}
 
 var runtime = '/var/lib/clean-your-tv-root/runtime/cli.py';
+// Audio recovery has a separate process-wide transaction lock and never runs on service load.
+var audio = require('./handlers').audio(function () { return process.getuid(); }, function (command) {
+  return new Promise(function (resolve, reject) {
+    var executable = pythonCommand();
+    execFile(executable, [runtime, 'audio', command],
+      {timeout:45000,maxBuffer:16384}, function (error, stdout) {
+        if (error) return reject(new Error('Audio recovery unavailable'));
+        try { resolve(JSON.parse(stdout)); } catch (_) { reject(new Error('Invalid audio response')); }
+      });
+  });
+});
+
 var handlers = require('./handlers')(function (command, transaction) {
   return new Promise(function (resolve, reject) {
     if (process.getuid() !== 0) return reject(new Error('Root recovery service required'));
@@ -18,7 +30,7 @@ var handlers = require('./handlers')(function (command, transaction) {
       try { resolve(JSON.parse(stdout)); } catch (_) { reject(new Error('Invalid runtime response')); }
     });
   });
-});
+}, audio);
 Object.keys(handlers).forEach(function (method) {
   service.register(method, function (message) {
     handlers[method](message.payload).then(function (result) { result.root = process.getuid() === 0; message.respond(result); });
@@ -31,19 +43,4 @@ service.register('listApps',function(message){
  if(!inventoryPending)inventoryPending=require('./app-inventory')();
  var request=inventoryPending;
  request.then(function(apps){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:true,apps:apps});},function(){if(inventoryPending===request)inventoryPending=null;message.respond({returnValue:false,errorText:'App inventory unavailable'});});
-});
-
-// Audio recovery has a separate process-wide transaction lock and never runs on service load.
-var audio = require('./audio-recovery')(function () { return process.getuid(); }, function (command) {
-  return new Promise(function (resolve, reject) {
-    var executable = pythonCommand();
-    execFile(executable, ['/var/lib/clean-your-tv-root/runtime/audio_recovery.py', command],
-      {timeout:45000,maxBuffer:16384}, function (error, stdout) {
-        if (error) return reject(new Error('Audio recovery unavailable'));
-        try { resolve(JSON.parse(stdout)); } catch (_) { reject(new Error('Invalid audio response')); }
-      });
-  });
-});
-Object.keys(audio).forEach(function (method) {
-  service.register(method, function (message) { audio[method](message.payload).then(function (reply) { message.respond(reply); }); });
 });

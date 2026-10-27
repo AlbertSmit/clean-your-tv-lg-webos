@@ -16,6 +16,13 @@
         109
       ],
       "summary": "Suppress same-component-version update offers and align settings badges with the edition-specific System Updater; physical-TV confirmation pending"
+    },
+    {
+      "pr": 121,
+      "issues": [
+        107
+      ],
+      "summary": "Preserve LF in Windows-built POSIX payload scripts and prevent redirected legacy-console encoding crashes; partial #107, BX routing/recovery remains unresolved"
     }
   ],
   "excluded": [],

@@ -119,3 +119,13 @@
 .root-updates .update-actions button,#updatePanel .update-actions button{margin:0 16px 12px 0}
 @media(max-width:1000px){.settings-heading>:not(:first-child){margin-left:12px}}
 @media(max-width:700px){.home-routing-actions>:not(:first-child){margin-left:0;margin-top:18px}.settings-main .settings-links button{flex:auto;margin-right:0}}
+
+/* A remote-friendly audio subpanel keeps the main settings card compact. */
+.root-audio .root-settings-card{width:1120px;max-height:90vh;overflow:auto}
+.root-audio .renewal-actions{display:flex;flex-wrap:wrap}
+.root-audio .renewal-actions button{min-height:64px}
+.root-audio .home-routing-switch{flex-basis:100%;text-align:left;margin-top:16px;margin-bottom:18px}
+.root-audio .settings-status{min-height:56px}
+@media(max-height:800px){.root-audio .root-settings-card{padding:24px 32px}.root-audio h1{font-size:34px}.root-audio p{font-size:21px}.root-audio .renewal-actions button{font-size:22px;min-height:56px}.root-audio .home-routing-switch{margin-top:10px;margin-bottom:12px}}
+
+.root-audio .home-routing-switch{position:relative;padding-right:128px}

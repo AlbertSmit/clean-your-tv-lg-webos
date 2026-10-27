@@ -9,12 +9,18 @@ do not substitute a missing system interpreter or change global PATH.
 never by status, restore or removal; referenced runtime slots remain retained.
 
 - `status`: read actual system profiles and independent Home setting, journal and recovery integrity.
+
 - `trial`: activate **com.cleanyourtv.root.preview** for at most 60 seconds using a detached rollback guardian. Refuses any unresolved journal, unexpected baseline, missing Home registration or missing recovery provisioning.
 - `restore`: conflict-checked removal of only the owned override, rescan, restore stock Home and verify the full original profiles. Retries bounded transport failures. Exit 2 means recovery is unresolved; preserve state for retry/investigation.
 - `boot`: restore the previous routing transaction first. A confirmed active intent may then start a fresh protected transaction and open the candidate. Failsafe or interrupted startup disables intent; duplicate callbacks preserve only a healthy matching guardian.
 - `enable`: activate persistently after automatic input, guardian and routing checks; requires the old helper to be stopped. Failed readiness restores LG Home. No user confirmation or timed session.
 - `confirm TRANSACTION`: diagnostic promotion of that exact live trial. Requires fresh input/guardian heartbeats, effective candidate routing and at least five seconds before rollback. No confirmation means automatic rollback.
 - `intent-trial`: diagnostic intent-bound trial, useful for regression checks; separate from user activation.
+
+An absent Settings Service Home key remains an incomplete runtime readback.
+Only explicit setup can initialize an absent override to stock LG Home, after
+recording intent and checking unchanged profiles and independent readback;
+runtime commands never do so. See [setup-only initialization](../../docs/development/ROOT-HOME-READBACK.md).
 
 The independent updater uses root-only internal commands `suspend-update TX`,
 `finish-update TX` and `abort-update TX` with its exact 32-character transaction
@@ -33,10 +39,37 @@ state instead of using this Root runtime.
 
 A confirmed normal shutdown retains the Home override, generated profile and transaction binding so bootd can select Clean Your TV as its first app. Startup recovery still restores the old transaction before arming fresh health protection. Explicit exit, input failure without a shutdown signal, and failsafe recovery restore LG Home.
 
-Boot recovery rearms protection without issuing a second Home launch after
-readiness. Native boot presentation uses the retained profile; reopening Home
-late would interrupt an app the user already selected during startup. Manual
-enable and ordinary Home routing retain their explicit user-requested behavior.
+The candidate shutdown monitor accepts only fresh transaction/session-bound evidence.
+Its local tvpower subscription must observe ON before Active Standby/Power Off;
+initial OFF snapshots, unknown replies and lost subscriptions grant no authority.
+Only actual pushes refresh the existing five-second evidence window. Returning ON
+or losing/invalidating the stream revokes its private volatile `.power` proof.
+No reconnect loop or ENODEV exception bypasses input recovery. A restored old
+observer defers enabled old-session intent to boot dispatch; escape, failsafe and
+package loss still override it. See [evidence and limits](../../docs/development/ROOT-COLD-BOOT.md).
+
+
+Unreleased cold-start correction: startup identity combines the kernel UUID with
+one private volatile session nonce, rather than clock-dependent `btime`. The
+nonce and its lock live beside the normal-start marker in
+`/tmp/clean-your-tv-root-boot`; creation is serialized, records are ownership/type
+checked and atomically published, and duplicate callbacks reuse the identity.
+The supervised C3 AC-off/snapshot test cleared an inert `/tmp` probe. This
+lifetime assumption requires verification on other snapshot firmware; kernel UUID
+reuse alone does not establish a new session. Corrupt/indirect session records
+are rejected, not silently reset.
+
+After a healthy guarded restart, the dispatcher makes one optional foreground
+request only for normal active hardware startup, LG `homeAutoLaunch=on`, and a
+final foreground read showing stock Home or Live TV. An already visible user app
+or Clean is left alone. Missing/slow optional APIs do not disable healthy Root.
+These calls use a 0.5-second reply deadline (up to another 0.5 second for child
+termination cleanup); no operation lock is held over launch, so an explicit off
+can complete during an in-flight request. There is no retry after an unknown
+launch outcome or duplicate boot callback. Foreground read and launch are separate
+platform calls, so a user app switch after that last read can race the one request.
+Manual enable and short Home retain their existing behavior. See
+[cold-start investigation and acceptance](../../docs/development/ROOT-COLD-BOOT.md).
 
 Runtime state is `/var/lib/clean-your-tv-root`; owned profile is `/var/webos-profile/override/clean-your-tv-root.json`. Both directories must be root-owned and not group/world writable, and must reside on the same filesystem for crash-safe hard-link publication. Runtime never edits app files, stock libraries, zoom behavior, or the existing no-root launcher.
 

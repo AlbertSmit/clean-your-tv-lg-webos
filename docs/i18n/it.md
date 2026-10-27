@@ -1,5 +1,8 @@
 # Clean Your TV — guida all’uso
 
+1.4.0: il responsabile ha accettato i test corretti su C3 di alimentazione, Home, focus, stato disattivato e rollback manuale a 1.3.0; #90 è stato chiuso su sua richiesta. Altre TV, audio eARC e Android fisico restano non verificati. Non tutti i tasti base del candidato precedente sono stati riprovati. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
+
 No-root e Root sono opzioni equivalenti per diverse configurazioni della TV. Scegli No-root per LG Developer Mode oppure Root se disponi già di accesso root tramite SSH. Compatibilità e verifiche eseguite sono specifiche di ogni edizione.
 
 ## Requisiti
@@ -7,6 +10,8 @@ No-root e Root sono opzioni equivalenti per diverse configurazioni della TV. Sce
 Questa guida descrive **[v1.3.0 stabile](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**. I collegamenti `releases/latest/download` distribuiscono la versione stabile pubblicata. Vedi [installazione](../INSTALL.md) e [note di rilascio](../RELEASE-1.3.0.md).
 
 Versioni del rilascio: cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root **0.4.0**, Home Updater e Root Updater **0.3.0**, Android **0.3.0-preview** (codice **11**), supervisore System Updater **1.1.0**, protocollo **1**.
+
+Il candidato 1.4.0 non ancora pubblicato prevede Android 0.4.0 (codice 13), senza preview, dopo i test in emulatore accettati dal manutentore. Testato: Android 15 ARM64 / WebView 124. Telefoni fisici e ripristino durante una vera installazione TV non sono verificati; Android 7 / WebView 108 è un requisito minimo, non un telefono testato. Aggiornare senza disinstallare o cancellare dati. I download pubblicati restano 0.3.0-preview. Segnalare telefono, Android/WebView, TV/firmware, edizione e passaggio fallito, senza credenziali.
 
 Problema noto della 1.3.0: dopo lo standby, il controllo Home di Root può disattivarsi e Home torna ad aprire LG. Riattivalo esplicitamente nelle impostazioni di Clean Your TV; se non riesce, mantieni LG Home e salva la diagnostica. Vedi [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) e i [test attuali](../RELEASE-1.3.0-ACCEPTANCE.md).
 
@@ -17,6 +22,31 @@ Accendi il televisore e collegalo alla stessa rete locale affidabile del compute
 Il Helper No-root aggiornato richiede Node.js 0.12.2 o successivo sulla TV. Il programma di installazione verifica questo requisito prima di installare. I pacchetti già pubblicati non acquisiscono automaticamente questa compatibilità; accesso al telecomando, standby e avvio a freddo richiedono prove su ogni modello.
 
 - **Root:** serve un accesso SSH root già disponibile. L’installer non ottiene i privilegi root. Non attivare Developer Mode su una configurazione già dotata di root. Mantieni disponibili accesso root e servizi di ripristino.
+
+
+## Configurare Developer Mode (No-root)
+
+Developer Mode permette a CYTV di installare app su una TV senza root.
+
+1. Sulla TV, apri LG Apps, cerca Developer Mode e installalo.
+2. Apri Developer Mode e accedi con il tuo account LG Developer. Se necessario, crea un account su webostv.developer.lge.com.
+3. Attiva Dev Mode Status. La TV si riavvia. Poi apri di nuovo Developer Mode.
+4. Attiva Key Server e lascia Developer Mode aperto. Inserisci il suo IP Address come indirizzo della TV in CYTV.
+5. Inserisci la Passphrase: i sei caratteri mostrati in Developer Mode sulla TV. Rispetta maiuscole e minuscole.
+
+Usa il codice della TV, non la password del tuo account LG. Se il codice non appare, attiva Key Server.
+
+L’associazione è un passaggio separato: quando la TV lo chiede, autorizza CYTV con il telecomando.
+
+Mantieni Developer Mode attivo: prima che scada il timer, aprilo e premi EXTEND con la TV connessa a Internet. Alla scadenza, LG può rimuovere queste app.
+
+Home è la tua schermata delle app. Home Helper fa sì che il tasto Home la apra.
+
+Dopo l’installazione, premi Home per provare. Se si apre LG Home, apri Home Helper dalle app della TV. Tre pressioni brevi di Home entro due secondi riportano a LG Home. Per riavviare il controllo Home, apri Home Helper, scegli Avvia Helper e conferma. La tua scelta della schermata Home viene mantenuta.
+
+Sul computer, CYTV mostra la preparazione un passo alla volta. Dettagli apre il registro dell’operazione. Puoi ingrandire le immagini LG; usa il codice della tua TV.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Python opzionale per Root
 
@@ -61,7 +91,7 @@ Le frecce selezionano, OK apre; tieni premuto OK per riordinare. Un breve Indiet
 
 **Nuove compilazioni: premi Home tre volte entro due secondi**, rilasciandolo tra le pressioni. Ripristina LG Home e interrompe il controllo senza cancellare le preferenze. Con No-root Helper fino alla 0.6.13 inclusa, tieni invece premuto Home per circa due secondi. La pressione prolungata di Home non è il gesto di emergenza di Root.
 
-No-root: apri **Home Helper** dalle app LG per riprendere; aprire solo Home non annulla l’arresto. Root: attiva **Cambia Home** nelle impostazioni Home per riprendere. **Apri LG Home** apre LG Home una volta senza cambiare la destinazione di Home. Per ripristinare LG Home come destinazione permanente, disattiva **Cambia Home** o esegui `cytv restore`. Non eseguire entrambi i controllori insieme. Se il problema ricompare, lascia attivo LG Home.
+No-root: Tre pressioni brevi di Home entro due secondi riportano a LG Home. Per riavviare il controllo Home, apri Home Helper, scegli Avvia Helper e conferma. La tua scelta della schermata Home viene mantenuta. Root: attiva **Cambia Home** nelle impostazioni Home per riprendere. **Apri LG Home** apre LG Home una volta senza cambiare la destinazione di Home. Per ripristinare LG Home come destinazione permanente, disattiva **Cambia Home** o esegui `cytv restore`. Non eseguire entrambi i controllori insieme. Se il problema ricompare, lascia attivo LG Home.
 
 ```sh
 ./cytv --language it status
@@ -167,3 +197,35 @@ L’avvio usa file privati associati alle prove di proprietà e verifica l’ide
 
 
 Per questo candidato dai sorgenti, un’installazione Root esistente richiede un ripristino verificato e una nuova configurazione per ricevere l’ambiente privato corretto. Aggiornare solo Installer non lo sostituisce. Conservare i dati di ripristino e attivare Home solo dalla configurazione o dalle impostazioni normali.
+
+Solo nel prossimo candidato: No-root Impostazioni → Modalità sviluppatore → Mostra diagnostica include categorie sicure degli errori di archiviazione e RPC Home e la versione effettiva del servizio. La consultazione non abilita il rinnovo né avvia Helper. Un controllo fallito non dimostra che Helper sia fermo. La correzione su C5 non è confermata; [dettagli (inglese)](../SETTINGS-DIAGNOSTICS.md).
+
+Il rapporto riceve il focus del telecomando. Su/Giù scorre; Sinistra/Destra o OK torna alle azioni vicine e Indietro alle impostazioni Home.
+
+**Non ancora pubblicato, #82:** se manca la voce Home, la configurazione Root avviata esplicitamente può impostare LG Home e rileggere il valore prima di completare la preparazione del ripristino. Status/doctor non modifica nulla. Una scrittura con esito incerto non viene ripetuta; conserva i dati di ripristino. La voce esplicita LG Home rimane dopo la disinstallazione. Servono ancora prove su questo firmware.
+
+## Candidato non pubblicato: ripristino audio HDMI (Root)
+
+Impostazioni Home → Audio HDMI offre riconnessione eARC e ripristino HDMI confermato.
+ARC-only, combinati/WOW Orchestra e modalità sconosciute sono escluse. L’automazione
+all’accensione/risveglio è sperimentale, inizialmente disattivata; richiede una
+sottoscrizione di alimentazione supportata e può interrompere audio funzionante.
+Indietro chiude durante la pulizia. Dopo interruzione controlla lo stato; ripristina
+solo se desideri eARC attivo. Ripristino Home/arresto di emergenza disattiva l’automazione
+fino ad attivazione esplicita. Vecchi runtime privati richiedono nuova configurazione
+verificata. Compatibilità e minore ritardo non confermati.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+Non ancora pubblicato: il controllo di Python privato distingue errori ABI, sicurezza delle directory e spazio. La prima installazione richiede 320 MiB liberi in /var/lib. WAM Session Storage può spiegare la mancanza di spazio; cancellarlo può perdere lo stato delle sessioni. Vedi il [ripristino](../RECOVERY.md#private-python-and-low-var-space).
+
+Nel candidato 1.4.0 non ancora pubblicato, anche un’installazione No-root interrotta offre **Ripristina e reinstalla** dopo **Controlla lo stato della TV**. Conferma la rimozione solo se vuoi eliminare le app Clean Your TV, poi controlla le versioni prima di reinstallare. Se il ripristino fallisce, salva il relativo rapporto diagnostico e fermati. Il rifiuto iniziale del pacchetto da parte della TV non è ancora spiegato né confermato come risolto (#21).
+
+
+**Non pubblicato — WAM:** `cytv clean-wam-cache --edition root`. Sono richiesti solo cache e codecache. Session Storage, cookie, Local Storage, Service Worker e database sono esclusi. Chiudi le app TV. La cache sarà scaricata o ricreata; il prossimo avvio può essere più lento. [WAM](../WAM-CLEANUP.md).
+
+Puoi annullare e liberare spazio da solo. Segui la guida e ricontrolla /var/lib; rimuovere app può liberare un'altra partizione. **Session Storage (SSH):** Chiudi prima le app del TV. Lo stato delle sessioni sarà eliminato; potresti perdere accessi o lavoro non salvato. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+Correzione Root dell’avvio a freddo non ancora pubblicata: con il controllo Home attivo e LG impostato sulla schermata Home all’accensione, un avvio protetto può aprire Clean una volta se sono ancora visibili TV in diretta o LG Home. Un’app visibile all’ultimo controllo viene mantenuta; nessun nuovo tentativo. La disattivazione esplicita e tre pressioni Home restano disattivate. Serve un’installazione/aggiornamento verificato del runtime privato; aggiornare solo l’app non basta. La verifica sul televisore resta da completare.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

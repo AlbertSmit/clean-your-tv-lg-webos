@@ -120,6 +120,25 @@ class DesktopRecoveryTests(unittest.TestCase):
                 self.assertFalse(any(c[0] == 'upload' for c in self.remote.calls))
                 w.close()
 
+    def test_interrupted_install_uses_the_same_guarded_recovery_journey(self):
+        self.store.finish(self.profile)
+        self.store.begin(self.profile, 'install')
+        self.test_recovery_uses_same_tv_and_default_no_then_installs_after_verified_removal()
+
+    def test_interrupted_install_recovery_checks_tv_idle_and_saves_failure_without_reinstall(self):
+        self.store.finish(self.profile)
+        self.store.begin(self.profile, 'install', expected={'saved': 'proof'})
+        original = self.store.pending(self.profile)
+        self.test_failed_recovery_offers_original_failure_report_without_retry_or_install()
+        self.assertEqual(self.store.pending(self.profile), original)
+
+    def test_declining_interrupted_install_recovery_retains_original_receipt(self):
+        self.store.finish(self.profile)
+        self.store.begin(self.profile, 'install', expected={'saved': 'proof'})
+        original = self.store.pending(self.profile)
+        self.test_declining_recovery_retains_receipt_and_does_not_offer_automatic_retry()
+        self.assertEqual(self.store.pending(self.profile), original)
+
     def test_recovery_uses_same_tv_and_default_no_then_installs_after_verified_removal(self):
         self.remote.installed = [{'id': 'com.local.nativehome', 'version': '0.6.13'},
                                  {'id': 'com.gathin.tvhome', 'version': '1.2.2'}]
@@ -227,7 +246,7 @@ class DesktopRecoveryTests(unittest.TestCase):
         self.assertTrue(w.report.is_file())
 
     def test_no_recovery_offer_for_completed_removal_or_other_pending_operations(self):
-        for action, stage in ((None, None), ('install', 'pending'), ('unknown', 'pending'), ('uninstall', 'removing')):
+        for action, stage in ((None, None), ('unknown', 'pending'), ('uninstall', 'removing')):
             with self.subTest(action=action, stage=stage):
                 if self.store.pending(self.profile):
                     self.store.finish(self.profile)

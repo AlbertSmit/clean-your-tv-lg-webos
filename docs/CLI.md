@@ -1,5 +1,7 @@
 # cytv standalone installer
 
+1.4.0: [release notes](RELEASE-1.4.0.md) and [C3 acceptance / limits](RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
+
 **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
@@ -406,8 +408,21 @@ python -m venv .venv-cytv
 
 Output is `dist/cytv` or `dist/cytv.exe`. Build each target natively; PyInstaller
 does not turn a macOS executable into a Windows/Linux executable. The workflow
-does this in four separate jobs. It tests both source and frozen payload smoke
-checks, without TV access or release publication.
+does this in four separate jobs. Use a fresh virtual environment: build requirements
+select binary `cryptography` wheels with their own static OpenSSL rather than a
+source build that can conflict with Python's bundled `libssl` on Intel macOS.
+An already installed source build is not replaced by pip's binary-only option;
+recreate the environment if the runtime check fails.
+
+Both console and GUI builders run `--check-payload` and the internal offline
+`--check-runtime` probe on the frozen executable before packaging succeeds. The
+runtime probe loads Python TLS and SSH dependencies, signs/verifies RSA and
+Ed25519 data, encrypts/decrypts AES-GCM data and derives a bcrypt key. Dependency
+load errors fail the build with their original exception; these checks do not
+connect to a TV, read connection profiles or publish a release. GUI startup smoke
+remains a separate check. A focused Intel macOS PR workflow freezes both actual
+entrypoints without a TV payload and runs the same probe before integration.
+This is an unreleased fix for issue #93.
 
 For source development, `python scripts/build-cytv.py --payload-only` prepares the
 embedded assets, then `python -m cytv` runs the same wizard. Public payload sources
@@ -449,3 +464,14 @@ Next-candidate Home settings (not published v1.2.0): a failed status read is sho
 as unknown, with Change Home hidden until a valid response. This avoids showing
 an unconfirmed off switch. It does not repair a firmware denial or unavailable
 request-file transport, prove that Helper stopped, or automatically start it.
+
+## Unreleased: optional WAM cache cleanup
+
+`cytv clean-wam-cache --edition root` estimates Cache/Code Cache usage and available
+`/var/lib` space, offers manual guidance and requires default-No confirmation.
+It requests only `cache` and `codecache` through the TV's native WAM API; it does
+not delete files itself. Session Storage and other app state are excluded.
+`--yes` does not authorize cleanup; noninteractive mode and pending local operations
+are refused. Cache rebuilding may slow the next app launch. No reboot, automatic
+retry or setup resume occurs. See [scope, manual maintenance and evidence](WAM-CLEANUP.md).
+Published installers do not include this action yet.

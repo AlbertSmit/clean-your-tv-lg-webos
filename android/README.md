@@ -1,6 +1,8 @@
-# CYTV for Android — 0.3.0-preview (versionCode 11)
+# CYTV for Android — 0.4.0 (versionCode 13)
 
-**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** includes cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0** and both edition Updaters **0.3.0**, and Android **0.3.0-preview / code 11**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.3.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
+1.4.0: [release notes](../docs/RELEASE-1.4.0.md) and [C3 acceptance / limits](../docs/RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
+
+Previous published baseline: **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** includes cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0** and both edition Updaters **0.3.0**, and Android **0.3.0-preview / code 11**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.3.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 
@@ -14,12 +16,24 @@ Traditional Chinese (`zh-Hant`, 繁體中文), including native operation notifi
 and WebView guidance. Explicit script tags override regional defaults; CN/SG
 use Simplified and TW/HK/MO use Traditional. Earlier v1.2.0 APKs do not include this support.
 
+## Release 1.4.0
+
+This release selects **Android 0.4.0 / versionCode 13**, without `preview`, after
+maintainer-approved emulator verification. Latest-download links follow the
+published release; #98 tracks publication. Tested: Android 15 / API 35 ARM64,
+WebView 124; physical-phone and live phone-to-TV recovery checks remain community
+follow-up. Android 7 / WebView 108 is the minimum requirement, not a verified
+phone configuration. See [acceptance and limits](STABLE-READINESS.md).
+Update over the existing APK without uninstalling or clearing app data; the
+application ID and signing certificate are retained. Report problems with phone,
+Android/WebView and TV/firmware details, edition and failed step, without secrets.
+
 ## Install and connect
 
-1. Copy the preview APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
+1. Copy the signed APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
 2. Keep the phone and LG webOS TV on the same local network. Turn the TV on; disconnect VPNs or guest-network isolation if the connection fails.
 3. Enter the TV IPv4 address and check the connection first. Then choose **No-root** for Developer Mode, or **Root** for a TV with existing root SSH access. Exactly one responding access mode is highlighted; with both or neither, choose manually. Default SSH ports are 9922 and 22 respectively; Root ports are editable.
-4. No-root: enable **Dev Mode Status** and **Key Server** in the TV's Developer Mode app. Enter its passphrase when CYTV asks. Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.
+4. No-root: follow the four preparation steps in CYTV: install Developer Mode, sign in with an LG Developer account, enable **Dev Mode Status** and reopen the app after reboot, then enable **Key Server**. Enter the six-character **Passphrase** from the TV, preserving letter case; this is separate from the LG account password. The steps and code prompt include offline LG reference screenshots; use the code on your own TV. See the [full setup guide](../docs/INSTALL.md#set-up-developer-mode-no-root). Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.
 5. Review the SSH fingerprint before trusting the TV. Review the actual installed/package versions before confirming installation. Accept the remote-control pairing prompt on the TV if shown.
 6. Keep the TV on. The foreground service continues while the Activity is in the background; keep Android's CYTV notification available. Do not force-stop the app or change networks during installation.
 7. Check Home, arrows/OK, Back, volume and standby/wake on the TV. Root requires existing compatible root, Python 3.9+, Node.js 8+, Homebrew services
@@ -28,7 +42,7 @@ use Simplified and TW/HK/MO use Traditional. Earlier v1.2.0 APKs do not include 
    a compatible TV loader/libc is still required. Working system Python skips this download.
    See [runtime limits](../docs/OPTIONAL-PYTHON.md). CYTV does not root or flash the TV.
 
-The historical **v1.2.0 APK was a preview/debug build**. A user confirmed successful Android setup with v1.1.0 after the operation-receipt fix in [issue #24](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/24#issuecomment-6400650506). The comment does not identify the phone, Android version or TV configuration; do not attribute the original issue author's TV to this separate reporter. Full physical-phone acceptance for **both editions**, including recovery, remains outstanding. The 1.3.0 preview uses a non-debuggable release build with the existing pinned signing identity; [stable readiness and evidence](STABLE-READINESS.md) governs removal of the preview suffix. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Compatible whole-edition TV updates require separate computer-assisted System
+The historical **v1.2.0 APK was a preview/debug build**. A user confirmed successful Android setup with v1.1.0 after the operation-receipt fix in [issue #24](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/24#issuecomment-6400650506). The comment does not identify the phone, Android version or TV configuration; do not attribute the original issue author's TV to this separate reporter. Full physical-phone acceptance for **both editions**, including recovery, remains outstanding. The 1.3.0 preview uses a non-debuggable release build with the existing pinned signing identity; [acceptance and evidence](STABLE-READINESS.md) records the scoped decision for the next candidate. Older 32-bit phones and x86 devices are not included in this APK. The initial UI includes install, status and restore; it does not expose uninstall or automatic discovery. The full TV app inventory is imported automatically. Compatible whole-edition TV updates require separate computer-assisted System
 Updater bootstrap with root/Homebrew services. Unrooted TVs use the installer.
 The APK does not expose that bootstrap action; see [updates](../root-edition/UPDATES.md).
 

@@ -23,6 +23,8 @@ node tests/renewal-transport.cjs
 node tests/tls-ca.cjs
 node tests/renewal-manager.cjs
 node tests/renewal-storage.cjs
+node tests/renewal-diagnostics.cjs
+node tests/settings-diagnostics.cjs
 node tests/helper-entry.cjs
 node tests/helper-service-status.cjs
 node tests/helper-published-ui.cjs
@@ -43,6 +45,7 @@ tail -1 build/tests/relay-startup.log
 build/tests/test-filter
 for file in launcher/*.js native/app/*.js native/service/*.js renewal-service/*.js; do node --check "$file"; done
 
+node root-edition/service/test-audio-recovery.cjs
 node root-edition/service/test-handlers.js
 node root-edition/service/test-persistent.js
 node root-edition/service/test-python-binding.js
@@ -50,6 +53,7 @@ node root-edition/ui/test-catalogs.cjs
 node root-edition/ui/test-localization.cjs
 node root-edition/ui/test-updater-localization.cjs
 node root-edition/ui/test-exit.cjs
+node root-edition/ui/test-audio.cjs
 node root-edition/ui/test-settings.cjs
 node root-edition/ui/test-firmware.cjs
 node root-edition/ui/test-firmware-control.cjs

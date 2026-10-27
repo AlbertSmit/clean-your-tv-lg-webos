@@ -1,5 +1,8 @@
 # Clean Your TV — 사용자 안내
 
+1.4.0: 관리자가 수정된 C3의 전원, Home, 포커스, 꺼짐 유지 및 1.3.0 수동 롤백 테스트를 승인했고 요청에 따라 #90을 닫았습니다. 다른 TV, eARC 소리 및 실제 Android 기기는 미검증입니다. 이전 후보의 기본 버튼을 모두 다시 시험하지는 않았습니다. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
+
 No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니다. LG Developer Mode를 사용하면 No-root를, 기존 root SSH 접근 권한이 있으면 Root를 선택하세요. 호환성과 테스트 범위는 각 버전마다 다릅니다.
 
 ## 설치 전 준비
@@ -7,6 +10,8 @@ No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니�
 이 안내서는 **[v1.3.0 안정 버전](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**을 설명합니다. `releases/latest/download` 링크는 게시된 안정 버전을 제공합니다. [설치 안내](../INSTALL.md)와 [릴리스 안내](../RELEASE-1.3.0.md)를 확인하세요.
 
 릴리스 구성: cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root **0.4.0**, Home Updater 및 Root Updater **0.3.0**, Android **0.3.0-preview**(버전 코드 **11**), System Updater 감독 서비스 **1.1.0**, 프로토콜 **1**.
+
+아직 공개되지 않은 1.4.0 후보는 관리자가 승인한 에뮬레이터 검사 후 Android 0.4.0(코드 13)에서 preview를 제거합니다. 검사 환경: Android 15 ARM64 / WebView 124. 실제 휴대전화와 실제 TV 설치 중 복구는 검증되지 않았습니다. Android 7 / WebView 108은 최소 요구 사항이며 검증된 휴대전화 환경은 아닙니다. 앱을 삭제하거나 데이터를 지우지 말고 업데이트하세요. 공개 다운로드는 아직 0.3.0-preview입니다. 문제를 보고할 때 휴대전화, Android/WebView, TV/펌웨어, 에디션과 실패 단계를 적고 인증 정보는 제외하세요.
 
 1.3.0의 알려진 문제: 대기 모드에서 깨어난 후 Root의 Home 제어가 꺼져 Home 버튼이 LG를 열 수 있습니다. Clean Your TV 설정에서 Home 제어를 명시적으로 다시 켜세요. 활성화에 실패하면 LG Home을 유지하고 진단을 저장하세요. [이슈 #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90)과 [현재 테스트 기록](../RELEASE-1.3.0-ACCEPTANCE.md)을 참고하세요.
 
@@ -17,6 +22,31 @@ TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연
 업데이트된 No-root Helper는 TV의 Node.js 0.12.2 이상이 필요합니다. 설치 프로그램은 설치 전에 TV 런타임을 확인합니다. 이전에 배포된 패키지에 이 호환성이 자동으로 적용되지는 않습니다. 입력 장치 접근, 대기 모드 복귀 및 콜드 부팅은 모델별로 확인해야 합니다.
 
 - **Root:** 기존 root SSH 접근 권한이 필요합니다. 설치 프로그램은 TV를 루팅하지 않습니다. 이미 루팅한 TV에는 Developer Mode를 켜지 마세요. root 접근 및 복구 서비스를 유지하세요.
+
+
+## Developer Mode 설정 (No-root)
+
+Developer Mode를 사용하면 root 없이 TV에 CYTV 앱을 설치할 수 있습니다.
+
+1. TV에서 LG Apps를 열고 Developer Mode를 검색하여 설치하세요.
+2. Developer Mode를 열고 LG Developer 계정으로 로그인하세요. 계정이 없으면 webostv.developer.lge.com에서 만드세요.
+3. Dev Mode Status를 켜세요. TV가 재시작되면 Developer Mode를 다시 여세요.
+4. Key Server를 켜고 Developer Mode를 열어 두세요. 표시된 IP Address를 CYTV의 TV 주소로 입력하세요.
+5. TV의 Developer Mode에 표시된 6자리 Passphrase를 입력하세요. 대소문자를 구분하세요.
+
+LG 계정 비밀번호가 아닌 TV 화면의 코드를 사용하세요. 코드가 보이지 않으면 Key Server를 켜세요.
+
+페어링은 별도 단계입니다. TV에서 요청하면 리모컨으로 CYTV를 승인하세요.
+
+타이머가 끝나기 전에 Developer Mode를 열고 TV가 인터넷에 연결된 상태에서 EXTEND를 누르세요. 만료되면 LG가 이 앱들을 삭제할 수 있습니다.
+
+Home은 앱 화면입니다. Home Helper를 사용하면 Home 버튼으로 이 화면을 열 수 있습니다.
+
+설치 후 Home 버튼을 눌러 보세요. LG Home이 열리면 TV 앱 목록에서 Home Helper를 여세요. 2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다.
+
+컴퓨터의 CYTV는 준비 과정을 한 단계씩 보여 줍니다. 세부 정보에서 작업 로그를 볼 수 있습니다. LG 예시 이미지는 확대할 수 있으며 코드는 자신의 TV에 표시된 것을 사용하세요.
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## Root용 선택적 Python 런타임
 
@@ -61,7 +91,7 @@ Root 제거가 중단되면 앱에서 제거를 다시 선택하세요. TV의 �
 
 **새 빌드에서는 2초 안에 Home을 세 번 짧게 누르세요.** 매번 버튼을 놓아야 합니다. 설정을 지우지 않고 LG Home으로 복귀하며 Home 제어를 중지합니다. No-root Helper 0.6.13 이하에서는 대신 Home을 약 2초 동안 누릅니다. Home 길게 누르기는 Root의 비상 복구 동작이 아닙니다.
 
-No-root는 LG 앱 목록에서 **Home Helper**를 열어 재개하세요. Home만 열어서는 중지가 해제되지 않습니다. Root는 Home 설정에서 **Home 변경**을 켜서 재개하세요. **LG Home 열기**는 Home의 연결 대상을 바꾸지 않고 LG Home을 한 번 엽니다. LG Home을 계속 사용할 기본 대상으로 복원하려면 **Home 변경**을 끄거나 `cytv restore`를 실행하세요. 두 제어 프로그램을 동시에 실행하지 마세요. 문제가 반복되면 LG Home을 유지하세요.
+No-root: 2초 안에 Home 버튼을 짧게 세 번 누르면 LG Home으로 돌아갑니다. Home 제어를 다시 시작하려면 Home Helper를 열고 Helper 시작을 선택한 다음 확인하세요. 저장된 Home 화면 선택은 유지됩니다. Root는 Home 설정에서 **Home 변경**을 켜서 재개하세요. **LG Home 열기**는 Home의 연결 대상을 바꾸지 않고 LG Home을 한 번 엽니다. LG Home을 계속 사용할 기본 대상으로 복원하려면 **Home 변경**을 끄거나 `cytv restore`를 실행하세요. 두 제어 프로그램을 동시에 실행하지 마세요. 문제가 반복되면 LG Home을 유지하세요.
 
 ```sh
 ./cytv --language ko status
@@ -166,3 +196,34 @@ Homebrew 설치를 검증하지 않습니다.
 
 
 이 소스 후보에서 기존 Root 설치에 수정된 비공개 런타임을 적용하려면 검증된 복구와 새 설정이 필요합니다. Installer만 업데이트해도 기존 런타임은 교체되지 않습니다. 복구 기록을 보존하고 일반 설정 절차나 설정 화면에서만 Home을 활성화하세요.
+
+다음 후보 버전 전용: No-root 설정 → 개발자 모드 → 진단 표시에서 저장소 및 Home RPC 오류의 안전한 분류와 실제 서비스 버전을 확인할 수 있습니다. 진단을 보는 것만으로 자동 연장을 켜거나 Helper를 시작하지 않습니다. 상태 확인 실패가 Helper 중단을 뜻하지는 않습니다. C5 수정은 아직 확인되지 않았습니다. [자세히 보기(영어)](../SETTINGS-DIAGNOSTICS.md).
+
+보고서에 리모컨 포커스가 이동합니다. 위/아래로 스크롤하고, 왼쪽/오른쪽 또는 OK로 주변 동작에 돌아가며, 뒤로 버튼으로 Home 설정에 돌아갑니다.
+
+**미출시, #82:** Home 설정이 없으면 명시적으로 시작한 Root 설치가 LG Home을 설정하고 값을 다시 읽어 확인한 뒤 복구 준비를 완료할 수 있습니다. Status/doctor는 설정을 쓰지 않습니다. 결과가 불확실한 쓰기는 반복하지 않으므로 복구 데이터를 보관하세요. 제거 후에도 명시적인 LG Home 설정은 유지됩니다. 이 펌웨어의 실제 기기 테스트는 아직 필요합니다.
+
+## 미출시 후보: HDMI 사운드 복원 (Root)
+
+Home 설정 → HDMI 사운드에서 eARC 재연결과 확인된 HDMI 출력 복원을 제공합니다.
+ARC 전용, 결합/WOW Orchestra 및 알 수 없는 모드는 건너뜁니다. 전원 켜기/대기
+복귀 후 자동 복원은 실험 기능이며 기본적으로 꺼져 있고, 지원되는 전원 구독이
+필요하며 정상 소리를 끊을 수 있습니다. 뒤로 가도 정리는 계속됩니다. 중단 후
+상태를 확인하고 eARC를 켜려는 경우에만 저장된 설정을 복원하세요. Home 복원/비상
+정지는 자동화를 끄며 명시적으로 다시 켜야 합니다. 이전 비공개 런타임은 검증된
+재설정이 필요합니다. TV 호환성과 소리 시작 시간 단축은 확인되지 않았습니다.
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+미출시: 전용 Python 검사는 ABI, 디렉터리 안전 및 공간 오류를 구분합니다. 최초 설치에는 /var/lib에 320 MiB가 필요합니다. 큰 WAM Session Storage가 원인일 수 있으며, 지우면 앱 세션 상태가 손실될 수 있습니다. [복구 안내](../RECOVERY.md#private-python-and-low-var-space)를 확인하세요.
+
+아직 공개되지 않은 1.4.0 후보에서는 중단된 No-root 설치도 **TV 상태 확인** 후 **복구 및 재설치**를 제공합니다. Clean Your TV 앱을 제거하려는 경우에만 제거를 확인하고, 다시 설치하기 전에 버전을 검토하세요. 복구에 실패하면 해당 진단 보고서를 저장하고 중단하세요. TV의 최초 패키지 거부 원인은 아직 확인되거나 해결되지 않았습니다 (#21).
+
+
+**미출시 — WAM:** `cytv clean-wam-cache --edition root`. cache와 codecache만 요청합니다. Session Storage, 쿠키, Local Storage, Service Worker 및 데이터베이스는 제외됩니다. 먼저 TV 앱을 닫으세요. 캐시를 다시 받거나 만들므로 다음 앱 실행이 느릴 수 있습니다. [WAM](../WAM-CLEANUP.md).
+
+취소하고 직접 공간을 확보할 수 있습니다. 수동 안내를 따르고 /var/lib를 다시 확인하세요. 앱 삭제는 다른 파티션의 공간을 확보할 수 있습니다. **Session Storage (SSH):** 먼저 TV 앱을 닫으세요. 앱 세션 상태를 삭제하며 로그아웃되거나 저장하지 않은 작업을 잃을 수 있습니다. [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+아직 출시되지 않은 Root 콜드 부팅 수정: Home 제어가 켜져 있고 LG 전원 켜기 화면이 Home이면, 보호 상태 확인 후 실시간 TV나 LG Home이 계속 표시될 때 Clean 실행을 한 번 요청할 수 있습니다. 마지막 화면 확인에서 이미 보이는 앱은 유지하며 재시도하지 않습니다. 직접 끄기와 Home 세 번 긴급 해제는 꺼진 상태로 유지됩니다. 검증된 설치/업데이트로 비공개 런타임을 교체해야 하며 앱만 업데이트해서는 적용되지 않습니다. TV 검증은 아직 남아 있습니다.
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

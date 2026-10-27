@@ -3,7 +3,8 @@
 Unanchored reads keep strict own leaves. Independently pinned reads tolerate
 ordinary SDK rwx drift; private readers stay strict. The shared packages container
 and pinned DATA reads through the exact services container permit observed owner 501;
-this grants no execution authority.
+UID 1001 on the exact packages/services containers is accepted only for independently
+pinned DATA; this grants no execution authority.
 Directory descriptors bind every open and are checked again after reading; concurrent
 package replacement fails shut.
 """
@@ -45,6 +46,8 @@ def _read(path,limit,uid,installed,verified):
         # Shared SDK metadata storage is DATA, distinct from strict package leaves.
         owners=(0,uid,501) if (name==installed/'usr/palm/packages' or
                               (verified and name==installed/'usr/palm/services')) else (0,uid)
+        if verified and name in (installed/'usr/palm/packages',installed/'usr/palm/services'):
+            owners=(*owners,1001)
         special=info.st_mode&0o7000
         if name in shared:special&=~stat.S_ISVTX  # Shared /tmp may be legitimately sticky.
         if not stat.S_ISDIR(info.st_mode) or info.st_uid not in owners or (special or (not verified and name not in shared and info.st_mode&0o022)):

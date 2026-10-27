@@ -20,7 +20,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from .errors import UserError, TVCommandError
+from .errors import UserError, TVCommandError, PythonPreflightError
 
 SHA256 = '4a71641c8d5536175e404a961624e8656eba30e97b5026f6bd7dc31e4bbeaaea'
 SIZE = 26256859
@@ -383,27 +383,66 @@ def _run(remote, script, data=None, timeout=90):
     return remote.run('/bin/sh -c ' + shlex.quote(_SHELL + script), data=data, timeout=timeout).strip()
 
 
+def _target_result(reply):
+    if reply == 'CYTV_TARGET_READY': return
+    match = re.fullmatch(r'CYTV_TARGET_ERROR space ([0-9]{1,16}) ([0-9]{1,16}) (-1|[0-9]{1,16})', reply)
+    if match and all(-1 <= int(value) <= 2**53 - 1 for value in match.groups()):
+        raise PythonPreflightError('space', *(int(value) for value in match.groups()))
+    reasons = {name: name for name in ('abi', 'ownership', 'space-query')}
+    raise PythonPreflightError(reasons.get(reply.removeprefix('CYTV_TARGET_ERROR '), 'unknown'))
+
+
+def _space_script(required_kib):
+    # Only aggregate known WAM storage, never export its contents or app names.
+    return r'''
+space=$(df -Pk "$base") || { printf 'CYTV_TARGET_ERROR space-query'; exit 0; }
+available=$(printf '%s\n' "$space" | awk 'END {print $4}')
+case "$available" in ''|*[!0-9]*) printf 'CYTV_TARGET_ERROR space-query'; exit 0;; esac
+[ "${#available}" -le 9 ] || { printf 'CYTV_TARGET_ERROR space-query'; exit 0; }
+if [ "$available" -lt REQUIRED ] && [ ! -e "$slot" ] && [ ! -L "$slot" ]; then
+    wam=-1
+    session='/var/lib/wam/Default/Session Storage'
+    du_path=$(command -v du || true)
+    if ancestors "$session" && [ -n "$du_path" ] && safe_mode "$(readlink -f "$du_path")"; then
+        if usage=$(du -skx "$session" 2>/dev/null); then
+            size=$(printf '%s\n' "$usage" | awk 'END {print $1}')
+            case "$size" in ''|*[!0-9]*) ;; *) [ "${#size}" -gt 9 ] || wam=$size;; esac
+        fi
+    fi
+    printf 'CYTV_TARGET_ERROR space %s REQUIRED %s' "$available" "$wam"
+    exit 0
+fi
+printf CYTV_TARGET_READY
+'''.replace('REQUIRED', str(required_kib))
+
+
+def _check_space(remote, required_kib):
+    script = 'base=' + shlex.quote(RUNTIME_ROOT) + '\nslot=\nancestors "$base"\n'
+    try: _target_result(_run(remote, script + _space_script(required_kib)))
+    except TVCommandError: raise PythonPreflightError('tools') from None
+
+
 def _preflight(remote):
     script = r'''
-ancestors /var/lib
-case "$(uname -m)" in armv7l|armv8l|aarch64) ;; *) exit 1;; esac
+ancestors /var/lib || { printf 'CYTV_TARGET_ERROR ownership'; exit 0; }
+abi() {
+case "$(uname -m)" in armv7l|armv8l|aarch64) ;; *) return 1;; esac
 shell=$(readlink -f /bin/sh)
-[ "$(od -An -tu1 -j 4 -N 2 "$shell" | awk '{$1=$1;print}')" = '1 1' ]
-[ "$(od -An -tu1 -j 18 -N 2 "$shell" | awk '{$1=$1;print}')" = '40 0' ]
+[ "$(od -An -tu1 -j 4 -N 2 "$shell" | awk '{$1=$1;print}')" = '1 1' ] || return 1
+[ "$(od -An -tu1 -j 18 -N 2 "$shell" | awk '{$1=$1;print}')" = '40 0' ] || return 1
 flags=$(od -An -tu1 -j 37 -N 1 "$shell" | awk '{$1=$1;print}')
-[ "$((flags & 4))" = 0 ]
-[ "$(od -An -tu1 -j 39 -N 1 "$shell" | awk '{$1=$1;print}')" = 5 ]
+[ "$((flags & 4))" = 0 ] || return 1
+[ "$(od -An -tu1 -j 39 -N 1 "$shell" | awk '{$1=$1;print}')" = 5 ] || return 1
+}
+abi || { printf 'CYTV_TARGET_ERROR abi'; exit 0; }
 '''
     script += 'base=' + shlex.quote(RUNTIME_ROOT) + '\nslot=' + shlex.quote(RUNTIME_ROOT+'/'+SHA256) + '\n'
     script += r'''
-if [ ! -e "$base" ] && [ ! -L "$base" ]; then mkdir -m 755 "$base"; fi
-ancestors "$base"
-available=$(df -Pk "$base" | awk 'END {print $4}')
-case "$available" in ''|*[!0-9]*) exit 1;; esac
-[ "$available" -ge 327680 ] || [ -e "$slot" ] || [ -L "$slot" ]
-printf CYTV_TARGET_READY
+if [ ! -e "$base" ] && [ ! -L "$base" ]; then mkdir -m 755 "$base" || { printf 'CYTV_TARGET_ERROR ownership'; exit 0; }; fi
+ancestors "$base" || { printf 'CYTV_TARGET_ERROR ownership'; exit 0; }
 '''
-    if _run(remote, script) != 'CYTV_TARGET_READY': raise UserError(TARGET_ERROR)
+    try: _target_result(_run(remote, script + _space_script(327680)))
+    except TVCommandError: raise PythonPreflightError('tools') from None
 
 
 def _verify(remote, tree, inventory):
@@ -472,7 +511,8 @@ def select_python(remote, cache_dir, progress, provision=False):
     try:
         progress('Checking TV compatibility for private Python…')
         try: _preflight(remote)
-        except (UserError, OSError): raise UserError(TARGET_ERROR) from None
+        except PythonPreflightError: raise
+        except (UserError, OSError): raise PythonPreflightError() from None
         raw = _verified_bytes(prime_cache(cache_dir, progress))
         progress('Preparing the verified private Python runtime…')
         normalized_directory = tempfile.TemporaryDirectory(prefix='cytv-python-')
@@ -489,8 +529,8 @@ def select_python(remote, cache_dir, progress, provision=False):
             progress('Using the verified private Python runtime…')
             return executable
         if exists != 'CYTV_SLOT_MISSING': raise UserError(INSTALL_ERROR)
+        _check_space(remote, (MAX_UNPACKED+payload.stat().st_size+32*1024*1024+1023)//1024)
         script = 'base='+shlex.quote(RUNTIME_ROOT)+'\nancestors "$base"\n'
-        script += 'available=$(df -Pk "$base" | awk \'END {print $4}\')\n[ "$available" -ge '+str((MAX_UNPACKED+payload.stat().st_size+32*1024*1024+1023)//1024)+' ]\n'
         script += 'stage=$(mktemp -d "$base/.stage-XXXXXXXXXXXX")\nprintf \'%s\\n\' "$stage"\n# CYTV_STAGE_READY\n'
         stage = _run(remote, script)
         if not re.fullmatch(re.escape(RUNTIME_ROOT)+r'/\.stage-[A-Za-z0-9]{6,32}', stage):
@@ -515,6 +555,7 @@ def select_python(remote, cache_dir, progress, provision=False):
         progress('Private Python is ready…')
         return executable
     except UserError as error:
+        if isinstance(error, PythonPreflightError): raise
         if type(error) is UserError and str(error) in (DOWNLOAD_ERROR, CACHE_ERROR, ARCHIVE_ERROR, TARGET_ERROR, INSTALL_ERROR): raise
         raise UserError(INSTALL_ERROR) from None
     except Exception:

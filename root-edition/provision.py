@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Device-side recovery provisioning. Never changes Home or upstream Homebrew files."""
+"""Recovery provisioning; may initialize an absent Home override to verified LG Home."""
 import argparse
 import hashlib
 import fcntl
@@ -18,7 +18,7 @@ STATE = Path('/var/lib/clean-your-tv-root')
 BASE = Path('/var/luna-service2-dev')
 PRIVATE_SERVICE = STATE/'service'
 RUNNER = STATE/'run-recovery-service'
-PRIVATE_FILES = ('service.js','startup-diagnostics.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
+PRIVATE_FILES = ('audio-recovery.js', 'service.js','startup-diagnostics.js','app-inventory.js','handlers.js','services.json','package.json','activity.json','boot-recover.sh')
 SYSTEM_FILES = tuple(Path(x) for x in ('/usr/bin/node','/usr/palm/services/jsservicelauncher/bootstrap-node.js','/usr/palm/services/jsservicelauncher/bootstrap.js'))
 RUNTIME = STATE / 'runtime'
 FILES = {'service': BASE/'services.d'/(NAME+'.service'),
@@ -104,7 +104,7 @@ def plan(original):
         'outbound':['com.webos.service.activitymanager','com.palm.activitymanager']}]
     return {'service': original['service'].replace(expected,'Exec='+str(RUNNER)).encode(),
             'role':encoded(role), 'client':encoded({NAME:['activity.operation'],'com.cleanyourtv.root.preview':[NAME+'.control'],'com.cleanyourtv.root.preview-*':[NAME+'.control']}),
-            'api':encoded({NAME+'.control':[NAME+'/'+x for x in ('status','restore','enable','confirm','listApps')],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
+            'api':encoded({NAME+'.control':[NAME+'/'+x for x in ('status','restore','enable','confirm','listApps','audioRecoveryStatus','setAudioRecoveryEnabled','recoverAudio')],'activities.callbacks':[NAME+'/boot'],NAME+'.admin':[NAME+'/'+x for x in ('status','restore','register','unregister')]})}
 
 def manifest():
     callback = PRIVATE_SERVICE/'boot-recover.sh'
@@ -193,17 +193,23 @@ def rpc(method):
     if method in ('register','unregister'):
         import activity
         return activity.manage(method,secure,write)
-    if method not in ('status','register','restore','unregister'):
+    home_calls = {
+        'home-read': ('com.webos.settingsservice/getSystemSettings', {'category':'general','keys':['defaultApps']}),
+        'home-profiles': ('com.webos.service.systemprofile/getProfiles', {'names':['defaultApps','idleApp'],'subscribe':False}),
+        'home-stock': ('com.webos.service.applicationmanager/setDefaultApp', {'category':'home','appId':'com.webos.app.home'}),
+    }
+    if method not in ('status','restore') and method not in home_calls:
         raise ValueError('Unsupported recovery method')
-    uri = 'luna://'+NAME+'/'+method
+    uri, payload = home_calls.get(method, (NAME+'/'+method, {}))
+    uri = 'luna://'+uri
     try:
-        process = subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,'{}'],
+        process = subprocess.Popen(['/usr/bin/luna-send','-n','1',uri,json.dumps(payload)],
                                    stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     except OSError as error:
         raise RecoveryRPCError('client-start-failed') from error
     try:
         # This TV exits luna-send early if stdin closes before its first reply.
-        deadline = time.monotonic()+(610 if method == 'restore' else 45)
+        deadline = time.monotonic()+(610 if method == 'restore' else 5 if method in home_calls else 45)
         data, total = b'', 0
         streams = [process.stdout, process.stderr]
         while time.monotonic() < deadline:
@@ -260,12 +266,68 @@ def refresh():
                    stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     return {'returnValue':True,'operation':'scan-services','effective_registration_verified':False}
 
+
+def prepare_stock_home():
+    """Setup only: materialize an absent override, never infer a SAM readback.
+
+    A submitted write is reconciled by observation, never repeated. The explicit
+    stock override remains after removal; it selects the same original LG Home.
+    """
+    stock = 'com.webos.app.home'
+    receipt = STATE/'stock-home-initialization.json'
+    def settings():
+        reply = rpc('home-read')
+        try: value = reply['settings']['defaultApps']
+        except (KeyError, TypeError) as error: raise ValueError('Incomplete Home settings readback') from error
+        if (not isinstance(value,dict) or ('home' in value and
+                (not isinstance(value['home'],str) or not value['home'] or value['home'].strip()!=value['home']))):
+            raise ValueError('Invalid Home settings readback')
+        return value
+
+    current = settings()
+    has_receipt = os.path.lexists(receipt)
+    pending = json.loads(secure(receipt)) if has_receipt else None
+    if has_receipt and (
+            not isinstance(pending,dict) or set(pending) != {'schema','phase','defaultApps','profiles'}
+            or type(pending['schema']) is not int or pending['schema'] != 1
+            or pending['phase'] not in ('submitted','verified')
+            or not isinstance(pending['defaultApps'],dict) or 'home' in pending['defaultApps']):
+        raise ValueError('Invalid stock Home initialization evidence; keep recovery data')
+    if pending is None and 'home' in current: return
+    # Even a dangling marker is ambiguous. Never alter established recovery or
+    # an existing routing transaction to retrofit support onto retained code.
+    blocked = [STATE/name for name in ('recovery-provision.json','profile-trial.json',
+               'persistent-intent.json','persistent-binding.json','profile-candidate.stage')]
+    blocked.append(Path('/var/webos-profile/override/clean-your-tv-root.json'))
+    if pending is None and any(os.path.lexists(path) for path in blocked):
+        raise ValueError('Home initialization requires never-activated provisioning')
+    try:
+        profiles = rpc('home-profiles')['profiles']
+        if (profiles['defaultApps']['categories']['home'] != stock
+                or profiles['idleApp']['appId'] != stock or profiles['idleApp']['support'] is not True):
+            raise ValueError('Home initialization requires stock profiles')
+    except (KeyError, TypeError) as error:
+        raise ValueError('Incomplete stock profiles') from error
+    if pending is None:
+        pending = {'schema':1,'phase':'submitted','defaultApps':current,'profiles':profiles}
+        write(receipt,encoded(pending))  # Durable intent before the only write.
+        try: rpc('home-stock')
+        except RecoveryRPCError: pass  # A missing reply is not proof of failure.
+        current = settings()
+        profiles = rpc('home-profiles')['profiles']
+    if current != dict(pending['defaultApps'],home=stock) or profiles != pending['profiles']:
+        raise ValueError('Stock Home initialization unconfirmed; keep recovery data, do not replay')
+    if pending['phase'] != 'verified': write(receipt,encoded(dict(pending,phase='verified')))
+
+
 def finalize():
     before = startup_record()
     phase = 'manifest'
     try:
         expected = json.loads(secure(STATE/'recovery-provision.pending.json'))
         if manifest() != expected: raise ValueError('Runtime changed since provisioning')
+        phase = 'stock-home'
+        prepare_stock_home()
         phase = 'status'
         reply = rpc('status')
         if reply.get('root') is not True:

@@ -18,6 +18,11 @@ compressed for SSH transfer in the inspected artifact. Initial staging requires
 Actual runtime compatibility is tested before
 Root activation, not inferred from a TV model name.
 
+**Unreleased diagnostics:** cytv distinguishes ABI, directory safety and space
+failures and shows free/required MiB. Low-space diagnostics may identify large
+WAM Session Storage without inspecting app contents. See [low /var space and
+recovery](RECOVERY.md#private-python-and-low-var-space) before clearing state.
+
 ## Scope and compatibility
 
 The first managed target is CPython 3.13.17, python-build-standalone 20261021,

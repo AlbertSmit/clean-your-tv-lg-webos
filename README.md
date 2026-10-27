@@ -1,7 +1,11 @@
 ![Clean Your TV — for LG webOS](assets/brand/readme-logo.png#gh-light-mode-only)
+
+1.4.0: [release notes](docs/RELEASE-1.4.0.md) and [C3 acceptance / limits](docs/RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
 ![Clean Your TV — for LG webOS](assets/brand/readme-logo-dark.png#gh-dark-mode-only)
 
 # Clean Your TV — LG webOS
+
+Release 1.4.0: Android **0.4.0 / code 13** removes preview after maintainer-approved Android 15 ARM64 / WebView 124 emulator checks. Physical phones and live phone-to-TV recovery remain unverified. Latest-download links follow the published release. See [Android acceptance and limits](android/STABLE-READINESS.md).
 
 **A clean home screen for LG webOS, with No-root and Root editions.**
 

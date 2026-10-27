@@ -1,9 +1,11 @@
 # Android stable readiness
 
-Status: **preparation, not a stable Android release announcement**. Keep the
-`-preview` component version and current published-download descriptions until
-the acceptance gate below is completed. Choose the next version and increment
-`versionCode` at candidate freeze through `docs/RELEASE-FLOW.md`.
+Status: **Android 0.4.0 / versionCode 13 is selected for the unpublished 1.4.0
+candidate without a preview suffix.** On 2026-10-27 the maintainer explicitly
+accepted emulator verification as sufficient for this release because no
+physical phone is available. Ship within the documented architecture/runtime
+limits and collect community feedback; do not describe missing physical results
+as passed. Public downloads remain the published 0.3.0-preview until publication.
 
 Developer Mode auto-renewal is outside this work. No automatic discovery,
 uninstall UI, extra phone architectures or Google Play publication is required
@@ -24,8 +26,8 @@ report. Its `status:needs-info` remains appropriate for the outstanding original
 reporter response.
 
 No physical Android phone is available to the maintainer for this preparation.
-Device checks remain an explicit release gate, to be supplied by maintainers or
-community testers; the existing success must not be discarded or overextended.
+Physical device checks are community follow-up under the maintainer decision
+above; the existing success must not be discarded or overextended.
 
 ## Production package and update identity
 
@@ -108,28 +110,30 @@ identity to the key's canonical path rather than interpreting alias spelling as
 lost user data. These fixtures do not test actual SSH credentials, network loss
 to a TV or a whole-edition TV rollback.
 
-## Physical acceptance before removing preview
+## Physical follow-up and compatibility limits
 
 Record the exact APK hash, signer, source/build and component versions for every
 result, with phone model, Android/WebView version, TV model/firmware and edition.
 Separate Android installer results from TV runtime compatibility.
 
-| Required scenario | Current evidence | Remaining work |
+| Scenario | Current evidence | Community follow-up |
 | --- | --- | --- |
 | No-root installation from phone | v1.1.0 user success in #24 | Record device details and verify final candidate |
 | Root installation from phone | Not established by #24 | Physical install, status and recovery |
-| Published preview update without data loss | Same-signer emulator fixture | Final CI APK with original public signer; physical update |
-| Activity recreation and prompt replay | Native bounded-replay regression and browser replay suites | Real rotation, backgrounding and return to the same operation |
-| Phone lock and denied notification permission | Foreground service and bounded wake lock in code | Verify operation continuation / clear outcome on actual Android devices |
+| Published preview update without data loss | Original-signer code11-to-code12 file retention and native Store fixture below | Final code13 original-signer APK; physical update |
+| Activity recreation and prompt replay | Emulator idle UI rotation/background return; native bounded replay and browser suites | Rotation/background return during a live phone-to-TV operation |
+| Phone lock and denied notification permission | Emulator idle UI checks; foreground service and bounded wake lock in code | Verify operation continuation / clear outcome on actual Android devices |
 | Network loss / TV unavailable | Existing negative connection fixtures and recovery UI | Interrupt real transfer; status/restore must reconcile before retry |
 | OS process termination | Emulator force-stop and durable pending-receipt fixture | Interrupt physical install; no automatic retry or receipt deletion |
 | Supported Android/WebView floor | API 35 emulator and WebView feature gate | Oldest supported Android 7 / WebView 108 and an additional current phone |
 | TV controls after installation | Historical edition-specific TV evidence | Final installed candidate: Home, arrows/OK, Back, volume, triple-Home and explicit resume |
 | TV power / recovery | Not established by successful package installation | Standby/wake and cold boot separately; status/restore and rollback within supported scope |
 
-Close the gate only with recorded results or an explicitly narrowed supported
-scope. Emulator checks, CI success and one successful setup do not establish
-universal phone/TV compatibility.
+The maintainer accepts the emulator-tested scope for suffix removal. The API 24 /
+WebView 108 floor remains a declared minimum, not a tested device claim. Emulator
+checks, CI success and one successful setup do not establish universal phone/TV
+compatibility. Report failures with Android/WebView versions, phone and TV model,
+firmware, edition and last completed step; exclude credentials and private logs.
 
 ## Automated verification record for this preparation
 
@@ -152,6 +156,37 @@ universal phone/TV compatibility.
   retained after force-stop. Reinstall was refused while that receipt was pending.
   Native operation checks also passed on the non-debuggable release target.
 
-These are development checks, not publication evidence. The final PR records
-the tested revision and final native upgrade results. Stable metadata and
-physical acceptance remain pending.
+These historical development checks predate the current candidate and are not
+publication evidence. See the current emulator record below and the release PR
+for final artifact verification. Physical acceptance remains follow-up.
+
+## 2026-10-27 emulator acceptance
+
+Android Emulator 37.2.12, isolated Pixel 6 profile, Google APIs Android 15 / API 35
+ARM64 image `AE3A.240806.043/12960925`, WebView 124.0.6367.219.
+No real TV profiles, private keys or TV connections were used.
+
+- Exact protected-CI APK from source `1114ccc518d352748f539aa8e44f52a90790ff93`,
+  run 40478003842: original public signer update from published v1.3.0 code 11 to
+  RC code 12 succeeded with `install -r`, without uninstall. Four synthetic files
+  (profile, dummy identity, preferences, pending receipt) retained identical hashes
+  after update and force-stop. This checks file retention, not live SSH recovery.
+- Original RC UI launched with notifications denied. Portrait/landscape recreation,
+  background/return, lock/wake and force-stop/relaunch returned to the Activity;
+  screenshots were inspected and the crash buffer was empty. These were idle UI
+  checks, not an active installation continuation test.
+- Separate test-signed copies of that baseline and candidate, plus the current
+  instrumentation runner, passed real Python Store seed/verify across upgrade
+  and process death. Pending receipt blocked a second begin without being changed;
+  a new process did not automatically resume. No uninstall occurred between
+  seed and verify. Disposable signing material is never a release asset.
+- Native OperationChecks passed both edition contexts, single-operation exclusion,
+  450-event bounded replay, outstanding prompt retention over 500 logs, stale
+  answer rejection, secret exclusion and Chinese resource qualifiers on a
+  non-debuggable release target.
+
+These checks justify the maintainer's scoped suffix decision, not physical-TV
+acceptance. The final 0.4.0/code13 protected-CI artifact must still pass its signer,
+metadata, payload and original-signer upgrade checks before publication. Record
+that artifact's exact source and hash in the release PR; code12 results do not
+silently become code13 artifact evidence.

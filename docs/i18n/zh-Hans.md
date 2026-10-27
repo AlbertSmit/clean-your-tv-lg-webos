@@ -1,5 +1,8 @@
 # Clean Your TV — 用户指南
 
+1.4.0：维护者已接受修正后的 C3 电源、Home、焦点、关闭状态保持和手动回退至 1.3.0 测试，并要求关闭 #90。其他电视、eARC 声音和实体 Android 仍未验证。未重复测试上一候选版本的所有基本按键。 [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
+
 No-root 和 Root 是适用于不同电视配置的同等选项。使用 LG 开发者模式请选择 No-root；已有 root SSH 访问请选择 Root。两种版本的兼容性与测试范围分别记录。
 
 ## 安装之前
@@ -7,6 +10,8 @@ No-root 和 Root 是适用于不同电视配置的同等选项。使用 LG 开�
 本指南涵盖 **[v1.3.0 稳定版](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**。最新下载链接指向已发布的稳定版。另请参阅[安装指南](../INSTALL.md)和[发行说明](../RELEASE-1.3.0.md)。
 
 v1.3.0 包含 cytv **0.4.0**、Home **1.4.2**、Home Helper **0.6.19**、Root Edition **0.4.0**、Home Updater 和 Root Updater **0.3.0**、Android **0.3.0-preview**（版本代码 **11**），以及 System Updater supervisor **1.1.0**（协议 **1**）。
+
+尚未发布的 1.4.0 候选版选择 Android 0.4.0（版本代码 13），维护者接受模拟器测试后移除 preview。已测环境：Android 15 ARM64 / WebView 124。实体手机及实际电视安装过程中的恢复尚未验证；Android 7 / WebView 108 是最低要求，并非已测手机配置。更新时不要卸载应用或清除数据。公开下载仍为 0.3.0-preview。反馈问题时请提供手机、Android/WebView、电视/固件、版本类型和失败步骤，不要公开凭据。
 
 1.3.0 已知问题：待机唤醒后，Root 的 Home 控制可能关闭，按 Home 会打开 LG。请在 Clean Your TV 设置中明确重新开启 Home 控制；如果开启失败，请保留 LG Home 并保存诊断信息。参见 [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) 和[当前测试记录](../RELEASE-1.3.0-ACCEPTANCE.md)。
 
@@ -16,6 +21,31 @@ v1.3.0 包含 cytv **0.4.0**、Home **1.4.2**、Home Helper **0.6.19**、Root Ed
 - **Root：**必须已有 root SSH 访问权限。安装程序不会为电视获取 root。已取得 root 的电视不要启用开发者模式。请保留 root 访问和恢复服务。
 
 新版 No-root Helper 要求电视 Node.js **0.12.2+**；安装程序会预先检查。旧的已发布安装包不会自动获得此兼容性。每种型号仍需检查输入设备访问、待机和冷启动。
+
+
+## 设置 Developer Mode（No-root）
+
+Developer Mode 让 CYTV 可以在没有 root 的电视上安装应用。
+
+1. 在电视上打开 LG Apps，搜索并安装 Developer Mode。
+2. 打开 Developer Mode 并登录 LG Developer 账号。如需注册，请访问 webostv.developer.lge.com。
+3. 开启 Dev Mode Status。电视将重启，然后请重新打开 Developer Mode。
+4. 开启 Key Server 并保持 Developer Mode 打开。将其中的 IP Address 填入 CYTV 的电视地址栏。
+5. 输入电视上 Developer Mode 显示的六位 Passphrase，注意区分大小写。
+
+请使用电视上的代码，而非 LG 账号密码。如未显示代码，请开启 Key Server。
+
+配对是单独的步骤：电视提示时，请用遥控器允许 CYTV 连接。
+
+请保持 Developer Mode 有效：计时结束前打开它，并在电视联网时按 EXTEND。过期后 LG 可能会删除这些应用。
+
+Home 是您的应用主屏幕。Home Helper 让遥控器的 Home 键打开此屏幕。
+
+安装后按 Home 键试用。如果打开的是 LG Home，请从电视应用列表中打开 Home Helper。 在两秒内短按 Home 三次可返回 LG Home。要重新启动 Home 控制，请打开 Home Helper，选择启动 Helper 并确认。已保存的主屏幕选择会保留。
+
+电脑版 CYTV 会逐步显示准备说明。“详细信息”可打开操作日志。LG 示例图片可以放大；请使用您自己电视上的代码。
+
+[LG Developer Mode](https://webostv.developer.lge.com/develop/getting-started/developer-mode-app)
 
 ## v1.1.0 起的可选 Root Python
 
@@ -60,7 +90,7 @@ Root 移除中断时，在应用中再次选择“移除”。它会先检查电
 
 **新构建：两秒内按 Home 三次，每次都松开**，即可返回 LG Home 并停止 Home 控制，偏好设置保留。No-root Helper 0.6.13 及更早版本改为按住 Home 约两秒；按住 Home 不是 Root 的紧急退出方式。
 
-No-root：从 LG Apps 打开 **Home Helper** 恢复；只打开 Home 不会解除停止状态。Root：在 Home 设置中启用 **Change Home** 恢复。**Open LG Home** 只打开 LG Home 一次，不更改路由。要持续使用 LG Home，请关闭 **Change Home** 或运行 `cytv restore`。不要同时运行两种控制器。若故障重复出现，请保持 LG Home 启用。
+No-root: 在两秒内短按 Home 三次可返回 LG Home。要重新启动 Home 控制，请打开 Home Helper，选择启动 Helper 并确认。已保存的主屏幕选择会保留。 Root：在 Home 设置中启用 **Change Home** 恢复。**Open LG Home** 只打开 LG Home 一次，不更改路由。要持续使用 LG Home，请关闭 **Change Home** 或运行 `cytv restore`。不要同时运行两种控制器。若故障重复出现，请保持 LG Home 启用。
 
 ```sh
 ./cytv --language zh-Hans status
@@ -149,3 +179,33 @@ Installer 要求已有 root、可执行 root exec 的 Homebrew Channel、Node.js
 
 
 此源码候选版中，现有 Root 安装需要经过验证的恢复和重新设置，才能获得修正后的私有运行环境。仅更新 Installer 不会替换它。请保留恢复记录，并且只通过正常设置流程或设置页面启用 Home。
+
+仅适用于下一候选版本：No-root 设置 → 开发者模式 → 显示诊断会提供安全的存储和 Home RPC 错误分类及实际服务版本。查看诊断不会启用自动续期或启动 Helper。状态检查失败不代表 Helper 已停止。C5 上的修复尚未确认；参阅[诊断说明（英文）](../SETTINGS-DIAGNOSTICS.md)。
+
+报告会获得遥控器焦点。上/下键滚动，左/右键或 OK 返回相邻操作，返回键回到 Home 设置。
+
+**尚未发布，#82：** 如果缺少 Home 设置，明确启动的 Root 安装可以将其设为 LG Home，并重新读取验证，然后完成恢复准备。Status/doctor 不会写入设置。结果不确定的写入不会重复，请保留恢复数据。卸载后显式的 LG Home 设置仍会保留。此固件仍需真机测试。
+
+## 未发布候选版本：HDMI 声音恢复（Root）
+
+Home 设置 → HDMI 声音提供 eARC 重新连接和已确认的 HDMI 输出恢复。仅 ARC、
+组合/WOW Orchestra 及未知模式会跳过。开机/待机唤醒自动恢复是实验功能，默认关闭；
+需要支持的电源订阅，可能中断正常声音。返回可关闭面板，清理仍会继续。中断后
+请检查状态，仅在希望开启 eARC 时恢复已保存的设置。恢复 Home 或紧急停止会关闭
+自动恢复，必须明确重新开启。旧私有运行时需要经过验证的重新设置。尚未确认
+电视兼容性或声音开始时间缩短。
+
+[Device acceptance (English)](../development/ROOT-AUDIO-RECOVERY.md)
+
+尚未发布：专用 Python 检查分别报告 ABI、目录安全和空间不足。首次安装需要 /var/lib 有 320 MiB 可用空间。较大的 WAM Session Storage 可能是原因；清除可能丢失应用会话状态。请参阅[恢复指南](../RECOVERY.md#private-python-and-low-var-space)。
+
+在尚未发布的 1.4.0 候选版中，中断的 No-root 安装也可在**检查电视状态**后使用**恢复并重新安装**。只有确定要移除 Clean Your TV 应用时才确认移除，然后在重新安装前检查版本。如果恢复失败，请保存该次诊断报告并停止操作。电视最初拒绝安装包的原因仍未确定，也尚未确认已修复（#21）。
+
+
+**尚未发布 — WAM:** `cytv clean-wam-cache --edition root`. 只请求 cache 和 codecache。不会清理 Session Storage、cookies、Local Storage、Service Worker 和 databases。 请先关闭电视应用。缓存会重新下载或生成；下次启动应用可能需要更多时间。 [WAM](../WAM-CLEANUP.md).
+
+可以取消并自行清理空间。请按手动指南操作并再次检查 /var/lib；删除应用可能只清理其他分区。 **Session Storage (SSH):** 请先关闭电视应用。这会删除应用会话状态，可能使您退出登录或丢失未保存的数据。 [WAM](../WAM-CLEANUP.md#free-space-yourself-instead).
+
+尚未发布的 Root 冷启动修正：启用 Home 控制且 LG 开机画面设为 Home 时，保护检查成功后，若仍显示电视直播或 LG Home，可请求打开 Clean 一次。最后一次画面检查时已显示的其他应用会保留，不会重试。手动关闭和连按三次 Home 的紧急关闭状态保持不变。需要通过已验证的安装或更新替换私有运行时，仅更新应用不够。修正版的电视验证仍待完成。
+
+[Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)

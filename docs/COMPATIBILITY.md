@@ -1,5 +1,7 @@
 # Compatibility and known limits
 
+Unpublished 1.4.0 candidate: Android **0.4.0 / code 13** removes preview after maintainer-approved Android 15 ARM64 / WebView 124 emulator checks. Physical phones and live phone-to-TV recovery remain unverified. Published downloads remain v1.3.0 / Android 0.3.0-preview. See [Android acceptance and limits](../android/STABLE-READINESS.md).
+
 TV runtime requirements are separate from the computer's build tools. No-root
 requires TV Node.js 0.12.2+ for the compiled Helper; cytv and the source
 installer reject older runtimes before installing packages. Root requires TV

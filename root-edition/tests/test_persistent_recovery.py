@@ -140,7 +140,7 @@ class IntegrationTests(unittest.TestCase):
   self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
  def test_bound_escape_disables_before_restore(self):
   from persistent_recovery import bound_exit
-  self.assertTrue(bound_exit('route-a'))
+  self.assertTrue(bound_exit('route-a',reason='escape'))
   self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
  def test_unbound_legacy_route_is_not_adopted(self):
   from persistent_recovery import bound_exit
@@ -176,6 +176,10 @@ class IntegrationTests(unittest.TestCase):
   self.assertEqual(self.home,CANDIDATE)
 
 class ShutdownTests(IntegrationTests):
+ def setUp(self):
+  super().setUp()
+  boot=patch('intent_runtime.boot_identity',return_value='boot-a')
+  boot.start();self.addCleanup(boot.stop)
  def test_input_observer_accepts_retained_shutdown_profile(self):
   from emergency_trial import recover
   with patch('shutdown_state.stopping',return_value=True):
@@ -236,3 +240,57 @@ class ShutdownTests(IntegrationTests):
   with patch('shutdown_state.stopping',return_value=True):
    self.assertTrue(bound_exit('route-a',reason='escape'))
   self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+
+ def test_restored_old_observer_cannot_revoke_intent_before_boot_dispatch(self):
+  from persistent_recovery import bound_exit
+  with patch('intent_runtime.boot_identity',return_value='boot-b'),patch.object(d,'restore_once') as restore:
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+   restore.assert_not_called()
+  self.assertEqual(self.store.read(),self.intent)
+  outcome=self.c.boot(self.store.read(),'boot-b','new-boot',False)
+  self.assertEqual(outcome['effect'],'start_guarded');self.assertEqual(self.read(),self.baseline)
+ def test_session_mismatch_does_not_override_escape_package_loss_or_failsafe(self):
+  from persistent_recovery import bound_exit
+  with patch('intent_runtime.boot_identity',return_value='boot-b'):
+   self.assertTrue(bound_exit('route-a',reason='escape'))
+  self.assertFalse(self.store.read()['enabled'])
+ def test_firmware_transition_shutdown_still_needs_confirmed_active_intent(self):
+  import shutdown_state as shutdown,persistent_health as health
+  from persistent_recovery import bound_exit
+  with patch.object(health,'ROOT',self.root/'health'),patch.object(shutdown,'query',return_value=False):
+   power=shutdown.PowerState('route-a','boot-a')
+   power.event(dict(returnValue=True,subscribed=True,state='Active'))
+   power.event(dict(returnValue=True,state='Active Standby'))
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertEqual(self.store.read()['phase'],'stopping');self.assertTrue(self.store.read()['enabled'])
+  self.assertEqual(self.home,CANDIDATE)
+
+ def test_session_mismatch_cannot_hide_package_loss_or_failsafe(self):
+  from persistent_recovery import bound_exit
+  with patch('intent_runtime.boot_identity',return_value='boot-b'),patch.object(d,'home_present',return_value=False):
+   self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+ def test_session_mismatch_with_failsafe_disables(self):
+  from persistent_recovery import bound_exit
+  with patch('intent_runtime.boot_identity',return_value='boot-b'),patch.object(d,'FAILSAFE',self.root/'failsafe'):
+   d.FAILSAFE.touch();self.assertTrue(bound_exit('route-a',reason='observer_exit'))
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+ def test_power_evidence_cannot_promote_unconfirmed_trial(self):
+  import shutdown_state as shutdown,persistent_health as health
+  from persistent_recovery import bound_exit
+  self.c.exit(self.intent);disabled=self.store.read()
+  trial,_=self.store.apply(disabled,dict(kind='enable',generation=disabled['generation'],boot='boot-a',token='unconfirmed'))
+  self.create_route('route-b');self.c.bind(trial,'route-b')
+  with patch.object(health,'ROOT',self.root/'health'),patch.object(shutdown,'query',return_value=False):
+   power=shutdown.PowerState('route-b','boot-a')
+   power.event(dict(returnValue=True,subscribed=True,state='Active'))
+   power.event(dict(returnValue=True,state='Active Standby'))
+   self.assertTrue(bound_exit('route-b',reason='observer_exit'))
+  self.assertFalse(self.store.read()['enabled']);self.assertEqual(self.read(),self.baseline)
+
+ def test_monitor_start_rejects_old_bound_startup_session(self):
+  import shutdown_state as shutdown
+  with patch('intent_runtime.boot_identity',return_value='boot-b'),patch.object(shutdown,'observe_power') as subscribe,patch.object(shutdown,'query') as query:
+   monitor=shutdown.monitor('route-a');monitor.close()
+  subscribe.assert_not_called();query.assert_not_called()
+  self.assertEqual(self.store.read(),self.intent)

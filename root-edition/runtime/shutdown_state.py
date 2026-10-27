@@ -1,7 +1,8 @@
-"""Observe PID 1 independently, before shutdown makes synchronous queries stall."""
+"""Observe bounded, session-bound shutdown evidence before input teardown."""
 import json
 import os
 import stat
+import select
 from pathlib import Path
 import subprocess
 import tempfile
@@ -20,16 +21,20 @@ def query():
     except (OSError,subprocess.TimeoutExpired): return False
 
 
-def record(transaction, source="systemd"):
+def record(transaction, source="systemd", boot=None):
     from intent_runtime import boot_identity
+    current = boot_identity()
+    if boot is None: boot = current
+    if boot != current: return False
     try:health.ROOT.mkdir(mode=0o700)
     except FileExistsError:pass
     d.trusted_dir(health.ROOT)
     fd,name=tempfile.mkstemp(dir=health.ROOT,prefix='.shutdown-')
     try:
         with os.fdopen(fd,'w') as out:
-            json.dump(dict(transaction=transaction,boot=boot_identity(),issued=time.monotonic(),source=source),out)
-        os.replace(name,health.path(transaction).with_suffix('.shutdown'))
+            json.dump(dict(transaction=transaction,boot=boot,issued=time.monotonic(),source=source),out)
+        os.replace(name,health.path(transaction).with_suffix('.power' if source == 'firmware-power' else '.shutdown'))
+        return True
     finally:
         if os.path.exists(name):os.unlink(name)
 
@@ -39,11 +44,13 @@ def stopping(transaction=None):
         try:
             from intent_runtime import boot_identity
             d.trusted_dir(health.ROOT)
-            v=d.safe_json(health.path(transaction).with_suffix('.shutdown'))
             from persistent_lease import finite
-            if (v.get('transaction') == transaction and v.get('boot') == boot_identity()
-                    and finite(v.get('issued')) and 0 <= time.monotonic()-v['issued'] < 5):
-                return True
+            for suffix in ('.shutdown','.power'):
+                try: v=d.safe_json(health.path(transaction).with_suffix(suffix))
+                except FileNotFoundError: continue
+                if (v.get('transaction') == transaction and v.get('boot') == boot_identity()
+                        and finite(v.get('issued')) and 0 <= time.monotonic()-v['issued'] < 5):
+                    return True
         except (OSError,ValueError):pass
     return query()
 
@@ -76,8 +83,108 @@ class PowerReason:
             self.consumed=True;return False
 
 
+class PowerState:
+    """A live ON -> shutdown transition; initial/reconnected OFF is never proof."""
+    def __init__(self, transaction, boot):
+        self.transaction = transaction
+        self.boot = boot
+        self.primed = False
+        self.on = False
+        self.clear()
+
+    def clear(self):
+        try:
+            d.trusted_dir(health.ROOT)
+            health.path(self.transaction).with_suffix('.power').unlink()
+        except FileNotFoundError: pass
+
+    def close(self):
+        self.on = False
+        self.clear()
+
+    def event(self, value):
+        if (not isinstance(value,dict) or value.get('returnValue') is not True
+                or not isinstance(value.get('state'),str)
+                or 'subscribed' in value and value['subscribed'] is not True
+                or not self.primed and value.get('subscribed') is not True):
+            self.close()
+            raise ValueError('Invalid power subscription')
+        state=value['state']
+        if state in ('Active','Screen Saver'):
+            self.close(); self.on=True
+        elif state in ('Active Standby','Power Off'):
+            if self.primed and self.on:
+                record(self.transaction,source='firmware-power',boot=self.boot)
+        else:
+            self.close()
+        self.primed=True
+
+
+def observe_power(transaction, boot, stop):
+    # One owned interactive child, no polling process/reconnect loop. Its stdin
+    # pipe closes if the guardian dies. Unknown/lost streams revoke their proof.
+    power=None;child=None
+    try:
+        power=PowerState(transaction,boot)
+        child=subprocess.Popen(['/usr/bin/luna-send','-i',
+            'luna://com.webos.service.tvpower/power/getPowerState','{"subscribe":true}'],
+            stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,close_fds=True)
+        data='';opened=time.monotonic()
+        while not stop.is_set():
+            from intent_runtime import boot_identity
+            if boot_identity() != boot: break
+            if not power.primed and time.monotonic()-opened > 5: break
+            if not select.select([child.stdout],[],[],.25)[0]:
+                if child.poll() is not None: break
+                continue
+            chunk=os.read(child.stdout.fileno(),4096)
+            if not chunk: break
+            data+=chunk.decode('utf8')
+            if len(data)>8192: break
+            while data.strip():
+                data=data.lstrip()
+                try: value,end=json.JSONDecoder().raw_decode(data)
+                except ValueError:
+                    # A partial frame may complete later, but cannot leave a
+                    # previous OFF frame authoritative while parsing is uncertain.
+                    power.clear();break
+                data=data[end:];power.event(value)
+    except (OSError,ValueError): pass
+    finally:
+        try:
+            if power is not None: power.close()
+        finally:
+            if child is not None:
+                if child.poll() is None: child.terminate()
+                try: child.communicate(timeout=1)
+                except subprocess.TimeoutExpired: child.kill(); child.communicate(timeout=1)
+
+
+class Monitor(threading.Event):
+    def __init__(self):
+        super().__init__()
+        self.threads=[]
+
+    def close(self):
+        self.set()
+        for thread in self.threads: thread.join(timeout=2)
+
+
 def monitor(transaction):
-    stop=threading.Event()
+    stop=Monitor()
+    from intent_runtime import boot_identity
+    try: boot=boot_identity()
+    except (OSError,ValueError): return stop
+    try:
+        from persistent_recovery import Coordinator
+        from persistent_store import Store
+        c=Coordinator(Store(d.STATE))
+        if os.path.lexists(c.binding):
+            binding=c.read_binding();intent=c.store.read()
+            if (binding['transaction'] != transaction or binding['restored']
+                    or (binding['generation'],binding['token']) != (intent['generation'],intent['token'])
+                    or intent['boot'] != boot): return stop
+    except (OSError,ValueError): return stop
     reason=PowerReason()
     reason.poll()  # Establish absence before announcing guardian readiness.
     def power_request():
@@ -86,7 +193,7 @@ def monitor(transaction):
             try:
                 if reason.poll(): pending_until=time.monotonic()+1
                 if time.monotonic() < pending_until:
-                    record(transaction,source='firmware-remoteKey')
+                    record(transaction,source='firmware-remoteKey',boot=boot)
                     pending_until=0
                     print(json.dumps(dict(event='shutdown-request-observed',transaction=transaction,uptime=time.monotonic())),flush=True)
             except (OSError,ValueError):pass
@@ -94,10 +201,11 @@ def monitor(transaction):
     def manager():
         while not stop.is_set():
             try:
-                if query():record(transaction)
+                if query():record(transaction,boot=boot)
             except (OSError,ValueError):pass
             stop.wait(.25)
     # A stalled systemctl call must not delay the firmware request observer.
-    for observe in (power_request,manager):
-        threading.Thread(target=observe,daemon=True).start()
+    for observe in (power_request,manager,lambda:observe_power(transaction,boot,stop)):
+        thread=threading.Thread(target=observe,daemon=True)
+        stop.threads.append(thread);thread.start()
     return stop

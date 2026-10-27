@@ -1,5 +1,7 @@
 # Install cytv without a terminal
 
+1.4.0: [release notes](RELEASE-1.4.0.md) and [C3 acceptance / limits](RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
+
 **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
@@ -203,3 +205,18 @@ With desktop dependencies installed, `python scripts/preview-installer.py --lang
 saves screenshots of the real Qt widgets to `build/installer-preview/`. These use
 sample TV data and do not discover, connect to, or modify a TV. Add `--all-locales`
 to capture every supported language at the minimum window size.
+
+## Unreleased: optional WAM cache cleanup
+
+A matching candidate adds **Maintenance → Clear WAM caches (root required)**.
+Review the estimated Cache/Code Cache size, free space, slower-next-launch warning
+and manual alternative before the default-No prompt. Only the native WAM API types
+`cache` and `codecache` are requested. Session Storage and other app data are
+excluded; no root filesystem deletion, service stop, reboot, retry or setup resume
+is performed. Existing Root SSH is required; TV Python/Node are not. See
+[WAM cache cleanup](WAM-CLEANUP.md) for manual Session Storage risks and the limited
+C3 API evidence. Published downloads do not include this action yet.
+
+### Interrupted No-root installation in the unpublished 1.4.0 candidate
+
+In the unpublished 1.4.0 candidate, an interrupted No-root installation also offers **Recover and reinstall** after **Check TV status**. Confirm removal only if you want to remove the Clean Your TV apps, then review the versions before reinstalling. If recovery fails, save its diagnostic report and stop. This does not yet identify or fix the original TV package rejection (#21). Removing the apps may reset Home preferences. The default is No, including with `--yes`; noninteractive setup cannot approve this step. The existing TV-installer-idle, removal readback and unknown-outcome guards remain in force. Published v1.3.0 offers this button for unfinished removal only.

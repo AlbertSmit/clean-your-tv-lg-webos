@@ -42,10 +42,10 @@ def validate_versions(versions):
         version(versions['release'])
     if 'android' in versions or 'android_version_code' in versions:
         if (not isinstance(versions.get('android'), str)
-                or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}-preview', versions['android'])
+                or not re.fullmatch(r'\d{1,4}\.\d{1,4}\.\d{1,4}(?:-preview)?', versions['android'])
                 or type(versions.get('android_version_code')) is not int
                 or versions['android_version_code'] < 1):
-            raise ValueError('Invalid Android preview version metadata')
+            raise ValueError('Invalid Android version metadata')
 
 
 def package_version(raw, kind, expected):

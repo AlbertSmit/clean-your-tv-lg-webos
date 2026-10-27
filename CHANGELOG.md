@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.4.0
+
+- Integrate #80, #81, #87, #89, #97 and #99: safe settings diagnostics, guided
+  setup, verified missing-Home initialization, experimental opt-in eARC recovery,
+  frozen Intel macOS dependency loading and actionable private-Python preflight.
+- Include #102 pinned C2 package-data verification and interrupted No-root recovery;
+  original report/device outcomes remain unresolved.
+- Add #103 Root observer diagnostics and #105 clock-independent cold-start identity
+  with one optional startup Home request. The corrected-runtime cold-boot, first-screen,
+  early app-focus and emergency/off matrix must pass before publication.
+- See [candidate scope and versions](docs/RELEASE-1.4.0.md) and
+  [testing matrix](docs/RC-1.4.0-TESTING.md). C3 acceptance and manual rollback passed; see [scope and limits](docs/RELEASE-1.4.0-ACCEPTANCE.md).
+
+## v1.3.0 — recovery, installer portability and localized Home
+
+- See [release notes](docs/RELEASE-1.3.0.md) and the scoped
+  [acceptance record](docs/RELEASE-1.3.0-ACCEPTANCE.md).
+
 ## v1.2.0 — Helper recovery and Root firmware settings
 
 - Offer confirmed Helper start when firmware denies status (#59, #60).

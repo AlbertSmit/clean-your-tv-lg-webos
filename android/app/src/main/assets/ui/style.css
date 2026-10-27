@@ -16,3 +16,5 @@
 .log pre .error-text,.live-caption.error-text,.error-result h1,.error-result p,.error-state h2,.error-state p,.error-state .dialog-icon{color:var(--error)}
 
 .error-summary{color:var(--error);border:1px solid var(--error);border-radius:14px;padding:16px;margin-top:24px;overflow-wrap:anywhere}
+
+.guide-example{margin:16px 0 0}.guide-example img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px}.guide-example figcaption{font-size:13px;line-height:1.5;color:var(--muted);margin-top:8px}dialog .guide-example{margin:8px 0 18px}dialog .guide-example img{max-height:180px;object-fit:contain;background:#050909}

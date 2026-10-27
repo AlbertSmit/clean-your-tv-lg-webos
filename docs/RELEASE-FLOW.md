@@ -278,8 +278,9 @@ they do not imply a debuggable build. The trusted APK verifier rejects
 `application-debuggable` and includes `debuggable: false` in the build report;
 assembly rejects reports without that explicit boolean. No unsigned fallback is
 allowed. Native fixtures are compiled in CI but need a separate emulator run.
-See [Android stable readiness](../android/STABLE-READINESS.md) for hardware and
-upgrade gates before removing the preview version suffix at candidate freeze.
+See [Android acceptance and limits](../android/STABLE-READINESS.md) for the
+maintainer-approved emulator scope used to remove preview at candidate freeze,
+physical-device follow-up and the mandatory final signed-artifact upgrade checks.
 
 ## Homebrew Installer candidate and promotion gate
 

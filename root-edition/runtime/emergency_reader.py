@@ -4,6 +4,7 @@ No EVIOCGRAB, input writes, reinjection, system library patches or key filtering
 """
 import errno
 import fcntl
+import json
 import os
 import select
 import stat
@@ -50,28 +51,47 @@ def observe(fd, health, keys_released):
     def send(message):
         data = message + b'\n'
         if os.write(health, data) != len(data): raise RuntimeError('Short health write')
+    def report(phase, reason, error=None):
+        # Fixed codes only: no key history, device paths or private input data.
+        record = {'event':'input-observer-fault', 'phase':phase, 'reason':reason}
+        if error is not None: record['errno'] = error.errno
+        try:
+            print(json.dumps(record), file=sys.stderr, flush=True)
+        except OSError:
+            pass  # Full/unavailable logs must not replace the input-loss signal.
+    def lost(phase, reason):
+        report(phase, reason)
+        send(b'LOST')
     # Drain historical events before checking keys; never count a held startup key.
     for _ in range(64):
         try: data = os.read(fd, EVENT.size * 64)
         except BlockingIOError: break
-        if not data: send(b'LOST'); return
-    else: send(b'LOST'); return
-    if not keys_released(): send(b'LOST'); return
+        except OSError as exc:
+            report('startup', 'read_error', exc)
+            raise
+        if not data: lost('startup', 'eof'); return
+    else: lost('startup', 'drain_limit'); return
+    if not keys_released(): lost('startup', 'keys_held'); return
     policy = TripleHome(); back = LongBack(); send(b'READY')
     while True:
         select.select([fd], [], [], .1)
         for _ in range(64):
             try: data = os.read(fd, EVENT.size * 64)
             except BlockingIOError: break
-            if not data or len(data) % EVENT.size: send(b'LOST'); return
+            except OSError as exc:
+                report('active', 'read_error', exc)
+                raise
+            if not data: lost('active', 'eof'); return
+            if len(data) % EVENT.size: lost('active', 'partial_event'); return
             for offset in range(0, len(data), EVENT.size):
                 sec, usec, kind, code, value = EVENT.unpack_from(data, offset)
-                if usec >= 1000000: send(b'LOST'); return
+                if usec >= 1000000: lost('active', 'invalid_timestamp'); return
+                if kind == 0 and code == 3: lost('active', 'events_dropped'); return
                 try: fired = policy.event(kind, code, value, sec * 1000 + usec / 1000)
-                except ValueError: send(b'LOST'); return
+                except ValueError: lost('active', 'invalid_key_value'); return
                 back.event(kind, code, value, time.monotonic() * 1000)
                 if fired: send(b'ESCAPE'); return
-        else: send(b'LOST'); return
+        else: lost('active', 'drain_limit'); return
         if back.tick(time.monotonic() * 1000): send(b'LGHOME')
         send(b'PING')
 

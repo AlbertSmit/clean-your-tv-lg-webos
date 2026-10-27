@@ -1,7 +1,7 @@
 /* Offline localization shared by the two Home editions and the updater. */
 (function(root){
  'use strict';
- var key='tvhome.language',catalogs={},active='en',dialog=null,previous=null,systemLanguage=null,pending=false,callbacks=[];
+ var key='tvhome.language',systemKey='tvhome.system-language.v1',catalogs={},active='en',dialog=null,previous=null,systemLanguage=null,pending=false,callbacks=[];
  var languages=[{code:'en',name:'English'},{code:'de',name:'Deutsch'},{code:'es',name:'Español'},{code:'pt-BR',name:'Português (Brasil)'},{code:'fr',name:'Français'},{code:'it',name:'Italiano'},{code:'ko',name:'한국어'},{code:'hi',name:'हिन्दी'},{code:'pl',name:'Polski'},{code:'ru',name:'Русский'}];
  function normalize(value){
   var base=String(value||'').replace(/_/g,'-').toLowerCase().split('-')[0];
@@ -71,12 +71,21 @@
   confirmationCallback=callback;confirmationSelected=0;confirmation.hidden=false;confirmationButtons[0].focus();
  }
  root.HomeI18n={ready:function(cb){if(pending)callbacks.push(cb);else cb();},languages:languages,normalize:normalize,language:function(){return active;},preference:preference,refresh:refresh,add:add,t:t,html:html,apply:apply,setLanguage:setLanguage,formatDate:formatDate,formatDateTime:formatDateTime,formatTime:formatTime,openLanguagePicker:openLanguagePicker,confirm:confirmAction};
- refresh();
+ var cached=null;
+ if(preference()==='auto')try{var savedSystem=root.localStorage.getItem(systemKey);if(languages.some(function(l){return l.code===savedSystem;}))cached=savedSystem;}catch(_){}
+ systemLanguage=cached;refresh();
+ if(cached&&root.HomeStartup)root.HomeStartup.mark('languageReady');
  if(root.PalmServiceBridge&&preference()==='auto'){
-  pending=true;var bridge,timer,finished=false;
-  function finish(value){if(finished)return;finished=true;root.clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}systemLanguage=value;refresh();pending=false;if(root.HomeStartup)root.HomeStartup.mark('languageReady');var queued=callbacks;callbacks=[];queued.forEach(function(cb){cb();});if(root.document)apply(root.document);}
+  pending=!cached;var bridge,timer,finished=false;
+  function finish(value){
+   if(finished)return;finished=true;root.clearTimeout(timer);if(bridge)try{bridge.cancel();}catch(_){}
+   var persisted=false;
+   if(value&&value!==cached&&preference()==='auto')try{root.localStorage.setItem(systemKey,value);persisted=root.localStorage.getItem(systemKey)===value;}catch(_){}
+   if(cached){if(value&&value!==cached&&persisted&&preference()==='auto'&&root.location&&root.location.reload)root.location.reload();return;}
+   systemLanguage=value;refresh();pending=false;if(root.HomeStartup)root.HomeStartup.mark('languageReady');var queued=callbacks;callbacks=[];queued.forEach(function(cb){cb();});if(root.document)apply(root.document);
+  }
   timer=root.setTimeout(function(){finish(null);},1200);
-  try{bridge=new root.PalmServiceBridge();bridge.onservicecallback=function(raw){if(root.HomeStartup)root.HomeStartup.mark('languageReply');var language=null;try{var r=JSON.parse(raw);if(r.returnValue===true)language=r.settings.localeInfo.locales.UI;}catch(_){}finish(language);};bridge.call('luna://com.webos.settingsservice/getSystemSettings',JSON.stringify({key:'localeInfo'}));}catch(_){finish(null);}
+  try{bridge=new root.PalmServiceBridge();bridge.onservicecallback=function(raw){if(root.HomeStartup)root.HomeStartup.mark('languageReply');var language=null;try{var r=JSON.parse(raw);if(r.returnValue===true){var ui=r.settings.localeInfo.locales.UI;if(typeof ui==='string'&&/^[a-zA-Z]{2,3}([-_][a-zA-Z0-9]{2,8})*$/.test(ui))language=normalize(ui)||'en';}}catch(_){}finish(language);};bridge.call('luna://com.webos.settingsservice/getSystemSettings',JSON.stringify({key:'localeInfo'}));}catch(_){finish(null);}
  }
  if(!pending&&root.HomeStartup)root.HomeStartup.mark('languageReady');
  if(root.document){

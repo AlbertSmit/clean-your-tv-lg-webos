@@ -66,3 +66,37 @@ behavior separately; this bounded startup record deliberately does not collect a
 history. Browser tests cover hook behavior and compatibility fallbacks, not
 physical TV speed or compatibility. No physical TV measurement has been made as
 part of the instrumentation implementation.
+
+## Automatic system-language cache
+
+Automatic language selection stores the last successful system UI locale in
+`tvhome.system-language.v1` in local storage. The value is one canonical supported
+language code (for example, `de` or `pt-BR`); a well-formed unsupported system
+locale uses `en`. This is a local startup cache, separate from the user's
+`tvhome.language` preference and the captured profile settings. It adds no
+profile schema fields, permissions or network endpoints. Locale values are not
+included in startup metrics or logged.
+
+With Automatic selected and a readable valid cache, Home releases the language
+gate immediately using that cached language. The existing system locale request
+runs in the background with its 1200 ms deadline. If a successful reply selects a
+different canonical language, Home reloads only after saving and reading back the
+new cache, and only while the preference is still Automatic. The existing page
+keeps its language until the reload, so it does not mix newly translated labels
+with the original interface. Regional changes that select the same supported
+language do not reload. A user language choice takes precedence over a pending
+system reply.
+
+A missing, invalid or unreadable cache retains the blocking system request and
+navigator-language fallback. Malformed replies, service failures, timeouts and
+failed cache persistence cannot trigger a background reload. A future document
+can retry the system request.
+
+For measurements, distinguish the first document without a valid cache from
+subsequent recreated documents with a valid cache; neither case establishes
+whether the TV itself cold-booted. On a cached startup, `languageReady` can precede
+`languageReply`. When checking a changed system language, record the initial
+cached document and the replacement document separately: each has its own startup
+record. Also check failed/unavailable service behavior and a user language choice
+made before the background reply. No physical TV timing or acceptance is implied
+by the cache's automated tests.

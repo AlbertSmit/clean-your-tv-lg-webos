@@ -1,8 +1,8 @@
-# CYTV for Android — 0.3.0-preview (versionCode 11)
+# CYTV for Android — 0.4.0 (versionCode 13)
 
-Unpublished 1.4.0 candidate: [test artifacts, device matrix and recovery gates](../docs/RC-1.4.0-TESTING.md). Stable download links below still refer to v1.3.0.
+1.4.0: [release notes](../docs/RELEASE-1.4.0.md) and [C3 acceptance / limits](../docs/RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
 
-**[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** includes cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0** and both edition Updaters **0.3.0**, and Android **0.3.0-preview / code 11**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.3.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
+Previous published baseline: **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** includes cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0** and both edition Updaters **0.3.0**, and Android **0.3.0-preview / code 11**. Android remains a preview within the stable distribution. Latest-download links follow the published release; see [release notes](../docs/RELEASE-1.3.0.md) and [scoped hardware acceptance](../docs/RELEASE-1.1.0-ACCEPTANCE.md).
 
 No-root and Root are equal options for different TV environments: Developer Mode or existing root SSH. Neither edition is preferred generally. After the connection check, CYTV highlights the edition matching an unambiguous detected SSH endpoint; root privileges still require verification after sign-in.
 
@@ -16,11 +16,11 @@ Traditional Chinese (`zh-Hant`, 繁體中文), including native operation notifi
 and WebView guidance. Explicit script tags override regional defaults; CN/SG
 use Simplified and TW/HK/MO use Traditional. Earlier v1.2.0 APKs do not include this support.
 
-## Unpublished 1.4.0 candidate
+## Release 1.4.0
 
-The candidate selects **Android 0.4.0 / versionCode 13**, without `preview`, after
-maintainer-approved emulator verification. Published downloads above remain
-0.3.0-preview until release publication. Tested: Android 15 / API 35 ARM64,
+This release selects **Android 0.4.0 / versionCode 13**, without `preview`, after
+maintainer-approved emulator verification. Latest-download links follow the
+published release; #98 tracks publication. Tested: Android 15 / API 35 ARM64,
 WebView 124; physical-phone and live phone-to-TV recovery checks remain community
 follow-up. Android 7 / WebView 108 is the minimum requirement, not a verified
 phone configuration. See [acceptance and limits](STABLE-READINESS.md).
@@ -30,7 +30,7 @@ Android/WebView and TV/firmware details, edition and failed step, without secret
 
 ## Install and connect
 
-1. Copy the preview APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
+1. Copy the signed APK to a **64-bit ARM phone running Android 7.0 or later with Android System WebView/Chrome 108+**. Allow the browser/file manager to install this APK when Android requests it.
 2. Keep the phone and LG webOS TV on the same local network. Turn the TV on; disconnect VPNs or guest-network isolation if the connection fails.
 3. Enter the TV IPv4 address and check the connection first. Then choose **No-root** for Developer Mode, or **Root** for a TV with existing root SSH access. Exactly one responding access mode is highlighted; with both or neither, choose manually. Default SSH ports are 9922 and 22 respectively; Root ports are editable.
 4. No-root: follow the four preparation steps in CYTV: install Developer Mode, sign in with an LG Developer account, enable **Dev Mode Status** and reopen the app after reboot, then enable **Key Server**. Enter the six-character **Passphrase** from the TV, preserving letter case; this is separate from the LG account password. The steps and code prompt include offline LG reference screenshots; use the code on your own TV. See the [full setup guide](../docs/INSTALL.md#set-up-developer-mode-no-root). Root: use the existing SSH password or select a private key with Android's file picker. Encrypted keys prompt for their passphrase.

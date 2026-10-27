@@ -61,30 +61,30 @@
       "issues": [
         90
       ],
-      "summary": "Add fixed-code Root observer diagnostics; partial investigation support only, original standby failure #90 remains unresolved"
+      "summary": "Add fixed-code Root observer diagnostics; maintainer C3 standby acceptance passed with the combined startup/shutdown corrections and #90 was closed at the reporting maintainer request"
     },
     {
       "pr": 105,
       "issues": [
         104
       ],
-      "summary": "Use a stable private startup-session nonce and one guarded initial Home presentation request; corrected-runtime cold-boot, focus and emergency/off acceptance remain mandatory before publication"
+      "summary": "Use stable private startup-session identity and one guarded Home presentation; C3 repeated AC startup, early focus and emergency/off persistence accepted; first-screen delay varies"
     },
     {
       "pr": 112,
       "issues": [
         111
       ],
-      "summary": "Validate the exact release-bound Root 0.4 runtime before disabling updaters; C3 original-request removal continuation verified, new-runtime acceptance remains pending"
+      "summary": "Validate release-bound historical Root0.4 runtime before updater teardown; original-request recovery, fresh setup and manual physical rollback verified on C3"
     },
     {
       "pr": 113,
       "issues": [
         104
       ],
-      "summary": "Recognize fresh session-bound firmware shutdown before input teardown and defer restored old observers to guarded boot recovery; first9194 AC failed, corrected-runtime hardware acceptance remains pending"
+      "summary": "Recognize fresh session-bound firmware shutdown before input teardown and defer old observers to guarded boot recovery; corrected candidate C3 power/focus/emergency acceptance passed"
     }
   ],
   "excluded": [],
-  "acceptance": ""
+  "acceptance": "Maintainer accepted 2026-10-27: OLED55C3RLA / firmware43.21.71 / SDK11.2.0, exact99997e47 artifacts/run40498700100. Checked replacement/fresh setup, 25 runtime hashes, guardian/recovery/System; three enabled AC cycles automatic Clean (variable first-screen delay), standby Emby-to-Home, early focus, triple-Home and explicit-off surviving separate AC cycles passed. Manual physical rollback to verified published v1.3.0/Root0.4/Updater0.3 completed with 24 runtime hashes, healthy old System baseline and owner-confirmed Emby-to-Home. TV left stable; no return-to-candidate or automatic signed downgrade claim. Maintainer confirmed normal operation and requested #90 closure. Other reporter devices, eARC audible/timing and physical Android remain unverified. See docs/RELEASE-1.4.0-ACCEPTANCE.md; fresh final-head builds required."
 }

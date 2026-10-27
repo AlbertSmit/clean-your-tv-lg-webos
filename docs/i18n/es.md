@@ -1,5 +1,7 @@
 # Clean Your TV — guía de uso
 
+1.4.0: el responsable aceptó las pruebas corregidas del C3 de encendido, Home, foco, estado desactivado y reversión manual a 1.3.0; #90 se cerró a su petición. Otros televisores, audio eARC y Android físico siguen sin verificar. No se repitieron todos los botones básicos del candidato anterior. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
 
 No-root y Root son opciones equivalentes para distintas configuraciones del televisor. Elige No-root para LG Developer Mode o Root si ya tienes acceso root por SSH. La compatibilidad y las pruebas realizadas son específicas de cada edición.
 

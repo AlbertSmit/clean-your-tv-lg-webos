@@ -1,4 +1,8 @@
-# Testing the unpublished 1.4.0 candidate
+# Testing and acceptance of the 1.4.0 candidate
+
+Current outcome: [maintainer acceptance](RELEASE-1.4.0-ACCEPTANCE.md), including
+manual physical rollback. The earlier candidate instructions and failed-source
+observations below are retained as history; release publication follows #98.
 
 Use only the artifacts from the **cytv standalone builds** Actions run linked in
 [release candidate #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98).
@@ -46,7 +50,7 @@ They do not accept a newly built installer, the changed Root startup runtime,
 AC-off cold boot, emergency-off persistence, rollback, or the reporter's C2.
 See [recorded measurements and limits](research/2026-10-27-wam-storage-cleanup.md).
 
-## Device matrix — exact-candidate acceptance pending
+## Device follow-up matrix
 
 | Path / target | Required result and evidence |
 | --- | --- |
@@ -59,7 +63,7 @@ See [recorded measurements and limits](research/2026-10-27-wam-storage-cleanup.m
 | Root OLED65C2AUA / 04.40.90, #101 | Fresh candidate private readers accept UID 1001 only at exact shared packages/services containers for independently pinned DATA. Preserve strict own-code ownership, hashes and links. Existing stopped operations keep their original drivers and require separately reviewed recovery before any fresh setup; do not overwrite or replay them. |
 | Root eARC LG 55NANO956NA / webOS 5.6.2 / 04.64.00 / HW-Q950A | Automatic recovery starts off. Verify manual reconnect and confirmed route fallback, restore readback and audible sound separately. Compare off/on over at least five repetitions per condition; separate standby/cold boot, Quick Start+ and warm/cold receiver. Measure start-time spread and needless interruptions. |
 | Root eARC fault/recovery | Check ARC-only/off, combined/WOW, unknown route, delayed/disconnected receiver, working audio, disable during wait/write, interrupted process, timeout/status and explicit saved-setting restore. Confirm emergency Home restore stops automation and never clears persistent Home off. Only supervised recoverable tests; retain uncertain receipts. |
-| Controls and lifecycle | Home/arrows/OK/Back/volume/unrelated buttons and key-up delivery; triple-Home persistent-off and explicit re-enable; standby and AC-off cold boot separately; new setup/update/removal and rollback with candidate private inventories. Known #90 standby failure is still open. |
+| Controls and lifecycle | Home/arrows/OK/Back/volume/unrelated buttons and key-up delivery; triple-Home persistent-off and explicit re-enable; standby and AC-off cold boot separately; new setup/update/removal and rollback with candidate private inventories. The maintainer accepted the tested C3 case and requested #90 closure. |
 
 Record each row as pass/fail/not tested with exact source/artifact, model/firmware,
 expected/actual behavior and reviewed redacted evidence. A package install, RPC
@@ -140,6 +144,11 @@ implicitly. No diagnostics, credentials or private state belong in release asset
 
 ## Maintainer finish
 
+The maintainer has now authorized freeze/publication. The current result is in
+[release acceptance](RELEASE-1.4.0-ACCEPTANCE.md). The instructions below describe
+the earlier feedback stage; final frozen-head builds remain required.
+
+
 Run the complete suite and payload/package verification on the combined source.
 Dispatch `cytv.yml` on `release/next` with `test_build=true`. Keep #98 draft and
 acceptance empty while collecting feedback. After any source change, use fresh
@@ -154,25 +163,27 @@ Root 0.4.0 observations do not accept the corrected candidate. Use the exact
 candidate's coherent retained runtime through supported checked setup/update;
 record source/bundle hashes and the TV model/firmware. Keep raw records private.
 
-- [ ] Verify active intent, independent guardian and recovery before power-off.
-- [ ] With LG Power On Screen set to Home, remote off, wait ten seconds, remove AC
+- [x] Verify active intent, independent guardian and recovery before power-off.
+- [x] With LG Power On Screen set to Home, remote off, wait ten seconds, remove AC
   for thirty seconds, reconnect and turn on. Do not press Home or open an app
   until recording the first screen. **Expected: Clean appears automatically**;
   unconfigured channels/Live TV remaining foreground is a failure even if Home works.
-- [ ] After the first-screen observation, open Emby and press short Home.
+- [x] After the first-screen observation, open Emby and press short Home.
   **Expected: Clean**, with active intent, fresh guardian and verified recovery.
-- [ ] Repeat at least three AC-off cycles; retain every failure. Verify a new
+- [x] Repeat at least three AC-off cycles; retain every failure. Verify a new
   session identity per cycle and stable identity through early clock correction.
-  Record standby/wake separately; issue #90 remains unresolved by diagnostics alone.
-- [ ] Open Emby as soon as startup permits and leave it visible through the first
+  Record standby/wake separately; the maintainer accepted #90 after the combined candidate passed.
+- [x] Open Emby as soon as startup permits and leave it visible through the first
   minute. No delayed Clean relaunch should replace that app. Foreground read and
   optional launch are separate platform calls; record any concurrent-switch race.
-- [ ] Triple-Home, then cold boot: Root stays off, short Home uses LG routing and
+- [x] Triple-Home, then cold boot: Root stays off, short Home uses LG routing and
   Clean does not automatically reactivate. Repeat after explicit settings off.
-- [ ] Confirm arrows/key-up, OK, Back, volume and unrelated controls; no repeated
-  launch loop or late retry after an unavailable/uncertain optional API result.
+- Prior9194 basic controls passed. Arrows/key-up, OK, Back, volume and unrelated
+  controls were not all repeated on corrected99997, at the maintainer request.
+  This is an accepted testing limitation, not a checked exact99997 result.
 
-All boxes remain pending for the new candidate. Keep release acceptance empty
-until genuine results are recorded; do not copy successful stable standby or
-old-source cold-boot results into this matrix. See
+The corrected-source C3 results are recorded in the
+[release acceptance](RELEASE-1.4.0-ACCEPTANCE.md); those results supersede the
+pending status of this checklist for that device. Historical failures above
+remain tied to their source. Other device rows remain follow-up. See
 [cold-start evidence and source policy](development/ROOT-COLD-BOOT.md).

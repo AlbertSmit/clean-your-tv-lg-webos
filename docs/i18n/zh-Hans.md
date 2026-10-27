@@ -1,5 +1,7 @@
 # Clean Your TV — 用户指南
 
+1.4.0：维护者已接受修正后的 C3 电源、Home、焦点、关闭状态保持和手动回退至 1.3.0 测试，并要求关闭 #90。其他电视、eARC 声音和实体 Android 仍未验证。未重复测试上一候选版本的所有基本按键。 [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
 
 No-root 和 Root 是适用于不同电视配置的同等选项。使用 LG 开发者模式请选择 No-root；已有 root SSH 访问请选择 Root。两种版本的兼容性与测试范围分别记录。
 

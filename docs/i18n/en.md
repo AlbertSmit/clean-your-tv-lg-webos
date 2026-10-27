@@ -1,5 +1,7 @@
 # Clean Your TV — user guide
 
+1.4.0: the maintainer accepted the corrected C3 power, Home, focus and off-state tests and manual rollback to 1.3.0; #90 was closed at their request. Other TVs, eARC audio and physical Android remain unverified. Basic controls from the previous candidate were not all repeated. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
 
 No-root and Root are equal options for different TV setups. Choose No-root for LG Developer Mode or Root for existing root SSH access. Compatibility and test coverage remain specific to each edition.
 

@@ -1,5 +1,7 @@
 # Clean Your TV — 사용자 안내
 
+1.4.0: 관리자가 수정된 C3의 전원, Home, 포커스, 꺼짐 유지 및 1.3.0 수동 롤백 테스트를 승인했고 요청에 따라 #90을 닫았습니다. 다른 TV, eARC 소리 및 실제 Android 기기는 미검증입니다. 이전 후보의 기본 버튼을 모두 다시 시험하지는 않았습니다. [1.4.0 acceptance (English)](../RELEASE-1.4.0-ACCEPTANCE.md). Earlier pending statements below are historical.
+
 
 No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니다. LG Developer Mode를 사용하면 No-root를, 기존 root SSH 접근 권한이 있으면 Root를 선택하세요. 호환성과 테스트 범위는 각 버전마다 다릅니다.
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased v1.4.0 candidate
+## v1.4.0
 
 - Integrate #80, #81, #87, #89, #97 and #99: safe settings diagnostics, guided
   setup, verified missing-Home initialization, experimental opt-in eARC recovery,
@@ -11,7 +11,7 @@
   with one optional startup Home request. The corrected-runtime cold-boot, first-screen,
   early app-focus and emergency/off matrix must pass before publication.
 - See [candidate scope and versions](docs/RELEASE-1.4.0.md) and
-  [testing matrix](docs/RC-1.4.0-TESTING.md). Physical acceptance is pending.
+  [testing matrix](docs/RC-1.4.0-TESTING.md). C3 acceptance and manual rollback passed; see [scope and limits](docs/RELEASE-1.4.0-ACCEPTANCE.md).
 
 ## v1.3.0 — recovery, installer portability and localized Home
 

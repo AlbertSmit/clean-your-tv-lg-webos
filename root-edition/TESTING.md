@@ -1,6 +1,8 @@
 # Root Edition test plan
 
-Unpublished 1.4.0 candidate: [test artifacts, device matrix and recovery gates](../docs/RC-1.4.0-TESTING.md). Stable download links below still refer to v1.3.0.
+Current result (2026-10-27): [corrected C3 acceptance and manual physical rollback](../docs/RELEASE-1.4.0-ACCEPTANCE.md) passed in the recorded scope. The maintainer accepted #90 and requested closure. Pending statements below describe earlier investigation checkpoints; other hardware remains unverified.
+
+1.4.0: [release notes](../docs/RELEASE-1.4.0.md) and [C3 acceptance / limits](../docs/RELEASE-1.4.0-ACCEPTANCE.md). [Release #98](https://github.com/Razdva122/clean-your-tv-lg-webos/pull/98) tracks publication; latest-download links follow the published release.
 
 For **[v1.3.0 stable / Root 0.4.0](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)**, start with [installation](../docs/INSTALL.md), [supervisor setup](UPDATES.md) and [current acceptance](../docs/RELEASE-1.3.0-ACCEPTANCE.md). The [candidate test guide](../docs/RC-1.1.0-TESTING.md) is superseded historical guidance. The bounded trials below are explicit developer tests, not a normal installer Keep/confirmation step. Historical acceptance remains tied to its original build.
 

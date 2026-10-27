@@ -1,8 +1,9 @@
-# v1.4.0 candidate — guided setup, diagnostics, native cache cleanup and Root startup
+# v1.4.0 — guided setup, diagnostics, native cache cleanup and Root startup
 
-**Unpublished testing candidate.** PR #98 remains draft. These versions are
-committed for artifact testing, not hardware acceptance or public delivery.
-Published downloads remain v1.3.0. No new TV compatibility is established.
+The maintainer accepted the corrected C3 candidate for release on 2026-10-27.
+See [acceptance and limits](RELEASE-1.4.0-ACCEPTANCE.md). Publication requires the
+final frozen-head builds and verified signed packages/feeds; #98 tracks delivery.
+Compatibility claims remain limited to recorded devices and tested paths.
 
 | Component | Published v1.3.0 | Candidate |
 | --- | --- | --- |
@@ -31,7 +32,7 @@ runtime validation before Root removal, after updater preparation. The owner
 confirmed the supported return to LG Home and working controls. PR #112
 verifies a release-bound historical runtime inventory before updater effects.
 Checked continuation of the original C3 request completed and independent status
-verified removal; fresh setup and new-runtime hardware acceptance remain pending.
+verified removal; fresh setup and corrected-runtime C3 acceptance subsequently passed.
 See the [transition record](RC-1.4.0-TESTING.md#root-040-transition-regression-111).
 
 
@@ -63,7 +64,7 @@ See the [transition record](RC-1.4.0-TESTING.md#root-040-transition-regression-1
   No root file deletion, reboot, automatic retry or setup resume occurs. A direct
   C3 API test recovered about 98.4 MiB with unchanged protected-data fingerprints;
   the C3 owner confirmed app launch/playback, retained sign-ins and LG Home return.
-  Exact installer, changed Root runtime and C2 acceptance remain pending. The reporter has since
+  C3 corrected-runtime acceptance passed; original C2 acceptance remains pending. The reporter has since
   confirmed #94 passes in published cytv 0.4.0; the later Root deployment fails in #101.
 
 - Issues #101 and #21: accept observed C2 UID 1001 only for independently pinned
@@ -96,26 +97,24 @@ Homebrew remains unreleased (`homebrew/release.json` absent).
 Follow the [candidate test matrix](RC-1.4.0-TESTING.md). Record exact source SHA,
 artifact hashes, model, firmware, expected/actual result, standby and true cold
 boot separately. Historical v1.3.0 evidence is a baseline, not acceptance of this
-candidate. Issue #90's known standby limitation remains unresolved.
+candidate. The maintainer accepted #90 after the corrected candidate passed.
 
-`release-plan.json.acceptance` deliberately remains empty. Draft artifact builds
-use the explicit `test_build=true` dispatch; they do not satisfy Release policy.
-No main merge, tag, signed feed change or publication is part of preparation.
-After hardware feedback, refresh documentation, commit acceptance honestly,
-rebuild the exact final head on all platforms and finish the normal release gates.
-Public rollback and signed feed verification remain required before shipping.
+Hardware acceptance is recorded in `release-plan.json` and the linked acceptance
+record. The reporting maintainer confirmed normal standby operation and requested
+#90 closure after the combined corrected candidate tests. Final exact-head builds,
+package integrity and signed publication verification remain release gates.
 
-## Root cold-start correction (unpublished, #104)
+## Root cold-start correction (#104)
 
 The source correction replaces clock-dependent startup identity with a private
 volatile session nonce and makes one optional Clean presentation request after
 healthy hardware startup when native Home auto-launch is on and Live TV/LG Home
 still occupies the foreground. Other visible apps are preserved at the final
-check. Explicit/emergency off is not reset. Separate observer diagnostics retain
-issue #90 as unresolved.
+check. Explicit/emergency off is not reset. Separate observer diagnostics helped investigation; the maintainer accepted the
+combined candidate and requested #90 closure after standby passed.
 
 This requires rebuilding and deploying the coherent private runtime; an app-only
-update is insufficient. Physical acceptance of the changed runtime is pending.
+update is insufficient. Physical C3 acceptance of the corrected runtime passed as recorded above.
 The [mandatory cold-boot matrix](RC-1.4.0-TESTING.md#required-before-publication-root-cold-boot-and-first-screen-104)
 must pass before publication, including first screen without Home, Emby-to-Home,
 repeated AC-off cycles and off/emergency preservation. Use fresh artifacts whose source SHA includes #103/#105 and #100; older
@@ -125,8 +124,8 @@ build does not satisfy the physical startup/rollback gates.
 
 The exact 9194c16a C3 Root0.5 test installation passed basic controls but failed
 its first AC cold boot: LiveTV remained and input ENODEV revoked Root intent.
-Root remains disabled with LG Home. A subsequent passive Root-disabled trace
+That failed source was superseded by corrected source `99997e47`. A passive Root-disabled trace
 supports correcting normal-shutdown detection; its host regressions do not
-establish physical acceptance. New exact artifacts and the complete supervised
-cold-boot/standby/emergency/rollback matrix remain required. See the
+establish physical acceptance. The corrected candidate subsequently passed the recorded C3 power/focus/off tests
+and manual physical rollback; fresh final-head artifacts remain required. See the
 [recorded result](RC-1.4.0-TESTING.md#exact-9194-root-050-first-ac-result-104).

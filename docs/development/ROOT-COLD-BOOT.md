@@ -1,5 +1,7 @@
 # Root cold-start identity and initial screen
 
+Current result (2026-10-27): [corrected C3 acceptance and manual physical rollback](../RELEASE-1.4.0-ACCEPTANCE.md) passed in the recorded scope. The maintainer accepted #90 and requested closure. Pending statements below describe earlier investigation checkpoints; other hardware remains unverified.
+
 This is unpublished source work for issue #104. It is separate from issue #90's
 intermittent standby input-readiness failure and PR #103's diagnostic reader.
 

@@ -115,3 +115,60 @@ Test initial foreground separately from short Home routing. See the
 [cold-start investigation, source policy and remaining device matrix](../docs/development/ROOT-COLD-BOOT.md).
 The two existing-source AC-off results do not validate the new nonce or optional
 foreground request. Preserve the standby issue #90 limitation and explicit off.
+## Issue 90: intermittent wake input startup (diagnostic source)
+
+The first failed standby on Root 0.4.0 remains unresolved. Its `input_lost`
+recovery occurred in durable phase `starting`; subsequent successful standby and
+AC-off tests do not identify that failure's cause. A held wake key is a hypothesis.
+
+The diagnostic reader writes one `input-observer-fault` JSON record to stderr
+(the existing private `emergency.log` under normal supervision) before its
+unchanged `LOST` health message. Fixed `phase`/`reason` codes distinguish:
+
+- `startup`: `eof`, `drain_limit`, `keys_held`.
+- `active`: `eof`, `partial_event`, `invalid_timestamp`, `events_dropped`,
+  `invalid_key_value`, `drain_limit`.
+- Both phases: `read_error` with numeric `errno`, preserving the existing
+  exception/observer-exit recovery path. Device inspection also found repeated
+  active-read `ENODEV` (19) exits, including shutdown-classified exits and a later
+  unclassified exit. These do not establish the original startup cause.
+
+No key codes/history, addresses, app inventories or event payloads are recorded.
+Discovery, ioctl exceptions, observer exit and heartbeat timeout still use
+the existing supervisor path; absence of this new record is not proof of held
+keys. This change adds no readiness wait, retry or automatic re-enable, and does
+not change ABI/channel validation, triple-Home, Long Back or watchdog deadlines.
+
+For a supervised retest:
+
+1. Record exact installed source/bundle hashes and verify recovery, current
+   intent and independent guardian. Do not replace retained runtime files or
+   edit integrity receipts by hand. The diagnostic runtime needs the supported
+   checked setup/update path; an app-only replacement does not install it.
+2. With confirmed active Home control, turn off by remote, wait 30 seconds,
+   wake, open Emby and press Home briefly. Record actual destinations and
+   read-only intent/guardian/recovery results. Repeat standby separately from
+   a genuine AC-off cold boot; keep every failure alongside successful runs.
+3. On failure, retain the private emergency log, correlate the observer fault
+   with its supervisor transaction and `bound-exit-decision`, and share only
+   reviewed fixed codes. A pre-READY `keys_held` record establishes the failing
+   condition on that attempt; it does not identify which key or prove why it
+   remained down. Do not change policy based on the old generic log alone.
+4. Verify explicit off and triple-Home still stay off after wake/fault. Any
+   later enable must be explicit. Do not close issue 90 based on diagnostic
+   delivery or successful local tests.
+
+Local regression: `python3 -m unittest discover -s root-edition/tests -p 'test_emergency*.py'` covers all nine explicit-loss branches, startup/active read errors, full-log
+fallback and unchanged wire signals, plus gesture/recovery/watchdog tests. No new user setup/control flow is
+introduced; localized user guides retain the known standby limitation.
+
+2026-10-27 investigation: on the saved C3 test target, read-only CLI inspection
+verified recovery integrity and restored routing with intent disabled. After
+explicit user activation, active intent/guardian and released keys were verified.
+One supervised remote-off / 30-second standby / wake / Emby / short-Home cycle
+returned to Clean Your TV; subsequent readback again verified active intent,
+guardian and recovery integrity. The appended log classified observer exit as
+normal shutdown and retained intent. The installed observer hash matched source
+`1e6e92ce` from the original report; the diagnostic reader was **not installed**.
+This is another successful repetition of existing code, not validation of a fix
+or a new compatibility claim. Raw logs and connection details remain private.

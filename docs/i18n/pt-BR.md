@@ -9,6 +9,8 @@ Este guia descreve **[v1.3.0 estável](https://github.com/Razdva122/clean-your-t
 
 Versões da publicação: cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root **0.4.0**, Home Updater e Root Updater **0.3.0**, Android **0.3.0-preview** (código **11**), supervisor System Updater **1.1.0**, protocolo **1**.
 
+O candidato 1.4.0 ainda não publicado inclui Android 0.4.0 (código 13), sem preview, após testes em emulador aceitos pelo mantenedor. Testado: Android 15 ARM64 / WebView 124. Telefones físicos e recuperação durante uma instalação real na TV não foram verificados; Android 7 / WebView 108 é um requisito mínimo, não um telefone testado. Atualize sem desinstalar nem apagar dados. Os downloads publicados continuam em 0.3.0-preview. Informe telefone, Android/WebView, TV/firmware, edição e etapa com falha, sem credenciais.
+
 Problema conhecido da 1.3.0: após o modo de espera, o controle Home do Root pode desligar e Home volta a abrir a LG. Ative-o novamente de forma explícita nos ajustes do Clean Your TV; se falhar, mantenha a LG Home e salve o diagnóstico. Veja a [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) e os [testes atuais](../RELEASE-1.3.0-ACCEPTANCE.md).
 
 Ligue a TV e conecte os dois dispositivos à mesma rede local confiável. Depois, o computador pode ficar desligado. A compatibilidade depende do modelo, firmware e controle remoto; Root ainda tem testes em hardware pendentes.

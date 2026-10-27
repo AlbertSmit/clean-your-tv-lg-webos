@@ -5,6 +5,8 @@ Unpublished 1.4.0 candidate: [test artifacts, device matrix and recovery gates](
 
 # Clean Your TV — LG webOS
 
+Unpublished 1.4.0 candidate: Android **0.4.0 / code 13** removes preview after maintainer-approved Android 15 ARM64 / WebView 124 emulator checks. Physical phones and live phone-to-TV recovery remain unverified. Published downloads remain v1.3.0 / Android 0.3.0-preview. See [Android acceptance and limits](android/STABLE-READINESS.md).
+
 **A clean home screen for LG webOS, with No-root and Root editions.**
 
 Keep your favorite apps in a personal dock and app grid, without sponsored rows

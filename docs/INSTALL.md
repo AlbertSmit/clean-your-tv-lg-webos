@@ -1,5 +1,7 @@
 # Install Clean Your TV — No-root and Root
 
+Unpublished 1.4.0 candidate: Android **0.4.0 / code 13** removes preview after maintainer-approved Android 15 ARM64 / WebView 124 emulator checks. Physical phones and live phone-to-TV recovery remain unverified. Published downloads remain v1.3.0 / Android 0.3.0-preview. See [Android acceptance and limits](../android/STABLE-READINESS.md).
+
 Unpublished 1.4.0 candidate: [test artifacts, device matrix and recovery gates](RC-1.4.0-TESTING.md). Stable download links below still refer to v1.3.0.
 
 **[v1.3.0 stable](https://github.com/Razdva122/clean-your-tv-lg-webos/releases/tag/v1.3.0)** contains cytv **0.4.0**, Home **1.4.2**, Helper **0.6.19**, Root **0.4.0**, both edition Updaters **0.3.0**, Android **0.3.0-preview / code 11** and System Updater **1.1.0 / protocol 1**. The latest-download links follow the published stable release. Hardware evidence is limited to the documented configuration and checks; see [release notes](RELEASE-1.3.0.md) and [compatibility](COMPATIBILITY.md).

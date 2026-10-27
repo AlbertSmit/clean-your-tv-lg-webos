@@ -9,6 +9,8 @@ No-root와 Root는 서로 다른 TV 환경에 맞는 동등한 선택지입니�
 
 릴리스 구성: cytv **0.4.0**, Home **1.4.2**, Home Helper **0.6.19**, Root **0.4.0**, Home Updater 및 Root Updater **0.3.0**, Android **0.3.0-preview**(버전 코드 **11**), System Updater 감독 서비스 **1.1.0**, 프로토콜 **1**.
 
+아직 공개되지 않은 1.4.0 후보는 관리자가 승인한 에뮬레이터 검사 후 Android 0.4.0(코드 13)에서 preview를 제거합니다. 검사 환경: Android 15 ARM64 / WebView 124. 실제 휴대전화와 실제 TV 설치 중 복구는 검증되지 않았습니다. Android 7 / WebView 108은 최소 요구 사항이며 검증된 휴대전화 환경은 아닙니다. 앱을 삭제하거나 데이터를 지우지 말고 업데이트하세요. 공개 다운로드는 아직 0.3.0-preview입니다. 문제를 보고할 때 휴대전화, Android/WebView, TV/펌웨어, 에디션과 실패 단계를 적고 인증 정보는 제외하세요.
+
 1.3.0의 알려진 문제: 대기 모드에서 깨어난 후 Root의 Home 제어가 꺼져 Home 버튼이 LG를 열 수 있습니다. Clean Your TV 설정에서 Home 제어를 명시적으로 다시 켜세요. 활성화에 실패하면 LG Home을 유지하고 진단을 저장하세요. [이슈 #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90)과 [현재 테스트 기록](../RELEASE-1.3.0-ACCEPTANCE.md)을 참고하세요.
 
 TV를 켜고 컴퓨터와 같은 신뢰할 수 있는 로컬 네트워크에 연결하세요. 설치 후에는 컴퓨터를 꺼도 됩니다. 호환성은 모델, 펌웨어, 리모컨에 따라 다릅니다. Root는 실제 기기 검증이 남아 있습니다.

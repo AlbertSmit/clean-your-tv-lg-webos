@@ -9,6 +9,8 @@ No-root 和 Root 是適用於不同電視組態的同等選項。使用 LG 開�
 
 v1.3.0 包含 cytv **0.4.0**、Home **1.4.2**、Home Helper **0.6.19**、Root Edition **0.4.0**、Home Updater 和 Root Updater **0.3.0**、Android **0.3.0-preview**（版本代碼 **11**），以及 System Updater supervisor **1.1.0**（協議 **1**）。
 
+尚未發布的 1.4.0 候選版選用 Android 0.4.0（版本代碼 13），維護者接受模擬器測試後移除 preview。已測環境：Android 15 ARM64 / WebView 124。實體手機及實際電視安裝過程中的復原尚未驗證；Android 7 / WebView 108 是最低要求，並非已測手機設定。更新時不要解除安裝應用程式或清除資料。公開下載仍為 0.3.0-preview。回報問題時請提供手機、Android/WebView、電視/韌體、版本類型及失敗步驟，請勿公開憑證。
+
 1.3.0 已知問題：待機喚醒後，Root 的 Home 控制可能關閉，按 Home 會開啟 LG。請在 Clean Your TV 設定中明確重新開啟 Home 控制；如果開啟失敗，請保留 LG Home 並儲存診斷資訊。參見 [issue #90](https://github.com/Razdva122/clean-your-tv-lg-webos/issues/90) 和[目前測試紀錄](../RELEASE-1.3.0-ACCEPTANCE.md)。
 
 安裝期間保持電視開機，將電腦與電視連線到同一個可信本地網路。完成後無需電腦持續開機。兼容性取決於型號、固件和遙控器；Root 仍有待完成的實機檢查。

@@ -5,6 +5,6 @@
   "helper": "0.6.19",
   "root": "0.5.0",
   "updater": "0.3.1",
-  "android": "0.4.0-preview",
-  "android_version_code": 12
+  "android": "0.4.0",
+  "android_version_code": 13
 }

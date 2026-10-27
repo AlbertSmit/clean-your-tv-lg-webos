@@ -7,13 +7,14 @@ The latest release/download links still deliver v1.3.0. Candidate artifacts expi
 according to Actions retention; they are not public release/update feeds.
 
 Expected versions: cytv 0.5.0; Home 1.5.0; Helper 0.6.19; Root 0.5.0;
-both independent Updaters 0.3.1; Android 0.4.0-preview / code 12.
+both independent Updaters 0.3.1; Android 0.4.0 / code 13.
 System supervisor wrapper remains 1.1.0 / protocol 1; Root/System private inventories
 must come from this candidate. Homebrew public promotion remains disabled.
-Android stays `0.4.0-preview` because physical-phone upgrade, lifecycle and recovery
-acceptance is incomplete. Its CI APK is release-mode, non-debuggable and signed
-with the existing update identity; preview is a readiness label, not a debug flag.
-See [Android physical acceptance](../android/STABLE-READINESS.md#physical-acceptance-before-removing-preview).
+Android 0.4.0 removes preview after maintainer-approved emulator acceptance.
+Keep the existing signing/application/private-data identity. Tested scope is
+Android 15 / API 35 ARM64, WebView 124; physical phones and live phone-to-TV
+installation/recovery remain community follow-up, not established compatibility.
+See [Android acceptance and limits](../android/STABLE-READINESS.md).
 
 ## Host checks before contacting a TV
 

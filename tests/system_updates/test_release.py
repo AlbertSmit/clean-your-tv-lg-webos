@@ -10,6 +10,18 @@ def load(path):
     spec=importlib.util.spec_from_file_location('release_'+path.stem,path);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module
 
 class ReleaseTests(unittest.TestCase):
+    def test_android_versions_accept_stable_and_historical_preview_only(self):
+        prepare = load(ROOT / 'scripts/prepare-release.py')
+        base = {key: '1.0.0' for key in ('cytv', 'home', 'helper', 'root', 'updater')}
+        for value in ('0.4.0', '0.3.0-preview'):
+            prepare.validate_versions({**base, 'android': value, 'android_version_code': 13})
+        for value in ('0.4', '0.4.0-beta', '0.4.0-preview-extra', '0.4.0\n', None):
+            with self.subTest(version=value), self.assertRaises(ValueError):
+                prepare.validate_versions({**base, 'android': value, 'android_version_code': 13})
+        for code in (None, True, 0, '13'):
+            with self.subTest(code=code), self.assertRaises(ValueError):
+                prepare.validate_versions({**base, 'android': '0.4.0', 'android_version_code': code})
+
     def test_final_assets_produce_both_exact_release_sets(self):
         build=load(ROOT/'system-updater/build.py');prepare=load(ROOT/'scripts/prepare-release.py')
         with tempfile.TemporaryDirectory() as tmp:

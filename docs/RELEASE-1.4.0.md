@@ -12,15 +12,17 @@ Published downloads remain v1.3.0. No new TV compatibility is established.
 | Home Helper | 0.6.19 | 0.6.19, exact published package |
 | Root Edition | 0.4.0 | 0.5.0 |
 | Both independent edition Updaters | 0.3.0 | 0.3.1 |
-| Android installer | 0.3.0-preview / code 11 | 0.4.0-preview / code 12 |
+| Android installer | 0.3.0-preview / code 11 | 0.4.0 / code 13 |
 | System Updater supervisor | 1.1.0 / protocol 1 | 1.1.0 / protocol 1; enclosing infrastructure rebuilt |
 | Homebrew Installer | Not published | Development only; no promotion record |
 
-Android remains a preview component inside the candidate: its APK uses a release
-build and the existing public signing identity, but the physical-phone upgrade,
-background/process-death and recovery matrix has not been completed. See
-[Android stable readiness](../android/STABLE-READINESS.md). Desktop/TV evidence
-cannot replace that phone acceptance.
+Android 0.4.0 removes the preview suffix by explicit maintainer decision after
+scoped emulator acceptance. It keeps the application ID, private storage and
+public signing identity. Android 15 / API 35 ARM64 with WebView 124 is the tested
+configuration; physical phones, Android 7 / WebView 108 and live phone-to-TV
+installation/recovery remain unverified. Community feedback will expand the
+hardware evidence; this decision does not establish universal compatibility.
+See [Android acceptance and limits](../android/STABLE-READINESS.md).
 
 ## Included scope
 

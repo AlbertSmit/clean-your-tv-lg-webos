@@ -8,6 +8,7 @@
   try{b=new PalmServiceBridge();b.onservicecallback=function(raw){try{var r=JSON.parse(raw);finish(r.returnValue===true?(r.result===undefined?r.state:r.result):null,r.returnValue===true);}catch(_){finish(null);}};b.call((service||'luna://com.cleanyourtv.updater.service/')+method,JSON.stringify(payload||{}));}catch(_){finish(null);}
  }
  function boot(){if(booted)return;booted=true;if(window.HomeStartup)window.HomeStartup.mark('profileGateComplete');var s=document.createElement('script');s.src='app.js';s.onload=function(){
+  if(systemRestore&&['verifying','verifying-rollback'].indexOf(systemRestore.phase)<0)return;
   // A populated rendered grid is a startup signal, not proof of every TV feature.
   if(!systemRestore&&!document.querySelector('#tiles .item[data-app-id]'))return;
   var manifest=new XMLHttpRequest();manifest.open('GET','appinfo.json',true);manifest.timeout=5000;
@@ -25,7 +26,7 @@
    }
   }catch(_){} };manifest.onerror=manifest.ontimeout=function(){};manifest.send();
  };document.body.appendChild(s);}
- function use(s,restore,identity){s=HomeData.validate(s);HomeData.save(localStorage,s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();['tvhome.order','tvhome.layout','tvhome.language'].forEach(function(key){if(s.settings[key]===undefined)localStorage.removeItem(key);});HomeData.apply(localStorage,s);if(identity)localStorage.setItem(restoreMarker,identity);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
+ function use(s,restore,identity){s=restore?HomeData.save(localStorage,s):HomeData.validate(s);if(restore){var previousLanguage=window.HomeI18n&&HomeI18n.preference();['tvhome.order','tvhome.layout','tvhome.language'].forEach(function(key){if(s.settings[key]===undefined)localStorage.removeItem(key);});HomeData.apply(localStorage,s);if(identity)localStorage.setItem(restoreMarker,identity);if(window.HomeI18n&&(HomeI18n.refresh(),HomeI18n.preference())!==previousLanguage)window.location.reload();}window.TV_APPS=s.inventory;window.CONFIG=s.config;if(s.renewal)rpc('restoreHistory',{state:s.renewal},function(){},'luna://com.gathin.tvhome.renewal/');}
  function icon(url,cb){if(/^data:image\/(png|jpeg|webp);base64,/.test(url)){cb(null,url);return;}
   // Only packaged relative icon paths; never turn arbitrary remote content into a profile.
   if(typeof url!=='string'||url.indexOf('..')>=0||/^([a-z]+:|\/)/i.test(url)){cb(Error('icon-path'));return;}

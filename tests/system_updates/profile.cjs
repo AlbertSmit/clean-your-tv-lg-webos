@@ -2,18 +2,18 @@ const assert = require('assert'), fs = require('fs'), vm = require('vm');
 const profile = {schema:1,inventory:{apps:[{id:'app.one',title:'One',icon:'data:image/png;base64,YQ=='}],inputs:[]},config:{columns:5,dockApps:[],hiddenApps:[]},settings:{'tvhome.order':'{"dock":"","ids":["app.one"]}'}};
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function harness(edition, {unavailable=false, corrupt=false, versionMismatch=false, noBackup=false, corruptProfile=false, snapshotProfile=profile, phase='verifying', storage, tiles=['app.one']}={}) {
-  const calls=[], scripts=[], memory=storage||new Map(), errors=[];
+  const calls=[], scripts=[], memory=storage||new Map(), errors=[];let writes=0,profileWrites=0,manifests=0;
   const data=require(edition==='root'?'../../root-edition/ui/root-profile-data':'../../launcher/user-data');
   const restored={profile:corruptProfile?{}:snapshotProfile,transaction:'a'.repeat(32),version:versionMismatch?'9.9.9':'1.2.3',phase:phase};
   const window={ROOT_VERSION:'1.2.3',CONFIG:profile.config,TV_APPS:{apps:[{id:'packaged'}],inputs:[]},HomeData:data,RootProfileData:data,AppLibrary:require('../../launcher/app-library'),
     SystemUpdates:{open:o=>errors.push(o),rpc:async(method,payload)=>{calls.push([method,payload]);if(unavailable)throw Object.assign(Error('absent'),{unavailable:true});if(corrupt)throw Error('corrupt journal');return method==='restoreProfile'?(noBackup?null:restored):{};}},
     RootUpdates:{rpc:async()=>null,open:o=>errors.push(o)}};
   const document={createElement:()=>({}),body:{appendChild:s=>scripts.push(s)},querySelector:()=>tiles.length?{}:null,querySelectorAll:()=>tiles.map(id=>({getAttribute:()=>id}))};
-  const ctx={window,document,localStorage:{getItem:k=>memory.has(k)?memory.get(k):null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)},setTimeout,clearTimeout,Promise,XMLHttpRequest:class{open(){}send(){this.status=200;this.responseText=JSON.stringify({id:'com.gathin.tvhome',version:'1.2.3'});this.onload();}}};
+  const ctx={window,document,localStorage:{getItem:k=>memory.has(k)?memory.get(k):null,setItem:(k,v)=>{writes++;if(k===data.key)profileWrites++;memory.set(k,v);},removeItem:k=>memory.delete(k)},setTimeout,clearTimeout,Promise,XMLHttpRequest:class{open(method,url){if(url==='appinfo.json')manifests++;}send(){this.status=200;this.responseText=JSON.stringify({id:'com.gathin.tvhome',version:'1.2.3'});this.onload();}}};
   Object.assign(ctx,window);
   window.location={reload(){errors.push('reload');}};
   vm.runInNewContext(fs.readFileSync(edition==='root'?'root-edition/ui/root-profile.js':'launcher/profile-bootstrap.js','utf8'),ctx);
-  return {window,ctx,calls,scripts,memory,errors};
+  return {window,ctx,calls,scripts,memory,errors,get writes(){return writes;},get profileWrites(){return profileWrites;},get manifests(){return manifests;}};
 }
 (async()=>{
   for(const edition of ['no-root','root']) {
@@ -22,6 +22,7 @@ function harness(edition, {unavailable=false, corrupt=false, versionMismatch=fal
     assert.equal(h.scripts.length,1);
     assert.equal(h.window.TV_APPS.apps[0].id,'app.one');
     assert.equal(h.memory.get('tvhome.order'),profile.settings['tvhome.order']);
+    if(edition==='no-root')assert.equal(h.profileWrites,1,'first authoritative restore persists the profile once');
     h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();
     const receipt=h.calls.find(c=>c[0]==='healthy');
     assert(receipt,edition+' must report health to transaction owner');
@@ -37,14 +38,27 @@ function harness(edition, {unavailable=false, corrupt=false, versionMismatch=fal
     h.memory.set('tvhome.language','de');
     h=harness(edition,{storage:h.memory});await tick();
     assert.equal(h.memory.get('tvhome.language'),'de',edition+' must restore a transaction only once and preserve later user settings');
+    if(edition==='no-root')assert.equal(h.profileWrites,0,'matching restore marker must not rewrite saved profile');
     h=harness(edition,{noBackup:true});await tick();
     assert.equal(h.scripts.length,1,edition+' null independent snapshot must retain legacy startup');
     assert.equal(h.window.TV_APPS.apps[0].id,'packaged','null snapshot must not apply unrelated inventory');
     assert(!h.calls.some(c=>c[0]==='healthy'));
     h=harness(edition,{phase:'complete'});await tick();
+    h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();
+    if(edition==='no-root'){
+      assert(!h.calls.some(c=>c[0]==='healthy'),'terminal complete phase must not report healthy');
+      assert.equal(h.manifests,1,'terminal complete phase must not fetch the post-boot manifest');
+    }
     h.memory.set('tvhome.order','{"dock":"","ids":[]}');
     h=harness(edition,{phase:'verifying-rollback',storage:h.memory});await tick();
     assert.equal(h.memory.get('tvhome.order'),profile.settings['tvhome.order'],edition+' rollback must restore settings even when the launcher version is unchanged');
+    h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();
+    if(edition==='no-root')assert(h.calls.some(c=>c[0]==='healthy'),'rollback verification phase must still report healthy');
+    h=harness(edition,{phase:'rolled-back'});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();
+    if(edition==='no-root'){
+      assert(!h.calls.some(c=>c[0]==='healthy'),'terminal rolled-back phase must not report healthy');
+      assert.equal(h.manifests,1,'terminal rolled-back phase must not fetch the post-boot manifest');
+    }
     h=harness(edition,{tiles:['wrong']});await tick();h.window.RootLauncherRendered=true;h.scripts[0].onload();await tick();
     assert(!h.calls.some(c=>c[0]==='healthy'),'wrong rendered inventory must not confirm startup');
     h=harness(edition,{versionMismatch:true});await tick();

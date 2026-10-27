@@ -228,3 +228,5 @@ Możesz anulować i samodzielnie zwolnić miejsce. Sprawdź instrukcję i ponown
 Nieopublikowana poprawka zimnego startu Root: przy włączonej obsłudze Home i ekranie startowym LG ustawionym na Home, po sprawdzeniu zabezpieczeń Clean może otworzyć się raz, jeśli nadal widać telewizję lub LG Home. Aplikacja widoczna podczas ostatniego sprawdzenia zostaje zachowana; brak ponawiania. Jawne wyłączenie i trzy naciśnięcia Home pozostają wyłączone. Potrzebna jest sprawdzona instalacja/aktualizacja prywatnego środowiska; sama aktualizacja aplikacji nie wystarczy. Testy na telewizorze są nadal wymagane.
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Nieopublikowana poprawka (#108/#109): po przygotowaniu System Updater wskaźnik i „Aktualizuj wszystko” korzystają z tego samego sprawdzenia edycji. Nowsze wydanie ogólne bez zmian wersji składników nie proponuje ponownej instalacji. Podczas sprawdzania instalacja jest wyłączona. Starsze sprawdzanie działa tylko przy braku System Updater. Potwierdzenie na telewizorze jest nadal oczekiwane.

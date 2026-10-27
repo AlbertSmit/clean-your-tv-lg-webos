@@ -27,14 +27,20 @@
  function checkUpdates(){
   if(checkingUpdates||!window.HomeUpdates||!window.HomeUpdates.rpc)return;
   checkingUpdates=true;
-  window.HomeUpdates.rpc('check',{},function(offer){
-   checkingUpdates=false;if(!offer)return;
-   var available=offer.state==='available'||offer.state==='helper-update-required';
+  function badge(available){
    var button=document.getElementById('renewalUpdates');
    button.setAttribute('data-update-available',String(available));
    button.setAttribute('aria-label',tr(available?'Software updates. Update available.':'Software updates'));
-  });
+  }
+  function legacy(){
+   return new Promise(function(resolve){window.HomeUpdates.rpc('check',{},function(offer){
+    if(offer)badge(offer.state==='available'||offer.state==='helper-update-required');resolve();
+   });});
+  }
+  var check=window.SystemUpdates?window.SystemUpdates.check('no-root',legacy).then(function(offer){if(offer)badge(offer.canInstall===true);}):legacy();
+  check.catch(function(){}).then(function(){checkingUpdates=false;});
  }
+
  function openNow(){return !panel.classList.contains('hidden');}
  function focus(i){var direction=i<index?-1:1;for(var n=0;n<buttons.length;n++,i+=direction){var j=(i+buttons.length*2)%buttons.length;if(!buttons[j].disabled&&!(buttons[j]===details&&details.classList.contains('hidden'))&&(developerButtons.indexOf(buttons[j])>=0)===developerOpen){index=j;buttons[index].focus();return;}}}
  function rpc(method,callback){

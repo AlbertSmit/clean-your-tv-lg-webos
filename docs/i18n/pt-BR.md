@@ -229,3 +229,5 @@ Você pode cancelar e liberar espaço por conta própria. Siga o guia e confira 
 Correção ainda não publicada da inicialização a frio do Root: com o controle Home ativado e a tela inicial da LG definida como Home, uma inicialização protegida pode abrir o Clean uma vez se ainda aparecer TV ao vivo ou LG Home. Um aplicativo visível na última verificação é preservado; não há nova tentativa. A desativação explícita e três toques em Home continuam desativados. É necessária instalação/atualização verificada do runtime privado; atualizar apenas o aplicativo não basta. A validação na TV ainda está pendente.
 
 [Cold-start investigation and acceptance (English)](../development/ROOT-COLD-BOOT.md)
+
+Correção ainda não publicada (#108/#109): com System Updater preparado, o indicador e «Atualizar tudo» usam a mesma verificação da edição. Uma nova versão geral sem mudanças nas versões dos componentes não oferece reinstalação. Durante a verificação, a instalação fica desativada. A verificação antiga só é usada na ausência de System Updater. A confirmação no televisor está pendente.

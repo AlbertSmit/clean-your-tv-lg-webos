@@ -55,6 +55,13 @@
         90
       ],
       "summary": "Add fixed-code Root observer diagnostics; partial investigation support only, original standby failure #90 remains unresolved"
+    },
+    {
+      "pr": 105,
+      "issues": [
+        104
+      ],
+      "summary": "Use a stable private startup-session nonce and one guarded initial Home presentation request; corrected-runtime cold-boot, focus and emergency/off acceptance remain mandatory before publication"
     }
   ],
   "excluded": [],

@@ -5,6 +5,11 @@
 - Integrate #80, #81, #87, #89, #97 and #99: safe settings diagnostics, guided
   setup, verified missing-Home initialization, experimental opt-in eARC recovery,
   frozen Intel macOS dependency loading and actionable private-Python preflight.
+- Include #102 pinned C2 package-data verification and interrupted No-root recovery;
+  original report/device outcomes remain unresolved.
+- Add #103 Root observer diagnostics and #105 clock-independent cold-start identity
+  with one optional startup Home request. The corrected-runtime cold-boot, first-screen,
+  early app-focus and emergency/off matrix must pass before publication.
 - See [candidate scope and versions](docs/RELEASE-1.4.0.md) and
   [testing matrix](docs/RC-1.4.0-TESTING.md). Physical acceptance is pending.
 

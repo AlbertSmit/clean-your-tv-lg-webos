@@ -12,6 +12,8 @@
 - [x] Resolve native LG power-on-screen selection separately; never infer foreground success from routing readback.
 - [x] Update English technical documentation and affected localized setup guidance; record actual device paths and limitations.
 - [x] Run focused and full `scripts/test.sh`, build and verify payload, and obtain independent review.
-- [ ] Save a PR to `release/next`. Deliver retained runtime only through supported checked setup/update; do not hand-edit code or integrity receipts. Hardware acceptance of new code remains pending until that delivery and the supervised matrix actually run.
+- [x] Save a PR to `release/next`. Deliver retained runtime only through supported checked setup/update; do not hand-edit code or integrity receipts. Hardware acceptance of new code remains pending until that delivery and the supervised matrix actually run.
 
 Native Home auto-launch was already on. Implemented one optional hardware-start fallback after guarded restart; latest foreground read preserves other apps, launch never holds the operation lock, and in-flight cancellation stays off. Foreground observation and launch are not atomic platform operations. Review found and corrected log-failure recovery ordering and JSON-null session rejection.
+
+PR #105 integrated into release/next after successful exact-head Linux/macOS, optional Python and Integration policy checks. The maintainer explicitly deferred corrected-runtime hardware acceptance to the mandatory prepublication matrix; no new source was installed during this investigation.

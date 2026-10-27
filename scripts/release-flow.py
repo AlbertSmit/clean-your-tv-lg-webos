@@ -137,6 +137,28 @@ def validate_issues(plan, check_links=False):
             raise ValueError(f'#{issue} is a PR; put it in changes, not issues')
 
 
+def validate_readme(readme, versions):
+    """Check visible stable metadata without rejecting historical evidence."""
+    release = versions['release']
+    expected = {
+        'downloads': f'Current stable release: **[v{release}](https://github.com/{REPO}/releases/tag/v{release})** — [release notes](docs/RELEASE-{release}.md).',
+        'components': '\n'.join([
+            '| Component | Stable version |', '| --- | --- |',
+            *[f'| {label} | {versions[key]} |' for label, key in (
+                ('cytv installer', 'cytv'), ('Home', 'home'), ('Home Helper', 'helper'),
+                ('Root edition', 'root'), ('Both edition Updaters', 'updater'))],
+            f"| Android installer / versionCode | {versions['android']} / {versions['android_version_code']} |",
+        ]),
+    }
+    for name, value in expected.items():
+        start, end = f'<!-- release:{name} -->', f'<!-- /release:{name} -->'
+        if readme.count(start) != 1 or readme.count(end) != 1:
+            raise ValueError(f'README requires exactly one release:{name} section')
+        actual = readme.split(start, 1)[1].split(end, 1)[0].strip()
+        if actual != value:
+            raise ValueError(f'README release:{name} does not match release-versions.json; update visible versions and release links')
+
+
 def validate_candidate(pr, root=ROOT, check_links=False):
     base, head = pr['base']['sha'], pr['head']['sha']
     plan = json.loads(read_at(head, PLAN, root))
@@ -147,6 +169,7 @@ def validate_candidate(pr, root=ROOT, check_links=False):
                   final=True, version=versions['release'], previous_version=old['release'],
                   merged_prs=prs, commits=commits,
                   notes=read_at(head, 'docs/RELEASE-' + versions['release'] + '.md', root))
+    validate_readme(read_at(head, 'README.md', root), versions)
     validate_issues(plan, check_links=check_links)
     return plan
 

@@ -12,6 +12,9 @@ COMPONENTS = ('tv', 'installer', 'android', 'setup', 'preview')
 def components(paths):
     selected = set()
     for path in paths:
+        if path == 'README.md':
+            selected.add('setup')
+            continue
         if (path.startswith(('docs/', '.github/ISSUE_TEMPLATE/', '.github/PULL_REQUEST_TEMPLATE/'))
                 or path.lower().endswith(('.md', '.rst'))
                 or path == 'LICENSE'):

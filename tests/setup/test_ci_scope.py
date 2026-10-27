@@ -55,7 +55,7 @@ class CIScope(unittest.TestCase):
                 subprocess.check_output(['python3', str(ROOT / 'scripts/ci-scope.py')], cwd=root,
                                         env={**env, 'CI_FULL_SUITE': str(full).lower()})
                 return dict(line.split('=') for line in output.read_text().splitlines())
-            self.assertEqual(route(docs)['any'], 'false')
+            self.assertEqual(route(docs)['setup'], 'true', 'README changes must run release metadata validation')
             full = route(docs, full=True)
             self.assertTrue(all(full[name] == 'true'
                                 for name in ('tv', 'installer', 'android', 'setup', 'preview')))
@@ -73,7 +73,8 @@ class CIScope(unittest.TestCase):
         scope = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(scope)
         cases = [
-            (['README.md', 'docs/INSTALL.md', 'android/README.md'], set()),
+            (['README.md', 'docs/INSTALL.md', 'android/README.md'], {'setup'}),
+            (['docs/INSTALL.md', 'android/README.md'], set()),
             (['launcher/app.js'], {'tv', 'installer', 'setup', 'preview'}),
             (['native/service/service.js'], {'tv', 'installer', 'setup'}),
             (['root-edition/ui/main.js'], {'tv', 'installer', 'setup', 'preview'}),

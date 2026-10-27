@@ -42,6 +42,13 @@
       "summary": "Explain failed private-Python ABI/ownership/storage checks with bounded diagnostics; no WAM cleanup, original installation outcome remains unconfirmed"
     },
     {
+      "pr": 100,
+      "issues": [
+        95
+      ],
+      "summary": "Offer default-No Root native WAM cache/codecache cleanup and warned manual Session Storage guidance; C3 API recovered about 98.4 MiB, exact installer and original C2 setup acceptance remain pending"
+    },
+    {
       "pr": 102,
       "issues": [
         21,

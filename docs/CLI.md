@@ -475,3 +475,21 @@ not delete files itself. Session Storage and other app state are excluded.
 are refused. Cache rebuilding may slow the next app launch. No reboot, automatic
 retry or setup resume occurs. See [scope, manual maintenance and evidence](WAM-CLEANUP.md).
 Published installers do not include this action yet.
+
+## Candidate: redirected Windows output and POSIX payloads (#107)
+
+The next candidate preserves the stream's selected encoding and writes unsupported
+console characters as backslash escapes (for example, `\u041f`) instead of failing
+with `UnicodeEncodeError`. UTF-8 output keeps the original localized text. This
+applies to help, errors and normal CLI output; it does not change TV settings or
+saved JSON data. A UTF-8 terminal/log remains preferable for readable localized text.
+These source changes are not a claim about already published installers.
+
+Windows source checkouts use LF for text through `.gitattributes`; binary assets
+remain unchanged. `--check-payload` verifies file hashes and rejects CR characters
+in loose or IPK-contained `.sh` scripts. It rejects a defective build rather than
+rewriting a signed or published package. Rebuild installers from a fresh checkout;
+do not edit installed recovery scripts or retained transaction files.
+
+The separate Root routing/recovery incompatibility on BX/webOS 5 remains unresolved.
+See the [investigation record](development/ISSUE-107-WINDOWS.md).

@@ -238,3 +238,5 @@ Unreleased Root cold-start correction: with Home control enabled and LG Power On
 Candidate OTA fix (#115): published 1.3.0 cannot apply 1.4.0 through the original System Updater because its allowed file inventory changed. An aborted attempt before replacement is not a partial installation. Preserve its recovery journal; do not retry, clear state or edit the pinned list. The next candidate restores the 1.3.0 path and permission contracts; hardware upgrade and rollback still need coordinated testing.
 
 Unreleased correction (#108/#109): with System Updater prepared, the update dot and Update all use the same edition check. A newer overall release without changed component versions does not offer reinstallation. During a check, installation stays disabled. Legacy checks are used only when System Updater is absent. Device confirmation is pending.
+
+Candidate CLI: redirected Windows output escapes characters unavailable in the selected encoding instead of failing. UTF-8 keeps the localized text. This does not establish Root support on BX/webOS 5.

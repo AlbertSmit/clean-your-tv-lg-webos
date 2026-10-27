@@ -162,6 +162,11 @@ def verify_payload(root):
         path = root / safe_name(name)
         if not path.is_file() or path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             raise ValueError('Embedded payload integrity mismatch')
+        # Integrity alone cannot detect CRLF introduced before the build hashes.
+        files = data_files(path.read_bytes()) if name.endswith('.ipk') else {name: path.read_bytes()}
+        for script, data in files.items():
+            if script.endswith('.sh') and b'\r' in data:
+                raise ValueError('POSIX script must use LF line endings: ' + name + ': ' + script)
     if not manifest['files']:
         raise ValueError('Empty embedded payload')
     return manifest
